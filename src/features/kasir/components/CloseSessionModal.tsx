@@ -152,7 +152,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         </div>
 
         {/* Total Bersih Banner (Highlight) */}
-        <div className='rounded-xl border-none bg-primary/10 p-4 text-center shadow-xs'>
+        <div className='rounded-xl border-none bg-primary/10 p-4 text-center'>
           <span className='text-xs font-semibold text-muted-foreground block mb-0.5'>
             Total Pendapatan Bersih Sesi (Net)
           </span>
@@ -167,7 +167,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         </div>
 
         {/* Peringatan Konfirmasi Penguncian */}
-        <div className='flex items-start gap-2.5 rounded-lg border-none bg-amber-500/15 p-3 text-xs text-amber-900 shadow-xs dark:text-amber-200'>
+        <div className='flex items-start gap-2.5 rounded-lg border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
           <span>
             <strong>Konfirmasi Penutupan:</strong> Setelah sesi ditutup, Anda

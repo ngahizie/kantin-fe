@@ -418,7 +418,7 @@ export const KasirPosPage: React.FC = () => {
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center justify-between gap-2 border-none bg-destructive/10 px-4 py-2 text-xs font-medium text-destructive shadow-xs'>
+        <div className='flex items-center justify-between gap-2 border-none bg-destructive/10 px-4 py-2 text-xs font-medium text-destructive'>
           <div className='flex items-center gap-2'>
             <Lock className='h-4 w-4 shrink-0' />
             <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
@@ -535,7 +535,7 @@ export const KasirPosPage: React.FC = () => {
 
           {/* Banner Peringatan Tutup Otomatis */}
           {isPastClosingTime && (
-            <div className='flex items-center gap-2 rounded-md border-none bg-amber-500/15 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300 shadow-xs'>
+            <div className='flex items-center gap-2 rounded-md border-none bg-amber-500/15 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300'>
               <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
               <span>
                 <strong>Perhatian:</strong> Melewati jam operasional tutup ({pengaturan.jamTutupOtomatis || '23:59'}).

@@ -115,7 +115,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         </DialogHeader>
 
         {/* Warning Banner */}
-        <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 shadow-xs dark:text-amber-200'>
+        <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
           <span>
             <strong>Perhatian:</strong> Pembatalan (void) akan mengembalikan

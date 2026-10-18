@@ -14,7 +14,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
     <div
       role='alert'
       aria-live='assertive'
-      className={`flex items-center justify-between gap-3 border-b border-rose-600/30 bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white select-none sm:text-sm ${className}`}
+      className={`flex items-center justify-between gap-3 border-none bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white select-none sm:text-sm ${className}`}
     >
       <div className='flex items-center gap-2.5'>
         <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20'>

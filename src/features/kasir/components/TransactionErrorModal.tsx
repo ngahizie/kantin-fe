@@ -75,7 +75,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
         <div className='space-y-4 py-2'>
           {/* Banner Saldo Kurang Menonjol */}
           {isSaldoKurang ? (
-            <div className='space-y-1.5 rounded-xl border-none bg-destructive/10 p-4 text-center shadow-xs'>
+            <div className='space-y-1.5 rounded-xl border-none bg-destructive/10 p-4 text-center'>
               <span className='text-xs font-semibold tracking-wide text-destructive uppercase'>
                 Kekurangan Nominal Saldo:
               </span>
@@ -91,7 +91,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
             </div>
           ) : (
             /* Pesan Error Standar yang Jelas */
-            <div className='rounded-xl border-none bg-destructive/10 p-4 text-center shadow-xs'>
+            <div className='rounded-xl border-none bg-destructive/10 p-4 text-center'>
               <p className='text-sm font-bold text-destructive sm:text-base'>
                 {errorInfo.message}
               </p>
