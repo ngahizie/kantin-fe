@@ -9,7 +9,6 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/auth-store'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -79,19 +78,6 @@ export function KasirLayout() {
 
         {/* Sisi Kanan: Status & Navigasi Cepat */}
         <div className='flex items-center gap-2'>
-          {/* Status Koneksi */}
-          {isOnline ? (
-            <Badge variant='secondary' className='hidden sm:flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'>
-              <span className='h-2 w-2 rounded-full bg-emerald-500 animate-pulse' />
-              Online
-            </Badge>
-          ) : (
-            <Badge variant='destructive' className='flex items-center gap-1'>
-              <WifiOff className='h-3 w-3' />
-              Offline
-            </Badge>
-          )}
-
           {/* Tombol Fullscreen */}
           <Button
             variant='ghost'
