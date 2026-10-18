@@ -4,6 +4,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  X,
   Pencil,
   Trash2,
   AlertTriangle,
@@ -206,15 +207,25 @@ export function KategoriPage() {
 
         {/* Search & Table Card */}
         <Card className='overflow-hidden rounded-2xl border-none bg-card shadow-none'>
-          <div className='flex flex-col gap-3 p-4 border-none bg-card sm:flex-row sm:items-center sm:justify-between shadow-none'>
-            <div className='relative w-full sm:w-72'>
+          <div className='flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='relative w-full max-w-[280px] sm:w-64'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
               <Input
                 placeholder='Cari nama kategori...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='h-10 border-none bg-muted/60 dark:bg-muted/40 pl-9 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
+                className='h-10 border-none bg-muted/60 dark:bg-muted/40 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
               />
+              {searchQuery && (
+                <button
+                  type='button'
+                  onClick={() => setSearchQuery('')}
+                  className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors'
+                  title='Hapus pencarian'
+                >
+                  <X className='size-3.5' />
+                </button>
+              )}
             </div>
             <div className='text-xs font-medium text-muted-foreground tabular-nums'>
               Menampilkan {filteredKategori.length} dari {kategoriList.length} kategori
