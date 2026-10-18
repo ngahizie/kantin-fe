@@ -236,10 +236,10 @@ export function KategoriPage() {
             <Table>
               <TableHeader>
                 <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
-                  <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
                     Urutan
                   </TableHead>
-                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>
                     Nama Kategori
                   </TableHead>
                   <TableHead className='w-36 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
@@ -248,7 +248,7 @@ export function KategoriPage() {
                   <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Status
                   </TableHead>
-                  <TableHead className='w-28 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
                     Aksi
                   </TableHead>
                 </TableRow>
@@ -256,7 +256,7 @@ export function KategoriPage() {
               <TableBody>
                 {loading ? (
                   <TableRow className='border-none'>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex items-center justify-center gap-2'>
                         <RefreshCw className='size-4 animate-spin' />
                         <span>Memuat kategori menu...</span>
@@ -265,7 +265,7 @@ export function KategoriPage() {
                   </TableRow>
                 ) : filteredKategori.length === 0 ? (
                   <TableRow className='border-none'>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <Tag className='size-8 text-muted-foreground/40' />
                         <p className='font-semibold text-foreground'>Tidak ada kategori ditemukan</p>
@@ -287,10 +287,10 @@ export function KategoriPage() {
                         key={kat.id}
                         className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'
                       >
-                        <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums'>
+                        <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums ps-6'>
                           {kat.urutan ?? kat.id}
                         </TableCell>
-                        <TableCell className='border-none py-3.5 font-semibold text-foreground text-sm'>
+                        <TableCell className='border-none py-3.5 font-semibold text-foreground text-sm ps-2'>
                           <div className='flex items-center gap-2'>
                             <span>{kat.nama}</span>
                           </div>
@@ -321,7 +321,7 @@ export function KategoriPage() {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className='text-right border-none py-3.5'>
+                        <TableCell className='text-right border-none py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1'>
                             <Button
                               variant='ghost'
