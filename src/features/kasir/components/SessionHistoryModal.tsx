@@ -165,7 +165,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Transaksi
                 </span>
-                <span className='font-mono text-sm font-bold text-foreground'>
+                <span className='text-sm font-bold text-foreground tabular-nums'>
                   {formatNumber(metrics.totalTransaksi)}
                 </span>
               </div>
@@ -174,7 +174,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 <span className='text-[10px] text-muted-foreground block'>
                   Sukses (Net)
                 </span>
-                <span className='font-mono text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400'>
+                <span className='text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                   {formatRupiah(metrics.totalBersih)}
                 </span>
               </div>
@@ -183,7 +183,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Void
                 </span>
-                <span className='font-mono text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400'>
+                <span className='text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums'>
                   {metrics.countVoid > 0 ? formatRupiah(metrics.totalVoid) : '0'}
                 </span>
               </div>
@@ -260,10 +260,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                       {/* Baris Atas: Info Waktu, Ref, & Status Badge */}
                       <div className='flex items-center justify-between gap-2 border-none pb-1 text-xs'>
                         <div className='flex items-center gap-2'>
-                          <span className='font-mono font-bold text-foreground'>
+                          <span className='font-bold text-foreground'>
                             {trx.nomorReferensi || `#${trx.id}`}
                           </span>
-                          <span className='text-muted-foreground text-[11px] flex items-center gap-1'>
+                          <span className='text-muted-foreground text-[11px] flex items-center gap-1 tabular-nums'>
                             <Clock className='h-3 w-3' />
                             {formatDateTime(trx.waktu)}
                           </span>
@@ -309,7 +309,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             Total Tagihan
                           </span>
                           <span
-                            className={`font-mono text-base font-bold tabular-nums ${
+                            className={`text-base font-bold tabular-nums ${
                               isSukses
                                 ? 'text-primary'
                                 : 'text-muted-foreground line-through'

@@ -106,7 +106,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
           <div className='flex items-center gap-1.5 text-muted-foreground'>
             <Calendar className='h-3.5 w-3.5' />
             <span>Tanggal:</span>
-            <strong className='font-mono text-foreground'>
+            <strong className='font-semibold text-foreground tabular-nums'>
               {sesi?.tanggal || new Date().toISOString().split('T')[0]}
             </strong>
           </div>
@@ -120,7 +120,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <Receipt className='h-3 w-3 text-emerald-600' /> Transaksi Sukses
               </span>
-              <span className='font-mono text-lg font-bold text-foreground block'>
+              <span className='text-lg font-bold tracking-tight text-foreground tabular-nums block'>
                 {formatNumber(jumlahTransaksi)}
               </span>
             </CardContent>
@@ -132,7 +132,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <RotateCcw className='h-3 w-3 text-rose-600' /> Transaksi Void
               </span>
-              <span className='font-mono text-lg font-bold text-rose-600 dark:text-rose-400 block'>
+              <span className='text-lg font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums block'>
                 {formatNumber(jumlahVoid)}
               </span>
             </CardContent>
@@ -144,7 +144,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <Coins className='h-3 w-3 text-muted-foreground' /> Total Bruto
               </span>
-              <span className='font-mono text-sm font-semibold text-foreground block'>
+              <span className='text-sm font-semibold text-foreground tabular-nums block'>
                 {formatRupiah(totalBruto)}
               </span>
             </CardContent>
@@ -156,7 +156,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
           <span className='text-xs font-semibold text-muted-foreground block mb-0.5'>
             Total Pendapatan Bersih Sesi (Net)
           </span>
-          <span className='font-mono text-2xl sm:text-3xl font-extrabold text-primary block'>
+          <span className='text-2xl sm:text-3xl font-bold tracking-tight text-primary tabular-nums block'>
             {formatRupiah(totalBersih)}
           </span>
           {totalVoid > 0 && (

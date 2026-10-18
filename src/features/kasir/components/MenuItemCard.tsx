@@ -115,7 +115,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         {/* Harga */}
         <div className='mt-3 flex flex-col border-none pt-1'>
           <span className='text-xs text-muted-foreground'>Harga</span>
-          <span className='font-mono text-base font-bold text-primary sm:text-lg'>
+          <span className='text-base font-bold tracking-tight text-primary tabular-nums sm:text-lg'>
             {formatRupiah(menu.hargaJual)}
           </span>
         </div>

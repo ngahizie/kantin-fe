@@ -174,7 +174,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       <Minus className='h-3.5 w-3.5' />
                     </Button>
 
-                    <span className='min-w-[2rem] text-center font-mono text-xs font-bold text-foreground'>
+                    <span className='min-w-[2rem] text-center text-xs font-bold text-foreground tabular-nums'>
                       {item.qty}
                     </span>
 
@@ -197,7 +197,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
                   {/* Subtotal Item (Integer Rupiah) */}
                   <div className='text-right'>
-                    <span className='font-mono text-sm font-bold text-foreground'>
+                    <span className='text-sm font-bold text-foreground tabular-nums'>
                       {formatRupiah(item.subtotal)}
                     </span>
                   </div>
@@ -214,13 +214,13 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
         <div className='space-y-1.5 text-xs'>
           <div className='flex justify-between text-muted-foreground'>
             <span>Total Kuantitas</span>
-            <span className='font-mono font-medium'>{totalCount} Item</span>
+            <span className='font-semibold text-foreground tabular-nums'>{totalCount} Item</span>
           </div>
           <div className='flex items-baseline justify-between border-none pt-1.5'>
             <span className='text-sm font-bold text-foreground'>
               Total Belanja
             </span>
-            <span className='font-mono text-lg font-extrabold text-primary sm:text-xl'>
+            <span className='text-lg font-bold tracking-tight text-primary tabular-nums sm:text-xl'>
               {formatRupiah(totalNominal)}
             </span>
           </div>

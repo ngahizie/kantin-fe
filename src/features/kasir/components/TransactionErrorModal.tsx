@@ -79,7 +79,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
               <span className='text-xs font-semibold tracking-wide text-destructive uppercase'>
                 Kekurangan Nominal Saldo:
               </span>
-              <p className='font-mono text-2xl font-extrabold text-destructive sm:text-3xl'>
+              <p className='text-2xl font-bold tracking-tight text-destructive tabular-nums sm:text-3xl'>
                 {errorInfo.kekurangan
                   ? formatRupiah(errorInfo.kekurangan)
                   : errorInfo.message}
@@ -99,9 +99,9 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
           )}
 
           {errorInfo.uid && (
-            <div className='flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground'>
+            <div className='flex items-center justify-center gap-2 text-xs text-muted-foreground'>
               <span>UID Terbaca:</span>
-              <span className='rounded-full bg-muted/70 px-2.5 py-0.5 font-bold text-foreground'>
+              <span className='rounded-full bg-muted/70 px-2.5 py-0.5 font-bold tracking-wider text-foreground'>
                 {errorInfo.uid}
               </span>
             </div>

@@ -66,7 +66,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
                 placeholder='Masukkan nomor UID kartu...'
                 disabled={isProcessing}
                 autoFocus
-                className='font-mono text-sm tracking-wider uppercase border-none bg-muted/60 shadow-none focus-visible:bg-muted focus-visible:ring-0 rounded-xl'
+                className='text-sm font-semibold tracking-wider uppercase border-none bg-muted/60 shadow-none focus-visible:bg-muted focus-visible:ring-0 rounded-xl'
               />
               <Button
                 type='submit'

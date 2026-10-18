@@ -130,7 +130,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             <span className='text-muted-foreground flex items-center gap-1.5'>
               <Receipt className='h-3.5 w-3.5' /> No. Referensi
             </span>
-            <span className='font-mono font-semibold text-foreground'>
+            <span className='font-semibold text-foreground'>
               {transaction.nomorReferensi || `#${transaction.id}`}
             </span>
           </div>
@@ -153,7 +153,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             <span className='text-muted-foreground flex items-center gap-1.5'>
               <Clock className='h-3.5 w-3.5' /> Waktu Transaksi
             </span>
-            <span className='text-muted-foreground font-mono'>
+            <span className='text-muted-foreground tabular-nums'>
               {formatDateTime(transaction.waktu)}
             </span>
           </div>
@@ -162,7 +162,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             <span className='font-semibold text-foreground flex items-center gap-1.5'>
               <Coins className='h-3.5 w-3.5 text-primary' /> Total Tagihan
             </span>
-            <span className='font-mono font-bold text-sm text-primary'>
+            <span className='font-bold text-sm text-primary tabular-nums'>
               {formatRupiah(transaction.total)}
             </span>
           </div>

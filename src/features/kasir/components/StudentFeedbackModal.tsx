@@ -139,12 +139,12 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
               {pembeli.nama}
             </h3>
             {isSiswa && pembeli.nis && (
-              <p className='font-mono text-xs text-muted-foreground'>
+              <p className='text-xs text-muted-foreground'>
                 NIS: {pembeli.nis}
               </p>
             )}
             {!isSiswa && pembeli.nomor_kartu && (
-              <p className='font-mono text-xs text-muted-foreground'>
+              <p className='text-xs text-muted-foreground'>
                 No. Kartu: {pembeli.nomor_kartu}
               </p>
             )}
@@ -156,7 +156,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
               <span className='text-[11px] text-muted-foreground'>
                 Total Belanja
               </span>
-              <p className='font-mono text-sm font-bold text-foreground'>
+              <p className='text-sm font-bold text-foreground tabular-nums'>
                 {formatRupiah(data.total)}
               </p>
             </div>
@@ -164,7 +164,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
               <span className='text-[11px] text-muted-foreground'>
                 Sisa Saldo
               </span>
-              <p className='font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400'>
+              <p className='text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(sisaSaldo)}
               </p>
             </div>
@@ -175,7 +175,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <Clock className='h-3.5 w-3.5 animate-pulse text-primary' />
             <span>
               Menutup otomatis dalam{' '}
-              <strong className='font-mono font-bold text-primary'>
+              <strong className='font-bold text-primary tabular-nums'>
                 {countdown}
               </strong>{' '}
               detik...

@@ -462,7 +462,7 @@ export const KasirPosPage: React.FC = () => {
                     <X className='h-3.5 w-3.5' />
                   </Button>
                 ) : (
-                  <kbd className='pointer-events-none absolute top-1/2 right-2.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded-md border-none bg-background/90 px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-none select-none sm:flex'>
+                  <kbd className='pointer-events-none absolute top-1/2 right-2.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded-md border-none bg-background/90 px-1.5 text-[11px] font-semibold text-muted-foreground shadow-none select-none sm:flex'>
                     /
                   </kbd>
                 )}
@@ -627,7 +627,7 @@ export const KasirPosPage: React.FC = () => {
               <ShoppingCart className='h-4 w-4' />
               <span>Keranjang ({totalItems()} item)</span>
             </div>
-            <span className='font-mono'>{formatRupiah(totalHarga())}</span>
+            <span className='font-bold tabular-nums'>{formatRupiah(totalHarga())}</span>
           </Button>
         </div>
       </div>
@@ -703,7 +703,7 @@ export const KasirPosPage: React.FC = () => {
           <div className='space-y-2 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3.5 text-sm shadow-none'>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>UID Kartu:</span>
-              <span className='font-mono font-semibold'>{pendingScannedUid}</span>
+              <span className='font-semibold text-foreground tracking-wider'>{pendingScannedUid}</span>
             </div>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Total Item:</span>
@@ -711,7 +711,7 @@ export const KasirPosPage: React.FC = () => {
             </div>
             <div className='flex justify-between border-none pt-2 text-base font-bold'>
               <span>Total Tagihan:</span>
-              <span className='text-primary'>{formatRupiah(totalHarga())}</span>
+              <span className='text-primary tabular-nums'>{formatRupiah(totalHarga())}</span>
             </div>
           </div>
           <AlertDialogFooter>
