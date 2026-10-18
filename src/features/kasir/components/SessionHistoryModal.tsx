@@ -144,9 +144,9 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           )}
 
           {/* Header Drawer */}
-          <SheetHeader className='border-none bg-card px-5 py-4 text-left shadow-none pr-20'>
-            <div className='flex items-center gap-2.5'>
-              <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+          <SheetHeader className='border-none bg-card px-5 py-4 text-left shadow-none'>
+            <div className='flex items-center gap-2.5 pr-20'>
+              <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary'>
                 <History className='h-5 w-5' />
               </div>
               <div>
