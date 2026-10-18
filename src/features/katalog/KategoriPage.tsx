@@ -220,7 +220,7 @@ export function KategoriPage() {
                 <button
                   type='button'
                   onClick={() => setSearchQuery('')}
-                  className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors'
+                  className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0'
                   title='Hapus pencarian'
                 >
                   <X className='size-3.5' />
