@@ -123,10 +123,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none'
+          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none border-0 shadow-2xl'
         >
           {/* Header Drawer */}
-          <SheetHeader className='border-b bg-muted/30 px-5 py-4 text-left'>
+          <SheetHeader className='border-0 bg-muted/40 px-5 py-4 text-left shadow-xs'>
             <div className='flex items-center justify-between gap-3'>
               <div className='flex items-center gap-2.5'>
                 <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
@@ -144,11 +144,11 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
               {onRefresh && (
                 <Button
-                  variant='outline'
+                  variant='secondary'
                   size='sm'
                   onClick={onRefresh}
                   disabled={isLoading}
-                  className='h-8 gap-1.5 px-2.5 text-xs'
+                  className='h-8 gap-1.5 px-2.5 text-xs border-0 bg-muted/80 text-foreground hover:bg-muted'
                   title='Segarkan riwayat transaksi'
                 >
                   <RefreshCw
@@ -161,7 +161,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
             {/* Quick Metrics Cards */}
             <div className='grid grid-cols-3 gap-2 pt-2'>
-              <div className='rounded-lg border bg-card p-2 text-center'>
+              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Transaksi
                 </span>
@@ -170,7 +170,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-lg border bg-card p-2 text-center'>
+              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Sukses (Net)
                 </span>
@@ -179,7 +179,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-lg border bg-card p-2 text-center'>
+              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Void
                 </span>
@@ -191,14 +191,14 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           </SheetHeader>
 
           {/* Filter Bar */}
-          <div className='flex items-center gap-2 border-b bg-background px-5 py-3'>
+          <div className='flex items-center gap-2 border-0 bg-muted/30 px-5 py-3'>
             <div className='relative flex-1'>
               <Search className='absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
               <Input
                 placeholder='Cari nomor referensi, nama pembeli, atau item...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='h-8 pl-8 text-xs'
+                className='h-8 pl-8 text-xs border-0 bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
               />
             </div>
 
@@ -250,15 +250,15 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 return (
                   <Card
                     key={trx.id}
-                    className={`transition-all ${
+                    className={`transition-all border-0 shadow-xs ${
                       isSukses
-                        ? 'border-border/80 hover:border-border'
-                        : 'border-rose-500/20 bg-rose-500/[0.02]'
+                        ? 'bg-card hover:shadow-md'
+                        : 'bg-rose-500/[0.04]'
                     }`}
                   >
                     <CardContent className='p-3.5 space-y-2.5'>
                       {/* Baris Atas: Info Waktu, Ref, & Status Badge */}
-                      <div className='flex items-center justify-between gap-2 border-b pb-2 text-xs'>
+                      <div className='flex items-center justify-between gap-2 border-0 pb-1 text-xs'>
                         <div className='flex items-center gap-2'>
                           <span className='font-mono font-bold text-foreground'>
                             {trx.nomorReferensi || `#${trx.id}`}
@@ -270,11 +270,11 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                         </div>
 
                         <Badge
-                          variant={isSukses ? 'outline' : 'destructive'}
-                          className={`text-[10px] font-bold ${
+                          variant={isSukses ? 'secondary' : 'destructive'}
+                          className={`text-[10px] font-bold border-0 shadow-xs ${
                             isSukses
-                              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400'
-                              : 'bg-rose-500/10 text-rose-600 border-rose-500/30'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/15 text-rose-600'
                           }`}
                         >
                           {isSukses ? 'SUKSES' : 'VOID'}
@@ -291,7 +291,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             </strong>
                             <Badge
                               variant='secondary'
-                              className='text-[9px] py-0 px-1 font-normal'
+                              className='text-[9px] py-0 px-1 font-normal border-0 shadow-xs'
                             >
                               {trx.pembeliTipe === 'SISWA' ? 'Siswa' : 'Tamu'}
                             </Badge>
@@ -342,7 +342,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                       {/* Catatan Alasan jika transaksi berstatus VOID */}
                       {!isSukses && trx.voidAlasan && (
-                        <div className='rounded border border-rose-500/20 bg-rose-500/5 p-2 text-[11px] text-rose-700 dark:text-rose-300'>
+                        <div className='rounded border-0 bg-rose-500/10 p-2 text-[11px] text-rose-700 shadow-xs dark:text-rose-300'>
                           <strong>Alasan Void:</strong> &ldquo;{trx.voidAlasan}&rdquo;
                           {trx.voidAt && (
                             <span className='block text-[10px] text-muted-foreground mt-0.5'>
@@ -357,11 +357,11 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                         <div className='flex items-center justify-end pt-1'>
                           <Button
                             type='button'
-                            variant='outline'
+                            variant='secondary'
                             size='sm'
                             disabled={!canVoid}
                             onClick={() => handleOpenVoidDialog(trx)}
-                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-rose-500/30'
+                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-0 bg-rose-500/10 shadow-xs'
                             title={
                               isSessionClosed
                                 ? 'Sesi kasir sudah ditutup, transaksi tidak dapat di-void'

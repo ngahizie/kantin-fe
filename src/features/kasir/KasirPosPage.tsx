@@ -648,7 +648,7 @@ export const KasirPosPage: React.FC = () => {
       <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
         <SheetContent
           side='right'
-          className='flex w-full flex-col p-0 sm:max-w-md'
+          className='flex w-full flex-col p-0 sm:max-w-md border-0 shadow-2xl'
         >
           <SheetHeader className='sr-only'>
             <SheetTitle>Keranjang Belanja Kasir</SheetTitle>
@@ -693,7 +693,7 @@ export const KasirPosPage: React.FC = () => {
         open={confirmManualOpen}
         onOpenChange={setConfirmManualOpen}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className='border-0 shadow-2xl'>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
             <AlertDialogDescription>

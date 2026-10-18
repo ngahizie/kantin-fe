@@ -97,7 +97,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg'>
+      <DialogContent className='max-w-md sm:max-w-lg border-0 shadow-2xl'>
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
             <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600'>
@@ -115,7 +115,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         </DialogHeader>
 
         {/* Warning Banner */}
-        <div className='flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200'>
+        <div className='flex items-start gap-2.5 rounded-lg border-0 bg-amber-500/15 p-3 text-xs text-amber-900 shadow-xs dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
           <span>
             <strong>Perhatian:</strong> Pembatalan (void) akan mengembalikan
@@ -125,7 +125,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         </div>
 
         {/* Detail Ringkas Transaksi */}
-        <div className='space-y-2 rounded-lg border bg-muted/30 p-3.5 text-xs'>
+        <div className='space-y-2 rounded-lg border-0 bg-muted/50 p-3.5 text-xs shadow-xs'>
           <div className='flex items-center justify-between'>
             <span className='text-muted-foreground flex items-center gap-1.5'>
               <Receipt className='h-3.5 w-3.5' /> No. Referensi
@@ -143,7 +143,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
               <span className='font-medium text-foreground'>
                 {transaction.pembeliNama}
               </span>
-              <Badge variant='outline' className='text-[10px] py-0 px-1.5'>
+              <Badge variant='secondary' className='text-[10px] py-0 px-1.5 border-0 bg-background/80 shadow-xs'>
                 {transaction.pembeliTipe === 'SISWA' ? 'Siswa' : 'Kartu Tamu'}
               </Badge>
             </div>
@@ -158,7 +158,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             </span>
           </div>
 
-          <div className='border-t pt-2 flex items-center justify-between'>
+          <div className='border-0 pt-2 flex items-center justify-between'>
             <span className='font-semibold text-foreground flex items-center gap-1.5'>
               <Coins className='h-3.5 w-3.5 text-primary' /> Total Tagihan
             </span>
@@ -182,10 +182,10 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
               <label
                 key={alasan}
                 htmlFor={`void-reason-${alasan}`}
-                className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 text-xs transition-colors hover:bg-muted/50 ${
+                className={`flex cursor-pointer items-center justify-between rounded-lg border-0 p-2.5 text-xs transition-colors hover:bg-muted/70 ${
                   selectedAlasan === alasan
-                    ? 'border-primary bg-primary/5 font-medium text-foreground'
-                    : 'text-muted-foreground'
+                    ? 'bg-primary/10 font-medium text-foreground shadow-xs'
+                    : 'bg-muted/40 text-muted-foreground'
                 }`}
               >
                 <span>{alasan}</span>
@@ -209,7 +209,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
                 value={keteranganLainnya}
                 onChange={(e) => setKeteranganLainnya(e.target.value)}
                 rows={2}
-                className='text-xs'
+                className='text-xs border-0 bg-muted/60 focus-visible:bg-muted focus-visible:ring-0 shadow-xs'
               />
             </div>
           )}
@@ -218,10 +218,11 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         <DialogFooter className='gap-2 sm:gap-0 pt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             size='sm'
             onClick={() => handleOpenChange(false)}
             disabled={isSubmitting}
+            className='border-0 bg-muted/80 text-foreground hover:bg-muted'
           >
             Batal
           </Button>
@@ -231,7 +232,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             size='sm'
             onClick={handleConfirmVoid}
             disabled={isSubmitting}
-            className='gap-1.5 font-semibold'
+            className='gap-1.5 font-semibold border-0 shadow-xs'
           >
             {isSubmitting ? (
               <>

@@ -77,7 +77,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg'>
+      <DialogContent className='max-w-md sm:max-w-lg border-0 shadow-2xl'>
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
             <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400'>
@@ -115,7 +115,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         {/* Rekapitulasi Metrik Sesi */}
         <div className='grid grid-cols-2 gap-2.5 sm:grid-cols-3 text-xs'>
           {/* Total Transaksi Sukses */}
-          <Card className='border bg-card'>
+          <Card className='border-0 bg-muted/50 shadow-xs'>
             <CardContent className='p-3'>
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <Receipt className='h-3 w-3 text-emerald-600' /> Transaksi Sukses
@@ -127,7 +127,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
           </Card>
 
           {/* Total Transaksi Void */}
-          <Card className='border bg-card'>
+          <Card className='border-0 bg-muted/50 shadow-xs'>
             <CardContent className='p-3'>
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <RotateCcw className='h-3 w-3 text-rose-600' /> Transaksi Void
@@ -139,7 +139,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
           </Card>
 
           {/* Total Bruto */}
-          <Card className='border bg-card col-span-2 sm:col-span-1'>
+          <Card className='border-0 bg-muted/50 shadow-xs col-span-2 sm:col-span-1'>
             <CardContent className='p-3'>
               <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-1'>
                 <Coins className='h-3 w-3 text-muted-foreground' /> Total Bruto
@@ -152,7 +152,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         </div>
 
         {/* Total Bersih Banner (Highlight) */}
-        <div className='rounded-xl border border-primary/20 bg-primary/5 p-4 text-center'>
+        <div className='rounded-xl border-0 bg-primary/10 p-4 text-center shadow-xs'>
           <span className='text-xs font-semibold text-muted-foreground block mb-0.5'>
             Total Pendapatan Bersih Sesi (Net)
           </span>
@@ -167,7 +167,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         </div>
 
         {/* Peringatan Konfirmasi Penguncian */}
-        <div className='flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200'>
+        <div className='flex items-start gap-2.5 rounded-lg border-0 bg-amber-500/15 p-3 text-xs text-amber-900 shadow-xs dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
           <span>
             <strong>Konfirmasi Penutupan:</strong> Setelah sesi ditutup, Anda
@@ -179,10 +179,11 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         <DialogFooter className='gap-2 sm:gap-0 pt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             size='sm'
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
+            className='border-0 bg-muted/80 text-foreground hover:bg-muted'
           >
             Batal
           </Button>
@@ -192,7 +193,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
             size='sm'
             onClick={handleCloseSession}
             disabled={isSubmitting}
-            className='gap-1.5 font-semibold'
+            className='gap-1.5 font-semibold border-0 shadow-xs'
           >
             {isSubmitting ? (
               <>

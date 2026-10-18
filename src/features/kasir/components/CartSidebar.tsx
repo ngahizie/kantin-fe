@@ -251,7 +251,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
       {/* Dialog Konfirmasi Kosongkan Keranjang */}
       <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className='border-0 shadow-2xl'>
           <AlertDialogHeader>
             <AlertDialogTitle className='flex items-center gap-2'>
               <AlertTriangle className='h-5 w-5 text-amber-500' />
@@ -263,10 +263,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel className='border-0 bg-muted/80 text-foreground hover:bg-muted'>
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClearConfirmed}
-              className='text-destructive-foreground bg-destructive hover:bg-destructive/90'
+              className='border-0 shadow-xs text-destructive-foreground bg-destructive hover:bg-destructive/90'
             >
               Kosongkan
             </AlertDialogAction>

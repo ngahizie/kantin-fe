@@ -40,7 +40,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md select-none'>
+      <DialogContent className='max-w-md select-none border-0 shadow-2xl'>
         <DialogHeader>
           <div className='flex items-center gap-2 text-primary'>
             <Keyboard className='h-5 w-5' />
@@ -56,11 +56,8 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
         <form onSubmit={handleSubmit} className='space-y-4 pt-2'>
           {/* Input Manual UID */}
           <div className='space-y-1.5'>
-            <label className='flex items-center justify-between text-xs font-semibold text-foreground'>
-              <span>Nomor UID Kartu RFID:</span>
-              <span className='text-[11px] font-normal text-muted-foreground'>
-                Contoh: 04A1B2C3D4
-              </span>
+            <label className='block text-xs font-semibold text-foreground'>
+              Nomor UID Kartu RFID:
             </label>
             <div className='flex gap-2'>
               <Input
@@ -69,12 +66,12 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
                 placeholder='Masukkan nomor UID kartu...'
                 disabled={isProcessing}
                 autoFocus
-                className='font-mono text-sm tracking-wider uppercase'
+                className='font-mono text-sm tracking-wider uppercase border-0 bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
               />
               <Button
                 type='submit'
                 disabled={!uidInput.trim() || isProcessing}
-                className='shrink-0 font-semibold'
+                className='shrink-0 font-semibold border-0 shadow-xs'
               >
                 Proses Tap
               </Button>
@@ -84,11 +81,11 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
           <DialogFooter className='gap-2 pt-1 sm:justify-end'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               size='sm'
               onClick={() => onOpenChange(false)}
               disabled={isProcessing}
-              className='text-xs'
+              className='text-xs border-0 bg-muted/80 text-foreground hover:bg-muted'
             >
               <X className='mr-1.5 h-3.5 w-3.5' />
               Tutup
