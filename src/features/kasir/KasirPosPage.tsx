@@ -448,7 +448,7 @@ export const KasirPosPage: React.FC = () => {
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Cari menu makanan atau minuman... (Tekan "/" untuk mencari)'
+                  placeholder='Cari menu makanan atau minuman...'
                   className='h-10 border-0 bg-muted/60 pr-16 pl-9 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0'
                 />
                 {searchQuery ? (
