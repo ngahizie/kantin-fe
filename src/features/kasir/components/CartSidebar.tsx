@@ -249,19 +249,6 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 : 'Bayar / Tap Kartu'}
             </span>
           </Button>
-
-          {onManualRfidOpen && (
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
-              onClick={onManualRfidOpen}
-              className='h-8 w-full text-xs text-muted-foreground hover:text-foreground'
-            >
-              Input Manual UID (Uji Coba)
-            </Button>
-          )}
         </div>
       </div>
 
