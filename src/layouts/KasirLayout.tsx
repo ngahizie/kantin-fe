@@ -5,7 +5,6 @@ import {
   Maximize2,
   Minimize2,
   ArrowLeft,
-  Clock,
   User,
   LogOut,
 } from 'lucide-react'
@@ -18,7 +17,6 @@ import useDialogState from '@/hooks/use-dialog-state'
 export function KasirLayout() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [time, setTime] = useState(new Date())
   const [signOutOpen, setSignOutOpen] = useDialogState()
   const { user } = useAuthStore().auth
 
@@ -34,12 +32,6 @@ export function KasirLayout() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
-
-  // Live clock
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
   }, [])
 
   // Toggle fullscreen
@@ -84,17 +76,6 @@ export function KasirLayout() {
           </div>
         </div>
 
-        {/* Sisi Tengah: Jam Real-time */}
-        <div className='hidden md:flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs text-muted-foreground'>
-          <Clock className='h-3.5 w-3.5 text-primary' />
-          <span className='font-medium text-foreground'>
-            {time.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
-          </span>
-          <span>•</span>
-          <span className='font-mono font-semibold text-foreground'>
-            {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </span>
-        </div>
 
         {/* Sisi Kanan: Status & Navigasi Cepat */}
         <div className='flex items-center gap-2'>
