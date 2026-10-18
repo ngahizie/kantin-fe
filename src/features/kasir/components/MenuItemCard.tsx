@@ -42,10 +42,10 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       aria-disabled={isHabis}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border select-none ${
+      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border-0 bg-card shadow-xs transition-all duration-200 select-none ${
         isHabis
-          ? 'cursor-not-allowed border-dashed bg-muted/40 opacity-60'
-          : 'cursor-pointer hover:border-primary/60'
+          ? 'cursor-not-allowed bg-muted/40 opacity-60'
+          : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md'
       }`}
     >
       {/* Gambar & Badges */}
@@ -69,20 +69,20 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         {/* Badge Status Stok di Pojok Kiri Atas */}
         <div className='absolute top-2 left-2 flex flex-col gap-1'>
           {isHabis ? (
-            <Badge variant='destructive' className='font-bold'>
+            <Badge variant='destructive' className='border-0 font-bold shadow-xs'>
               Habis
             </Badge>
           ) : isMenipis ? (
             <Badge
-              variant='outline'
-              className='border-amber-500 bg-amber-500/90 font-bold text-amber-950 dark:text-amber-100'
+              variant='secondary'
+              className='border-0 bg-amber-500 font-bold text-amber-950 shadow-xs dark:text-amber-100'
             >
               <AlertCircle className='mr-1 h-3 w-3' /> Sisa {availableStock}
             </Badge>
           ) : (
             <Badge
               variant='secondary'
-              className='bg-background/85 text-xs font-medium text-foreground backdrop-blur-xs'
+              className='border-0 bg-background/90 text-xs font-medium text-foreground shadow-xs backdrop-blur-xs'
             >
               Stok: {availableStock}
             </Badge>
@@ -92,7 +92,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         {/* Badge Jumlah di Keranjang di Pojok Kanan Atas */}
         {cartQty > 0 && (
           <div className='absolute top-2 right-2 animate-in duration-200 zoom-in-75'>
-            <Badge className='bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground'>
+            <Badge className='border-0 bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground shadow-xs'>
               {cartQty}x di keranjang
             </Badge>
           </div>
@@ -114,7 +114,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         </div>
 
         {/* Harga & Tombol Tambah */}
-        <div className='mt-3 flex items-center justify-between gap-2 border-t pt-2'>
+        <div className='mt-3 flex items-center justify-between gap-2 border-0 pt-2'>
           <div className='flex flex-col'>
             <span className='text-xs text-muted-foreground'>Harga</span>
             <span className='text-sm font-bold text-primary sm:text-base'>
@@ -125,13 +125,13 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <Button
             type='button'
             size='sm'
-            variant={isHabis ? 'outline' : 'default'}
+            variant={isHabis ? 'secondary' : 'default'}
             disabled={isHabis}
             onClick={(e) => {
               e.stopPropagation()
               handleCardClick()
             }}
-            className='h-8 min-w-[36px] touch-manipulation px-2.5'
+            className='h-8 min-w-[36px] touch-manipulation border-0 px-2.5 shadow-xs'
             title={isHabis ? 'Stok habis' : `Tambah ${menu.nama} ke keranjang`}
           >
             <Plus className='h-4 w-4' />

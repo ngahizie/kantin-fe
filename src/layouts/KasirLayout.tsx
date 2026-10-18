@@ -47,7 +47,7 @@ export function KasirLayout() {
   }
 
   return (
-    <div className='flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground select-none'>
+    <div className='flex h-screen w-screen flex-col overflow-hidden bg-muted/40 text-foreground select-none'>
       {/* Banner Peringatan Offline (PRD §6.5) */}
       {!isOnline && (
         <div className='flex items-center justify-center gap-2 bg-destructive py-2 text-sm font-semibold text-destructive-foreground animate-pulse'>
@@ -57,7 +57,7 @@ export function KasirLayout() {
       )}
 
       {/* Top Header Kasir POS */}
-      <header className='flex h-14 shrink-0 items-center justify-between border-b px-4 bg-card/60 backdrop-blur'>
+      <header className='flex h-14 shrink-0 items-center justify-between border-0 bg-card px-4 shadow-xs backdrop-blur'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
           <div className='flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-muted dark:bg-white p-1'>
@@ -90,7 +90,7 @@ export function KasirLayout() {
           </Button>
 
           {/* Kembali ke Dashboard */}
-          <Button asChild variant='outline' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1' title='Kembali ke Dashboard'>
+          <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1 border-0 bg-muted/80 hover:bg-muted text-foreground' title='Kembali ke Dashboard'>
             <Link to='/'>
               <ArrowLeft className='h-3.5 w-3.5' />
               <span className='hidden sm:inline'>Kembali</span>

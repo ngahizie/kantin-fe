@@ -29,13 +29,13 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
         {Array.from({ length: 8 }).map((_, idx) => (
           <Card
             key={idx}
-            className='flex flex-col overflow-hidden rounded-xl border p-0'
+            className='flex flex-col overflow-hidden rounded-2xl border-0 bg-card p-0 shadow-xs'
           >
             <Skeleton className='aspect-4/3 w-full' />
             <div className='flex flex-col gap-2 p-3'>
               <Skeleton className='h-4 w-3/4' />
               <Skeleton className='h-3 w-1/3' />
-              <div className='mt-2 flex items-center justify-between border-t pt-2'>
+              <div className='mt-2 flex items-center justify-between border-0 pt-2'>
                 <Skeleton className='h-5 w-16' />
                 <Skeleton className='h-8 w-12 rounded-md' />
               </div>
@@ -61,10 +61,10 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
         </p>
         {hasFilters && onResetFilters && (
           <Button
-            variant='outline'
+            variant='secondary'
             size='sm'
             onClick={onResetFilters}
-            className='mt-4 gap-2 text-xs'
+            className='mt-4 gap-2 text-xs border-0 bg-muted/80 hover:bg-muted text-foreground'
           >
             <RotateCcw className='h-3.5 w-3.5' />
             Reset Filter &amp; Pencarian
