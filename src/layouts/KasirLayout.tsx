@@ -89,11 +89,11 @@ export function KasirLayout() {
             {isFullscreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
           </Button>
 
-          {/* Kembali ke Backoffice */}
-          <Button asChild variant='outline' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1'>
+          {/* Kembali ke Dashboard */}
+          <Button asChild variant='outline' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1' title='Kembali ke Dashboard'>
             <Link to='/'>
               <ArrowLeft className='h-3.5 w-3.5' />
-              <span className='hidden sm:inline'>Back Office</span>
+              <span className='hidden sm:inline'>Kembali</span>
             </Link>
           </Button>
 
