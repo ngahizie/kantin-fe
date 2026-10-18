@@ -72,11 +72,11 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
           <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary'>
             <ShoppingCart className='h-4 w-4' />
           </div>
-          <div>
-            <h3 className='text-sm font-bold tracking-tight text-foreground'>
+          <div className='flex flex-col justify-center'>
+            <h3 className='text-sm font-bold leading-none tracking-tight text-foreground'>
               Keranjang Belanja
             </h3>
-            <span className='text-[11px] text-muted-foreground'>
+            <span className='mt-0.5 text-[11px] leading-none text-muted-foreground'>
               {totalCount} item dipilih
             </span>
           </div>
