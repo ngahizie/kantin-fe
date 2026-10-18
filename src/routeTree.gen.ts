@@ -25,7 +25,6 @@ import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedKontrolSiswaIndexRouteImport } from './routes/_authenticated/kontrol-siswa/index'
 import { Route as AuthenticatedKategoriIndexRouteImport } from './routes/_authenticated/kategori/index'
 import { Route as AuthenticatedKartuTamuIndexRouteImport } from './routes/_authenticated/kartu-tamu/index'
-import { Route as AuthenticatedBackofficeIndexRouteImport } from './routes/_authenticated/backoffice/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedTuTopupIndexRouteImport } from './routes/_authenticated/tu/topup/index'
 import { Route as AuthenticatedTuSetoranIndexRouteImport } from './routes/_authenticated/tu/setoran/index'
@@ -125,12 +124,6 @@ const AuthenticatedKartuTamuIndexRoute =
   AuthenticatedKartuTamuIndexRouteImport.update({
     id: '/kartu-tamu/',
     path: '/kartu-tamu/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBackofficeIndexRoute =
-  AuthenticatedBackofficeIndexRouteImport.update({
-    id: '/backoffice/',
-    path: '/backoffice/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedErrorsErrorRoute =
@@ -247,7 +240,6 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/kasir/': typeof KasirIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/backoffice/': typeof AuthenticatedBackofficeIndexRoute
   '/kartu-tamu/': typeof AuthenticatedKartuTamuIndexRoute
   '/kategori/': typeof AuthenticatedKategoriIndexRoute
   '/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -281,7 +273,6 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/kasir': typeof KasirIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/backoffice': typeof AuthenticatedBackofficeIndexRoute
   '/kartu-tamu': typeof AuthenticatedKartuTamuIndexRoute
   '/kategori': typeof AuthenticatedKategoriIndexRoute
   '/kontrol-siswa': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -318,7 +309,6 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/kasir/': typeof KasirIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/_authenticated/backoffice/': typeof AuthenticatedBackofficeIndexRoute
   '/_authenticated/kartu-tamu/': typeof AuthenticatedKartuTamuIndexRoute
   '/_authenticated/kategori/': typeof AuthenticatedKategoriIndexRoute
   '/_authenticated/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -355,7 +345,6 @@ export interface FileRouteTypes {
     | '/503'
     | '/kasir/'
     | '/errors/$error'
-    | '/backoffice/'
     | '/kartu-tamu/'
     | '/kategori/'
     | '/kontrol-siswa/'
@@ -389,7 +378,6 @@ export interface FileRouteTypes {
     | '/'
     | '/kasir'
     | '/errors/$error'
-    | '/backoffice'
     | '/kartu-tamu'
     | '/kategori'
     | '/kontrol-siswa'
@@ -425,7 +413,6 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/kasir/'
     | '/_authenticated/errors/$error'
-    | '/_authenticated/backoffice/'
     | '/_authenticated/kartu-tamu/'
     | '/_authenticated/kategori/'
     | '/_authenticated/kontrol-siswa/'
@@ -575,13 +562,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKartuTamuIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/backoffice/': {
-      id: '/_authenticated/backoffice/'
-      path: '/backoffice'
-      fullPath: '/backoffice/'
-      preLoaderRoute: typeof AuthenticatedBackofficeIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -707,7 +687,6 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedBackofficeIndexRoute: typeof AuthenticatedBackofficeIndexRoute
   AuthenticatedKartuTamuIndexRoute: typeof AuthenticatedKartuTamuIndexRoute
   AuthenticatedKategoriIndexRoute: typeof AuthenticatedKategoriIndexRoute
   AuthenticatedKontrolSiswaIndexRoute: typeof AuthenticatedKontrolSiswaIndexRoute
@@ -735,7 +714,6 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedBackofficeIndexRoute: AuthenticatedBackofficeIndexRoute,
   AuthenticatedKartuTamuIndexRoute: AuthenticatedKartuTamuIndexRoute,
   AuthenticatedKategoriIndexRoute: AuthenticatedKategoriIndexRoute,
   AuthenticatedKontrolSiswaIndexRoute: AuthenticatedKontrolSiswaIndexRoute,

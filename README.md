@@ -12,7 +12,7 @@ Aplikasi menggunakan arsitektur antarmuka ganda berbasis TanStack Router:
    - Layar penuh (*kiosk mode*) yang dioptimalkan untuk kecepatan pelayanan antrean transaksi tap kartu RFID siswa.
    - Terintegrasi dengan pemindai RFID hardware USB, indikator audio beeper transaksi, pencegahan mutasi ganda (*idempotency key*), pembatalan (*void*), dan rekapitulasi sesi kasir.
 
-2. **Backoffice Pengelola (`/` dan `/backoffice`)**
+2. **Backoffice Pengelola (`/`)**
    - Panel manajemen terpusat dengan navigasi berbasis peran pengguna (*Role-Based Access Control*).
    - Mencakup dashboard analitik penjualan, manajemen menu dan kategori, pemantauan stok fisik dan kartu stok, kontrol batasan belanja siswa, refund saldo, rekapitulasi laporan keuangan (ekspor Excel), dan pengaturan titik kasir.
 
