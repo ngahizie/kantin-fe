@@ -97,10 +97,10 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg border-none shadow-2xl'>
+      <DialogContent className='max-w-md sm:max-w-lg border-none shadow-none rounded-2xl bg-card'>
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
-            <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600'>
+            <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600'>
               <RotateCcw className='h-5 w-5' />
             </div>
             <div>
@@ -125,7 +125,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         </div>
 
         {/* Detail Ringkas Transaksi */}
-        <div className='space-y-2 rounded-xl border-none bg-muted/50 p-3.5 text-xs shadow-xs'>
+        <div className='space-y-2 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3.5 text-xs shadow-none'>
           <div className='flex items-center justify-between'>
             <span className='text-muted-foreground flex items-center gap-1.5'>
               <Receipt className='h-3.5 w-3.5' /> No. Referensi
@@ -143,7 +143,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
               <span className='font-medium text-foreground'>
                 {transaction.pembeliNama}
               </span>
-              <Badge variant='secondary' className='text-[10px] py-0 px-1.5 border-none bg-background/80 shadow-xs'>
+              <Badge variant='secondary' className='text-[10px] py-0 px-2 rounded-full border-none bg-background/80 shadow-none font-semibold uppercase tracking-wide'>
                 {transaction.pembeliTipe === 'SISWA' ? 'Siswa' : 'Kartu Tamu'}
               </Badge>
             </div>
@@ -184,12 +184,12 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
                 htmlFor={`void-reason-${alasan}`}
                 className={`flex cursor-pointer items-center justify-between rounded-xl border-none p-3 text-xs transition-colors hover:bg-muted/70 ${
                   selectedAlasan === alasan
-                    ? 'bg-primary/10 font-medium text-foreground shadow-xs'
+                    ? 'bg-primary/10 font-semibold text-foreground shadow-none'
                     : 'bg-muted/40 text-muted-foreground'
                 }`}
               >
                 <span>{alasan}</span>
-                <RadioGroupItem value={alasan} id={`void-reason-${alasan}`} className='border-none bg-muted shadow-xs' />
+                <RadioGroupItem value={alasan} id={`void-reason-${alasan}`} className='border-none bg-muted shadow-none' />
               </label>
             ))}
           </RadioGroup>
@@ -209,7 +209,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
                 value={keteranganLainnya}
                 onChange={(e) => setKeteranganLainnya(e.target.value)}
                 rows={2}
-                className='text-xs border-none bg-muted/60 focus-visible:bg-muted focus-visible:ring-0 shadow-xs'
+                className='text-xs border-none bg-muted/60 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
               />
             </div>
           )}
@@ -222,7 +222,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             size='sm'
             onClick={() => handleOpenChange(false)}
             disabled={isSubmitting}
-            className='border-none bg-muted/80 text-foreground hover:bg-muted'
+            className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
           >
             Batal
           </Button>
@@ -232,7 +232,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             size='sm'
             onClick={handleConfirmVoid}
             disabled={isSubmitting}
-            className='gap-1.5 font-semibold border-none shadow-xs'
+            className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
           >
             {isSubmitting ? (
               <>

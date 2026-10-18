@@ -89,7 +89,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md overflow-hidden p-6 select-none border-none shadow-2xl'>
+      <DialogContent className='max-w-md overflow-hidden p-6 select-none border-none shadow-none rounded-2xl bg-card'>
         <DialogHeader className='pb-2 text-center'>
           <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
             <CheckCircle2 className='h-7 w-7' />
@@ -107,7 +107,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
-            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-md ring-4 ring-primary/20'>
+            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-none ring-4 ring-primary/20'>
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
@@ -126,7 +126,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <div className='absolute -bottom-2.5 left-1/2 -translate-x-1/2'>
               <Badge
                 variant='secondary'
-                className='border-none bg-background/95 px-2.5 py-0.5 text-xs font-semibold shadow-xs'
+                className='border-none bg-background/95 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
               >
                 {isSiswa ? pembeli.kelas || 'Siswa' : 'Kartu Tamu'}
               </Badge>
@@ -151,7 +151,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
           </div>
 
           {/* Ringkasan Saldo & Total Belanja */}
-          <div className='grid w-full grid-cols-2 gap-3 rounded-xl border-none bg-muted/50 p-3 text-center shadow-xs'>
+          <div className='grid w-full grid-cols-2 gap-3 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3 text-center shadow-none'>
             <div>
               <span className='text-[11px] text-muted-foreground'>
                 Total Belanja
@@ -192,7 +192,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             size='sm'
             disabled={isVoiding}
             onClick={handleVoidClick}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:w-auto border-none shadow-xs'
+            className='h-9 w-full gap-1.5 text-xs font-semibold sm:w-auto border-none rounded-xl shadow-none'
             title='Batalkan transaksi seketika jika wajah tidak cocok dengan pemilik kartu'
           >
             <Ban className='h-4 w-4' />
@@ -208,7 +208,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             size='sm'
             onClick={handleDoneClick}
             disabled={isVoiding}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:flex-1 border-none shadow-xs'
+            className='h-9 w-full gap-1.5 text-xs font-semibold sm:flex-1 border-none rounded-xl shadow-none'
           >
             <span>Selesai</span>
             <ArrowRight className='h-3.5 w-3.5' />

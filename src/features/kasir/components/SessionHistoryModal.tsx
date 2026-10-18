@@ -123,7 +123,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none border-none shadow-2xl'
+          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none border-none shadow-none'
         >
           {/* Tombol Segarkan (icon saja di samping kiri tombol X) */}
           {onRefresh && (
@@ -133,7 +133,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
               size='icon'
               onClick={onRefresh}
               disabled={isLoading}
-              className='absolute inset-e-11 top-2.5 z-10 h-7 w-7 rounded-sm border-none text-muted-foreground hover:bg-muted hover:text-foreground'
+              className='absolute inset-e-11 top-2.5 z-10 h-7 w-7 rounded-lg border-none text-muted-foreground hover:bg-muted hover:text-foreground'
               title='Segarkan riwayat transaksi'
             >
               <RefreshCw
@@ -144,7 +144,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           )}
 
           {/* Header Drawer */}
-          <SheetHeader className='border-none bg-card px-5 py-4 text-left shadow-xs pr-20'>
+          <SheetHeader className='border-none bg-card px-5 py-4 text-left shadow-none pr-20'>
             <div className='flex items-center gap-2.5'>
               <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
                 <History className='h-5 w-5' />
@@ -161,7 +161,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
             {/* Quick Metrics Cards */}
             <div className='grid grid-cols-3 gap-2 pt-2'>
-              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
+              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Transaksi
                 </span>
@@ -170,7 +170,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
+              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Sukses (Net)
                 </span>
@@ -179,7 +179,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
+              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Void
                 </span>
@@ -198,7 +198,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 placeholder='Cari nomor referensi, nama pembeli, atau item...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='h-8 pl-8 text-xs border-none bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
+                className='h-8 pl-8 text-xs border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0'
               />
             </div>
 
@@ -209,10 +209,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                   setFilterStatus(val as 'ALL' | 'SUKSES' | 'VOID')
                 }
               >
-                <SelectTrigger className='h-8 text-xs border-none bg-muted/60 shadow-xs focus:ring-0'>
+                <SelectTrigger className='h-8 text-xs border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus:ring-0'>
                   <SelectValue placeholder='Status' />
                 </SelectTrigger>
-                <SelectContent className='border-none shadow-xl'>
+                <SelectContent className='border-none shadow-none rounded-xl'>
                   <SelectItem value='ALL'>Semua Status</SelectItem>
                   <SelectItem value='SUKSES'>Hanya Sukses</SelectItem>
                   <SelectItem value='VOID'>Hanya Void</SelectItem>
@@ -250,9 +250,9 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 return (
                   <Card
                     key={trx.id}
-                    className={`transition-all border-none shadow-xs ${
+                    className={`border-none rounded-2xl shadow-none ${
                       isSukses
-                        ? 'bg-card hover:shadow-md'
+                        ? 'bg-card'
                         : 'bg-rose-500/[0.04]'
                     }`}
                   >
@@ -271,10 +271,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                         <Badge
                           variant={isSukses ? 'secondary' : 'destructive'}
-                          className={`text-[10px] font-bold border-none shadow-xs ${
+                          className={`rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-none uppercase tracking-wide shadow-none ${
                             isSukses
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                              : 'bg-rose-500/15 text-rose-600'
+                              : 'bg-destructive/15 text-destructive'
                           }`}
                         >
                           {isSukses ? 'SUKSES' : 'VOID'}
@@ -291,7 +291,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             </strong>
                             <Badge
                               variant='secondary'
-                              className='text-[9px] py-0 px-1 font-normal border-none shadow-xs'
+                              className='rounded-full text-[9px] py-0 px-2 font-normal border-none bg-muted/80 shadow-none'
                             >
                               {trx.pembeliTipe === 'SISWA' ? 'Siswa' : 'Tamu'}
                             </Badge>
@@ -309,7 +309,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             Total Tagihan
                           </span>
                           <span
-                            className={`font-mono text-base font-bold ${
+                            className={`font-mono text-base font-bold tabular-nums ${
                               isSukses
                                 ? 'text-primary'
                                 : 'text-muted-foreground line-through'
@@ -321,7 +321,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                       </div>
 
                       {/* Baris Bawah: Rincian Item Belanja */}
-                      <div className='rounded bg-muted/40 p-2 text-[11px] text-muted-foreground'>
+                      <div className='rounded-xl bg-muted/50 dark:bg-muted/30 p-2.5 text-[11px] text-muted-foreground'>
                         <div className='font-medium text-foreground flex items-center gap-1 mb-1'>
                           <ShoppingBag className='h-3 w-3' />
                           <span>Rincian Barang ({trx.items.length} macam):</span>
@@ -342,7 +342,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                       {/* Catatan Alasan jika transaksi berstatus VOID */}
                       {!isSukses && trx.voidAlasan && (
-                        <div className='rounded border-none bg-rose-500/10 p-2 text-[11px] text-rose-700 shadow-xs dark:text-rose-300'>
+                        <div className='rounded-xl border-none bg-rose-500/10 p-2 text-[11px] text-rose-700 dark:text-rose-300 shadow-none'>
                           <strong>Alasan Void:</strong> &ldquo;{trx.voidAlasan}&rdquo;
                           {trx.voidAt && (
                             <span className='block text-[10px] text-muted-foreground mt-0.5'>
@@ -361,7 +361,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             size='sm'
                             disabled={!canVoid}
                             onClick={() => handleOpenVoidDialog(trx)}
-                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-none bg-rose-500/10 shadow-xs'
+                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-none bg-rose-500/10 rounded-xl shadow-none'
                             title={
                               isSessionClosed
                                 ? 'Sesi kasir sudah ditutup, transaksi tidak dapat di-void'

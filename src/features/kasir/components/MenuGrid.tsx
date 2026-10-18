@@ -29,7 +29,7 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
         {Array.from({ length: 8 }).map((_, idx) => (
           <Card
             key={idx}
-            className='flex flex-col overflow-hidden rounded-2xl border-none bg-card p-0 shadow-xs'
+            className='flex flex-col overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-0 shadow-none'
           >
             <Skeleton className='aspect-4/3 w-full' />
             <div className='flex flex-col gap-2 p-3'>

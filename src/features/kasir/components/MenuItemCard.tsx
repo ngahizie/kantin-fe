@@ -41,14 +41,14 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       aria-disabled={isHabis}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border-none bg-card shadow-xs select-none ${
+      className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none select-none ${
         isHabis
-          ? 'cursor-not-allowed bg-muted/40 opacity-60'
+          ? 'cursor-not-allowed opacity-60'
           : 'cursor-pointer'
       }`}
     >
       {/* Gambar & Badges */}
-      <div className='relative aspect-4/3 w-full overflow-hidden bg-muted/60'>
+      <div className='relative aspect-4/3 w-full overflow-hidden bg-muted/50 dark:bg-muted/50'>
         {menu.fotoUrl && !imageError ? (
           <img
             src={menu.fotoUrl}
@@ -66,22 +66,22 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         )}
 
         {/* Badge Status Stok di Pojok Kiri Atas */}
-        <div className='absolute top-2 left-2 flex flex-col gap-1'>
+        <div className='absolute top-2.5 left-2.5 flex flex-col gap-1'>
           {isHabis ? (
-            <Badge variant='destructive' className='border-none font-bold shadow-none'>
+            <Badge variant='destructive' className='rounded-full border-none font-semibold text-[10px] px-2.5 py-0.5 uppercase tracking-wide shadow-none'>
               Habis
             </Badge>
           ) : isMenipis ? (
             <Badge
               variant='secondary'
-              className='border-none bg-amber-500 font-bold text-amber-950 dark:text-amber-100 shadow-none'
+              className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold text-[10px] px-2.5 py-0.5 uppercase tracking-wide shadow-none'
             >
               <AlertCircle className='mr-1 h-3 w-3' /> Sisa {availableStock}
             </Badge>
           ) : (
             <Badge
               variant='secondary'
-              className='border-none bg-background/90 text-xs font-medium text-foreground shadow-none backdrop-blur-xs'
+              className='rounded-full border-none bg-background/90 text-xs font-semibold text-foreground shadow-none backdrop-blur-xs px-2.5 py-0.5'
             >
               Stok: {availableStock}
             </Badge>
@@ -90,8 +90,8 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
         {/* Badge Jumlah di Keranjang di Pojok Kanan Atas */}
         {cartQty > 0 && (
-          <div className='absolute top-2 right-2 animate-in duration-200 zoom-in-75'>
-            <Badge className='border-none bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground shadow-none'>
+          <div className='absolute top-2.5 right-2.5 animate-in duration-200 zoom-in-75'>
+            <Badge className='rounded-full border-none bg-primary text-primary-foreground font-semibold text-[10px] px-2.5 py-0.5 shadow-none'>
               {cartQty}x di keranjang
             </Badge>
           </div>

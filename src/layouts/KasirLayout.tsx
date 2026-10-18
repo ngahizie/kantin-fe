@@ -47,7 +47,7 @@ export function KasirLayout() {
   }
 
   return (
-    <div className='flex h-screen w-screen flex-col overflow-hidden bg-muted/40 text-foreground select-none'>
+    <div className='flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground select-none'>
       {/* Banner Peringatan Offline (PRD §6.5) */}
       {!isOnline && (
         <div className='flex items-center justify-center gap-2 bg-destructive py-2 text-sm font-semibold text-destructive-foreground animate-pulse'>
@@ -60,7 +60,7 @@ export function KasirLayout() {
       <header className='flex h-14 shrink-0 items-center justify-between border-none bg-card px-4 shadow-none backdrop-blur'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
-          <div className='flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-muted dark:bg-white p-1'>
+          <div className='flex aspect-square size-8 items-center justify-center rounded-xl overflow-hidden bg-muted dark:bg-white p-1'>
             <img
               src='/logo.png'
               alt='Kantin SKOOLIA'
@@ -82,7 +82,7 @@ export function KasirLayout() {
           <Button
             variant='ghost'
             size='icon'
-            className='h-8 w-8 text-muted-foreground hover:text-foreground'
+            className='h-8 w-8 text-muted-foreground hover:text-foreground rounded-xl'
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
           >
@@ -90,7 +90,7 @@ export function KasirLayout() {
           </Button>
 
           {/* Kembali ke Dashboard */}
-          <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1 border-none bg-muted/80 hover:bg-muted text-foreground' title='Kembali ke Dashboard'>
+          <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl border-none bg-muted/70 dark:bg-muted/30 hover:bg-muted text-foreground shadow-none' title='Kembali ke Dashboard'>
             <Link to='/'>
               <ArrowLeft className='h-3.5 w-3.5' />
               <span className='hidden sm:inline'>Kembali</span>
@@ -101,7 +101,7 @@ export function KasirLayout() {
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10'
+            className='h-8 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl'
             onClick={() => setSignOutOpen(true)}
             title='Keluar Akun'
           >

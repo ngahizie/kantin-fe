@@ -439,7 +439,7 @@ export const KasirPosPage: React.FC = () => {
         {/* Sisi Kiri: Katalog POS (Pencarian, Filter Kategori, Grid Menu) */}
         <div className='flex flex-1 flex-col overflow-hidden'>
           {/* Top Control Bar: Search & Status */}
-          <div className='flex flex-col gap-2.5 border-none bg-card p-3 shadow-xs sm:p-4'>
+          <div className='flex flex-col gap-2.5 border-none bg-card p-3 shadow-none sm:p-4'>
             <div className='flex items-center gap-2'>
               {/* Input Pencarian dengan Shortcut '/' */}
               <div className='relative flex-1'>
@@ -449,7 +449,7 @@ export const KasirPosPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder='Cari menu makanan atau minuman...'
-                  className='h-10 border-none bg-muted/60 pr-16 pl-9 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0'
+                  className='h-10 border-none bg-muted/60 dark:bg-muted/40 pr-16 pl-9 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
                 />
                 {searchQuery ? (
                   <Button
@@ -457,12 +457,12 @@ export const KasirPosPage: React.FC = () => {
                     variant='ghost'
                     size='icon'
                     onClick={() => setSearchQuery('')}
-                    className='absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                    className='absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded-xl'
                   >
                     <X className='h-3.5 w-3.5' />
                   </Button>
                 ) : (
-                  <kbd className='pointer-events-none absolute top-1/2 right-2.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded border-none bg-background/90 px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-xs select-none sm:flex'>
+                  <kbd className='pointer-events-none absolute top-1/2 right-2.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded-md border-none bg-background/90 px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-none select-none sm:flex'>
                     /
                   </kbd>
                 )}
@@ -474,7 +474,7 @@ export const KasirPosPage: React.FC = () => {
                 variant='secondary'
                 onClick={() => setManualRfidOpen(true)}
                 disabled={!isOnline || isSessionClosed}
-                className='h-10 gap-1.5 border-none bg-muted/70 px-3 text-xs font-semibold text-foreground hover:bg-muted'
+                className='h-10 gap-1.5 border-none bg-muted/70 dark:bg-muted/30 px-3 text-xs font-semibold text-foreground hover:bg-muted rounded-xl shadow-none'
                 title='Input manual UID atau kartu pengujian'
               >
                 <Keyboard className='h-4 w-4' />
@@ -486,13 +486,13 @@ export const KasirPosPage: React.FC = () => {
                 type='button'
                 variant='secondary'
                 onClick={() => setHistoryModalOpen(true)}
-                className='h-10 gap-1.5 border-none bg-muted/70 px-3 text-xs font-semibold text-foreground hover:bg-muted'
+                className='h-10 gap-1.5 border-none bg-muted/70 dark:bg-muted/30 px-3 text-xs font-semibold text-foreground hover:bg-muted rounded-xl shadow-none'
                 title='Lihat riwayat transaksi sesi hari ini'
               >
                 <History className='h-4 w-4' />
                 <span className='hidden sm:inline'>Riwayat Sesi</span>
                 {transactions.length > 0 && (
-                  <Badge variant='secondary' className='ml-0.5 border-none bg-background/80 px-1.5 py-0 text-[10px] text-foreground shadow-xs'>
+                  <Badge variant='secondary' className='ml-0.5 border-none bg-background/80 px-2 py-0.5 text-[10px] font-semibold text-foreground rounded-full shadow-none'>
                     {transactions.length}
                   </Badge>
                 )}
@@ -504,7 +504,7 @@ export const KasirPosPage: React.FC = () => {
                 variant='secondary'
                 onClick={() => setCloseSessionModalOpen(true)}
                 disabled={isSessionClosed}
-                className={`h-10 gap-1.5 border-none px-3 text-xs font-semibold ${
+                className={`h-10 gap-1.5 border-none px-3 text-xs font-semibold rounded-xl shadow-none ${
                   isSessionClosed
                     ? 'cursor-not-allowed opacity-60'
                     : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
@@ -524,7 +524,7 @@ export const KasirPosPage: React.FC = () => {
               size='icon'
               onClick={loadKatalogData}
               disabled={loading}
-              className='h-10 w-10 shrink-0 border-none bg-muted/70 text-foreground hover:bg-muted'
+              className='h-10 w-10 shrink-0 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
               title='Muat Ulang Menu'
             >
               <RefreshCw
@@ -535,7 +535,7 @@ export const KasirPosPage: React.FC = () => {
 
           {/* Banner Peringatan Tutup Otomatis */}
           {isPastClosingTime && (
-            <div className='flex items-center gap-2 rounded-md border-none bg-amber-500/15 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300'>
+            <div className='flex items-center gap-2 rounded-xl border-none bg-amber-500/15 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
               <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
               <span>
                 <strong>Perhatian:</strong> Melewati jam operasional tutup ({pengaturan.jamTutupOtomatis || '23:59'}).
@@ -550,20 +550,20 @@ export const KasirPosPage: React.FC = () => {
               size='sm'
               variant={selectedKategoriId === null ? 'default' : 'secondary'}
               onClick={() => setSelectedKategoriId(null)}
-              className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3 text-xs font-semibold shadow-xs ${
+              className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3.5 text-xs font-semibold shadow-none ${
                 selectedKategoriId === null
                   ? ''
-                  : 'bg-muted/70 text-foreground hover:bg-muted'
+                  : 'bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted'
               }`}
             >
               <Layers className='mr-1.5 h-3.5 w-3.5' />
               Semua Menu
               <Badge
                 variant='secondary'
-                className={`ml-1.5 h-4 border-none px-1 text-[10px] ${
+                className={`ml-1.5 h-4 border-none px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
                   selectedKategoriId === null
                     ? 'bg-primary-foreground/20 text-primary-foreground'
-                    : 'bg-background/80 text-muted-foreground shadow-xs'
+                    : 'bg-background/80 text-muted-foreground'
                 }`}
               >
                 {menus.filter((m) => m.aktif).length}
@@ -581,19 +581,19 @@ export const KasirPosPage: React.FC = () => {
                   size='sm'
                   variant={isSelected ? 'default' : 'secondary'}
                   onClick={() => setSelectedKategoriId(kat.id)}
-                  className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3 text-xs font-semibold shadow-xs ${
+                  className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3.5 text-xs font-semibold shadow-none ${
                     isSelected
                       ? ''
-                      : 'bg-muted/70 text-foreground hover:bg-muted'
+                      : 'bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted'
                   }`}
                 >
                   {kat.nama}
                   <Badge
                     variant='secondary'
-                    className={`ml-1.5 h-4 border-none px-1 text-[10px] ${
+                    className={`ml-1.5 h-4 border-none px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
                       isSelected
                         ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-background/80 text-muted-foreground shadow-xs'
+                        : 'bg-background/80 text-muted-foreground'
                     }`}
                   >
                     {count}
@@ -605,7 +605,7 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Area Scrollable Katalog Menu */}
-        <div className='flex-1 overflow-y-auto'>
+        <div className='flex-1 overflow-y-auto bg-background'>
           <MenuGrid
             menus={filteredMenus}
             loading={loading}
@@ -617,10 +617,10 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Floating Cart Trigger untuk Layar Mobile / Tablet Kecil (< lg) */}
-        <div className='flex shrink-0 border-none bg-card p-3 shadow-lg lg:hidden'>
+        <div className='flex shrink-0 border-none bg-card p-3 shadow-none lg:hidden'>
           <Button
             type='button'
-            className='h-11 w-full justify-between font-bold border-none shadow-xs'
+            className='h-11 w-full justify-between font-bold border-none rounded-xl shadow-none'
             onClick={() => setMobileCartOpen(true)}
           >
             <div className='flex items-center gap-2'>
@@ -648,7 +648,7 @@ export const KasirPosPage: React.FC = () => {
       <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
         <SheetContent
           side='right'
-          className='flex w-full flex-col p-0 sm:max-w-md border-none shadow-2xl'
+          className='flex w-full flex-col p-0 sm:max-w-md border-none shadow-none'
         >
           <SheetHeader className='sr-only'>
             <SheetTitle>Keranjang Belanja Kasir</SheetTitle>
@@ -693,14 +693,14 @@ export const KasirPosPage: React.FC = () => {
         open={confirmManualOpen}
         onOpenChange={setConfirmManualOpen}
       >
-        <AlertDialogContent className='border-none shadow-2xl'>
+        <AlertDialogContent className='border-none rounded-2xl shadow-none'>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
             <AlertDialogDescription>
               Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className='space-y-2 rounded-xl border-none bg-muted/60 p-3 text-sm shadow-xs'>
+          <div className='space-y-2 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3.5 text-sm shadow-none'>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>UID Kartu:</span>
               <span className='font-mono font-semibold'>{pendingScannedUid}</span>
@@ -716,7 +716,7 @@ export const KasirPosPage: React.FC = () => {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className='border-none bg-muted/80 text-foreground hover:bg-muted'
+              className='border-none bg-muted/80 text-foreground hover:bg-muted rounded-xl shadow-none'
               onClick={() => {
                 setConfirmManualOpen(false)
                 setPendingScannedUid(null)
@@ -725,7 +725,7 @@ export const KasirPosPage: React.FC = () => {
               Batalkan
             </AlertDialogCancel>
             <AlertDialogAction
-              className='border-none shadow-sm'
+              className='border-none rounded-xl shadow-none'
               onClick={async () => {
                 if (pendingScannedUid) {
                   const uid = pendingScannedUid
