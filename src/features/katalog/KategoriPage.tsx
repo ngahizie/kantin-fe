@@ -206,7 +206,7 @@ export function KategoriPage() {
         </div>
 
         {/* Search & Table Card */}
-        <Card className='overflow-hidden rounded-2xl border-none bg-card shadow-none'>
+        <Card className='overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none'>
           <div className='flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='relative w-full max-w-[280px] sm:w-64'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
@@ -214,7 +214,7 @@ export function KategoriPage() {
                 placeholder='Cari nama kategori...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='h-10 border-none bg-muted/60 dark:bg-muted/40 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
+                className='h-10 border-none bg-background/90 dark:bg-background/40 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-0 rounded-xl shadow-none'
               />
               {searchQuery && (
                 <button
@@ -235,7 +235,7 @@ export function KategoriPage() {
           <CardContent className='p-0'>
             <Table>
               <TableHeader>
-                <TableRow className='border-none bg-muted/50 dark:bg-muted/20 hover:bg-muted/50'>
+                <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
                   <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Urutan
                   </TableHead>
@@ -285,7 +285,7 @@ export function KategoriPage() {
                     return (
                       <TableRow
                         key={kat.id}
-                        className='border-none hover:bg-muted/40 dark:hover:bg-muted/10 transition-colors'
+                        className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'
                       >
                         <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums'>
                           {kat.urutan ?? kat.id}
@@ -298,7 +298,7 @@ export function KategoriPage() {
                         <TableCell className='text-center border-none py-3.5'>
                           <Badge
                             variant='secondary'
-                            className='rounded-full border-none bg-muted/80 dark:bg-muted/50 text-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none gap-1'
+                            className='rounded-full border-none bg-background/80 dark:bg-background/20 text-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none gap-1'
                           >
                             <UtensilsCrossed className='size-3 text-muted-foreground' />
                             <span className='tabular-nums'>{itemQty} menu</span>
@@ -315,7 +315,7 @@ export function KategoriPage() {
                           ) : (
                             <Badge
                               variant='secondary'
-                              className='rounded-full border-none bg-muted text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                              className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                             >
                               Nonaktif
                             </Badge>
@@ -326,7 +326,7 @@ export function KategoriPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 shadow-none'
+                              className='size-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
                               onClick={() => handleEdit(kat)}
                               title='Ubah Kategori'
                             >
