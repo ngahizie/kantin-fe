@@ -35,9 +35,9 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
             <div className='flex flex-col gap-2 p-3'>
               <Skeleton className='h-4 w-3/4' />
               <Skeleton className='h-3 w-1/3' />
-              <div className='mt-2 flex items-center justify-between border-none pt-2'>
-                <Skeleton className='h-5 w-16' />
-                <Skeleton className='h-8 w-12 rounded-md' />
+              <div className='mt-3 flex flex-col border-none pt-1'>
+                <Skeleton className='h-3 w-10' />
+                <Skeleton className='mt-1 h-5 w-24' />
               </div>
             </div>
           </Card>
