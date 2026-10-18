@@ -6,9 +6,6 @@ import {
   Layers,
   RefreshCw,
   Keyboard,
-  Radio,
-  Store,
-  Clock,
   AlertTriangle,
   History,
   Lock,
@@ -24,13 +21,6 @@ import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,14 +70,8 @@ export const KasirPosPage: React.FC = () => {
   const [mobileCartOpen, setMobileCartOpen] = useState(false)
 
   // Pengaturan operasional & Titik Kasir store
-  const {
-    pengaturan,
-    fetchPengaturan,
-    titikKasirList,
-    fetchTitikKasir,
-    activeTitikKasirId,
-    setActiveTitikKasirId,
-  } = usePengaturanStore()
+  const { pengaturan, fetchPengaturan, fetchTitikKasir, activeTitikKasirId } =
+    usePengaturanStore()
 
   // Online Status & Sesi Kasir Harian
   const isOnline = useOnlineStatus()
@@ -532,53 +516,6 @@ export const KasirPosPage: React.FC = () => {
                   {isSessionClosed ? 'Sesi Ditutup' : 'Tutup Kasir'}
                 </span>
               </Button>
-
-            {/* Titik Kasir Selector */}
-            <div className='hidden sm:flex items-center gap-1.5'>
-              <Store className='h-4 w-4 text-muted-foreground' />
-              <Select
-                value={activeTitikKasirId ? String(activeTitikKasirId) : ''}
-                onValueChange={(val) =>
-                  setActiveTitikKasirId(val ? Number(val) : null)
-                }
-              >
-                <SelectTrigger className='h-10 w-[150px] bg-background text-xs font-medium'>
-                  <SelectValue placeholder='Pilih Titik' />
-                </SelectTrigger>
-                <SelectContent>
-                  {titikKasirList.length === 0 ? (
-                    <SelectItem value='none' disabled>
-                      Tidak ada titik
-                    </SelectItem>
-                  ) : (
-                    titikKasirList.map((tk) => (
-                      <SelectItem key={tk.id} value={String(tk.id)}>
-                        {tk.nama} ({tk.kode})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Jam Tutup Otomatis Badge */}
-            <Badge
-              variant={isPastClosingTime ? 'destructive' : 'outline'}
-              className='hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 text-xs'
-              title={`Kasir otomatis tutup pada pukul ${pengaturan.jamTutupOtomatis || '23:59'}`}
-            >
-              <Clock className='h-3.5 w-3.5' />
-              <span>Tutup: {pengaturan.jamTutupOtomatis || '23:59'}</span>
-            </Badge>
-
-            {/* Status Indikator Reader USB */}
-            <Badge
-              variant='secondary'
-              className='hidden items-center gap-1.5 border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs text-primary lg:flex'
-            >
-              <Radio className='h-3.5 w-3.5 animate-pulse text-emerald-500' />
-              <span>RFID Aktif</span>
-            </Badge>
 
             {/* Tombol Refresh Katalog */}
             <Button
