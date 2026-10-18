@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link } from '@tanstack/react-router'
 import {
-  Store,
   WifiOff,
   Maximize2,
   Minimize2,
@@ -70,8 +69,12 @@ export function KasirLayout() {
       <header className='flex h-14 shrink-0 items-center justify-between border-b px-4 bg-card/60 backdrop-blur'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
-          <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold'>
-            <Store className='h-5 w-5' />
+          <div className='flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-muted dark:bg-white p-1'>
+            <img
+              src='/logo.png'
+              alt='Kantin SKOOLIA'
+              className='size-full object-contain'
+            />
           </div>
           <div>
             <div className='flex items-center gap-2'>
