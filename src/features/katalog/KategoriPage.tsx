@@ -395,7 +395,7 @@ export function KategoriPage() {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className='gap-2 sm:gap-0 pt-2'>
+          <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
             <AlertDialogCancel
               disabled={isDeleting}
               className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
