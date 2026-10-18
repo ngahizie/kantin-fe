@@ -1,14 +1,10 @@
 import React, { useState } from 'react'
-import {
-  X,
-  Keyboard,
-} from 'lucide-react'
+import { Keyboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -77,20 +73,6 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
               </Button>
             </div>
           </div>
-
-          <DialogFooter className='gap-2 pt-1 sm:justify-end'>
-            <Button
-              type='button'
-              variant='secondary'
-              size='sm'
-              onClick={() => onOpenChange(false)}
-              disabled={isProcessing}
-              className='text-xs border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-            >
-              <X className='mr-1.5 h-3.5 w-3.5' />
-              Tutup
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
