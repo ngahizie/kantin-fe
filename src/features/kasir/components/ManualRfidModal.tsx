@@ -40,7 +40,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md select-none border-0 shadow-2xl'>
+      <DialogContent className='max-w-md select-none border-none shadow-2xl'>
         <DialogHeader>
           <div className='flex items-center gap-2 text-primary'>
             <Keyboard className='h-5 w-5' />
@@ -66,12 +66,12 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
                 placeholder='Masukkan nomor UID kartu...'
                 disabled={isProcessing}
                 autoFocus
-                className='font-mono text-sm tracking-wider uppercase border-0 bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
+                className='font-mono text-sm tracking-wider uppercase border-none bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
               />
               <Button
                 type='submit'
                 disabled={!uidInput.trim() || isProcessing}
-                className='shrink-0 font-semibold border-0 shadow-xs'
+                className='shrink-0 font-semibold border-none shadow-xs'
               >
                 Proses Tap
               </Button>
@@ -85,7 +85,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
               size='sm'
               onClick={() => onOpenChange(false)}
               disabled={isProcessing}
-              className='text-xs border-0 bg-muted/80 text-foreground hover:bg-muted'
+              className='text-xs border-none bg-muted/80 text-foreground hover:bg-muted'
             >
               <X className='mr-1.5 h-3.5 w-3.5' />
               Tutup

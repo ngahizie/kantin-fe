@@ -693,14 +693,14 @@ export const KasirPosPage: React.FC = () => {
         open={confirmManualOpen}
         onOpenChange={setConfirmManualOpen}
       >
-        <AlertDialogContent className='border-0 shadow-2xl'>
+        <AlertDialogContent className='border-none shadow-2xl'>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
             <AlertDialogDescription>
               Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className='space-y-2 rounded-lg border-0 bg-muted/60 p-3 text-sm shadow-xs'>
+          <div className='space-y-2 rounded-xl border-none bg-muted/60 p-3 text-sm shadow-xs'>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>UID Kartu:</span>
               <span className='font-mono font-semibold'>{pendingScannedUid}</span>
@@ -709,14 +709,14 @@ export const KasirPosPage: React.FC = () => {
               <span className='text-muted-foreground'>Total Item:</span>
               <span className='font-medium'>{totalItems()} item</span>
             </div>
-            <div className='flex justify-between border-0 pt-2 text-base font-bold'>
+            <div className='flex justify-between border-none pt-2 text-base font-bold'>
               <span>Total Tagihan:</span>
               <span className='text-primary'>{formatRupiah(totalHarga())}</span>
             </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className='border-0 bg-muted/80 text-foreground hover:bg-muted'
+              className='border-none bg-muted/80 text-foreground hover:bg-muted'
               onClick={() => {
                 setConfirmManualOpen(false)
                 setPendingScannedUid(null)
@@ -725,7 +725,7 @@ export const KasirPosPage: React.FC = () => {
               Batalkan
             </AlertDialogCancel>
             <AlertDialogAction
-              className='border-0 shadow-sm'
+              className='border-none shadow-sm'
               onClick={async () => {
                 if (pendingScannedUid) {
                   const uid = pendingScannedUid

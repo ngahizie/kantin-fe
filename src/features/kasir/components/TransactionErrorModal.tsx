@@ -59,7 +59,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md border-0 p-6 select-none shadow-2xl'>
+      <DialogContent className='max-w-md border-none p-6 select-none shadow-2xl'>
         <DialogHeader className='pb-2 text-center'>
           <div className='mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-2xl bg-destructive/10 text-destructive duration-200 zoom-in-75'>
             {getErrorIcon()}
@@ -75,7 +75,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
         <div className='space-y-4 py-2'>
           {/* Banner Saldo Kurang Menonjol */}
           {isSaldoKurang ? (
-            <div className='space-y-1.5 rounded-xl border-0 bg-destructive/10 p-4 text-center shadow-xs'>
+            <div className='space-y-1.5 rounded-xl border-none bg-destructive/10 p-4 text-center shadow-xs'>
               <span className='text-xs font-semibold tracking-wide text-destructive uppercase'>
                 Kekurangan Nominal Saldo:
               </span>
@@ -91,7 +91,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
             </div>
           ) : (
             /* Pesan Error Standar yang Jelas */
-            <div className='rounded-xl border-0 bg-destructive/10 p-4 text-center shadow-xs'>
+            <div className='rounded-xl border-none bg-destructive/10 p-4 text-center shadow-xs'>
               <p className='text-sm font-bold text-destructive sm:text-base'>
                 {errorInfo.message}
               </p>
@@ -113,7 +113,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
             type='button'
             variant='destructive'
             onClick={() => onOpenChange(false)}
-            className='w-full gap-1.5 px-6 font-semibold sm:w-auto border-0 shadow-xs'
+            className='w-full gap-1.5 px-6 font-semibold sm:w-auto border-none shadow-xs'
           >
             <X className='h-4 w-4' />
             <span>Tutup &amp; Sesuaikan Pesanan</span>
