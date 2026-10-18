@@ -77,12 +77,7 @@ export function KasirLayout() {
             />
           </div>
           <div>
-            <div className='flex items-center gap-2'>
-              <span className='font-bold text-sm tracking-tight'>SKOOLIA Kantin POS</span>
-              <Badge variant='outline' className='text-xs font-normal border-primary/30 text-primary'>
-                Kasir 1
-              </Badge>
-            </div>
+            <span className='block font-bold text-sm tracking-tight'>SKOOLIA Kantin POS</span>
             <p className='text-xs text-muted-foreground flex items-center gap-1'>
               <User className='h-3 w-3' /> Petugas: {user?.nama || 'Ahmad Kasir'} (Aktif)
             </p>
