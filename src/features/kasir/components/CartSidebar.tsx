@@ -63,10 +63,10 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
   return (
     <aside
-      className={`flex h-full w-full flex-col border-0 bg-card select-none shadow-xs sm:w-[350px] lg:w-[380px] xl:w-[420px] ${className}`}
+      className={`flex h-full w-full flex-col border-none bg-card select-none shadow-xs sm:w-[350px] lg:w-[380px] xl:w-[420px] ${className}`}
     >
       {/* Header Keranjang */}
-      <div className='flex h-14 shrink-0 items-center justify-between border-0 bg-muted/40 px-4'>
+      <div className='flex h-14 shrink-0 items-center justify-between border-none bg-muted/40 px-4'>
         <div className='flex items-center gap-2'>
           <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary'>
             <ShoppingCart className='h-4 w-4' />
@@ -119,7 +119,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             return (
               <div
                 key={item.menu.id}
-                className='flex flex-col gap-2 rounded-xl border-0 bg-muted/50 p-3 shadow-xs transition-colors hover:bg-muted/70'
+                className='flex flex-col gap-2 rounded-xl border-none bg-muted/50 p-3 shadow-xs transition-colors hover:bg-muted/70'
               >
                 {/* Baris Atas: Info Item & Tombol Hapus */}
                 <div className='flex items-start justify-between gap-2'>
@@ -138,7 +138,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       {isMaxReached && (
                         <Badge
                           variant='secondary'
-                          className='h-4 border-0 bg-amber-500/20 px-1 text-[10px] text-amber-600 dark:text-amber-400'
+                          className='h-4 border-none bg-amber-500/20 px-1 text-[10px] text-amber-600 dark:text-amber-400'
                         >
                           Maksimal stok
                         </Badge>
@@ -162,7 +162,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 {/* Baris Bawah: Pengatur Qty & Subtotal */}
                 <div className='flex items-center justify-between gap-2 pt-1'>
                   {/* Stepper Kuantitas */}
-                  <div className='flex items-center gap-1 rounded-lg border-0 bg-background/80 p-0.5 shadow-xs'>
+                  <div className='flex items-center gap-1 rounded-lg border-none bg-background/80 p-0.5 shadow-xs'>
                     <Button
                       type='button'
                       variant='ghost'
@@ -209,14 +209,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       </div>
 
       {/* Footer / Panel Pembayaran */}
-      <div className='shrink-0 space-y-3 border-0 bg-muted/40 p-4 shadow-xs'>
+      <div className='shrink-0 space-y-3 border-none bg-muted/40 p-4 shadow-xs'>
         {/* Ringkasan Biaya */}
         <div className='space-y-1.5 text-xs'>
           <div className='flex justify-between text-muted-foreground'>
             <span>Total Kuantitas</span>
             <span className='font-mono font-medium'>{totalCount} Item</span>
           </div>
-          <div className='flex items-baseline justify-between border-0 pt-1.5'>
+          <div className='flex items-baseline justify-between border-none pt-1.5'>
             <span className='text-sm font-bold text-foreground'>
               Total Belanja
             </span>
@@ -233,7 +233,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             size='lg'
             disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
             onClick={onCheckout}
-            className='h-12 w-full touch-manipulation gap-2 border-0 text-sm font-bold shadow-sm sm:text-base'
+            className='h-12 w-full touch-manipulation gap-2 border-none text-sm font-bold shadow-sm sm:text-base'
           >
             <CreditCard className='h-5 w-5' />
             <span>

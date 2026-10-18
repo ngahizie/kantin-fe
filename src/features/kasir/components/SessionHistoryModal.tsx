@@ -250,7 +250,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 return (
                   <Card
                     key={trx.id}
-                    className={`transition-all border-0 shadow-xs ${
+                    className={`transition-all border-none shadow-xs ${
                       isSukses
                         ? 'bg-card hover:shadow-md'
                         : 'bg-rose-500/[0.04]'
@@ -258,7 +258,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                   >
                     <CardContent className='p-3.5 space-y-2.5'>
                       {/* Baris Atas: Info Waktu, Ref, & Status Badge */}
-                      <div className='flex items-center justify-between gap-2 border-0 pb-1 text-xs'>
+                      <div className='flex items-center justify-between gap-2 border-none pb-1 text-xs'>
                         <div className='flex items-center gap-2'>
                           <span className='font-mono font-bold text-foreground'>
                             {trx.nomorReferensi || `#${trx.id}`}
@@ -271,7 +271,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                         <Badge
                           variant={isSukses ? 'secondary' : 'destructive'}
-                          className={`text-[10px] font-bold border-0 shadow-xs ${
+                          className={`text-[10px] font-bold border-none shadow-xs ${
                             isSukses
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                               : 'bg-rose-500/15 text-rose-600'
@@ -291,7 +291,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             </strong>
                             <Badge
                               variant='secondary'
-                              className='text-[9px] py-0 px-1 font-normal border-0 shadow-xs'
+                              className='text-[9px] py-0 px-1 font-normal border-none shadow-xs'
                             >
                               {trx.pembeliTipe === 'SISWA' ? 'Siswa' : 'Tamu'}
                             </Badge>
@@ -342,7 +342,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                       {/* Catatan Alasan jika transaksi berstatus VOID */}
                       {!isSukses && trx.voidAlasan && (
-                        <div className='rounded border-0 bg-rose-500/10 p-2 text-[11px] text-rose-700 shadow-xs dark:text-rose-300'>
+                        <div className='rounded border-none bg-rose-500/10 p-2 text-[11px] text-rose-700 shadow-xs dark:text-rose-300'>
                           <strong>Alasan Void:</strong> &ldquo;{trx.voidAlasan}&rdquo;
                           {trx.voidAt && (
                             <span className='block text-[10px] text-muted-foreground mt-0.5'>
@@ -361,7 +361,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                             size='sm'
                             disabled={!canVoid}
                             onClick={() => handleOpenVoidDialog(trx)}
-                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-0 bg-rose-500/10 shadow-xs'
+                            className='h-7 gap-1 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 border-none bg-rose-500/10 shadow-xs'
                             title={
                               isSessionClosed
                                 ? 'Sesi kasir sudah ditutup, transaksi tidak dapat di-void'
