@@ -123,45 +123,45 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none border-0 shadow-2xl'
+          className='flex h-full w-full flex-col p-0 sm:max-w-xl md:max-w-2xl select-none border-none shadow-2xl'
         >
-          {/* Header Drawer */}
-          <SheetHeader className='border-0 bg-muted/40 px-5 py-4 text-left shadow-xs'>
-            <div className='flex items-center justify-between gap-3'>
-              <div className='flex items-center gap-2.5'>
-                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
-                  <History className='h-5 w-5' />
-                </div>
-                <div>
-                  <SheetTitle className='text-base font-bold'>
-                    Riwayat Transaksi Sesi Kasir
-                  </SheetTitle>
-                  <SheetDescription className='text-xs text-muted-foreground'>
-                    Daftar seluruh transaksi yang diproses pada shift aktif hari ini.
-                  </SheetDescription>
-                </div>
-              </div>
+          {/* Tombol Segarkan (icon saja di samping kiri tombol X) */}
+          {onRefresh && (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              onClick={onRefresh}
+              disabled={isLoading}
+              className='absolute inset-e-11 top-2.5 z-10 h-7 w-7 rounded-sm border-none text-muted-foreground hover:bg-muted hover:text-foreground'
+              title='Segarkan riwayat transaksi'
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
+              />
+              <span className='sr-only'>Segarkan</span>
+            </Button>
+          )}
 
-              {onRefresh && (
-                <Button
-                  variant='secondary'
-                  size='sm'
-                  onClick={onRefresh}
-                  disabled={isLoading}
-                  className='h-8 gap-1.5 px-2.5 text-xs border-0 bg-muted/80 text-foreground hover:bg-muted'
-                  title='Segarkan riwayat transaksi'
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-                  />
-                  <span className='hidden sm:inline'>Segarkan</span>
-                </Button>
-              )}
+          {/* Header Drawer */}
+          <SheetHeader className='border-none bg-card px-5 py-4 text-left shadow-xs pr-20'>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                <History className='h-5 w-5' />
+              </div>
+              <div>
+                <SheetTitle className='text-base font-bold'>
+                  Riwayat Transaksi Sesi Kasir
+                </SheetTitle>
+                <SheetDescription className='text-xs text-muted-foreground'>
+                  Daftar seluruh transaksi yang diproses pada shift aktif hari ini.
+                </SheetDescription>
+              </div>
             </div>
 
             {/* Quick Metrics Cards */}
             <div className='grid grid-cols-3 gap-2 pt-2'>
-              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
+              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Transaksi
                 </span>
@@ -170,7 +170,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
+              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Sukses (Net)
                 </span>
@@ -179,7 +179,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 </span>
               </div>
 
-              <div className='rounded-lg border-0 bg-card p-2 text-center shadow-xs'>
+              <div className='rounded-xl border-none bg-muted/60 p-2 text-center shadow-xs'>
                 <span className='text-[10px] text-muted-foreground block'>
                   Total Void
                 </span>
@@ -191,14 +191,14 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           </SheetHeader>
 
           {/* Filter Bar */}
-          <div className='flex items-center gap-2 border-0 bg-muted/30 px-5 py-3'>
+          <div className='flex items-center gap-2 border-none bg-muted/30 px-5 py-3'>
             <div className='relative flex-1'>
               <Search className='absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
               <Input
                 placeholder='Cari nomor referensi, nama pembeli, atau item...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='h-8 pl-8 text-xs border-0 bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
+                className='h-8 pl-8 text-xs border-none bg-muted/60 shadow-xs focus-visible:bg-muted focus-visible:ring-0'
               />
             </div>
 
@@ -209,10 +209,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                   setFilterStatus(val as 'ALL' | 'SUKSES' | 'VOID')
                 }
               >
-                <SelectTrigger className='h-8 text-xs'>
+                <SelectTrigger className='h-8 text-xs border-none bg-muted/60 shadow-xs focus:ring-0'>
                   <SelectValue placeholder='Status' />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className='border-none shadow-xl'>
                   <SelectItem value='ALL'>Semua Status</SelectItem>
                   <SelectItem value='SUKSES'>Hanya Sukses</SelectItem>
                   <SelectItem value='VOID'>Hanya Void</SelectItem>
@@ -222,7 +222,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           </div>
 
           {/* Daftar Transaksi */}
-          <div className='flex-1 space-y-3 overflow-y-auto p-5'>
+          <div className='flex-1 space-y-3 overflow-y-auto p-5 bg-muted/40'>
             {isLoading ? (
               <div className='flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground'>
                 <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
