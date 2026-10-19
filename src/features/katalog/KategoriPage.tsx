@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Tag,
   Plus,
@@ -50,6 +50,11 @@ export function KategoriPage() {
   // Dialog konfirmasi delete / nonaktifkan
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const lastDeleteTargetRef = useRef<KategoriItem | null>(null)
+  if (deleteTarget) {
+    lastDeleteTargetRef.current = deleteTarget
+  }
+  const activeDeleteTarget = deleteTarget || lastDeleteTargetRef.current
 
   const loadData = async () => {
     try {
@@ -113,11 +118,12 @@ export function KategoriPage() {
   }
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return
+    const target = activeDeleteTarget
+    if (!target) return
     try {
       setIsDeleting(true)
-      await katalogApi.deleteKategori(deleteTarget.id)
-      toast.success(`Kategori "${deleteTarget.nama}" berhasil dinonaktifkan`)
+      await katalogApi.deleteKategori(target.id)
+      toast.success(`Kategori "${target.nama}" berhasil dinonaktifkan`)
       setDeleteTarget(null)
       loadData()
     } catch (err: unknown) {
@@ -370,14 +376,14 @@ export function KategoriPage() {
             <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
               <p>
                 Apakah Anda yakin ingin menonaktifkan kategori{' '}
-                <strong className='text-foreground'>{deleteTarget?.nama}</strong>?
+                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
               </p>
-              {deleteTarget && (deleteTarget.jumlahItem ?? 0) > 0 ? (
+              {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
                 <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-none'>
                   <AlertTriangle className='size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
                   <span>
                     <strong>Perhatian:</strong> Kategori ini saat ini masih memiliki{' '}
-                    <strong>{deleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
+                    <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
                     kategori hanya akan <strong>dinonaktifkan</strong> (tidak dihapus permanen) agar
                     riwayat transaksi kasir tetap aman.
                   </span>
