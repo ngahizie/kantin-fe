@@ -135,24 +135,24 @@ export function KategoriPage() {
   return (
     <>
       <Header fixed>
+        <div className='flex items-center gap-2 overflow-hidden me-auto'>
+          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
+            Manajemen Kategori Menu
+          </h1>
+        </div>
         <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
 
       <Main className='p-4 md:p-6 space-y-6'>
-        {/* Header Title & Actions */}
+        {/* Actions & Description */}
         <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Manajemen Kategori Menu
-            </h1>
-            <p className='text-sm text-muted-foreground mt-0.5'>
-              Kelola pengelompokan menu makanan, minuman, dan snack untuk kasir dan laporan.
-            </p>
-          </div>
+          <p className='text-sm text-muted-foreground'>
+            Kelola pengelompokan menu makanan, minuman, dan snack untuk kasir dan laporan.
+          </p>
 
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 shrink-0'>
             <Button
               variant='secondary'
               size='sm'
