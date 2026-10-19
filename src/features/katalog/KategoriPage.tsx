@@ -146,32 +146,26 @@ export function KategoriPage() {
       </Header>
 
       <Main className='p-4 md:p-6 space-y-6'>
-        {/* Actions & Description */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <p className='text-sm text-muted-foreground'>
-            Kelola pengelompokan menu makanan, minuman, dan snack untuk kasir dan laporan.
-          </p>
-
-          <div className='flex items-center gap-2 shrink-0'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={loadData}
-              disabled={loading}
-              className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-            >
-              <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Segarkan
-            </Button>
-            <Button
-              size='sm'
-              onClick={handleAdd}
-              className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
-            >
-              <Plus className='size-4' />
-              Tambah Kategori
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className='flex items-center justify-end gap-2'>
+          <Button
+            variant='secondary'
+            size='sm'
+            onClick={loadData}
+            disabled={loading}
+            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Segarkan
+          </Button>
+          <Button
+            size='sm'
+            onClick={handleAdd}
+            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
+          >
+            <Plus className='size-4' />
+            Tambah Kategori
+          </Button>
         </div>
 
         {/* Ringkasan Widget */}
