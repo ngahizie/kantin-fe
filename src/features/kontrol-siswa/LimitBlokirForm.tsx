@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Component, type ReactNode, type ErrorInfo } from 'react'
 import {
   Check,
   DollarSign,
@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -356,10 +355,15 @@ function LimitBlokirFormContent({
                     }`}
                   >
                     <div className='flex items-center gap-2.5 pointer-events-none'>
-                      <Checkbox
-                        checked={isBlocked}
-                        id={`cat-${kat.id}`}
-                      />
+                      <div
+                        className={`size-4 shrink-0 rounded border transition-colors flex items-center justify-center ${
+                          isBlocked
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-input bg-background/50'
+                        }`}
+                      >
+                        {isBlocked && <Check className='size-3 text-primary-foreground stroke-[3]' />}
+                      </div>
                       <span className='text-xs font-semibold text-foreground'>
                         {kat.nama}
                       </span>
@@ -477,11 +481,23 @@ function LimitBlokirFormContent({
                       }`}
                     >
                       <div className='flex items-center gap-3 min-w-0 pointer-events-none'>
-                        <Checkbox
-                          checked={isItemBlocked || isCatBlocked}
-                          disabled={isCatBlocked}
-                          id={`menu-${item.id}`}
-                        />
+                        <div
+                          className={`size-4 shrink-0 rounded border transition-colors flex items-center justify-center ${
+                            isCatBlocked
+                              ? 'border-amber-500/50 bg-amber-500/20 text-amber-700 dark:text-amber-400 opacity-60'
+                              : isItemBlocked
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-input bg-background/50'
+                          }`}
+                        >
+                          {(isItemBlocked || isCatBlocked) && (
+                            <Check
+                              className={`size-3 stroke-[3] ${
+                                isCatBlocked ? 'text-amber-700 dark:text-amber-400' : 'text-primary-foreground'
+                              }`}
+                            />
+                          )}
+                        </div>
                         {item.foto_url && (
                           <img
                             src={item.foto_url}
@@ -578,6 +594,48 @@ function LimitBlokirFormContent({
   )
 }
 
+class FormErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // eslint-disable-next-line no-console
+    console.error('[LimitBlokirForm FormErrorBoundary caught]:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className='p-6 text-center space-y-3'>
+          <p className='font-bold text-destructive text-sm'>
+            Gagal memuat form pengaturan kontrol siswa.
+          </p>
+          <p className='text-xs text-muted-foreground font-mono bg-destructive/10 p-2.5 rounded'>
+            {this.state.error?.message}
+          </p>
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Coba Lagi
+          </Button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export function LimitBlokirForm({
   open,
   onOpenChange,
@@ -639,14 +697,16 @@ export function LimitBlokirForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 border-0 shadow-2xl'>
-        <LimitBlokirFormContent
-          key={student.siswa_id}
-          student={student}
-          categories={categories}
-          menuList={menuList}
-          onClose={() => onOpenChange(false)}
-          onSaveSuccess={onSaveSuccess}
-        />
+        <FormErrorBoundary>
+          <LimitBlokirFormContent
+            key={student.siswa_id}
+            student={student}
+            categories={categories}
+            menuList={menuList}
+            onClose={() => onOpenChange(false)}
+            onSaveSuccess={onSaveSuccess}
+          />
+        </FormErrorBoundary>
       </DialogContent>
     </Dialog>
   )
