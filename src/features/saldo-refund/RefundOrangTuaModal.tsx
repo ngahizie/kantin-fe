@@ -222,7 +222,7 @@ function RefundOrangTuaFormContent({
   }
 
   return (
-    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto'>
+    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Refund Sisa Saldo ke Orang Tua / Wali
@@ -233,13 +233,13 @@ function RefundOrangTuaFormContent({
         </DialogHeader>
 
         {/* Info Siswa & Sisa Saldo */}
-        <div className='rounded-xl border bg-muted/60 p-3.5 space-y-2'>
+        <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5 space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <img
                 src={siswa.foto_url}
                 alt={siswa.nama}
-                className='h-12 w-12 rounded-full object-cover border'
+                className='h-12 w-12 rounded-full object-cover shrink-0'
               />
               <div>
                 <p className='font-bold text-sm text-foreground'>{siswa.nama}</p>
@@ -280,10 +280,10 @@ function RefundOrangTuaFormContent({
               className='grid grid-cols-2 gap-3'
             >
               <div
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 ${
                   metode === 'TRANSFER_BANK'
-                    ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                    : 'border-border hover:bg-muted/50'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
                 onClick={() => setMetode('TRANSFER_BANK')}
               >
@@ -298,10 +298,10 @@ function RefundOrangTuaFormContent({
               </div>
 
               <div
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 ${
                   metode === 'TUNAI'
-                    ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                    : 'border-border hover:bg-muted/50'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
                 onClick={() => setMetode('TUNAI')}
               >
@@ -319,14 +319,14 @@ function RefundOrangTuaFormContent({
 
           {/* Form Detail Transfer Bank jika dipilih */}
           {metode === 'TRANSFER_BANK' && (
-            <div className='rounded-lg border p-3.5 space-y-3 bg-muted/20'>
+            <div className='rounded-xl border-0 p-3.5 space-y-3 bg-muted/50 dark:bg-muted/20'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
                   <Label htmlFor='bank' className='text-xs'>
                     Bank Tujuan *
                   </Label>
                   <Select value={bank} onValueChange={setBank}>
-                    <SelectTrigger id='bank' className='h-9 text-xs'>
+                    <SelectTrigger id='bank' className='h-9 text-xs border-0 bg-background/80 shadow-none'>
                       <SelectValue placeholder='Pilih bank' />
                     </SelectTrigger>
                     <SelectContent>
@@ -348,7 +348,7 @@ function RefundOrangTuaFormContent({
                     value={noRekening}
                     onChange={(e) => setNoRekening(e.target.value.replace(/\D/g, ''))}
                     placeholder='Misal: 142001928374'
-                    className='h-9 text-xs font-mono'
+                    className='h-9 text-xs font-mono border-0 bg-background/80 shadow-none'
                   />
                 </div>
               </div>
@@ -362,7 +362,7 @@ function RefundOrangTuaFormContent({
                   value={namaRekening}
                   onChange={(e) => setNamaRekening(e.target.value)}
                   placeholder='Sesuai buku tabungan / e-wallet'
-                  className='h-9 text-xs'
+                  className='h-9 text-xs border-0 bg-background/80 shadow-none'
                 />
               </div>
             </div>
@@ -381,7 +381,7 @@ function RefundOrangTuaFormContent({
                   value={namaPenerima}
                   onChange={(e) => setNamaPenerima(e.target.value)}
                   placeholder='Nama lengkap orang tua'
-                  className='h-9 pl-8 text-xs'
+                  className='h-9 pl-8 text-xs border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
                 />
               </div>
             </div>
@@ -397,7 +397,7 @@ function RefundOrangTuaFormContent({
                   value={kontakPenerima}
                   onChange={(e) => setKontakPenerima(e.target.value)}
                   placeholder='0812xxxxxxx'
-                  className='h-9 pl-8 text-xs font-mono'
+                  className='h-9 pl-8 text-xs font-mono border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
                 />
               </div>
             </div>
@@ -410,7 +410,7 @@ function RefundOrangTuaFormContent({
               <span className='text-[11px] text-muted-foreground font-normal'>Opsional</span>
             </Label>
             <div className='flex items-center gap-3'>
-              <label className='flex items-center gap-2 cursor-pointer border border-dashed rounded-lg px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors text-xs text-muted-foreground'>
+              <label className='flex items-center gap-2 cursor-pointer border-0 bg-muted/70 hover:bg-muted/90 rounded-lg px-3 py-2 transition-colors text-xs text-muted-foreground'>
                 <Upload className='h-3.5 w-3.5 text-primary' />
                 <span>{isUploading ? 'Mengunggah...' : 'Pilih Foto / Gambar Bukti'}</span>
                 <input
@@ -423,7 +423,7 @@ function RefundOrangTuaFormContent({
               </label>
 
               {buktiUrl && (
-                <div className='flex items-center gap-2 text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-2.5 py-1.5 rounded-lg border border-emerald-200'>
+                <div className='flex items-center gap-2 text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded-lg border-0'>
                   <ImageIcon className='h-3.5 w-3.5' />
                   <span className='truncate max-w-[150px]'>Bukti Terlampir</span>
                   <button
@@ -448,12 +448,12 @@ function RefundOrangTuaFormContent({
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               placeholder='Contoh: Pengembalian sisa saldo kelulusan tahun ajaran 2025/2026'
-              className='text-xs min-h-[60px]'
+              className='text-xs min-h-[60px] border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
             />
           </div>
 
           {/* Peringatan & Konfirmasi Blokir Otomatis */}
-          <Alert className='border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
+          <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
             <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
             <AlertTitle className='text-xs font-semibold'>
               Konfirmasi Efek Otomatis Sistem
@@ -484,9 +484,10 @@ function RefundOrangTuaFormContent({
           <DialogFooter className='gap-2 pt-2'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className='border-0 bg-muted/80 shadow-none'
             >
               Batal
             </Button>

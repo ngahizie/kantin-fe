@@ -211,7 +211,7 @@ function PindahSaldoFormContent({
   }
 
   return (
-    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto'>
+    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Pindahkan Saldo ke Saudara Kandung
@@ -222,13 +222,13 @@ function PindahSaldoFormContent({
         </DialogHeader>
 
         {/* Info Siswa Asal */}
-        <div className='rounded-xl border bg-muted/60 p-3.5 space-y-2'>
+        <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5 space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <img
                 src={siswaAsal.foto_url}
                 alt={siswaAsal.nama}
-                className='h-11 w-11 rounded-full object-cover border'
+                className='h-11 w-11 rounded-full object-cover shrink-0'
               />
               <div>
                 <span className='text-[10px] font-semibold tracking-wider text-muted-foreground uppercase'>
@@ -278,10 +278,10 @@ function PindahSaldoFormContent({
                         const target = activeStudents.find((s) => s.siswa_id === sibling.siswa_id)
                         if (target) setSelectedDestination(target)
                       }}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                      className={`flex items-center justify-between p-3 rounded-lg border-0 cursor-pointer transition-all ${
                         isSelected
-                          ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                          : 'border-border hover:bg-muted/50'
+                          ? 'bg-primary/15 text-primary'
+                          : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                       }`}
                     >
                       <div className='flex items-center gap-2.5'>
@@ -337,7 +337,7 @@ function PindahSaldoFormContent({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='Cari nama siswa, NIS, atau kelas...'
-                className='h-9 pl-8 text-xs'
+                className='h-9 pl-8 text-xs border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
               />
             </div>
 
@@ -377,7 +377,7 @@ function PindahSaldoFormContent({
 
           {/* Pratinjau Saldo Atomik Real-time */}
           {selectedDestination && (
-            <div className='rounded-xl border bg-muted/40 p-3.5 space-y-2.5'>
+            <div className='rounded-xl border-0 bg-muted/50 dark:bg-muted/20 p-3.5 space-y-2.5'>
               <div className='flex items-center justify-between text-xs font-bold text-foreground'>
                 <span>Pratinjau Mutasi Saldo Atomik</span>
                 <Badge variant='outline' className='border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[10px] py-0 font-medium'>
@@ -387,7 +387,7 @@ function PindahSaldoFormContent({
 
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
                 {/* Asal */}
-                <div className='rounded-lg bg-card p-2.5 border space-y-1'>
+                <div className='rounded-lg bg-card p-2.5 border-0 shadow-none space-y-1'>
                   <p className='text-[10px] text-muted-foreground font-semibold'>AKUN ASAL (LULUS)</p>
                   <p className='font-semibold truncate text-foreground'>
                     {siswaAsal.nama}
@@ -404,7 +404,7 @@ function PindahSaldoFormContent({
                 </div>
 
                 {/* Tujuan */}
-                <div className='rounded-lg bg-card p-2.5 border space-y-1'>
+                <div className='rounded-lg bg-card p-2.5 border-0 shadow-none space-y-1'>
                   <p className='text-[10px] text-primary font-semibold'>PENERIMA (SAUDARA AKTIF)</p>
                   <p className='font-semibold truncate text-foreground'>
                     {selectedDestination.nama}
@@ -438,12 +438,12 @@ function PindahSaldoFormContent({
               value={beritaAcara}
               onChange={(e) => setBeritaAcara(e.target.value)}
               placeholder='Contoh: Pemindahan sisa saldo kakak yang telah lulus ke adik kandung.'
-              className='text-xs min-h-[60px]'
+              className='text-xs min-h-[60px] border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
             />
           </div>
 
           {/* Warning Banner */}
-          <Alert className='border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
+          <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
             <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
             <AlertTitle className='text-xs font-semibold'>Sifat Transaksi Atomik</AlertTitle>
             <AlertDescription className='text-[11px] leading-relaxed mt-1'>
@@ -475,9 +475,10 @@ function PindahSaldoFormContent({
           <DialogFooter className='gap-2 pt-2'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className='border-0 bg-muted/80 shadow-none'
             >
               Batal
             </Button>
