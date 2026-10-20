@@ -125,6 +125,7 @@ export interface RingkasanSaldoMengendap {
 export interface SiswaSaldoDetail {
   siswaId: number
   nis: string
+  nisn?: string
   nama: string
   kelas: string
   saldo: number
