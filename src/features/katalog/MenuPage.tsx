@@ -281,9 +281,9 @@ export function MenuPage() {
         {/* Filter Controls & Search */}
         <Card className='overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none'>
           <div className='p-4 flex flex-col md:flex-row md:items-center justify-between gap-3'>
-            <div className='flex flex-1 flex-col sm:flex-row items-center gap-3'>
+            <div className='flex flex-1 flex-col sm:flex-row items-center gap-2.5'>
               {/* Search Bar */}
-              <div className='relative w-full max-w-[280px] sm:w-64'>
+              <div className='relative w-full sm:w-64 shrink-0'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
                 <Input
                   placeholder='Cari nama menu...'
@@ -310,7 +310,7 @@ export function MenuPage() {
               </div>
 
               {/* Filter Kategori */}
-              <div className='w-full sm:w-48'>
+              <div className='w-full sm:w-48 shrink-0'>
                 <Select
                   value={selectedKategoriId}
                   onValueChange={(val) => {
@@ -318,9 +318,9 @@ export function MenuPage() {
                     setCurrentPage(1)
                   }}
                 >
-                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0'>
-                    <div className='flex items-center gap-1.5 truncate'>
-                      <Tag className='size-3.5 text-muted-foreground' />
+                  <SelectTrigger className='w-full !h-10 data-[size=default]:!h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0 px-3'>
+                    <div className='flex items-center gap-2 truncate'>
+                      <Tag className='size-4 text-muted-foreground shrink-0' />
                       <SelectValue placeholder='Kategori' />
                     </div>
                   </SelectTrigger>
@@ -336,7 +336,7 @@ export function MenuPage() {
               </div>
 
               {/* Filter Status */}
-              <div className='w-full sm:w-44'>
+              <div className='w-full sm:w-40 shrink-0'>
                 <Select
                   value={selectedStatus}
                   onValueChange={(val) => {
@@ -344,9 +344,9 @@ export function MenuPage() {
                     setCurrentPage(1)
                   }}
                 >
-                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0'>
-                    <div className='flex items-center gap-1.5 truncate'>
-                      <Filter className='size-3.5 text-muted-foreground' />
+                  <SelectTrigger className='w-full !h-10 data-[size=default]:!h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0 px-3'>
+                    <div className='flex items-center gap-2 truncate'>
+                      <Filter className='size-4 text-muted-foreground shrink-0' />
                       <SelectValue placeholder='Status' />
                     </div>
                   </SelectTrigger>
