@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Wallet,
   Users,
   CreditCard,
   Download,
-  RefreshCw,
   Search,
   ArrowRight,
   UserCheck,
@@ -52,25 +50,6 @@ export function LaporanSaldoMengendapPage() {
   const [activeTab, setActiveTab] = useState<'siswa' | 'kartu-tamu'>('siswa')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resRingkasan, resSiswa, resKartuTamu] = await Promise.all([
-        laporanApi.getSaldoMengendap(),
-        laporanApi.getSiswaSaldoList(),
-        laporanApi.getKartuTamuSaldoList(),
-      ])
-
-      setRingkasan(resRingkasan)
-      setSiswaList(resSiswa)
-      setKartuTamuList(resKartuTamu)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat saldo mengendap'
-      toast.error('Gagal Memuat Laporan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -212,33 +191,12 @@ export function LaporanSaldoMengendapPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Wallet className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Saldo Mengendap
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Total dana titipan siswa & kartu tamu yang menjadi kewajiban sekolah (PRD §9.5).
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Saldo Mengendap
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
@@ -254,17 +212,14 @@ export function LaporanSaldoMengendapPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card className="border-primary/30 bg-primary/5">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-primary">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Dana Titipan (Kewajiban Sekolah)
                 </CardTitle>
-                <div className="rounded-lg bg-primary/20 p-2 text-primary">
-                  <Wallet className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-primary">
+                <div className="text-2xl font-bold tracking-tight">
                   {ringkasan ? formatRupiah(ringkasan.total) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -273,14 +228,11 @@ export function LaporanSaldoMengendapPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Saldo Mengendap Siswa
                 </CardTitle>
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600">
-                  <Users className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -292,14 +244,11 @@ export function LaporanSaldoMengendapPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Saldo Mengendap Kartu Tamu
                 </CardTitle>
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-600">
-                  <CreditCard className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -347,7 +296,7 @@ export function LaporanSaldoMengendapPage() {
 
             {/* TAB CONTENT: SALDO SISWA */}
             <TabsContent value="siswa" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Rincian Dana Titipan per Siswa
@@ -357,7 +306,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -412,12 +361,18 @@ export function LaporanSaldoMengendapPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 {siswa.isBlocked ? (
-                                  <Badge variant="destructive" className="text-xs gap-1">
+                                  <Badge
+                                    variant="secondary"
+                                    className="border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 text-xs gap-1 font-medium"
+                                  >
                                     <Ban className="h-3 w-3" />
                                     <span>Diblokir</span>
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-500 gap-1">
+                                  <Badge
+                                    variant="secondary"
+                                    className="border-0 bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs gap-1 font-medium"
+                                  >
                                     <UserCheck className="h-3 w-3" />
                                     <span>Aktif</span>
                                   </Badge>
@@ -455,7 +410,7 @@ export function LaporanSaldoMengendapPage() {
 
             {/* TAB CONTENT: SALDO KARTU TAMU */}
             <TabsContent value="kartu-tamu" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Rincian Dana Titipan per Kartu Tamu
@@ -465,7 +420,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -511,8 +466,14 @@ export function LaporanSaldoMengendapPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <Badge
-                                  variant={kt.status === 'ACTIVE' ? 'default' : 'secondary'}
-                                  className="text-xs"
+                                  variant="secondary"
+                                  className={`border-0 text-xs font-medium ${
+                                    kt.status === 'ACTIVE'
+                                      ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                      : kt.status === 'BLOCKED'
+                                      ? 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}
                                 >
                                   {kt.status}
                                 </Badge>
