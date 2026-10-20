@@ -350,7 +350,7 @@ function LimitBlokirFormContent({
                     onClick={() => handleToggleCategory(kat.id)}
                     className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all select-none ${
                       isBlocked
-                        ? 'border-0 bg-destructive/15 ring-1 ring-destructive/30'
+                        ? 'border-0 bg-destructive/15'
                         : 'border-0 bg-background/80 hover:bg-background'
                     }`}
                   >
