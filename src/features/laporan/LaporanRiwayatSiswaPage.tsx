@@ -631,8 +631,8 @@ export function LaporanRiwayatSiswaPage() {
               <style>{`
                 @media print {
                   @page {
-                    margin: 8mm auto;
-                    size: auto;
+                    margin: 0;
+                    size: 80mm auto;
                   }
                   html, body {
                     background: #ffffff !important;
@@ -649,31 +649,38 @@ export function LaporanRiwayatSiswaPage() {
                   body * {
                     visibility: hidden !important;
                   }
-                  .printable-slip, .printable-slip * {
+                  .printable-slip,
+                  .printable-slip * {
                     visibility: visible !important;
+                    color: #000000 !important;
                   }
                   .printable-slip {
-                    position: absolute !important;
+                    position: fixed !important;
                     left: 50% !important;
-                    top: 10mm !important;
+                    top: 8mm !important;
                     transform: translateX(-50%) !important;
-                    translate: -50% 0 !important;
-                    width: 100% !important;
-                    max-width: 360px !important;
-                    padding: 16px 20px !important;
+                    width: 76mm !important;
+                    max-width: 76mm !important;
+                    padding: 6mm 3mm !important;
                     font-family: 'Courier New', Courier, monospace, sans-serif !important;
                     background: #ffffff !important;
                     color: #000000 !important;
                     box-shadow: none !important;
-                    border: 1px dashed #94a3b8 !important;
-                    border-radius: 8px !important;
+                    border: 1px dashed #000000 !important;
+                    border-radius: 6px !important;
                     page-break-inside: avoid !important;
                     break-inside: avoid !important;
                     page-break-after: avoid !important;
                     break-after: avoid !important;
                   }
-                  .printable-slip * {
-                    color: #000000 !important;
+                  .printable-slip .border-slate-300,
+                  .printable-slip .border-slate-200 {
+                    border-color: #000000 !important;
+                  }
+                  .printable-slip .bg-slate-100,
+                  .printable-slip .bg-slate-50 {
+                    background-color: transparent !important;
+                    border-color: #000000 !important;
                   }
                   .no-print {
                     display: none !important;
