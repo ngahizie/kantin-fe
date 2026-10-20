@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   PackageOpen,
   Eye,
-  Search,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -18,7 +17,6 @@ import { formatRupiah } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -34,6 +32,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import apiClient from '@/lib/api-client'
+import { TableToolbar } from '@/components/data-table'
 import { MOCK_KARTU_TAMU, type KartuTamuMock } from '@/mocks/mock-data'
 import { RegisterKartuModal } from './RegisterKartuModal'
 import { TopupKartuTamuModal } from './TopupKartuTamuModal'
@@ -99,6 +98,7 @@ async function fetchCardsWithBalances(): Promise<KartuTamuMock[]> {
 export function KartuTamuPage() {
   const [cards, setCards] = useState<KartuTamuMock[]>(MOCK_KARTU_TAMU)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [selectedCard, setSelectedCard] = useState<KartuTamuMock | null>(null)
   const [slipData, setSlipData] = useState<KartuTamuSlipData | null>(null)
@@ -206,11 +206,13 @@ export function KartuTamuPage() {
   // --- Filter ---
   const filteredCards = cards.filter((c) => {
     const q = searchQuery.toLowerCase()
-    return (
+    const matchesSearch =
       c.nomor_kartu.toLowerCase().includes(q) ||
       c.label_pemegang.toLowerCase().includes(q) ||
       c.uid.toLowerCase().includes(q)
-    )
+    const matchesStatus =
+      statusFilter.length === 0 || statusFilter.includes(c.status)
+    return matchesSearch && matchesStatus
   })
 
   return (
@@ -314,26 +316,40 @@ export function KartuTamuPage() {
           </div>
 
           {/* Table Section */}
-          <div className='bg-card rounded-xl border overflow-hidden'>
-            {/* Table Header */}
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b'>
-              <div>
-                <h2 className='text-base font-semibold text-foreground'>
-                  Daftar Kartu Tamu
-                </h2>
-                <p className='text-xs text-muted-foreground'>
-                  Menampilkan {filteredCards.length} kartu terdaftar
-                </p>
-              </div>
-              <div className='relative max-w-xs w-full'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                <Input
-                  placeholder='Cari nomor, label, atau UID...'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className='pl-9 h-9 text-sm'
-                />
-              </div>
+          <div className='bg-card rounded-xl border shadow-xs overflow-hidden'>
+            {/* Table Header & Toolbar */}
+            <div className='p-4 border-b'>
+              <TableToolbar
+                searchPlaceholder='Cari nomor, label, UID...'
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                filters={[
+                  {
+                    title: 'Status',
+                    options: [
+                      { label: 'Aktif', value: 'ACTIVE' },
+                      { label: 'Tersedia', value: 'AVAILABLE' },
+                      { label: 'Diblokir', value: 'BLOCKED' },
+                    ],
+                    selectedValues: statusFilter,
+                    onSelect: setStatusFilter,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery || statusFilter.length > 0)}
+                onReset={() => {
+                  setSearchQuery('')
+                  setStatusFilter([])
+                }}
+              >
+                <Button
+                  size='sm'
+                  onClick={() => openModal('register')}
+                  className='h-8 gap-1.5 text-xs'
+                >
+                  <Plus className='size-4' />
+                  Daftarkan Kartu Baru
+                </Button>
+              </TableToolbar>
             </div>
 
             <div className='overflow-x-auto'>

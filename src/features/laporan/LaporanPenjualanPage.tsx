@@ -1,14 +1,13 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Download,
-  Search,
   Tag,
   Store,
   Layers,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -341,57 +340,49 @@ export function LaporanPenjualanPage() {
             onValueChange={(v) => setActiveTab(v as 'item' | 'kategori' | 'kasir')}
             className="space-y-4"
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList className="grid w-full grid-cols-3 sm:w-auto">
-                <TabsTrigger value="item" className="gap-2">
-                  <Layers className="h-4 w-4" />
-                  <span>Per Menu ({items.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="kategori" className="gap-2">
-                  <Tag className="h-4 w-4" />
-                  <span>Per Kategori ({kategoris.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="kasir" className="gap-2">
-                  <Store className="h-4 w-4" />
-                  <span>Per Titik Kasir ({kasirs.length})</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex items-center gap-2">
-                <div className="relative w-full sm:w-60">
-                  <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-                  <Input
-                    placeholder="Cari data laporan..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm"
-                  />
-                </div>
-
-                {activeTab === 'item' && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant={sortBy === 'terlaris' ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setSortBy('terlaris')}
-                      className="text-xs"
-                    >
-                      Terlaris
-                    </Button>
-                    <Button
-                      variant={sortBy === 'laba' ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setSortBy('laba')}
-                      className="text-xs"
-                    >
-                      Laba Terbesar
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* TAB CONTENT 1: PENJUALAN PER ITEM */}
+            <TableToolbar
+              extraLeft={
+                <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                  <TabsTrigger value="item" className="gap-2">
+                    <Layers className="h-4 w-4" />
+                    <span>Per Menu ({items.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="kategori" className="gap-2">
+                    <Tag className="h-4 w-4" />
+                    <span>Per Kategori ({kategoris.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="kasir" className="gap-2">
+                    <Store className="h-4 w-4" />
+                    <span>Per Titik Kasir ({kasirs.length})</span>
+                  </TabsTrigger>
+                </TabsList>
+              }
+              searchPlaceholder="Cari data laporan..."
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              filters={
+                activeTab === 'item'
+                  ? [
+                      {
+                        title: 'Urutkan',
+                        options: [
+                          { label: 'Terlaris', value: 'terlaris' },
+                          { label: 'Laba Terbesar', value: 'laba' },
+                        ],
+                        selectedValues: [sortBy],
+                        onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba') || 'terlaris'),
+                        isSingleSelect: true,
+                      },
+                    ]
+                  : []
+              }
+              isFiltered={Boolean(searchQuery || (activeTab === 'item' && sortBy !== 'terlaris'))}
+              onReset={() => {
+                setSearchQuery('')
+                setSortBy('terlaris')
+              }}
+            />
+{/* TAB CONTENT 1: PENJUALAN PER ITEM */}
             <TabsContent value="item" className="space-y-4">
               <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>

@@ -1,8 +1,8 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
   RefreshCw,
-  Search as SearchIcon,
   CheckCircle2,
   AlertTriangle,
   Calendar,
@@ -30,13 +30,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -366,79 +359,50 @@ export function SetoranKasPage() {
         </div>
 
         {/* Filter Bar */}
-        <Card className='border border-border bg-card'>
-          <CardContent className='p-4'>
-            <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-              <div className='flex flex-1 flex-wrap items-center gap-3'>
-                {/* Date Picker */}
-                <div className='flex min-w-[200px] items-center gap-2'>
-                  <Calendar className='h-4 w-4 text-muted-foreground' />
-                  <Input
-                    type='date'
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className='h-9 text-xs font-medium'
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className='w-[200px]'>
-                  <Select
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                  >
-                    <SelectTrigger className='h-9 text-xs'>
-                      <SelectValue placeholder='Filter Status Setoran' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='ALL' className='text-xs'>
-                        Semua Status
-                      </SelectItem>
-                      <SelectItem
-                        value='MENUNGGU_KONFIRMASI'
-                        className='text-xs'
-                      >
-                        Menunggu Konfirmasi
-                      </SelectItem>
-                      <SelectItem value='TERKONFIRMASI' className='text-xs'>
-                        Terkonfirmasi Bendahara
-                      </SelectItem>
-                      <SelectItem value='SELISIH' className='text-xs'>
-                        Memiliki Selisih Kas
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Search Query */}
-                <div className='relative min-w-[220px] flex-1'>
-                  <SearchIcon className='absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground' />
-                  <Input
-                    placeholder='Cari nama petugas TU atau No. Setoran...'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='h-9 pl-8 text-xs'
-                  />
-                </div>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => {
-                    setSelectedDate(todayStr)
-                    setStatusFilter('ALL')
-                    setSearchQuery('')
-                  }}
-                  className='h-9 text-xs text-muted-foreground hover:text-foreground'
-                >
-                  Reset Filter
-                </Button>
-              </div>
+        <TableToolbar
+          extraLeft={
+            <div className='flex items-center gap-1.5'>
+              <Calendar className='h-3.5 w-3.5 text-muted-foreground' />
+              <Input
+                type='date'
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className='h-8 text-xs font-medium w-[135px] bg-background'
+              />
             </div>
-          </CardContent>
-        </Card>
+          }
+          searchPlaceholder='Cari nama petugas atau No. Setoran...'
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={[
+            {
+              title: 'Status',
+              options: [
+                { label: 'Menunggu Konfirmasi', value: 'MENUNGGU_KONFIRMASI' },
+                { label: 'Terkonfirmasi Bendahara', value: 'TERKONFIRMASI' },
+                { label: 'Memiliki Selisih Kas', value: 'SELISIH' },
+              ],
+              selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
+              onSelect: (vals) => setStatusFilter(vals[0] || 'ALL'),
+              isSingleSelect: true,
+            },
+          ]}
+          isFiltered={Boolean(searchQuery || statusFilter !== 'ALL')}
+          onReset={() => {
+            setSearchQuery('')
+            setStatusFilter('ALL')
+          }}
+        >
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleExportCSV}
+            className='h-8 gap-1.5 text-xs'
+          >
+            <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
+            Ekspor CSV
+          </Button>
+        </TableToolbar>
 
         {/* Rekapitulasi Table */}
         <Card className='overflow-hidden border border-border bg-card'>

@@ -3,7 +3,6 @@ import {
   Banknote,
   ArrowLeftRight,
   RefreshCw,
-  Search,
   CheckCircle2,
   Lock,
   Users,
@@ -14,7 +13,6 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
@@ -25,14 +23,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import apiClient from '@/lib/api-client'
+import { TableToolbar } from '@/components/data-table'
 import { formatRupiah } from '@/lib/formatters'
 import { MOCK_SISWA_NONAKTIF, type SiswaNonaktifMock } from '@/mocks/mock-data'
 import { RefundOrangTuaModal } from './RefundOrangTuaModal'
@@ -335,56 +327,46 @@ export function RefundSiswaKeluarPage() {
 
         {/* Tab & Toolbar */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
-          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
-            <TabsList className='grid grid-cols-2 w-full sm:w-auto'>
-              <TabsTrigger value='pending' className='text-xs gap-2'>
-                <Banknote className='h-3.5 w-3.5' />
-                <span>Menunggu Refund</span>
-                {pendingRefundCount > 0 && (
-                  <Badge variant='secondary' className='ml-1 px-1.5 py-0 text-[10px]'>
-                    {pendingRefundCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value='completed' className='text-xs gap-2'>
-                <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
-                <span>Riwayat Selesai</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Filter & Pencarian */}
-            <div className='flex flex-wrap items-center gap-2 w-full sm:w-auto'>
-              <div className='relative w-full sm:w-64'>
-                <Search className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Cari NIS, nama, atau ortu...'
-                  className='h-9 pl-8 text-xs'
-                />
-              </div>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className='h-9 text-xs w-[140px]'>
-                  <SelectValue placeholder='Status Akademik' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='ALL' className='text-xs'>
-                    Semua Status
-                  </SelectItem>
-                  <SelectItem value='LULUS' className='text-xs'>
-                    Lulus
-                  </SelectItem>
-                  <SelectItem value='PINDAH' className='text-xs'>
-                    Pindah Sekolah
-                  </SelectItem>
-                  <SelectItem value='KELUAR' className='text-xs'>
-                    Keluar / Undur Diri
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <TableToolbar
+            extraLeft={
+              <TabsList className='grid grid-cols-2 w-full sm:w-auto'>
+                <TabsTrigger value='pending' className='text-xs gap-2'>
+                  <Banknote className='h-3.5 w-3.5' />
+                  <span>Menunggu Refund</span>
+                  {pendingRefundCount > 0 && (
+                    <Badge variant='secondary' className='ml-1 px-1.5 py-0 text-[10px]'>
+                      {pendingRefundCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value='completed' className='text-xs gap-2'>
+                  <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
+                  <span>Riwayat Selesai</span>
+                </TabsTrigger>
+              </TabsList>
+            }
+            searchPlaceholder='Cari NIS, nama, atau ortu...'
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            filters={[
+              {
+                title: 'Status Akademik',
+                options: [
+                  { label: 'Lulus', value: 'LULUS' },
+                  { label: 'Pindah Sekolah', value: 'PINDAH' },
+                  { label: 'Keluar / Undur Diri', value: 'KELUAR' },
+                ],
+                selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
+                onSelect: (vals) => setStatusFilter(vals[0] || 'ALL'),
+                isSingleSelect: true,
+              },
+            ]}
+            isFiltered={Boolean(searchQuery || statusFilter !== 'ALL')}
+            onReset={() => {
+              setSearchQuery('')
+              setStatusFilter('ALL')
+            }}
+          />
 
           {/* TAB 1: DAFTAR SISWA MENUNGGU REFUND (SALDO > 0) */}
           <TabsContent value='pending' className='space-y-4 m-0'>

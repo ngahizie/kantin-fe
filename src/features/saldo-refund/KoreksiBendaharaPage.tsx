@@ -5,7 +5,6 @@ import {
 } from '@/mocks/mock-data'
 import {
   RefreshCw,
-  Search,
   Plus,
   ArrowDownRight,
   ArrowUpRight,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
+import { TableToolbar } from '@/components/data-table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,14 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -395,83 +387,39 @@ export function KoreksiBendaharaPage() {
             {/* TAB 1: LOG MUTASI KOREKSI BENDAHARA */}
             <TabsContent value='riwayat' className='space-y-4'>
               {/* Filter Toolbar */}
-              <Card>
-                <CardContent className='p-4'>
-                  <div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
-                    <div className='flex flex-1 flex-wrap items-center gap-3'>
-                      {/* Search Query */}
-                      <div className='relative min-w-[240px] flex-1'>
-                        <Search className='absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground' />
-                        <Input
-                          placeholder='Cari No. Berita Acara, nama siswa, alasan...'
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className='h-9 pl-8 text-xs'
-                        />
-                      </div>
-
-                      {/* Subjek Filter */}
-                      <div className='w-[160px]'>
-                        <Select
-                          value={subjekFilter}
-                          onValueChange={setSubjekFilter}
-                        >
-                          <SelectTrigger className='h-9 text-xs'>
-                            <SelectValue placeholder='Subjek' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='ALL' className='text-xs'>
-                              Semua Subjek
-                            </SelectItem>
-                            <SelectItem value='SISWA' className='text-xs'>
-                              Siswa
-                            </SelectItem>
-                            <SelectItem value='KARTU_TAMU' className='text-xs'>
-                              Kartu Tamu
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Arah Filter */}
-                      <div className='w-[160px]'>
-                        <Select
-                          value={arahFilter}
-                          onValueChange={setArahFilter}
-                        >
-                          <SelectTrigger className='h-9 text-xs'>
-                            <SelectValue placeholder='Arah Mutasi' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='ALL' className='text-xs'>
-                              Semua Arah
-                            </SelectItem>
-                            <SelectItem value='DEBIT' className='text-xs'>
-                              DEBIT (-Saldo)
-                            </SelectItem>
-                            <SelectItem value='KREDIT' className='text-xs'>
-                              KREDIT (+Saldo)
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => {
-                        setSearchQuery('')
-                        setSubjekFilter('ALL')
-                        setArahFilter('ALL')
-                      }}
-                      className='h-9 text-xs text-muted-foreground'
-                    >
-                      Reset Filter
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <TableToolbar
+                searchPlaceholder='Cari No. Berita Acara, nama siswa, alasan...'
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                filters={[
+                  {
+                    title: 'Subjek',
+                    options: [
+                      { label: 'Siswa', value: 'SISWA' },
+                      { label: 'Kartu Tamu', value: 'KARTU_TAMU' },
+                    ],
+                    selectedValues: subjekFilter !== 'ALL' ? [subjekFilter] : [],
+                    onSelect: (vals) => setSubjekFilter(vals[0] || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                  {
+                    title: 'Arah Mutasi',
+                    options: [
+                      { label: 'DEBIT (-Saldo)', value: 'DEBIT' },
+                      { label: 'KREDIT (+Saldo)', value: 'KREDIT' },
+                    ],
+                    selectedValues: arahFilter !== 'ALL' ? [arahFilter] : [],
+                    onSelect: (vals) => setArahFilter(vals[0] || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery || subjekFilter !== 'ALL' || arahFilter !== 'ALL')}
+                onReset={() => {
+                  setSearchQuery('')
+                  setSubjekFilter('ALL')
+                  setArahFilter('ALL')
+                }}
+              />
 
               {/* Tabel Mutasi Koreksi */}
               <Card className='overflow-hidden'>

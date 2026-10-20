@@ -1,33 +1,22 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   UtensilsCrossed,
   Plus,
   RefreshCw,
-  Search,
   Pencil,
   Trash2,
   AlertTriangle,
-  Tag,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Image as ImageIcon,
-  X,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -280,93 +269,59 @@ export function MenuPage() {
         </div>
 
         {/* Filter Controls & Search */}
-        <Card className='overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none'>
-          <div className='p-4 flex flex-col md:flex-row md:items-center justify-between gap-3'>
-            <div className='flex flex-1 flex-col sm:flex-row items-center gap-2.5'>
-              {/* Search Bar */}
-              <div className='relative w-full sm:w-64 shrink-0'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
-                <Input
-                  placeholder='Cari nama menu...'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
+        <Card className='border border-border bg-card shadow-xs'>
+          <div className='p-4 border-b'>
+            <TableToolbar
+              searchPlaceholder='Cari nama menu...'
+              searchValue={searchQuery}
+              onSearchChange={(val: string) => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              filters={[
+                {
+                  title: 'Kategori',
+                  options: kategoriList.map((kat) => ({
+                    label: kat.nama,
+                    value: String(kat.id),
+                  })),
+                  selectedValues: selectedKategoriId !== 'all' ? [selectedKategoriId] : [],
+                  onSelect: (vals: string[]) => {
+                    setSelectedKategoriId(vals[0] || 'all')
                     setCurrentPage(1)
-                  }}
-                  className='h-10 border-none bg-background/90 dark:bg-background/40 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-0 rounded-xl shadow-none'
-                />
-                {searchQuery && (
-                  <button
-                    type='button'
-                    onClick={() => {
-                      setSearchQuery('')
-                      setCurrentPage(1)
-                    }}
-                    className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0'
-                    title='Hapus pencarian'
-                  >
-                    <X className='size-3.5' />
-                  </button>
-                )}
-              </div>
-
-              {/* Filter Kategori */}
-              <div className='w-full sm:w-48 shrink-0'>
-                <Select
-                  value={selectedKategoriId}
-                  onValueChange={(val) => {
-                    setSelectedKategoriId(val)
+                  },
+                  isSingleSelect: true,
+                },
+                {
+                  title: 'Status',
+                  options: [
+                    { label: 'Hanya Aktif', value: 'active' },
+                    { label: 'Hanya Nonaktif', value: 'inactive' },
+                    { label: 'Stok Menipis (⚠️)', value: 'low_stock' },
+                  ],
+                  selectedValues: selectedStatus !== 'all' ? [selectedStatus] : [],
+                  onSelect: (vals: string[]) => {
+                    setSelectedStatus(vals[0] || 'all')
                     setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className='w-full !h-10 data-[size=default]:!h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0 px-3'>
-                    <div className='flex items-center gap-2 truncate'>
-                      <Tag className='size-4 text-muted-foreground shrink-0' />
-                      <SelectValue placeholder='Kategori' />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className='border-none rounded-xl shadow-none'>
-                    <SelectItem value='all'>Semua Kategori</SelectItem>
-                    {kategoriList.map((kat) => (
-                      <SelectItem key={kat.id} value={String(kat.id)}>
-                        {kat.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filter Status */}
-              <div className='w-full sm:w-48 shrink-0'>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={(val) => {
-                    setSelectedStatus(val)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className='w-full !h-10 data-[size=default]:!h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0 px-3'>
-                    <div className='flex items-center gap-2 truncate'>
-                      <Filter className='size-4 text-muted-foreground shrink-0' />
-                      <SelectValue placeholder='Status' />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className='border-none rounded-xl shadow-none'>
-                    <SelectItem value='all'>Semua Status</SelectItem>
-                    <SelectItem value='active'>Hanya Aktif</SelectItem>
-                    <SelectItem value='inactive'>Hanya Nonaktif</SelectItem>
-                    <SelectItem value='low_stock'>Stok Menipis</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className='text-xs font-medium text-muted-foreground tabular-nums shrink-0'>
-              Menampilkan {filteredMenu.length} dari {menuList.length} menu
-            </div>
+                  },
+                  isSingleSelect: true,
+                },
+              ]}
+              isFiltered={Boolean(searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all')}
+              onReset={() => {
+                setSearchQuery('')
+                setSelectedKategoriId('all')
+                setSelectedStatus('all')
+                setCurrentPage(1)
+              }}
+            >
+              <Button size='sm' onClick={handleAdd} className='h-8 gap-1.5 text-xs shadow-xs'>
+                <Plus className='size-4' />
+                Tambah Menu
+              </Button>
+            </TableToolbar>
           </div>
 
-          {/* Tabel Menu */}
           <CardContent className='p-0 overflow-x-auto'>
             <Table>
               <TableHeader>

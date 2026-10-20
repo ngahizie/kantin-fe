@@ -1,21 +1,12 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
-  Search,
-  Filter,
   AlertOctagon,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Card } from '@/components/ui/card'
 import type { RiwayatStokItem, JenisMutasiStok } from '../types'
 
 interface RiwayatOpnameTableProps {
@@ -121,34 +112,29 @@ export function RiwayatOpnameTable({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25">
-        <CardContent className="p-4 flex items-center justify-center">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full sm:w-auto">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Cari menu, no. referensi, alasan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-9 text-xs bg-background w-full"
-              />
-            </div>
-
-            <Select value={filterJenis} onValueChange={setFilterJenis}>
-              <SelectTrigger className="h-9 w-full sm:w-[200px] text-xs bg-background">
-                <Filter className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                <SelectValue placeholder="Semua Tipe Opname" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL_OPNAME">Semua Opname & Rusak</SelectItem>
-                <SelectItem value="BARANG_RUSAK">Barang Rusak / Basi</SelectItem>
-                <SelectItem value="OPNAME_KELUAR">Opname Keluar (Kurang)</SelectItem>
-                <SelectItem value="OPNAME_MASUK">Opname Masuk (Lebih)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <TableToolbar
+        searchPlaceholder='Cari menu, no. referensi, alasan...'
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={[
+          {
+            title: 'Tipe Mutasi',
+            options: [
+              { label: 'Barang Rusak / Basi', value: 'BARANG_RUSAK' },
+              { label: 'Opname Keluar (Kurang)', value: 'OPNAME_KELUAR' },
+              { label: 'Opname Masuk (Lebih)', value: 'OPNAME_MASUK' },
+            ],
+            selectedValues: filterJenis !== 'ALL_OPNAME' ? [filterJenis] : [],
+            onSelect: (vals) => setFilterJenis(vals[0] || 'ALL_OPNAME'),
+            isSingleSelect: true,
+          },
+        ]}
+        isFiltered={Boolean(searchQuery || filterJenis !== 'ALL_OPNAME')}
+        onReset={() => {
+          setSearchQuery('')
+          setFilterJenis('ALL_OPNAME')
+        }}
+      />
 
       {/* Table */}
       <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden">

@@ -1,3 +1,4 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Search,
@@ -27,13 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -533,11 +527,11 @@ export function LaporanRiwayatSiswaPage() {
                   type="text"
                   placeholder="Cari NIS, NISN, atau Nama Siswa..."
                   value={searchStudentQuery}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setSearchStudentQuery(e.target.value)
                     setIsDropdownOpen(true)
                   }}
-                  onFocus={(e) => {
+                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                     setIsDropdownOpen(true)
                     e.target.select()
                   }}
@@ -700,33 +694,30 @@ export function LaporanRiwayatSiswaPage() {
                 </CardDescription>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative w-full sm:w-56">
-                  <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-                  <Input
-                    placeholder="Cari transaksi / menu..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    className="pl-8 text-sm border-0 bg-background/80 dark:bg-background/40 shadow-none"
-                  />
-                </div>
-
-                <Select
-                  value={jenisFilter}
-                  onValueChange={(v) => setJenisFilter(v)}
-                >
-                  <SelectTrigger className="w-[160px] text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none">
-                    <SelectValue placeholder="Semua Mutasi" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Mutasi</SelectItem>
-                    <SelectItem value="BELANJA">Belanja Kasir</SelectItem>
-                    <SelectItem value="TOPUP_TUNAI">Top-up Tunai TU</SelectItem>
-                    <SelectItem value="KOREKSI">Koreksi Bendahara</SelectItem>
-                    <SelectItem value="VOID">Void Pembatalan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <TableToolbar
+                searchPlaceholder="Cari transaksi / menu..."
+                searchValue={searchFilter}
+                onSearchChange={setSearchFilter}
+                filters={[
+                  {
+                    title: 'Mutasi',
+                    options: [
+                      { label: 'Belanja Kasir', value: 'BELANJA' },
+                      { label: 'Top-up Tunai TU', value: 'TOPUP_TUNAI' },
+                      { label: 'Koreksi Bendahara', value: 'KOREKSI' },
+                      { label: 'Void Pembatalan', value: 'VOID' },
+                    ],
+                    selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
+                    onSelect: (vals) => setJenisFilter(vals[0] || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchFilter || jenisFilter !== 'ALL')}
+                onReset={() => {
+                  setSearchFilter('')
+                  setJenisFilter('ALL')
+                }}
+              />
             </CardHeader>
 
             <CardContent>
