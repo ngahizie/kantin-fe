@@ -1,11 +1,10 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Download,
-  Search,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -14,13 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -293,46 +285,41 @@ export function LaporanLabaKotorPage() {
                 </CardDescription>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative w-full sm:w-56">
-                  <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-                  <Input
-                    placeholder="Cari menu / kategori..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm"
-                  />
-                </div>
-
-                <Select
-                  value={marginFilter}
-                  onValueChange={(v) => setMarginFilter(v as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW')}
-                >
-                  <SelectTrigger className="w-[160px] text-xs">
-                    <SelectValue placeholder="Filter Margin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Margin</SelectItem>
-                    <SelectItem value="HIGH">Margin Tinggi (≥ 35%)</SelectItem>
-                    <SelectItem value="MEDIUM">Margin Sedang (20-34%)</SelectItem>
-                    <SelectItem value="LOW">Margin Tipis (&lt; 20%)</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={sortBy}
-                  onValueChange={(v) => setSortBy(v as 'laba_desc' | 'margin_desc' | 'omset_desc')}
-                >
-                  <SelectTrigger className="w-[160px] text-xs">
-                    <SelectValue placeholder="Urutkan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="laba_desc">Laba Terbesar</SelectItem>
-                    <SelectItem value="margin_desc">Margin Tertinggi</SelectItem>
-                    <SelectItem value="omset_desc">Omset Tertinggi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <TableToolbar
+                searchPlaceholder="Cari menu / kategori..."
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                filters={[
+                  {
+                    title: 'Margin',
+                    options: [
+                      { label: 'Margin Tinggi (≥ 35%)', value: 'HIGH' },
+                      { label: 'Margin Sedang (20-34%)', value: 'MEDIUM' },
+                      { label: 'Margin Tipis (< 20%)', value: 'LOW' },
+                    ],
+                    selectedValues: marginFilter !== 'ALL' ? [marginFilter] : [],
+                    onSelect: (vals) => setMarginFilter((vals[0] as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                  {
+                    title: 'Urutkan',
+                    options: [
+                      { label: 'Laba Terbesar', value: 'laba_desc' },
+                      { label: 'Margin Tertinggi', value: 'margin_desc' },
+                      { label: 'Omset Tertinggi', value: 'omset_desc' },
+                    ],
+                    selectedValues: sortBy !== 'laba_desc' ? [sortBy] : [],
+                    onSelect: (vals) => setSortBy((vals[0] as 'laba_desc' | 'margin_desc' | 'omset_desc') || 'laba_desc'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery || marginFilter !== 'ALL' || sortBy !== 'laba_desc')}
+                onReset={() => {
+                  setSearchQuery('')
+                  setMarginFilter('ALL')
+                  setSortBy('laba_desc')
+                }}
+              />
             </CardHeader>
 
             <CardContent>

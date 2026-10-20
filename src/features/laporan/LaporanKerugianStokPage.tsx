@@ -1,11 +1,10 @@
-  import { useState, useEffect, useMemo } from 'react'
+import { TableToolbar } from '@/components/data-table'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Download,
-  Search,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -14,13 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -274,45 +266,40 @@ export function LaporanKerugianStokPage() {
                 </CardDescription>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative w-full sm:w-56">
-                  <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-                  <Input
-                    placeholder="Cari menu, alasan, BA..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm bg-background/80 dark:bg-background/40 border-0 shadow-none"
-                  />
-                </div>
-
-                <Select
-                  value={jenisFilter}
-                  onValueChange={(v) => setJenisFilter(v as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK')}
-                >
-                  <SelectTrigger className="w-[170px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
-                    <SelectValue placeholder="Semua Jenis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Semua Jenis</SelectItem>
-                    <SelectItem value="BARANG_RUSAK">Barang Rusak / Basi</SelectItem>
-                    <SelectItem value="OPNAME_KELUAR">Opname Keluar (Audit)</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={sortBy}
-                  onValueChange={(v) => setSortBy(v as 'nilai_desc' | 'qty_desc' | 'waktu_desc')}
-                >
-                  <SelectTrigger className="w-[160px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
-                    <SelectValue placeholder="Urutkan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nilai_desc">Kerugian Terbesar</SelectItem>
-                    <SelectItem value="qty_desc">Qty Terbanyak</SelectItem>
-                    <SelectItem value="waktu_desc">Waktu Terbaru</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <TableToolbar
+                searchPlaceholder="Cari menu, alasan, BA..."
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                filters={[
+                  {
+                    title: 'Jenis Kerugian',
+                    options: [
+                      { label: 'Barang Rusak / Basi', value: 'BARANG_RUSAK' },
+                      { label: 'Opname Keluar (Audit)', value: 'OPNAME_KELUAR' },
+                    ],
+                    selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
+                    onSelect: (vals) => setJenisFilter((vals[0] as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK') || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                  {
+                    title: 'Urutkan',
+                    options: [
+                      { label: 'Kerugian Terbesar', value: 'nilai_desc' },
+                      { label: 'Qty Terbanyak', value: 'qty_desc' },
+                      { label: 'Waktu Terbaru', value: 'waktu_desc' },
+                    ],
+                    selectedValues: sortBy !== 'nilai_desc' ? [sortBy] : [],
+                    onSelect: (vals) => setSortBy((vals[0] as 'nilai_desc' | 'qty_desc' | 'waktu_desc') || 'nilai_desc'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery || jenisFilter !== 'ALL' || sortBy !== 'nilai_desc')}
+                onReset={() => {
+                  setSearchQuery('')
+                  setJenisFilter('ALL')
+                  setSortBy('nilai_desc')
+                }}
+              />
             </CardHeader>
 
             <CardContent>

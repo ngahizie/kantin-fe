@@ -1,9 +1,9 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Users,
   CreditCard,
   Download,
-  Search,
   ArrowRight,
   UserCheck,
   Ban,
@@ -11,7 +11,6 @@ import {
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -267,34 +266,30 @@ export function LaporanSaldoMengendapPage() {
             onValueChange={(v) => setActiveTab(v as 'siswa' | 'kartu-tamu')}
             className="space-y-4"
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList className="grid w-full grid-cols-2 sm:w-auto">
-                <TabsTrigger value="siswa" className="gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>Saldo Siswa ({siswaList.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="kartu-tamu" className="gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Saldo Kartu Tamu ({kartuTamuList.length})</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="relative w-full sm:w-72">
-                <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-                <Input
-                  placeholder={
-                    activeTab === 'siswa'
-                      ? 'Cari nama, NIS, kelas, wali...'
-                      : 'Cari nomor kartu, pemegang, UID...'
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 text-sm"
-                />
-              </div>
-            </div>
-
-            {/* TAB CONTENT: SALDO SISWA */}
+            <TableToolbar
+              extraLeft={
+                <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+                  <TabsTrigger value="siswa" className="gap-2">
+                    <Users className="h-4 w-4" />
+                    <span>Saldo Siswa ({siswaList.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="kartu-tamu" className="gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Saldo Kartu Tamu ({kartuTamuList.length})</span>
+                  </TabsTrigger>
+                </TabsList>
+              }
+              searchPlaceholder={
+                activeTab === 'siswa'
+                  ? 'Cari nama, NIS, kelas, wali...'
+                  : 'Cari nomor kartu, pemegang, UID...'
+              }
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              isFiltered={Boolean(searchQuery)}
+              onReset={() => setSearchQuery('')}
+            />
+{/* TAB CONTENT: SALDO SISWA */}
             <TabsContent value="siswa" className="space-y-4">
               <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>

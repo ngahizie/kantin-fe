@@ -1,6 +1,6 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Search,
   Download,
   History,
   PackagePlus,
@@ -8,16 +8,8 @@ import {
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -371,85 +363,65 @@ export function InventarisPage() {
         </div>
 
         {/* Filters & Search Toolbar */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-          <CardContent className='p-4 sm:p-5'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5'>
-              {/* Search Bar */}
-              <div className='relative'>
-                <Search className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
-                <Input
-                  placeholder='Cari nama menu / SKU...'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className='pl-9'
-                />
-              </div>
-
-              {/* Kategori Filter */}
-              <div>
-                <Select
-                  value={selectedKategoriId}
-                  onValueChange={setSelectedKategoriId}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Semua Kategori' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL'>Semua Kategori</SelectItem>
-                    {kategoriList.map((k) => (
-                      <SelectItem key={k.id} value={String(k.id)}>
-                        {k.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={(val) =>
-                    setSelectedStatus(val as 'ALL' | 'AMAN' | 'MENIPIS' | 'HABIS')
-                  }
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Status Persediaan' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL'>Semua Status</SelectItem>
-                    <SelectItem value='AMAN'>Hanya Stok Aman</SelectItem>
-                    <SelectItem value='MENIPIS'>Stok Menipis (Kritis)</SelectItem>
-                    <SelectItem value='HABIS'>Stok Habis (0)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Urutan Sort By */}
-              <div>
-                <Select
-                  value={sortBy}
-                  onValueChange={(val) => setSortBy(val as typeof sortBy)}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Urutkan Berdasarkan' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='NILAI_DESC'>
-                      Nilai Tertinggi (Rp)
-                    </SelectItem>
-                    <SelectItem value='NILAI_ASC'>
-                      Nilai Terendah (Rp)
-                    </SelectItem>
-                    <SelectItem value='STOK_DESC'>Stok Terbanyak</SelectItem>
-                    <SelectItem value='STOK_ASC'>Stok Tersedikit</SelectItem>
-                    <SelectItem value='NAMA_ASC'>Nama Menu (A-Z)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TableToolbar
+          searchPlaceholder='Cari nama menu / SKU...'
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={[
+            {
+              title: 'Kategori',
+              options: kategoriList.map((k) => ({
+                label: k.nama,
+                value: String(k.id),
+              })),
+              selectedValues: selectedKategoriId !== 'ALL' ? [selectedKategoriId] : [],
+              onSelect: (vals) => setSelectedKategoriId(vals[0] || 'ALL'),
+              isSingleSelect: true,
+            },
+            {
+              title: 'Status Persediaan',
+              options: [
+                { label: 'Hanya Stok Aman', value: 'AMAN' },
+                { label: 'Stok Menipis (Kritis)', value: 'MENIPIS' },
+                { label: 'Stok Habis (0)', value: 'HABIS' },
+              ],
+              selectedValues: selectedStatus !== 'ALL' ? [selectedStatus] : [],
+              onSelect: (vals) => setSelectedStatus((vals[0] as 'ALL' | 'AMAN' | 'MENIPIS' | 'HABIS') || 'ALL'),
+              isSingleSelect: true,
+            },
+            {
+              title: 'Urutkan',
+              options: [
+                { label: 'Nilai Tertinggi (Rp)', value: 'NILAI_DESC' },
+                { label: 'Nilai Terendah (Rp)', value: 'NILAI_ASC' },
+                { label: 'Stok Terbanyak', value: 'STOK_DESC' },
+                { label: 'Stok Tersedikit', value: 'STOK_ASC' },
+                { label: 'Nama Menu (A-Z)', value: 'NAMA_ASC' },
+              ],
+              selectedValues: sortBy !== 'NILAI_DESC' ? [sortBy] : [],
+              onSelect: (vals) => setSortBy((vals[0] as typeof sortBy) || 'NILAI_DESC'),
+              isSingleSelect: true,
+            },
+          ]}
+          isFiltered={Boolean(searchQuery || selectedKategoriId !== 'ALL' || selectedStatus !== 'ALL' || sortBy !== 'NILAI_DESC')}
+          onReset={() => {
+            setSearchQuery('')
+            setSelectedKategoriId('ALL')
+            setSelectedStatus('ALL')
+            setSortBy('NILAI_DESC')
+          }}
+        >
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleExportCsv}
+            disabled={filteredAndSortedList.length === 0}
+            className='h-8 gap-1.5 text-xs'
+          >
+            <Download className='h-4 w-4' />
+            <span>Ekspor CSV</span>
+          </Button>
+        </TableToolbar>
 
         {/* Data Table */}
         <Card className='border-0 bg-muted/70 dark:bg-muted/30'>

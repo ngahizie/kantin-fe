@@ -1,6 +1,6 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
-  Search,
   RefreshCw,
   RotateCcw,
   ChevronLeft,
@@ -10,14 +10,6 @@ import {
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -138,37 +130,29 @@ export function RiwayatStokTable({
   return (
     <div className='space-y-4'>
       {/* Filter & Toolbar */}
-      <div className='flex flex-wrap items-center gap-2'>
-        <div className='relative max-w-sm flex-1'>
-          <Search className='absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground' />
-          <Input
-            placeholder='Cari nama menu atau no. bukti...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='h-9 pl-8 text-xs bg-background'
-          />
-        </div>
-
-        <Select value={selectedJenis} onValueChange={onJenisChange}>
-          <SelectTrigger className='h-9 w-[180px] text-xs bg-background'>
-            <SelectValue placeholder='Semua Mutasi' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all' className='text-xs'>
-              Semua Mutasi
-            </SelectItem>
-            <SelectItem value='BARANG_MASUK' className='text-xs'>
-              Hanya Barang Masuk
-            </SelectItem>
-            <SelectItem value='BARANG_MASUK_PEMBALIK' className='text-xs'>
-              Hanya Pembalik Masuk
-            </SelectItem>
-            <SelectItem value='PENJUALAN' className='text-xs'>
-              Penjualan Kasir
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <TableToolbar
+        searchPlaceholder='Cari nama menu atau no. bukti...'
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={[
+          {
+            title: 'Jenis Mutasi',
+            options: [
+              { label: 'Hanya Barang Masuk', value: 'BARANG_MASUK' },
+              { label: 'Hanya Pembalik Masuk', value: 'BARANG_MASUK_PEMBALIK' },
+              { label: 'Penjualan Kasir', value: 'PENJUALAN' },
+            ],
+            selectedValues: selectedJenis !== 'all' ? [selectedJenis] : [],
+            onSelect: (vals) => onJenisChange(vals[0] || 'all'),
+            isSingleSelect: true,
+          },
+        ]}
+        isFiltered={Boolean(searchQuery || selectedJenis !== 'all')}
+        onReset={() => {
+          setSearchQuery('')
+          onJenisChange('all')
+        }}
+      />
 
       {/* Tabel Mutasi */}
       <div className='overflow-hidden rounded-xl border-0 bg-muted/60 dark:bg-muted/25'>

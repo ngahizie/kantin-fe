@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Search,
   PhoneOff,
   Smartphone,
   Sliders,
@@ -13,7 +12,6 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
@@ -23,14 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import apiClient from '@/lib/api-client'
+import { TableToolbar } from '@/components/data-table'
 import { formatRupiah } from '@/lib/formatters'
 import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
 import { LimitBlokirForm } from './LimitBlokirForm'
@@ -208,60 +200,40 @@ export function KontrolSiswaPage() {
         </div>
 
         {/* Toolbar Pencarian & Filter */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-          <CardContent className='p-4'>
-            <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
-              <div className='relative flex-1'>
-                <Search className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Cari nama siswa, NIS, kelas, atau nama orang tua...'
-                  className='h-9 pl-8 text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none'
-                />
-              </div>
-
-              <div className='flex flex-wrap items-center gap-2'>
-                <Select value={appFilter} onValueChange={setAppFilter}>
-                  <SelectTrigger className='h-9 text-xs w-[170px] border-0 bg-background/80 dark:bg-background/40 shadow-none'>
-                    <SelectValue placeholder='Status App Ortu' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL' className='text-xs'>
-                      Semua Akun Ortu
-                    </SelectItem>
-                    <SelectItem value='NON_APP' className='text-xs'>
-                      Belum Pakai App (Fokus)
-                    </SelectItem>
-                    <SelectItem value='APP' className='text-xs'>
-                      Sudah Pakai App
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={limitFilter} onValueChange={setLimitFilter}>
-                  <SelectTrigger className='h-9 text-xs w-[170px] border-0 bg-background/80 dark:bg-background/40 shadow-none'>
-                    <SelectValue placeholder='Status Pembatasan' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='ALL' className='text-xs'>
-                      Semua Pembatasan
-                    </SelectItem>
-                    <SelectItem value='WITH_LIMIT' className='text-xs'>
-                      Ada Limit Harian
-                    </SelectItem>
-                    <SelectItem value='NO_LIMIT' className='text-xs'>
-                      Tanpa Limit Harian
-                    </SelectItem>
-                    <SelectItem value='WITH_BLOCK' className='text-xs'>
-                      Ada Blokir Menu
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TableToolbar
+          searchPlaceholder='Cari nama siswa, NIS, kelas, atau nama orang tua...'
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={[
+            {
+              title: 'Akun Ortu',
+              options: [
+                { label: 'Belum Pakai App', value: 'NON_APP' },
+                { label: 'Sudah Pakai App', value: 'APP' },
+              ],
+              selectedValues: appFilter !== 'ALL' ? [appFilter] : [],
+              onSelect: (vals) => setAppFilter(vals[0] || 'ALL'),
+              isSingleSelect: true,
+            },
+            {
+              title: 'Pembatasan',
+              options: [
+                { label: 'Ada Limit Harian', value: 'WITH_LIMIT' },
+                { label: 'Tanpa Limit Harian', value: 'NO_LIMIT' },
+                { label: 'Ada Blokir Menu', value: 'WITH_BLOCK' },
+              ],
+              selectedValues: limitFilter !== 'ALL' ? [limitFilter] : [],
+              onSelect: (vals) => setLimitFilter(vals[0] || 'ALL'),
+              isSingleSelect: true,
+            },
+          ]}
+          isFiltered={Boolean(searchQuery || appFilter !== 'ALL' || limitFilter !== 'ALL')}
+          onReset={() => {
+            setSearchQuery('')
+            setAppFilter('ALL')
+            setLimitFilter('ALL')
+          }}
+        />
 
         {/* Tabel Siswa */}
         <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
