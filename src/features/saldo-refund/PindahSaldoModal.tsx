@@ -3,7 +3,6 @@ import {
   ArrowLeftRight,
   Search,
   Lock,
-  AlertTriangle,
   ArrowRight,
   Check,
   Users,
@@ -20,7 +19,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -442,16 +440,10 @@ function PindahSaldoFormContent({
             />
           </div>
 
-          {/* Warning Banner */}
-          <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
-            <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
-            <AlertTitle className='text-xs font-semibold'>Sifat Transaksi Atomik</AlertTitle>
-            <AlertDescription className='text-[11px] leading-relaxed mt-1'>
-              Operasi pemindahan saldo bersifat atomik: jika transfer berhasil, saldo siswa nonaktif
-              menjadi Rp 0 dan kartu lamanya langsung dinonaktifkan permanen, sedangkan saldo saudara
-              kandung langsung bertambah dan bisa dipakai belanja di kantin saat ini juga.
-            </AlertDescription>
-          </Alert>
+          {/* Ketentuan Pemindahan Saldo */}
+          <div className='rounded-lg border-0 bg-muted/70 dark:bg-muted/30 px-3.5 py-2.5 text-xs text-muted-foreground'>
+            Saldo asal menjadi <strong className='text-foreground'>Rp 0</strong> & kartu dinonaktifkan. Saldo penerima otomatis bertambah.
+          </div>
 
           {/* Persetujuan */}
           <div className='flex items-center gap-2 pt-1'>

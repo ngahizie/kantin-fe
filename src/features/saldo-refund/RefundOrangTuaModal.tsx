@@ -3,7 +3,6 @@ import {
   Banknote,
   Building,
   Upload,
-  AlertTriangle,
   Lock,
   Image as ImageIcon,
   User,
@@ -29,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -452,18 +450,10 @@ function RefundOrangTuaFormContent({
             />
           </div>
 
-          {/* Peringatan & Konfirmasi Blokir Otomatis */}
-          <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
-            <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
-            <AlertTitle className='text-xs font-semibold'>
-              Konfirmasi Efek Otomatis Sistem
-            </AlertTitle>
-            <AlertDescription className='text-[11px] leading-relaxed mt-1'>
-              Setelah refund diproses: <strong>saldo siswa akan menjadi Rp 0</strong> dan kartu RFID
-              lama (<code className='font-mono font-bold'>{siswa.rfid_uid}</code>) akan{' '}
-              <strong>otomatis diblokir permanen</strong> dari sistem kasir.
-            </AlertDescription>
-          </Alert>
+          {/* Ketentuan Konfirmasi Blokir Otomatis */}
+          <div className='rounded-lg border-0 bg-muted/70 dark:bg-muted/30 px-3.5 py-2.5 text-xs text-muted-foreground'>
+            Setelah refund, saldo siswa menjadi <strong className='text-foreground'>Rp 0</strong> dan kartu RFID (<code className='font-mono font-bold text-foreground'>{siswa.rfid_uid}</code>) otomatis diblokir permanen.
+          </div>
 
           {/* Persetujuan Petugas */}
           <div className='flex items-center gap-2 pt-1'>
