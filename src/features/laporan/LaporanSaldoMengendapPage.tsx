@@ -470,6 +470,8 @@ export function LaporanSaldoMengendapPage() {
                                   className={`border-0 text-xs font-medium ${
                                     kt.status === 'ACTIVE'
                                       ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                      : kt.status === 'BLOCKED'
+                                      ? 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
                                       : 'bg-muted text-muted-foreground'
                                   }`}
                                 >
