@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Banknote,
   ArrowLeftRight,
-  RefreshCw,
   CheckCircle2,
   Lock,
   Users,
@@ -34,7 +33,6 @@ import type { RefundSlipData } from './types'
 
 export function RefundSiswaKeluarPage() {
   const [students, setStudents] = useState<SiswaNonaktifMock[]>(MOCK_SISWA_NONAKTIF)
-  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [activeTab, setActiveTab] = useState('pending')
@@ -69,21 +67,7 @@ export function RefundSiswaKeluarPage() {
     }
   }, [])
 
-  const refreshNonaktifStudents = async () => {
-    setIsLoading(true)
-    try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat', {
-        params: { hanyaTidakAktif: true },
-      })
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
-      }
-    } catch {
-      // Fallback
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   // KPI Calculations
   const totalDanaMengendap = useMemo(() => {
@@ -241,28 +225,10 @@ export function RefundSiswaKeluarPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Refund Saldo Siswa Keluar / Lulus
-            </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Pengembalian dana titipan siswa nonaktif dan pemindahan saldo
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => void refreshNonaktifStudents()}
-              disabled={isLoading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh Data
-            </Button>
-          </div>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Refund Saldo Siswa Keluar / Lulus
+          </h1>
         </div>
 
         {/* KPI Cards Ringkasan */}
@@ -314,9 +280,8 @@ export function RefundSiswaKeluarPage() {
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Kartu RFID Diamankan
               </CardDescription>
-              <CardTitle className='text-2xl font-bold flex items-center gap-2 text-foreground'>
-                <Lock className='h-5 w-5 text-destructive' />
-                <span>{completedRefundCount} Kartu</span>
+              <CardTitle className='text-2xl font-bold text-foreground'>
+                {completedRefundCount} Kartu
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
@@ -370,7 +335,7 @@ export function RefundSiswaKeluarPage() {
 
           {/* TAB 1: DAFTAR SISWA MENUNGGU REFUND (SALDO > 0) */}
           <TabsContent value='pending' className='space-y-4 m-0'>
-            <Card>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
@@ -407,7 +372,7 @@ export function RefundSiswaKeluarPage() {
                                   <img
                                     src={siswa.foto_url}
                                     alt={siswa.nama}
-                                    className='h-10 w-10 rounded-full object-cover border'
+                                    className='h-10 w-10 rounded-full object-cover'
                                   />
                                   <div>
                                     <p className='font-bold text-foreground'>
@@ -522,12 +487,12 @@ export function RefundSiswaKeluarPage() {
                                   {/* Opsi B: Pindah ke Saudara */}
                                   <Button
                                     size='sm'
-                                    variant='outline'
+                                    variant='secondary'
                                     onClick={() => {
                                       setSelectedStudentTransfer(siswa)
                                       setIsTransferModalOpen(true)
                                     }}
-                                    className='h-8 text-xs gap-1.5'
+                                    className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                                   >
                                     <ArrowLeftRight className='h-3.5 w-3.5' />
                                     <span>Pindah Saudara</span>
@@ -547,7 +512,7 @@ export function RefundSiswaKeluarPage() {
 
           {/* TAB 2: RIWAYAT PEMROSESAN SELESAI */}
           <TabsContent value='completed' className='space-y-4 m-0'>
-            <Card>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
@@ -580,7 +545,7 @@ export function RefundSiswaKeluarPage() {
                                   <img
                                     src={siswa.foto_url}
                                     alt={siswa.nama}
-                                    className='h-9 w-9 rounded-full object-cover border'
+                                    className='h-9 w-9 rounded-full object-cover'
                                   />
                                   <div>
                                     <p className='font-semibold text-foreground'>
@@ -644,9 +609,9 @@ export function RefundSiswaKeluarPage() {
                               <TableCell className='text-right'>
                                 <Button
                                   size='sm'
-                                  variant='outline'
+                                  variant='secondary'
                                   onClick={() => handleOpenSlipFromHistory(siswa)}
-                                  className='h-8 text-xs gap-1.5'
+                                  className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                                 >
                                   <Eye className='h-3.5 w-3.5' />
                                   <span>Lihat Bukti</span>

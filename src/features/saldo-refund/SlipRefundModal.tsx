@@ -43,7 +43,7 @@ export function SlipRefundModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg overflow-y-auto max-h-[90vh]'>
+      <DialogContent className='max-w-md sm:max-w-lg overflow-y-auto max-h-[90vh] border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             {isTransfer ? 'Bukti Pemindahan Saldo Saudara' : 'Bukti Refund Saldo Siswa'}
@@ -56,10 +56,10 @@ export function SlipRefundModal({
         {/* Struk Fisik Thermal Format */}
         <div
           ref={printAreaRef}
-          className='rounded-xl border border-dashed border-border bg-muted/30 p-5 space-y-4 font-sans text-xs'
+          className='rounded-xl border-0 bg-muted/50 dark:bg-muted/20 p-5 space-y-4 font-sans text-xs'
         >
           {/* Header Slip */}
-          <div className='text-center pb-3 border-b border-dashed border-border space-y-1'>
+          <div className='text-center pb-3 border-0 space-y-1'>
             <div className='flex items-center justify-center gap-1.5 font-bold text-sm tracking-wide text-foreground'>
               <Building className='h-4 w-4 text-primary' />
               KANTIN CASHLESS SKOOLIA
@@ -73,7 +73,7 @@ export function SlipRefundModal({
           </div>
 
           {/* Badge Transaksi */}
-          <div className='flex justify-between items-center bg-card p-2.5 rounded-lg border border-border'>
+          <div className='flex justify-between items-center bg-card p-2.5 rounded-lg border-0 shadow-none'>
             <span className='font-medium text-muted-foreground'>Jenis Transaksi:</span>
             <Badge
               variant='outline'
@@ -93,7 +93,7 @@ export function SlipRefundModal({
               <User className='h-3.5 w-3.5 text-muted-foreground' />
               Data Siswa Nonaktif (Asal)
             </p>
-            <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border border-border'>
+            <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
               <span className='text-muted-foreground'>Nama Siswa:</span>
               <span className='font-semibold text-right truncate'>{slipData.siswa_asal.nama}</span>
               <span className='text-muted-foreground'>NIS / Kelas:</span>
@@ -120,7 +120,7 @@ export function SlipRefundModal({
                 <ArrowRight className='h-3.5 w-3.5 text-primary' />
                 Siswa Penerima (Saudara Kandung Aktif)
               </p>
-              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border border-border'>
+              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
                 <span className='text-muted-foreground'>Nama Saudara:</span>
                 <span className='font-semibold text-right text-primary truncate'>
                   {slipData.siswa_tujuan.nama}
@@ -147,7 +147,7 @@ export function SlipRefundModal({
                 <CreditCard className='h-3.5 w-3.5 text-muted-foreground' />
                 Detail Penerima Dana (Orang Tua / Wali)
               </p>
-              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border border-border'>
+              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
                 <span className='text-muted-foreground'>Nama Penerima:</span>
                 <span className='font-semibold text-right'>{slipData.nama_penerima || '-'}</span>
                 <span className='text-muted-foreground'>Kontak / HP:</span>
@@ -167,7 +167,7 @@ export function SlipRefundModal({
           )}
 
           {/* Nominal Ringkasan */}
-          <div className='rounded-lg bg-emerald-500/10 p-3 border border-emerald-500/20 flex items-center justify-between'>
+          <div className='rounded-lg bg-emerald-500/15 p-3 border-0 flex items-center justify-between'>
             <span className='text-xs font-semibold text-emerald-900 dark:text-emerald-200'>
               {isTransfer ? 'TOTAL SALDO DIPINDAHKAN' : 'TOTAL SALDO DI-REFUND'}
             </span>
@@ -177,7 +177,7 @@ export function SlipRefundModal({
           </div>
 
           {/* Footer Struk */}
-          <div className='pt-2 border-t border-dashed border-border text-center space-y-1 text-[10px] text-muted-foreground'>
+          <div className='pt-2 border-0 text-center space-y-1 text-[10px] text-muted-foreground'>
             <p>Waktu Transaksi: {new Date(slipData.waktu).toLocaleString('id-ID')}</p>
             <p>Petugas TU / Kasir: {slipData.petugas_nama}</p>
             <p className='italic font-medium text-foreground'>
@@ -187,7 +187,7 @@ export function SlipRefundModal({
         </div>
 
         <DialogFooter className='flex-col sm:flex-row gap-2 pt-2'>
-          <Button variant='outline' onClick={handlePrint} className='gap-2 w-full sm:w-auto'>
+          <Button variant='secondary' onClick={handlePrint} className='gap-2 w-full sm:w-auto border-0 bg-muted/80 shadow-none'>
             <Printer className='h-4 w-4' />
             Cetak Struk / Bukti
           </Button>

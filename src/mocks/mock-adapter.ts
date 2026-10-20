@@ -586,6 +586,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           const item = menuList.find((m) => m.id === targetId)
           if (!item)
             return { status: 404, data: { message: 'Menu tidak ditemukan' } }
+          const kat = kategoriList.find((k) => k.id === item.kategori_id)
           return {
             status: 200,
             data: {
@@ -594,30 +595,49 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               data: {
                 id: item.id,
                 kategoriId: item.kategori_id,
+                kategori_id: item.kategori_id,
+                kategoriNama: kat?.nama || item.kategori_nama || 'Menu',
+                kategori_nama: kat?.nama || item.kategori_nama || 'Menu',
                 nama: item.nama,
                 hargaJual: item.harga_jual,
+                harga_jual: item.harga_jual,
                 satuan: item.satuan ? item.satuan.toUpperCase() : 'PCS',
                 fotoUrl: item.foto_url || null,
+                foto_url: item.foto_url || null,
                 stokMinimum: item.stok_minimum,
+                stok_minimum: item.stok_minimum,
                 stokBerjalan: item.stok,
+                stok: item.stok,
                 aktif: item.is_active,
+                is_active: item.is_active,
               },
             },
           }
         }
 
         // List menu
-        const mappedList = menuList.map((m) => ({
-          id: m.id,
-          kategoriId: m.kategori_id,
-          nama: m.nama,
-          hargaJual: m.harga_jual,
-          satuan: m.satuan ? m.satuan.toUpperCase() : 'PCS',
-          fotoUrl: m.foto_url || null,
-          stokMinimum: m.stok_minimum,
-          stokBerjalan: m.stok,
-          aktif: m.is_active,
-        }))
+        const mappedList = menuList.map((m) => {
+          const kat = kategoriList.find((k) => k.id === m.kategori_id)
+          return {
+            id: m.id,
+            kategoriId: m.kategori_id,
+            kategori_id: m.kategori_id,
+            kategoriNama: kat?.nama || m.kategori_nama || 'Menu',
+            kategori_nama: kat?.nama || m.kategori_nama || 'Menu',
+            nama: m.nama,
+            hargaJual: m.harga_jual,
+            harga_jual: m.harga_jual,
+            satuan: m.satuan ? m.satuan.toUpperCase() : 'PCS',
+            fotoUrl: m.foto_url || null,
+            foto_url: m.foto_url || null,
+            stokMinimum: m.stok_minimum,
+            stok_minimum: m.stok_minimum,
+            stokBerjalan: m.stok,
+            stok: m.stok,
+            aktif: m.is_active,
+            is_active: m.is_active,
+          }
+        })
         return {
           status: 200,
           data: {
@@ -1866,6 +1886,51 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             limitHarian: siswa.limit_harian,
             limitHarianEnabled: siswa.limit_harian_enabled,
           },
+        },
+      }
+    }
+
+    // POST /api/kontrol-kartu/blokir-item
+    if (url.includes('/api/kontrol-kartu/blokir-item') && method === 'post') {
+      const subjekTipe = String(payload.subjekTipe || 'SISWA').toUpperCase()
+      const subjekId = Number(payload.subjekId)
+      const menuId = payload.menuId ? Number(payload.menuId) : null
+      const kategoriId = payload.kategoriId ? Number(payload.kategoriId) : null
+      const diblokir = payload.diblokir !== false
+
+      if (subjekTipe === 'SISWA') {
+        const siswa = siswaList.find((s) => s.siswa_id === subjekId)
+        if (siswa) {
+          if (!siswa.blocked_items) siswa.blocked_items = []
+          if (!siswa.blocked_categories) siswa.blocked_categories = []
+
+          if (menuId) {
+            if (diblokir && !siswa.blocked_items.includes(menuId)) {
+              siswa.blocked_items.push(menuId)
+            } else if (!diblokir) {
+              siswa.blocked_items = siswa.blocked_items.filter((id) => id !== menuId)
+            }
+          }
+          if (kategoriId) {
+            if (diblokir && !siswa.blocked_categories.includes(kategoriId)) {
+              siswa.blocked_categories.push(kategoriId)
+            } else if (!diblokir) {
+              siswa.blocked_categories = siswa.blocked_categories.filter((id) => id !== kategoriId)
+            }
+          }
+          siswa.updated_at = new Date().toISOString()
+        }
+      }
+
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: diblokir
+            ? 'Item / Kategori berhasil diblokir'
+            : 'Blokir item / kategori berhasil dibuka',
+          data: { subjekTipe, subjekId, menuId, kategoriId, diblokir },
         },
       }
     }

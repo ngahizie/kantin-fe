@@ -88,7 +88,11 @@ export function DataTableFacetedFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='outline' size='sm' className='h-8 border-dashed text-xs'>
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-8 text-xs border-0 bg-muted/70 hover:bg-muted text-foreground shadow-none'
+        >
           <PlusCircledIcon className='size-4' />
           {title}
           {selectedValues?.size > 0 && (
@@ -96,7 +100,7 @@ export function DataTableFacetedFilter<TData, TValue>({
               <Separator orientation='vertical' className='mx-2 h-4' />
               <Badge
                 variant='secondary'
-                className='rounded-sm px-1 font-normal lg:hidden'
+                className='rounded-sm px-1 font-normal lg:hidden border-0 bg-background/80'
               >
                 {selectedValues.size}
               </Badge>
@@ -104,7 +108,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 {selectedValues.size > 2 ? (
                   <Badge
                     variant='secondary'
-                    className='rounded-sm px-1 font-normal'
+                    className='rounded-sm px-1 font-normal border-0 bg-background/80'
                   >
                     {selectedValues.size} selected
                   </Badge>
@@ -115,7 +119,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <Badge
                         variant='secondary'
                         key={option.value}
-                        className='rounded-sm px-1 font-normal'
+                        className='rounded-sm px-1 font-normal border-0 bg-background/80'
                       >
                         {option.label}
                       </Badge>
@@ -126,7 +130,7 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-[200px] p-0' align='start'>
+      <PopoverContent className='w-[200px] p-0 border-0 shadow-lg' align='start'>
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
