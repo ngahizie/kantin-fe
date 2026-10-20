@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Banknote,
   ArrowLeftRight,
-  RefreshCw,
   CheckCircle2,
   Lock,
   Users,
@@ -34,7 +33,6 @@ import type { RefundSlipData } from './types'
 
 export function RefundSiswaKeluarPage() {
   const [students, setStudents] = useState<SiswaNonaktifMock[]>(MOCK_SISWA_NONAKTIF)
-  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [activeTab, setActiveTab] = useState('pending')
@@ -69,21 +67,7 @@ export function RefundSiswaKeluarPage() {
     }
   }, [])
 
-  const refreshNonaktifStudents = async () => {
-    setIsLoading(true)
-    try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat', {
-        params: { hanyaTidakAktif: true },
-      })
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
-      }
-    } catch {
-      // Fallback
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   // KPI Calculations
   const totalDanaMengendap = useMemo(() => {
@@ -241,28 +225,10 @@ export function RefundSiswaKeluarPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Refund Saldo Siswa Keluar / Lulus
-            </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Pengembalian dana titipan siswa nonaktif dan pemindahan saldo
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => void refreshNonaktifStudents()}
-              disabled={isLoading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh Data
-            </Button>
-          </div>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Refund Saldo Siswa Keluar / Lulus
+          </h1>
         </div>
 
         {/* KPI Cards Ringkasan */}
