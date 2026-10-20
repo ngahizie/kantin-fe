@@ -1,14 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  TrendingUp,
   Download,
-  RefreshCw,
   Search,
-  ShoppingCart,
-  Receipt,
   Tag,
   Store,
-  DollarSign,
   Layers,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -34,7 +29,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { laporanApi } from './api/laporan-api'
@@ -44,6 +38,23 @@ import type {
   BarisPenjualanKategori,
   BarisPenjualanKasir,
 } from './types'
+
+const getCategoryBadgeClass = (kategori: string) => {
+  const k = (kategori || '').toLowerCase()
+  if (k.includes('berat')) {
+    return 'border-0 bg-orange-500/15 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
+  }
+  if (k.includes('dingin') || k.includes('minum')) {
+    return 'border-0 bg-cyan-500/15 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300'
+  }
+  if (k.includes('snack') || k.includes('roti')) {
+    return 'border-0 bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+  }
+  if (k.includes('hangat')) {
+    return 'border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+  }
+  return 'border-0 bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
+}
 
 export function LaporanPenjualanPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanPenjualan | null>(null)
@@ -56,27 +67,6 @@ export function LaporanPenjualanPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'terlaris' | 'laba' | 'margin'>('terlaris')
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resRingkasan, resItems, resKategoris, resKasirs] = await Promise.all([
-        laporanApi.getPenjualan(),
-        laporanApi.getPenjualanPerItem(),
-        laporanApi.getPenjualanPerKategori(),
-        laporanApi.getPenjualanPerKasir(),
-      ])
-
-      setRingkasan(resRingkasan)
-      setItems(resItems)
-      setKategoris(resKategoris)
-      setKasirs(resKasirs)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat data penjualan'
-      toast.error('Gagal Memuat Laporan Penjualan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -239,56 +229,34 @@ export function LaporanPenjualanPage() {
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Pusat Laporan Keuangan
+              Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
             <span className="text-xs font-medium">Penjualan & Laba Kotor</span>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>
       </Header>
 
-      <Main fixed>
+      <Main>
         <div className="space-y-6 pb-12">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Penjualan & Laba Kotor
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Analisis penjualan bersih, total HPP, dan laba kotor per menu, per kategori, per kasir, dan periode tanggal.
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Penjualan & Laba Kotor
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleExportExcel}
                 disabled={isLoading || !ringkasan}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
@@ -298,14 +266,11 @@ export function LaporanPenjualanPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Penjualan Bersih
                 </CardTitle>
-                <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
-                  <DollarSign className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -318,14 +283,11 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Beban HPP
                 </CardTitle>
-                <div className="rounded-lg bg-orange-500/10 p-2 text-orange-600">
-                  <Receipt className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -337,14 +299,11 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Laba Kotor (Gross Profit)
                 </CardTitle>
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
@@ -359,14 +318,11 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Volume Transaksi
                 </CardTitle>
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-600">
-                  <ShoppingCart className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -437,7 +393,7 @@ export function LaporanPenjualanPage() {
 
             {/* TAB CONTENT 1: PENJUALAN PER ITEM */}
             <TabsContent value="item" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Penjualan & Laba Kotor per Item Menu
@@ -447,7 +403,7 @@ export function LaporanPenjualanPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -486,7 +442,10 @@ export function LaporanPenjualanPage() {
                                 {item.nama}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
+                                >
                                   {item.kategoriNama}
                                 </Badge>
                               </TableCell>
@@ -534,7 +493,7 @@ export function LaporanPenjualanPage() {
 
             {/* TAB CONTENT 2: PENJUALAN PER KATEGORI */}
             <TabsContent value="kategori" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Penjualan & Laba Kotor per Kategori
@@ -544,7 +503,7 @@ export function LaporanPenjualanPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -612,7 +571,7 @@ export function LaporanPenjualanPage() {
 
             {/* TAB CONTENT 3: PENJUALAN PER KASIR */}
             <TabsContent value="kasir" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Penjualan per Titik Kasir & Petugas
@@ -622,7 +581,7 @@ export function LaporanPenjualanPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>

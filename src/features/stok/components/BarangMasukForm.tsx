@@ -244,7 +244,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
   return (
     <form onSubmit={handleSubmit} className='space-y-6'>
       {/* Kartu Header Faktur / Nota */}
-      <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+      <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
         <CardHeader className='pb-3'>
           <CardTitle className='flex items-center gap-2 text-base font-semibold'>
             <FileText className='h-4 w-4 text-primary' />
@@ -363,7 +363,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
       </Card>
 
       {/* Tabel Multi-Item Restock */}
-      <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+      <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
         <CardHeader className='flex flex-row items-center justify-between pb-3'>
           <div>
             <CardTitle className='flex items-center gap-2 text-base font-semibold'>
@@ -373,10 +373,10 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
           </div>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             size='sm'
             onClick={handleAddRow}
-            className='flex items-center gap-1.5 text-xs bg-background'
+            className='flex items-center gap-1.5 text-xs border-0 bg-background hover:bg-accent'
           >
             <Plus className='h-3.5 w-3.5' />
             Tambah Baris Menu
@@ -399,7 +399,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                     Subtotal
                   </TableHead>
                   <TableHead className='min-w-[240px] text-xs'>
-                    Simulasi HPP Baru
+                    Estimasi HPP Baru
                   </TableHead>
                   <TableHead className='w-12 text-center text-xs'>
                     Aksi
@@ -509,13 +509,13 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                         {formatRupiah(subtotal)}
                       </TableCell>
 
-                      {/* Simulasi HPP Preview */}
+                      {/* Estimasi HPP Preview */}
                       <TableCell>
                         {simulasi ? (
                           <HppSimulationBadge simulasi={simulasi} compact />
                         ) : (
                           <span className='text-[11px] text-muted-foreground italic'>
-                            Pilih menu untuk melihat simulasi
+                            Pilih menu untuk melihat estimasi
                           </span>
                         )}
                       </TableCell>

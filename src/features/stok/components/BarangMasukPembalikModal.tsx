@@ -130,7 +130,7 @@ function PembalikFormContent({
 
       <div className='space-y-4 py-4 text-xs'>
         {/* Box Ringkasan Transaksi Asal */}
-        <div className='space-y-2 rounded-lg border-0 bg-muted/60 dark:bg-muted/25 p-3 shadow-xs'>
+        <div className='space-y-2 rounded-lg border-0 bg-muted/60 dark:bg-muted/25 p-3'>
           <div className='flex items-center justify-between'>
             <span className='text-sm font-semibold text-foreground'>
               {mutasi.menuNama || `Menu #${mutasi.menuId}`}
@@ -244,10 +244,10 @@ function PembalikFormContent({
           </div>
         </div>
 
-        {/* Simulasi Dampak Pembalik */}
+        {/* Estimasi Dampak Pembalik */}
         <div className='space-y-1 rounded-lg border-0 bg-destructive/10 p-3 text-xs'>
           <p className='font-semibold text-destructive'>
-            Simulasi Dampak terhadap Stok & HPP:
+            Estimasi Dampak terhadap Stok & HPP:
           </p>
           <div className='grid grid-cols-2 gap-2 pt-1 text-[11px]'>
             <div>
@@ -278,7 +278,7 @@ function PembalikFormContent({
         </div>
       </div>
 
-      <DialogFooter className='gap-2 sm:gap-0'>
+      <DialogFooter className='gap-2 sm:gap-2.5'>
         <Button
           type='button'
           variant='outline'

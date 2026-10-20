@@ -121,7 +121,7 @@ export function RiwayatOpnameTable({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 shadow-sm">
+      <Card className="border-0 bg-muted/60 dark:bg-muted/25">
         <CardContent className="p-4 flex items-center justify-center">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full sm:w-auto">
             <div className="relative w-full sm:w-72">
@@ -151,7 +151,7 @@ export function RiwayatOpnameTable({
       </Card>
 
       {/* Table */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden shadow-sm">
+      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>

@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
+import { formatRupiah } from '@/lib/formatters'
 import type { KartuTamuMock } from '@/mocks/mock-data'
 import type { KartuTamuSlipData } from './KartuTamuSlipModal'
 
@@ -88,8 +89,8 @@ export function TopupKartuTamuModal({
       }
 
       onTopupSuccess(kartu.id, saldoFinal)
-      toast.success(`Top-up Rp ${nominalNum.toLocaleString('id-ID')} berhasil!`, {
-        description: `Saldo baru ${kartu.nomor_kartu}: Rp ${saldoFinal.toLocaleString('id-ID')}`,
+      toast.success(`Top-up ${formatRupiah(nominalNum)} berhasil!`, {
+        description: `Saldo baru ${kartu.nomor_kartu}: ${formatRupiah(saldoFinal)}`,
       })
 
       onShowSlip({
@@ -144,7 +145,7 @@ export function TopupKartuTamuModal({
           <div className='text-right shrink-0'>
             <p className='text-xs text-muted-foreground'>Saldo Saat Ini</p>
             <p className='font-bold text-base text-emerald-600 dark:text-emerald-400 font-mono'>
-              Rp {saldoSaatIni.toLocaleString('id-ID')}
+              {formatRupiah(saldoSaatIni)}
             </p>
           </div>
         </div>
@@ -223,13 +224,13 @@ export function TopupKartuTamuModal({
                 <div className='flex justify-between text-muted-foreground'>
                   <span>Saldo saat ini:</span>
                   <span className='font-mono font-medium text-foreground'>
-                    Rp {saldoSaatIni.toLocaleString('id-ID')}
+                    {formatRupiah(saldoSaatIni)}
                   </span>
                 </div>
                 <div className='flex justify-between text-emerald-600 dark:text-emerald-400 font-medium'>
                   <span>Nominal (+):</span>
                   <span className='font-mono font-bold'>
-                    Rp {nominalNum.toLocaleString('id-ID')}
+                    {formatRupiah(nominalNum)}
                   </span>
                 </div>
                 <div className='border-t border-border pt-2 flex justify-between font-bold'>
@@ -241,7 +242,7 @@ export function TopupKartuTamuModal({
                         : 'text-emerald-600 dark:text-emerald-400'
                     }`}
                   >
-                    Rp {saldoBaru.toLocaleString('id-ID')}
+                    {formatRupiah(saldoBaru)}
                   </span>
                 </div>
               </div>
@@ -254,7 +255,7 @@ export function TopupKartuTamuModal({
                   </AlertTitle>
                   <AlertDescription className='text-xs'>
                     Batas saldo Kartu Tamu:{' '}
-                    <strong>Rp {MAX_SALDO_KARTU_TAMU.toLocaleString('id-ID')}</strong>.
+                    <strong>{formatRupiah(MAX_SALDO_KARTU_TAMU)}</strong>.
                     Kurangi nominal top-up.
                   </AlertDescription>
                 </Alert>

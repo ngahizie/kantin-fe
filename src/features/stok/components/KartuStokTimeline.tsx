@@ -176,14 +176,14 @@ export function KartuStokTimeline({
           <div key={item.id ?? index} className='relative flex items-start gap-3.5 sm:gap-4 group'>
             {/* Dot / Icon marker on vertical line */}
             <div
-              className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 transition-transform group-hover:scale-105 ${meta.iconClass}`}
+              className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 ${meta.iconClass}`}
             >
               <IconComponent className='h-4 w-4' />
             </div>
 
             {/* Card Content */}
             <div className='flex-1 min-w-0'>
-              <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all duration-200 hover:shadow-md'>
+              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
                 <CardContent className='p-4 sm:p-5'>
                   {/* Header: [Badge] • #ID_TRANSAKSI             TANGGAL & WAKTU */}
                   <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b pb-3 mb-3'>

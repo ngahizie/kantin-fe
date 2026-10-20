@@ -4,6 +4,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  X,
   Pencil,
   Trash2,
   AlertTriangle,
@@ -12,8 +13,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search as SearchComp } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -51,7 +50,13 @@ export function KategoriPage() {
   // Dialog konfirmasi delete / nonaktifkan
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [activeDeleteTarget, setActiveDeleteTarget] = useState<KategoriItem | null>(null)
+  const handleDeleteClick = (kat: KategoriItem) => {
+    setDeleteTarget(kat)
+    setActiveDeleteTarget(kat)
+  }
 
+  
   const loadData = async () => {
     try {
       setLoading(true)
@@ -114,11 +119,12 @@ export function KategoriPage() {
   }
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return
+    const target = activeDeleteTarget
+    if (!target) return
     try {
       setIsDeleting(true)
-      await katalogApi.deleteKategori(deleteTarget.id)
-      toast.success(`Kategori "${deleteTarget.nama}" berhasil dinonaktifkan`)
+      await katalogApi.deleteKategori(target.id)
+      toast.success(`Kategori "${target.nama}" berhasil dinonaktifkan`)
       setDeleteTarget(null)
       loadData()
     } catch (err: unknown) {
@@ -135,88 +141,94 @@ export function KategoriPage() {
 
   return (
     <>
-      <Header fixed>
-        <SearchComp showKbd={false} />
+      <Header fixed className='border-b border-sidebar-border/50'>
+        <div className='flex items-center gap-2 overflow-hidden me-auto'>
+          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
+            Manajemen Kategori Menu
+          </h1>
+        </div>
         <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
           <ProfileDropdown />
         </div>
       </Header>
 
-      <Main className='p-4 md:p-6 space-y-6'>
-        {/* Header Title & Actions */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Manajemen Kategori Menu
-            </h1>
-            <p className='text-sm text-muted-foreground mt-0.5'>
-              Kelola pengelompokan menu makanan, minuman, dan snack untuk kasir dan laporan.
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={loadData}
-              disabled={loading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Segarkan
-            </Button>
-            <Button size='sm' onClick={handleAdd} className='gap-1.5 shadow-xs'>
-              <Plus className='size-4' />
-              Tambah Kategori
-            </Button>
-          </div>
+      <Main className='space-y-6 pb-12'>
+        {/* Actions */}
+        <div className='flex items-center justify-end gap-2'>
+          <Button
+            variant='secondary'
+            size='sm'
+            onClick={loadData}
+            disabled={loading}
+            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Segarkan
+          </Button>
+          <Button
+            size='sm'
+            onClick={handleAdd}
+            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
+          >
+            <Plus className='size-4' />
+            Tambah Kategori
+          </Button>
         </div>
 
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Total Kategori</p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>{stats.total}</h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Kelompok menu terdaftar</p>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Kategori</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Kelompok menu terdaftar</p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Kategori Aktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori Aktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {stats.aktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Aktif di kasir & laporan</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Aktif di kasir & laporan</p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Nonaktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-muted-foreground'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Nonaktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
                 {stats.nonaktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Tidak digunakan</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Tidak digunakan</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Search & Table Card */}
-        <Card className='border border-border bg-card shadow-xs'>
-          <div className='p-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-            <div className='relative w-full sm:w-72'>
-              <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
+        <Card className='overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none'>
+          <div className='flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='relative w-full max-w-[280px] sm:w-64'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
               <Input
                 placeholder='Cari nama kategori...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-8 h-9 text-sm'
+                className='h-10 border-none bg-background/90 dark:bg-background/40 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-background focus-visible:ring-0 rounded-xl shadow-none'
               />
+              {searchQuery && (
+                <button
+                  type='button'
+                  onClick={() => setSearchQuery('')}
+                  className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0'
+                  title='Hapus pencarian'
+                >
+                  <X className='size-3.5' />
+                </button>
+              )}
             </div>
-            <div className='text-xs text-muted-foreground'>
+            <div className='text-xs font-medium text-muted-foreground tabular-nums'>
               Menampilkan {filteredKategori.length} dari {kategoriList.length} kategori
             </div>
           </div>
@@ -224,18 +236,28 @@ export function KategoriPage() {
           <CardContent className='p-0'>
             <Table>
               <TableHeader>
-                <TableRow className='bg-muted/40 hover:bg-muted/40'>
-                  <TableHead className='w-16 text-center'>Urutan</TableHead>
-                  <TableHead>Nama Kategori</TableHead>
-                  <TableHead className='w-36 text-center'>Menu Terkait</TableHead>
-                  <TableHead className='w-28 text-center'>Status</TableHead>
-                  <TableHead className='w-28 text-right'>Aksi</TableHead>
+                <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
+                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
+                    Urutan
+                  </TableHead>
+                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>
+                    Nama Kategori
+                  </TableHead>
+                  <TableHead className='w-36 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                    Menu Terkait
+                  </TableHead>
+                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                    Status
+                  </TableHead>
+                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
+                    Aksi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground'>
+                  <TableRow className='border-none'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex items-center justify-center gap-2'>
                         <RefreshCw className='size-4 animate-spin' />
                         <span>Memuat kategori menu...</span>
@@ -243,11 +265,11 @@ export function KategoriPage() {
                     </TableCell>
                   </TableRow>
                 ) : filteredKategori.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground'>
+                  <TableRow className='border-none'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <Tag className='size-8 text-muted-foreground/40' />
-                        <p className='font-medium'>Tidak ada kategori ditemukan</p>
+                        <p className='font-semibold text-foreground'>Tidak ada kategori ditemukan</p>
                         <p className='text-xs text-muted-foreground'>
                           {searchQuery
                             ? 'Coba gunakan kata kunci pencarian lainnya'
@@ -262,47 +284,50 @@ export function KategoriPage() {
                     const itemQty = kat.jumlahItem ?? 0
 
                     return (
-                      <TableRow key={kat.id} className='hover:bg-muted/30'>
-                        <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                      <TableRow
+                        key={kat.id}
+                        className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'
+                      >
+                        <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums ps-6'>
                           {kat.urutan ?? kat.id}
                         </TableCell>
-                        <TableCell className='font-medium text-foreground'>
+                        <TableCell className='border-none py-3.5 font-semibold text-foreground text-sm ps-2'>
                           <div className='flex items-center gap-2'>
                             <span>{kat.nama}</span>
                           </div>
                         </TableCell>
-                        <TableCell className='text-center'>
+                        <TableCell className='text-center border-none py-3.5'>
                           <Badge
-                            variant='outline'
-                            className='border-0 bg-muted/60 text-muted-foreground font-normal text-xs gap-1'
+                            variant='secondary'
+                            className='rounded-full border-none bg-background/80 dark:bg-background/20 text-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none gap-1'
                           >
                             <UtensilsCrossed className='size-3 text-muted-foreground' />
-                            <span>{itemQty} menu</span>
+                            <span className='tabular-nums'>{itemQty} menu</span>
                           </Badge>
                         </TableCell>
-                        <TableCell className='text-center'>
+                        <TableCell className='text-center border-none py-3.5'>
                           {isAktif ? (
                             <Badge
-                              variant='outline'
-                              className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium'
+                              variant='secondary'
+                              className='rounded-full border-none bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                             >
                               Aktif
                             </Badge>
                           ) : (
                             <Badge
-                              variant='outline'
-                              className='border-0 bg-muted text-muted-foreground text-[11px] font-medium'
+                              variant='secondary'
+                              className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                             >
                               Nonaktif
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className='text-right'>
+                        <TableCell className='text-right border-none py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1'>
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 text-muted-foreground hover:text-foreground'
+                              className='size-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
                               onClick={() => handleEdit(kat)}
                               title='Ubah Kategori'
                             >
@@ -311,8 +336,8 @@ export function KategoriPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 text-muted-foreground hover:text-destructive'
-                              onClick={() => setDeleteTarget(kat)}
+                              className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
+                              onClick={() => handleDeleteClick(kat)}
                               title='Nonaktifkan Kategori'
                             >
                               <Trash2 className='size-4' />
@@ -339,23 +364,30 @@ export function KategoriPage() {
 
       {/* Alert Dialog Konfirmasi Nonaktifkan */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
           <AlertDialogHeader>
-            <div className='flex items-center gap-2 text-destructive'>
-              <AlertTriangle className='size-5' />
-              <AlertDialogTitle>Nonaktifkan Kategori?</AlertDialogTitle>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive'>
+                <AlertTriangle className='size-5' />
+              </div>
+              <AlertDialogTitle className='text-lg font-bold'>
+                Nonaktifkan Kategori?
+              </AlertDialogTitle>
             </div>
-            <AlertDialogDescription className='space-y-2 pt-2'>
+            <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
               <p>
                 Apakah Anda yakin ingin menonaktifkan kategori{' '}
-                <strong className='text-foreground'>{deleteTarget?.nama}</strong>?
+                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
               </p>
-              {deleteTarget && (deleteTarget.jumlahItem ?? 0) > 0 ? (
-                <div className='rounded-lg bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400 border border-amber-500/20'>
-                  ⚠️ <strong>Perhatian:</strong> Kategori ini saat ini masih memiliki{' '}
-                  <strong>{deleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
-                  kategori hanya akan <strong>dinonaktifkan</strong> (tidak dihapus permanen) agar
-                  riwayat transaksi kasir tetap aman.
+              {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
+                <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-none'>
+                  <AlertTriangle className='size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
+                  <span>
+                    <strong>Perhatian:</strong> Kategori ini saat ini masih memiliki{' '}
+                    <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
+                    kategori hanya akan <strong>dinonaktifkan</strong> (tidak dihapus permanen) agar
+                    riwayat transaksi kasir tetap aman.
+                  </span>
                 </div>
               ) : (
                 <p className='text-xs text-muted-foreground'>
@@ -364,12 +396,17 @@ export function KategoriPage() {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+          <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+            >
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
               {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
             </AlertDialogAction>

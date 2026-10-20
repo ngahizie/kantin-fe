@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
+import { formatRupiah } from '@/lib/formatters'
 import type { KartuTamuMock } from '@/mocks/mock-data'
 import type { KartuTamuSlipData } from './KartuTamuSlipModal'
 
@@ -71,7 +72,7 @@ export function RefundKartuModal({
 
       onRefundSuccess(kartu.id)
       toast.success(`Kartu ${kartu.nomor_kartu} berhasil dikembalikan!`, {
-        description: `Refund Rp ${kartu.saldo.toLocaleString('id-ID')} kepada ${namaPenerima.trim()}`,
+        description: `Refund ${formatRupiah(kartu.saldo)} kepada ${namaPenerima.trim()}`,
       })
 
       onShowSlip({
@@ -119,7 +120,7 @@ export function RefundKartuModal({
           <div className='text-right shrink-0'>
             <p className='text-xs text-muted-foreground'>Saldo yang di-refund</p>
             <p className='font-bold text-xl text-amber-600 dark:text-amber-400 font-mono'>
-              Rp {kartu.saldo.toLocaleString('id-ID')}
+              {formatRupiah(kartu.saldo)}
             </p>
           </div>
         </div>
@@ -131,7 +132,7 @@ export function RefundKartuModal({
             <strong>Perhatian:</strong> Setelah dikonfirmasi —
             <ul className='mt-1.5 space-y-0.5 list-disc list-inside'>
               <li>
-                Saldo <strong>Rp {kartu.saldo.toLocaleString('id-ID')}</strong> di-refund tunai
+                Saldo <strong>{formatRupiah(kartu.saldo)}</strong> di-refund tunai
               </li>
               <li>Saldo kartu direset menjadi Rp 0</li>
               <li>Label pemegang dikosongkan (kartu siap pakai ulang)</li>

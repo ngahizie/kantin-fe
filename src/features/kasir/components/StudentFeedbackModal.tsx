@@ -89,7 +89,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md overflow-hidden p-6 select-none'>
+      <DialogContent className='max-w-md overflow-hidden p-6 select-none border-none shadow-none rounded-2xl bg-card'>
         <DialogHeader className='pb-2 text-center'>
           <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
             <CheckCircle2 className='h-7 w-7' />
@@ -107,7 +107,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
-            <Avatar className='h-32 w-32 rounded-2xl border-4 border-primary/20 shadow-lg'>
+            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-none ring-4 ring-primary/20'>
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
@@ -126,7 +126,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <div className='absolute -bottom-2.5 left-1/2 -translate-x-1/2'>
               <Badge
                 variant='secondary'
-                className='border bg-background/95 px-2.5 py-0.5 text-xs font-semibold shadow-sm'
+                className='border-none bg-background/95 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
               >
                 {isSiswa ? pembeli.kelas || 'Siswa' : 'Kartu Tamu'}
               </Badge>
@@ -139,32 +139,32 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
               {pembeli.nama}
             </h3>
             {isSiswa && pembeli.nis && (
-              <p className='font-mono text-xs text-muted-foreground'>
+              <p className='text-xs text-muted-foreground'>
                 NIS: {pembeli.nis}
               </p>
             )}
             {!isSiswa && pembeli.nomor_kartu && (
-              <p className='font-mono text-xs text-muted-foreground'>
+              <p className='text-xs text-muted-foreground'>
                 No. Kartu: {pembeli.nomor_kartu}
               </p>
             )}
           </div>
 
           {/* Ringkasan Saldo & Total Belanja */}
-          <div className='grid w-full grid-cols-2 gap-3 rounded-xl border bg-muted/30 p-3 text-center'>
+          <div className='grid w-full grid-cols-2 gap-3 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3 text-center shadow-none'>
             <div>
               <span className='text-[11px] text-muted-foreground'>
                 Total Belanja
               </span>
-              <p className='font-mono text-sm font-bold text-foreground'>
+              <p className='text-sm font-bold text-foreground tabular-nums'>
                 {formatRupiah(data.total)}
               </p>
             </div>
-            <div className='border-l'>
+            <div className='pl-2'>
               <span className='text-[11px] text-muted-foreground'>
                 Sisa Saldo
               </span>
-              <p className='font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400'>
+              <p className='text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(sisaSaldo)}
               </p>
             </div>
@@ -175,7 +175,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <Clock className='h-3.5 w-3.5 animate-pulse text-primary' />
             <span>
               Menutup otomatis dalam{' '}
-              <strong className='font-mono font-bold text-primary'>
+              <strong className='font-bold text-primary tabular-nums'>
                 {countdown}
               </strong>{' '}
               detik...
@@ -184,7 +184,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         </div>
 
         {/* Footer Tombol Aksi */}
-        <DialogFooter className='flex-col gap-2 border-t pt-2 sm:flex-row'>
+        <DialogFooter className='flex-col gap-2 border-none pt-2 sm:flex-row'>
           {/* Tombol Batalkan / Void Darurat jika Wajah Tidak Cocok */}
           <Button
             type='button'
@@ -192,7 +192,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             size='sm'
             disabled={isVoiding}
             onClick={handleVoidClick}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:w-auto'
+            className='h-9 w-full gap-1.5 text-xs font-semibold sm:w-auto border-none rounded-xl shadow-none'
             title='Batalkan transaksi seketika jika wajah tidak cocok dengan pemilik kartu'
           >
             <Ban className='h-4 w-4' />
@@ -208,7 +208,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             size='sm'
             onClick={handleDoneClick}
             disabled={isVoiding}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:flex-1'
+            className='h-9 w-full gap-1.5 text-xs font-semibold sm:flex-1 border-none rounded-xl shadow-none'
           >
             <span>Selesai</span>
             <ArrowRight className='h-3.5 w-3.5' />

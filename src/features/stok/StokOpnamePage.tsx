@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem, KategoriItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -122,11 +121,18 @@ export function StokOpnamePage() {
 
   return (
     <>
-      {/* Top Navigation Bar */}
       <Header fixed>
-        <div className="ml-auto flex items-center space-x-4">
-          <ThemeSwitch />
-          <ProfileDropdown />
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+              Manajemen Stok
+            </span>
+            <span className="text-muted-foreground text-xs">/</span>
+            <span className="text-xs font-medium">Stok Opname & Rusak</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ProfileDropdown />
+          </div>
         </div>
       </Header>
 
@@ -144,7 +150,7 @@ export function StokOpnamePage() {
               size="sm"
               variant="destructive"
               onClick={() => setIsQuickDamageModalOpen(true)}
-              className="h-8 gap-1.5 text-xs text-white font-semibold shadow-sm"
+              className="h-8 gap-1.5 text-xs text-white font-semibold"
             >
               <PlusCircle className="h-3.5 w-3.5" />
               Catat Barang Rusak

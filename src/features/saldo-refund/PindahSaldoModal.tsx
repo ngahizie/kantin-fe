@@ -197,7 +197,7 @@ function PindahSaldoFormContent({
       toast.success(
         `Pemindahan saldo ke ${targetSibling.nama} berhasil secara atomik!`,
         {
-          description: `Saldo Rp ${nominalTransfer.toLocaleString('id-ID')} masuk ke akun adik/saudara. Kartu RFID lama ${siswaAsal.nama} otomatis diblokir permanen.`,
+          description: `Saldo ${formatRupiah(nominalTransfer)} masuk ke akun adik/saudara. Kartu RFID lama ${siswaAsal.nama} otomatis diblokir permanen.`,
         }
       )
 
@@ -375,11 +375,11 @@ function PindahSaldoFormContent({
             )}
           </div>
 
-          {/* Simulasi Saldo Atomik Real-time */}
+          {/* Pratinjau Saldo Atomik Real-time */}
           {selectedDestination && (
             <div className='rounded-xl border bg-muted/40 p-3.5 space-y-2.5'>
               <div className='flex items-center justify-between text-xs font-bold text-foreground'>
-                <span>Simulasi Mutasi Saldo Atomik</span>
+                <span>Pratinjau Mutasi Saldo Atomik</span>
                 <Badge variant='outline' className='border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[10px] py-0 font-medium'>
                   2 Akun Sekaligus
                 </Badge>

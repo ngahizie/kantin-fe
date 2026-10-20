@@ -27,12 +27,14 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Sign out'
-      desc='Are you sure you want to sign out? You will need to sign in again to access your account.'
-      confirmText='Sign out'
+      title='Keluar'
+      desc='Apakah Anda yakin ingin keluar? Anda harus masuk kembali untuk mengakses akun Anda.'
+      confirmText='Keluar'
+      cancelBtnText='Batal'
       destructive
       handleConfirm={handleSignOut}
-      className='sm:max-w-sm'
+      className='sm:max-w-sm border-0'
+      cancelBtnClassName='border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus-visible:border-transparent outline-none focus:outline-none focus-visible:outline-none'
     />
   )
 }

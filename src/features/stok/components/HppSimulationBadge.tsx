@@ -58,7 +58,7 @@ export function HppSimulationBadge({
           </TooltipTrigger>
           <TooltipContent className='max-w-xs space-y-1.5 p-3 text-xs'>
             <p className='border-b pb-1 text-sm font-semibold'>
-              Simulasi Dampak Restock
+              Estimasi Dampak Restock
             </p>
             <div className='grid grid-cols-2 gap-x-2 gap-y-1'>
               <span className='text-muted-foreground'>Stok Berjalan:</span>

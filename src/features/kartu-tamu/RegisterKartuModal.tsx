@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import {
-  CreditCard,
-  Radio,
   Sparkles,
   RefreshCw,
   CheckCircle2,
-  Wifi,
   Hash,
 } from 'lucide-react'
 import {
@@ -46,15 +43,6 @@ function generateNextNomorKartu(existingCards: KartuTamuMock[]): string {
   return `KT-${String(next).padStart(3, '0')}`
 }
 
-function generateSimulatedUID(): string {
-  const hex = () =>
-    Math.floor(Math.random() * 256)
-      .toString(16)
-      .padStart(2, '0')
-      .toUpperCase()
-  return `04${hex()}${hex()}${hex()}${hex()}`
-}
-
 export function RegisterKartuModal({
   open,
   onOpenChange,
@@ -64,20 +52,9 @@ export function RegisterKartuModal({
 }: RegisterKartuModalProps) {
   const [labelPemegang, setLabelPemegang] = useState('')
   const [detectedUid, setDetectedUid] = useState<string | null>(null)
-  const [isScanning, setIsScanning] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const nextNomor = generateNextNomorKartu(existingCards)
-
-  const handleSimulateTap = () => {
-    setIsScanning(true)
-    // Simulate RFID reader detection delay (300ms)
-    setTimeout(() => {
-      const uid = generateSimulatedUID()
-      setDetectedUid(uid)
-      setIsScanning(false)
-    }, 700)
-  }
 
   const handleReset = () => {
     setDetectedUid(null)
@@ -176,62 +153,35 @@ export function RegisterKartuModal({
             </Badge>
           </div>
 
-          {/* RFID Scan Area */}
-          <div className='space-y-3'>
-            <Label className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-              Tap Kartu RFID pada Reader
+          {/* Input UID Kartu RFID */}
+          <div className='space-y-2'>
+            <Label htmlFor='rfid-uid' className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+              UID Kartu RFID
             </Label>
-            <div
-              className={`relative flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-300 ${
-                detectedUid
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : isScanning
-                    ? 'border-primary/50 bg-primary/10 animate-pulse'
-                    : 'border-muted-foreground/30 bg-muted/30 hover:border-primary/50 hover:bg-muted/50'
-              }`}
-              onClick={!detectedUid ? handleSimulateTap : undefined}
-            >
-              {isScanning ? (
-                <>
-                  <Wifi className='h-12 w-12 text-primary animate-pulse mb-3' />
-                  <p className='text-sm font-semibold text-primary'>Mendeteksi kartu...</p>
-                  <p className='text-xs text-muted-foreground mt-1'>Tempelkan kartu RFID ke reader</p>
-                </>
-              ) : detectedUid ? (
-                <>
-                  <CheckCircle2 className='h-10 w-10 text-emerald-600 mb-2' />
-                  <p className='text-sm font-bold text-emerald-600 dark:text-emerald-400'>
-                    Kartu Terdeteksi!
-                  </p>
-                  <code className='text-xs font-mono bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg mt-2'>
-                    UID: {detectedUid}
-                  </code>
-                  <button
-                    type='button'
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleReset()
-                    }}
-                    className='mt-3 text-xs text-muted-foreground hover:text-foreground underline'
-                  >
-                    Tap ulang kartu lain
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className='relative mb-3'>
-                    <CreditCard className='h-12 w-12 text-muted-foreground/60' />
-                    <Radio className='h-5 w-5 text-primary absolute -top-1 -right-1 animate-pulse' />
-                  </div>
-                  <p className='text-sm font-semibold text-foreground'>
-                    Klik untuk Simulasi Tap RFID
-                  </p>
-                  <p className='text-xs text-muted-foreground mt-1 text-center'>
-                    (Pada sistem nyata: tempelkan kartu fisik ke reader TU)
-                  </p>
-                </>
+            <div className='flex gap-2'>
+              <Input
+                id='rfid-uid'
+                placeholder='Scan kartu pada reader atau ketik UID fisik...'
+                value={detectedUid || ''}
+                onChange={(e) => setDetectedUid(e.target.value.toUpperCase())}
+                className='font-mono text-sm bg-background'
+                autoFocus
+              />
+              {detectedUid && (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={handleReset}
+                  className='h-9 px-2 text-xs'
+                >
+                  Reset
+                </Button>
               )}
             </div>
+            <p className='text-[11px] text-muted-foreground'>
+              Tempelkan kartu RFID ke USB reader TU atau masukkan kode UID kartu fisik.
+            </p>
           </div>
 
           {/* Label Pemegang */}

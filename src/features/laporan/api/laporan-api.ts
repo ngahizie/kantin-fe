@@ -34,7 +34,48 @@ export const laporanApi = {
       '/api/laporan/rekonsiliasi',
       { params }
     )
-    return res.data.data
+    const raw = res.data.data
+
+    // Kalkulasi metrik turunan jika response berasal langsung dari BE (RingkasanRekonsiliasi.java)
+    const totalTopupSemua =
+      raw.totalTopupSemua ?? (raw.topupOnline ?? 0) + (raw.topupTunai ?? 0)
+    const totalRefundSemua = raw.totalRefundSemua ?? (raw.refund ?? 0)
+    const topupBersih =
+      raw.topupBersih ?? totalTopupSemua - totalRefundSemua
+    const penjualanBersih =
+      raw.penjualanBersih ?? (raw.penjualan ?? 0) - (raw.voidPenjualan ?? 0)
+    const totalPenggunaan =
+      raw.totalPenggunaan ?? (raw.saldoMengendap ?? 0) + penjualanBersih
+
+    // Breakdown saldo siswa & kartu tamu jika BE hanya mengembalikan saldoMengendap total
+    let saldoSiswa = raw.saldoSiswa
+    let saldoKartuTamu = raw.saldoKartuTamu
+
+    if (saldoSiswa === undefined || saldoKartuTamu === undefined) {
+      try {
+        const saldoRes = await apiClient.get<ApiResponse<RingkasanSaldoMengendap>>(
+          '/api/laporan/saldo-mengendap'
+        )
+        if (saldoRes.data?.data) {
+          saldoSiswa = saldoRes.data.data.saldoSiswa ?? 0
+          saldoKartuTamu = saldoRes.data.data.saldoKartuTamu ?? 0
+        }
+      } catch {
+        saldoSiswa = raw.saldoMengendap ?? 0
+        saldoKartuTamu = 0
+      }
+    }
+
+    return {
+      ...raw,
+      totalTopupSemua,
+      totalRefundSemua,
+      topupBersih,
+      penjualanBersih,
+      totalPenggunaan,
+      saldoSiswa: saldoSiswa ?? 0,
+      saldoKartuTamu: saldoKartuTamu ?? 0,
+    }
   },
 
   /**

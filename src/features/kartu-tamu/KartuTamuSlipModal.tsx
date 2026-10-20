@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { formatRupiah } from '@/lib/formatters'
 
 export type KartuTamuSlipType = 'REGISTER' | 'TOPUP' | 'REFUND'
 
@@ -132,7 +133,7 @@ export function KartuTamuSlipModal({
 
         {/* Receipt Wrapper */}
         <div className='p-5 bg-muted/40 flex justify-center no-print-bg'>
-          <div className='printable-slip w-full bg-white text-slate-900 border border-slate-300 rounded-xl p-5 shadow-sm space-y-4 font-mono text-xs'>
+          <div className='printable-slip w-full bg-white text-slate-900 border border-slate-300 rounded-xl p-5 space-y-4 font-mono text-xs'>
 
             {/* Header Nota */}
             <div className='text-center space-y-1 pb-3 print-border-dashed border-b border-dashed border-slate-300'>
@@ -212,16 +213,16 @@ export function KartuTamuSlipModal({
                 )}
                 <div className='flex justify-between items-center text-slate-600 text-[11px] print-dark-override'>
                   <span>Saldo Awal:</span>
-                  <span className='font-medium'>Rp {(slipData.saldo_awal ?? 0).toLocaleString('id-ID')}</span>
+                  <span className='font-medium'>{formatRupiah(slipData.saldo_awal ?? 0)}</span>
                 </div>
                 <div className='flex justify-between items-center font-bold text-emerald-700 text-xs print-dark-override'>
                   <span>Setoran (+):</span>
-                  <span className='text-sm'>Rp {(slipData.nominal ?? 0).toLocaleString('id-ID')}</span>
+                  <span className='text-sm'>{formatRupiah(slipData.nominal ?? 0)}</span>
                 </div>
                 <div className='border-t-2 border-slate-900 pt-2 flex justify-between items-center font-bold text-sm text-slate-900 print-border-double'>
                   <span>SALDO BARU:</span>
                   <span className='text-base font-mono text-emerald-700 print-dark-override'>
-                    Rp {(slipData.saldo_baru ?? 0).toLocaleString('id-ID')}
+                    {formatRupiah(slipData.saldo_baru ?? 0)}
                   </span>
                 </div>
               </div>
@@ -238,7 +239,7 @@ export function KartuTamuSlipModal({
                 <div className='border-t-2 border-slate-900 pt-2 flex justify-between items-center font-bold text-sm text-slate-900 print-border-double'>
                   <span>REFUND TUNAI:</span>
                   <span className='text-base font-mono text-amber-700 print-dark-override'>
-                    Rp {(slipData.saldo_direfund ?? 0).toLocaleString('id-ID')}
+                    {formatRupiah(slipData.saldo_direfund ?? 0)}
                   </span>
                 </div>
                 <p className='text-[10px] text-slate-500 text-center pt-1'>

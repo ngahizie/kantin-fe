@@ -6,9 +6,27 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-none;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+  }
+
+  /* Hilangkan garis luar (outline / ring / box-shadow) saat elemen diklik atau difokuskan */
+  *,
+  *::before,
+  *::after {
+    outline: none !important;
+  }
+
+  *:focus,
+  *:focus-visible,
+  *:focus-within {
+    outline: none !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-offset-color: transparent !important;
+    box-shadow: none !important;
   }
   html {
     @apply overflow-x-hidden;
@@ -35,6 +53,18 @@
     textarea {
       font-size: 16px !important;
     }
+  }
+
+  /* Sembunyikan ikon reveal dan autofill bawaan peramban (Edge/Chrome/Safari) */
+  input[type='password']::-ms-reveal,
+  input[type='password']::-ms-clear,
+  input::-webkit-credentials-auto-fill-button,
+  input::-webkit-contacts-auto-fill-button {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    right: 0 !important;
   }
 }
 

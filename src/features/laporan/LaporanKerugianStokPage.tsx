@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+  import { useState, useEffect, useMemo } from 'react'
 import {
   PackageX,
   AlertTriangle,
@@ -38,7 +38,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { laporanApi } from './api/laporan-api'
@@ -182,19 +181,18 @@ export function LaporanKerugianStokPage() {
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Pusat Laporan Keuangan
+              Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
             <span className="text-xs font-medium">Kerugian Stok</span>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>
       </Header>
 
-      <Main fixed>
+      <Main>
         <div className="space-y-6 pb-12">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -231,7 +229,7 @@ export function LaporanKerugianStokPage() {
                 size="sm"
                 onClick={handleExportExcel}
                 disabled={isLoading || kerugianList.length === 0}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>

@@ -91,12 +91,12 @@ export function KategoriFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-md border-none rounded-2xl shadow-none bg-card'>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className='text-lg font-bold'>
             {isEditing ? 'Ubah Kategori Menu' : 'Tambah Kategori Baru'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className='text-xs text-muted-foreground'>
             {isEditing
               ? 'Perbarui informasi kategori menu kantin sekolah.'
               : 'Tambahkan kategori baru untuk mengelompokkan makanan, minuman, dan snack.'}
@@ -110,7 +110,7 @@ export function KategoriFormModal({
               name='nama'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className='text-xs font-semibold'>
                     Nama Kategori <span className='text-destructive'>*</span>
                   </FormLabel>
                   <FormControl>
@@ -119,6 +119,7 @@ export function KategoriFormModal({
                       {...field}
                       disabled={isSubmitting}
                       autoFocus
+                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                     />
                   </FormControl>
                   <FormDescription className='text-xs'>
@@ -134,7 +135,7 @@ export function KategoriFormModal({
               name='urutan'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Urutan Tampil</FormLabel>
+                  <FormLabel className='text-xs font-semibold'>Urutan Tampil</FormLabel>
                   <FormControl>
                     <Input
                       type='number'
@@ -143,6 +144,7 @@ export function KategoriFormModal({
                       value={field.value}
                       onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                       disabled={isSubmitting}
+                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm tabular-nums'
                     />
                   </FormControl>
                   <FormDescription className='text-xs'>
@@ -156,13 +158,18 @@ export function KategoriFormModal({
             <DialogFooter className='pt-2 sm:justify-end gap-2'>
               <Button
                 type='button'
-                variant='outline'
+                variant='secondary'
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
               >
                 Batal
               </Button>
-              <Button type='submit' disabled={isSubmitting} className='gap-1.5'>
+              <Button
+                type='submit'
+                disabled={isSubmitting}
+                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className='size-4 animate-spin' />

@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -127,11 +126,18 @@ export function BarangMasukPage() {
 
   return (
     <>
-      {/* Top Header */}
       <Header fixed>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
+        <div className='flex w-full items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
+              Manajemen Stok
+            </span>
+            <span className='text-muted-foreground text-xs'>/</span>
+            <span className='text-xs font-medium'>Barang Masuk</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <ProfileDropdown />
+          </div>
         </div>
       </Header>
 
@@ -139,13 +145,13 @@ export function BarangMasukPage() {
         {/* Page Title */}
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Pencatatan Barang Masuk (Restock)
+            Pencatatan Barang Masuk
           </h1>
         </div>
 
         {/* Ringkasan Status Header Cards */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Menu Aktif di Katalog
@@ -156,7 +162,7 @@ export function BarangMasukPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Total Riwayat Mutasi
@@ -167,7 +173,7 @@ export function BarangMasukPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Peringatan Stok Menipis

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -12,16 +12,12 @@ import {
   Calendar,
   UserCheck,
   Loader2,
-  Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search as SearchHeader } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -62,7 +58,6 @@ export const PengaturanKantinPage: React.FC = () => {
   } = usePengaturanStore()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [previewCountdown, setPreviewCountdown] = useState<number | null>(null)
 
   const {
     register,
@@ -77,7 +72,6 @@ export const PengaturanKantinPage: React.FC = () => {
   })
 
   // Watch field values for dynamic previews
-  const watchedDurasi = watch('durasiFotoDetik', 3)
   const watchedKonfirmasi = watch('konfirmasiManual', false)
   const watchedMinTopup = watch('minTopup', 5000)
   const watchedMaxTopup = watch('maksTopup', 500000)
@@ -112,20 +106,6 @@ export const PengaturanKantinPage: React.FC = () => {
       isMounted = false
     }
   }, [fetchPengaturan, reset])
-
-  // Simulasi preview countdown foto
-  const handleTestPreviewCountdown = useCallback(() => {
-    setPreviewCountdown(watchedDurasi)
-    const interval = setInterval(() => {
-      setPreviewCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(interval)
-          return null
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }, [watchedDurasi])
 
   // Submit Handler
   const onSubmit = async (values: PengaturanKantinFormValues) => {
@@ -166,10 +146,18 @@ export const PengaturanKantinPage: React.FC = () => {
   return (
     <>
       <Header>
-        <SearchHeader className='me-auto' />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
+        <div className='flex w-full items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
+              Pengaturan Kantin
+            </span>
+            <span className='text-muted-foreground text-xs'>/</span>
+            <span className='text-xs font-medium'>Operasional Kantin</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <ProfileDropdown />
+          </div>
+        </div>
       </Header>
 
       <Main fixed>
@@ -218,7 +206,7 @@ export const PengaturanKantinPage: React.FC = () => {
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
             <div className='grid gap-6 md:grid-cols-2'>
               {/* Card 1: Identitas & Jam Tutup Otomatis */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
                     <Store className='h-5 w-5 text-primary shrink-0' />
@@ -307,7 +295,7 @@ export const PengaturanKantinPage: React.FC = () => {
               </Card>
 
               {/* Card 2: Interaksi Kasir POS (Foto & Konfirmasi Manual) */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
                     <Camera className='h-5 w-5 text-primary shrink-0' />
@@ -361,24 +349,12 @@ export const PengaturanKantinPage: React.FC = () => {
 
                   {/* Durasi Tampil Foto Siswa */}
                   <div className='space-y-2 py-1'>
-                    <div className='flex items-center justify-between'>
-                      <Label
-                        htmlFor='durasiFotoDetik'
-                        className='text-xs font-semibold'
-                      >
-                        Durasi Tampil Foto Siswa
-                      </Label>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        onClick={handleTestPreviewCountdown}
-                        className='h-6 px-1.5 text-[10px]'
-                        title='Uji coba hitung mundur foto'
-                      >
-                        <Eye className='h-3 w-3 mr-1' /> Tes Hitung Mundur
-                      </Button>
-                    </div>
+                    <Label
+                      htmlFor='durasiFotoDetik'
+                      className='text-xs font-semibold'
+                    >
+                      Durasi Tampil Foto Siswa
+                    </Label>
 
                     <div className='flex items-center gap-3'>
                       <Input
@@ -403,25 +379,12 @@ export const PengaturanKantinPage: React.FC = () => {
                         {errors.durasiFotoDetik.message}
                       </p>
                     )}
-
-                    {/* Preview Simulasi Countdown jika diuji */}
-                    {previewCountdown !== null && (
-                      <div className='mt-2 flex items-center justify-center gap-2 rounded-md bg-emerald-500/10 p-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400'>
-                        <Clock className='h-4 w-4 animate-pulse' />
-                        <span>
-                          Simulasi modal foto kasir menutup otomatis dalam:{' '}
-                          <strong className='font-mono text-sm'>
-                            {previewCountdown}s
-                          </strong>
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Card 3: Batas Plafon Top-Up Siswa */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
                     <Coins className='h-5 w-5 text-primary shrink-0' />
@@ -500,7 +463,7 @@ export const PengaturanKantinPage: React.FC = () => {
               </Card>
 
               {/* Card 4: Batas Saldo Maksimum */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
                     <ShieldCheck className='h-5 w-5 text-primary shrink-0' />
@@ -586,7 +549,7 @@ export const PengaturanKantinPage: React.FC = () => {
             </div>
 
             {/* Bottom Action Footer */}
-            <Card className='border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+            <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
               <CardFooter className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='flex items-center gap-2 text-xs text-muted-foreground'>
                   <UserCheck className='h-4 w-4 text-emerald-600' />
