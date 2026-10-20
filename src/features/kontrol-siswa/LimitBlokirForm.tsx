@@ -119,13 +119,55 @@ function LimitBlokirFormContent({
     setIsSubmitting(true)
 
     try {
-      await apiClient
-        .put('/api/kontrol-kartu/limit-harian', {
-          subjekTipe: 'SISWA',
-          subjekId: student.siswa_id,
-          nominal: limitEnabled ? nominalLimitNum : null,
-        })
-        .catch(() => null)
+      const oldBlockedItems = student.blocked_items || []
+      const oldBlockedCats = student.blocked_categories || []
+
+      const itemsToBlock = blockedItemIds.filter((id) => !oldBlockedItems.includes(id))
+      const itemsToUnblock = oldBlockedItems.filter((id) => !blockedItemIds.includes(id))
+      const catsToBlock = blockedCategoryIds.filter((id) => !oldBlockedCats.includes(id))
+      const catsToUnblock = oldBlockedCats.filter((id) => !blockedCategoryIds.includes(id))
+
+      await Promise.all([
+        apiClient
+          .put('/api/kontrol-kartu/limit-harian', {
+            subjekTipe: 'SISWA',
+            subjekId: student.siswa_id,
+            nominal: limitEnabled ? nominalLimitNum : null,
+          })
+          .catch(() => null),
+        ...itemsToBlock.map((id) =>
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
+            subjekTipe: 'SISWA',
+            subjekId: student.siswa_id,
+            menuId: id,
+            diblokir: true,
+          }).catch(() => null)
+        ),
+        ...itemsToUnblock.map((id) =>
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
+            subjekTipe: 'SISWA',
+            subjekId: student.siswa_id,
+            menuId: id,
+            diblokir: false,
+          }).catch(() => null)
+        ),
+        ...catsToBlock.map((id) =>
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
+            subjekTipe: 'SISWA',
+            subjekId: student.siswa_id,
+            kategoriId: id,
+            diblokir: true,
+          }).catch(() => null)
+        ),
+        ...catsToUnblock.map((id) =>
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
+            subjekTipe: 'SISWA',
+            subjekId: student.siswa_id,
+            kategoriId: id,
+            diblokir: false,
+          }).catch(() => null)
+        ),
+      ])
 
       const updatedStudent: KartuSiswaMock = {
         ...student,
