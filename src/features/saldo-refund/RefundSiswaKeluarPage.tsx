@@ -280,9 +280,8 @@ export function RefundSiswaKeluarPage() {
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Kartu RFID Diamankan
               </CardDescription>
-              <CardTitle className='text-2xl font-bold flex items-center gap-2 text-foreground'>
-                <Lock className='h-5 w-5 text-destructive' />
-                <span>{completedRefundCount} Kartu</span>
+              <CardTitle className='text-2xl font-bold text-foreground'>
+                {completedRefundCount} Kartu
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
