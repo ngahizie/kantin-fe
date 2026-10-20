@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import {
-  Banknote,
-  Building,
   Upload,
-  AlertTriangle,
   Lock,
   Image as ImageIcon,
   User,
@@ -29,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -222,7 +218,7 @@ function RefundOrangTuaFormContent({
   }
 
   return (
-    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto'>
+    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Refund Sisa Saldo ke Orang Tua / Wali
@@ -233,13 +229,13 @@ function RefundOrangTuaFormContent({
         </DialogHeader>
 
         {/* Info Siswa & Sisa Saldo */}
-        <div className='rounded-xl border bg-muted/60 p-3.5 space-y-2'>
+        <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5 space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <img
                 src={siswa.foto_url}
                 alt={siswa.nama}
-                className='h-12 w-12 rounded-full object-cover border'
+                className='h-12 w-12 rounded-full object-cover shrink-0'
               />
               <div>
                 <p className='font-bold text-sm text-foreground'>{siswa.nama}</p>
@@ -279,54 +275,48 @@ function RefundOrangTuaFormContent({
               onValueChange={(v) => setMetode(v as 'TUNAI' | 'TRANSFER_BANK')}
               className='grid grid-cols-2 gap-3'
             >
-              <div
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+              <label
+                htmlFor='metode-transfer'
+                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TRANSFER_BANK'
-                    ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                    : 'border-border hover:bg-muted/50'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
-                onClick={() => setMetode('TRANSFER_BANK')}
               >
-                <div className='flex items-center gap-2.5'>
-                  <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
-                  <Label htmlFor='metode-transfer' className='cursor-pointer text-xs font-medium'>
-                    <div className='font-semibold text-sm'>Transfer Bank</div>
-                    <div className='text-muted-foreground text-[11px]'>Kirim ke rekening ortu</div>
-                  </Label>
+                <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
+                <div className='text-xs font-medium'>
+                  <div className='font-semibold text-sm'>Transfer Bank</div>
+                  <div className='text-muted-foreground text-[11px]'>Kirim ke rekening ortu</div>
                 </div>
-                <Building className='h-4 w-4 text-primary shrink-0' />
-              </div>
+              </label>
 
-              <div
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+              <label
+                htmlFor='metode-tunai'
+                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TUNAI'
-                    ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                    : 'border-border hover:bg-muted/50'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
-                onClick={() => setMetode('TUNAI')}
               >
-                <div className='flex items-center gap-2.5'>
-                  <RadioGroupItem value='TUNAI' id='metode-tunai' />
-                  <Label htmlFor='metode-tunai' className='cursor-pointer text-xs font-medium'>
-                    <div className='font-semibold text-sm'>Tunai (Kas TU)</div>
-                    <div className='text-muted-foreground text-[11px]'>Diserahkan langsung di TU</div>
-                  </Label>
+                <RadioGroupItem value='TUNAI' id='metode-tunai' />
+                <div className='text-xs font-medium'>
+                  <div className='font-semibold text-sm'>Tunai (Kas TU)</div>
+                  <div className='text-muted-foreground text-[11px]'>Diserahkan langsung di TU</div>
                 </div>
-                <Banknote className='h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0' />
-              </div>
+              </label>
             </RadioGroup>
           </div>
 
           {/* Form Detail Transfer Bank jika dipilih */}
           {metode === 'TRANSFER_BANK' && (
-            <div className='rounded-lg border p-3.5 space-y-3 bg-muted/20'>
+            <div className='rounded-xl border-0 p-3.5 space-y-3 bg-muted/50 dark:bg-muted/20'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
                   <Label htmlFor='bank' className='text-xs'>
-                    Bank Tujuan *
+                    Bank Tujuan <span className='text-destructive'>*</span>
                   </Label>
                   <Select value={bank} onValueChange={setBank}>
-                    <SelectTrigger id='bank' className='h-9 text-xs'>
+                    <SelectTrigger id='bank' className='h-9 text-xs border-0 bg-background/80 shadow-none'>
                       <SelectValue placeholder='Pilih bank' />
                     </SelectTrigger>
                     <SelectContent>
@@ -341,28 +331,28 @@ function RefundOrangTuaFormContent({
 
                 <div className='space-y-1.5'>
                   <Label htmlFor='noRekening' className='text-xs'>
-                    Nomor Rekening Tujuan *
+                    Nomor Rekening Tujuan <span className='text-destructive'>*</span>
                   </Label>
                   <Input
                     id='noRekening'
                     value={noRekening}
                     onChange={(e) => setNoRekening(e.target.value.replace(/\D/g, ''))}
                     placeholder='Misal: 142001928374'
-                    className='h-9 text-xs font-mono'
+                    className='h-9 text-xs font-mono border-0 bg-background/80 shadow-none'
                   />
                 </div>
               </div>
 
               <div className='space-y-1.5'>
                 <Label htmlFor='namaRekening' className='text-xs'>
-                  Nama Pemilik Rekening *
+                  Nama Pemilik Rekening <span className='text-destructive'>*</span>
                 </Label>
                 <Input
                   id='namaRekening'
                   value={namaRekening}
                   onChange={(e) => setNamaRekening(e.target.value)}
                   placeholder='Sesuai buku tabungan / e-wallet'
-                  className='h-9 text-xs'
+                  className='h-9 text-xs border-0 bg-background/80 shadow-none'
                 />
               </div>
             </div>
@@ -372,7 +362,7 @@ function RefundOrangTuaFormContent({
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div className='space-y-1.5'>
               <Label htmlFor='namaPenerima' className='text-xs'>
-                Nama Orang Tua / Penerima *
+                Nama Orang Tua / Penerima <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
                 <User className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
@@ -381,14 +371,14 @@ function RefundOrangTuaFormContent({
                   value={namaPenerima}
                   onChange={(e) => setNamaPenerima(e.target.value)}
                   placeholder='Nama lengkap orang tua'
-                  className='h-9 pl-8 text-xs'
+                  className='h-9 pl-8 text-xs border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
                 />
               </div>
             </div>
 
             <div className='space-y-1.5'>
               <Label htmlFor='kontakPenerima' className='text-xs'>
-                No. HP / WhatsApp Ortu *
+                No. HP / WhatsApp Ortu <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
                 <Phone className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
@@ -397,7 +387,7 @@ function RefundOrangTuaFormContent({
                   value={kontakPenerima}
                   onChange={(e) => setKontakPenerima(e.target.value)}
                   placeholder='0812xxxxxxx'
-                  className='h-9 pl-8 text-xs font-mono'
+                  className='h-9 pl-8 text-xs font-mono border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
                 />
               </div>
             </div>
@@ -410,7 +400,7 @@ function RefundOrangTuaFormContent({
               <span className='text-[11px] text-muted-foreground font-normal'>Opsional</span>
             </Label>
             <div className='flex items-center gap-3'>
-              <label className='flex items-center gap-2 cursor-pointer border border-dashed rounded-lg px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors text-xs text-muted-foreground'>
+              <label className='flex items-center gap-2 cursor-pointer border-0 bg-muted/70 hover:bg-muted/90 rounded-lg px-3 py-2 transition-colors text-xs text-muted-foreground'>
                 <Upload className='h-3.5 w-3.5 text-primary' />
                 <span>{isUploading ? 'Mengunggah...' : 'Pilih Foto / Gambar Bukti'}</span>
                 <input
@@ -423,7 +413,7 @@ function RefundOrangTuaFormContent({
               </label>
 
               {buktiUrl && (
-                <div className='flex items-center gap-2 text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-2.5 py-1.5 rounded-lg border border-emerald-200'>
+                <div className='flex items-center gap-2 text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded-lg border-0'>
                   <ImageIcon className='h-3.5 w-3.5' />
                   <span className='truncate max-w-[150px]'>Bukti Terlampir</span>
                   <button
@@ -448,45 +438,36 @@ function RefundOrangTuaFormContent({
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               placeholder='Contoh: Pengembalian sisa saldo kelulusan tahun ajaran 2025/2026'
-              className='text-xs min-h-[60px]'
+              className='text-xs min-h-[60px] border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
             />
           </div>
 
-          {/* Peringatan & Konfirmasi Blokir Otomatis */}
-          <Alert className='border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
-            <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
-            <AlertTitle className='text-xs font-semibold'>
-              Konfirmasi Efek Otomatis Sistem
-            </AlertTitle>
-            <AlertDescription className='text-[11px] leading-relaxed mt-1'>
-              Setelah refund diproses: <strong>saldo siswa akan menjadi Rp 0</strong> dan kartu RFID
-              lama (<code className='font-mono font-bold'>{siswa.rfid_uid}</code>) akan{' '}
-              <strong>otomatis diblokir permanen</strong> dari sistem kasir.
-            </AlertDescription>
-          </Alert>
+          {/* Ketentuan Konfirmasi Blokir Otomatis */}
+          <div className='rounded-lg border-0 bg-muted/70 dark:bg-muted/30 px-3.5 py-2.5 text-xs text-muted-foreground'>
+            Setelah refund, saldo siswa menjadi <strong className='text-foreground'>Rp 0</strong> dan kartu RFID (<code className='font-mono font-bold text-foreground'>{siswa.rfid_uid}</code>) otomatis diblokir permanen.
+          </div>
 
           {/* Persetujuan Petugas */}
-          <div className='flex items-start gap-2 pt-1'>
+          <div className='flex items-center gap-2 pt-1'>
             <input
               type='checkbox'
               id='agreement'
               checked={agreement}
               onChange={(e) => setAgreement(e.target.checked)}
-              className='mt-0.5 rounded border-gray-300 text-primary focus:ring-primary'
+              className='rounded border-gray-300 text-primary focus:ring-primary cursor-pointer'
             />
-            <Label htmlFor='agreement' className='text-[11px] font-normal leading-tight cursor-pointer'>
-              Saya menyatakan bahwa dana sebesar{' '}
-              <strong className='text-foreground'>{formatRupiah(siswa.saldo)}</strong> telah
-              diserahkan secara sah kepada orang tua/wali siswa yang bersangkutan.
+            <Label htmlFor='agreement' className='text-xs font-normal cursor-pointer select-none'>
+              Dana sebesar <strong className='text-foreground'>{formatRupiah(siswa.saldo)}</strong> telah diserahkan ke orang tua/wali.
             </Label>
           </div>
 
           <DialogFooter className='gap-2 pt-2'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className='border-0 bg-muted/80 shadow-none'
             >
               Batal
             </Button>
