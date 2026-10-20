@@ -213,28 +213,22 @@ export function MenuPage() {
       </Header>
 
       <Main className='p-4 md:p-6 space-y-6'>
-        {/* Actions & Description */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <p className='text-sm text-muted-foreground'>
-            Kelola menu makanan, minuman, harga jual rupiah, dan kontrol stok minimum kantin.
-          </p>
-
-          <div className='flex items-center gap-2 shrink-0'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={loadData}
-              disabled={loading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Segarkan
-            </Button>
-            <Button size='sm' onClick={handleAdd} className='gap-1.5'>
-              <Plus className='size-4' />
-              Tambah Menu Baru
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className='flex items-center justify-end gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={loadData}
+            disabled={loading}
+            className='gap-1.5'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Segarkan
+          </Button>
+          <Button size='sm' onClick={handleAdd} className='gap-1.5'>
+            <Plus className='size-4' />
+            Tambah Menu Baru
+          </Button>
         </div>
 
         {/* Ringkasan Widgets */}
