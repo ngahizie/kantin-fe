@@ -4,7 +4,6 @@ import {
   Users,
   CreditCard,
   Download,
-  RefreshCw,
   Search,
   ArrowRight,
   UserCheck,
@@ -52,25 +51,6 @@ export function LaporanSaldoMengendapPage() {
   const [activeTab, setActiveTab] = useState<'siswa' | 'kartu-tamu'>('siswa')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resRingkasan, resSiswa, resKartuTamu] = await Promise.all([
-        laporanApi.getSaldoMengendap(),
-        laporanApi.getSiswaSaldoList(),
-        laporanApi.getKartuTamuSaldoList(),
-      ])
-
-      setRingkasan(resRingkasan)
-      setSiswaList(resSiswa)
-      setKartuTamuList(resKartuTamu)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat saldo mengendap'
-      toast.error('Gagal Memuat Laporan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -212,33 +192,12 @@ export function LaporanSaldoMengendapPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Wallet className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Saldo Mengendap
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Total dana titipan siswa & kartu tamu yang menjadi kewajiban sekolah (PRD §9.5).
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Saldo Mengendap
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
