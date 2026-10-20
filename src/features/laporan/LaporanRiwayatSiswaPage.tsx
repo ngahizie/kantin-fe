@@ -4,7 +4,7 @@ import {
   Download,
   User,
   Phone,
-  Receipt,
+  FileText,
   Printer,
   AlertCircle,
   X,
@@ -601,7 +601,7 @@ export function LaporanRiwayatSiswaPage() {
                                 onClick={() => setSelectedTrxForReceipt(trx)}
                                 className="h-8 text-xs gap-1"
                               >
-                                <Receipt className="h-3.5 w-3.5" />
+                                <FileText className="h-3.5 w-3.5" />
                                 <span>Lihat</span>
                               </Button>
                             ) : (
@@ -622,7 +622,10 @@ export function LaporanRiwayatSiswaPage() {
             open={!!selectedTrxForReceipt}
             onOpenChange={(open) => !open && setSelectedTrxForReceipt(null)}
           >
-            <DialogContent className="sm:max-w-md font-sans border-0 shadow-lg p-0 overflow-hidden">
+            <DialogContent
+              className="sm:max-w-md font-sans border-0 border-none shadow-2xl p-0 overflow-hidden outline-none ring-0"
+              style={{ border: 'none' }}
+            >
               <style>{`
                 @media print {
                   @page {
@@ -659,7 +662,7 @@ export function LaporanRiwayatSiswaPage() {
                     margin: 24px auto !important;
                     max-width: 420px !important;
                     padding: 0 !important;
-                    border: 1px solid #cbd5e1 !important;
+                    border: none !important;
                     border-radius: 12px !important;
                     box-shadow: none !important;
                     background: #ffffff !important;
@@ -687,7 +690,7 @@ export function LaporanRiwayatSiswaPage() {
                   }
                   .printable-struk .printable-receipt-card {
                     background-color: #f8fafc !important;
-                    border: 1px solid #e2e8f0 !important;
+                    border: none !important;
                   }
                   .printable-struk .border-b {
                     border-bottom-color: #e2e8f0 !important;
@@ -696,9 +699,9 @@ export function LaporanRiwayatSiswaPage() {
               `}</style>
 
               <div className="printable-struk p-6">
-                <DialogHeader className="text-center pb-3 border-b">
+                <DialogHeader className="text-center pb-2">
                   <DialogTitle className="flex items-center gap-2 justify-center font-bold text-base">
-                    <Receipt className="h-5 w-5 text-primary" />
+                    <FileText className="h-5 w-5 text-primary" />
                     <span>Struk Transaksi Digital Kantin</span>
                   </DialogTitle>
                   <DialogDescription className="text-center text-xs text-muted-foreground">
@@ -708,7 +711,10 @@ export function LaporanRiwayatSiswaPage() {
 
                 {selectedTrxForReceipt && profil && (
                   <div className="space-y-4 pt-3 font-mono text-xs">
-                    <div className="printable-receipt-card rounded-lg border-0 p-4 bg-muted/40 text-xs space-y-2">
+                    <div
+                      className="printable-receipt-card rounded-xl border-0 border-none p-4 bg-muted/40 text-xs space-y-2"
+                      style={{ border: 'none' }}
+                    >
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Waktu:</span>
                         <span className="font-semibold text-foreground">{formatDateTime(selectedTrxForReceipt.waktu)}</span>
