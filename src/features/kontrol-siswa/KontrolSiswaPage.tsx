@@ -1,13 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
-  RefreshCw,
   PhoneOff,
   Smartphone,
   Sliders,
   CheckCircle2,
   UtensilsCrossed,
   DollarSign,
-  ShoppingCart,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -23,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { TableToolbar } from '@/components/data-table'
 import { formatRupiah } from '@/lib/formatters'
@@ -32,7 +29,7 @@ import { LimitBlokirForm } from './LimitBlokirForm'
 
 export function KontrolSiswaPage() {
   const [students, setStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
-  const [isLoading, setIsLoading] = useState(false)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [appFilter, setAppFilter] = useState<string>('ALL')
   const [limitFilter, setLimitFilter] = useState<string>('ALL')
@@ -59,19 +56,7 @@ export function KontrolSiswaPage() {
     }
   }, [])
 
-  const refreshStudents = async () => {
-    setIsLoading(true)
-    try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat')
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
-      }
-    } catch {
-      // Fallback
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   // KPI Calculations
   const nonAppCount = useMemo(() => {
@@ -117,10 +102,10 @@ export function KontrolSiswaPage() {
       const q = searchQuery.toLowerCase().trim()
       if (q) {
         return (
-          s.nama.toLowerCase().includes(q) ||
-          s.nis.toLowerCase().includes(q) ||
-          s.kelas.toLowerCase().includes(q) ||
-          (s.parent_name && s.parent_name.toLowerCase().includes(q))
+          (s.nama?.toLowerCase() ?? '').includes(q) ||
+          (s.nis?.toLowerCase() ?? '').includes(q) ||
+          (s.kelas?.toLowerCase() ?? '').includes(q) ||
+          Boolean(s.parent_name && s.parent_name.toLowerCase().includes(q))
         )
       }
       return true
@@ -133,43 +118,7 @@ export function KontrolSiswaPage() {
     )
   }
 
-  // Quick live validator test for demo / verification
-  const handleTestCashierValidation = useCallback(
-    async (studentToTest: KartuSiswaMock) => {
-      // Sample cart: Nasi Uduk (ID 1, Kat 1) + Es Teh Manis (ID 9, Kat 3)
-      const testItems = [
-        { menuId: 1, qty: 1 },
-        { menuId: 9, qty: 1 },
-      ]
 
-      try {
-        const res = await apiClient.post('/api/kasir/tap', {
-          rfidUid: studentToTest.uid,
-          titikKasirId: 1,
-          items: testItems,
-          idempotencyKey: `TAP-TEST-${Date.now()}-${studentToTest.siswa_id}`,
-        })
-        if (
-          res.data?.status === 'SUCCESS' ||
-          res.data?.responseCode === 200 ||
-          res.data?.code === 200
-        ) {
-          const total = (res.data?.data?.total || 16000) as number
-          toast.success(`Uji Validasi Kasir: LOLOS`, {
-            description: `Siswa ${studentToTest.nama} lolos membeli Nasi Uduk & Es Teh (${formatRupiah(total)}).`,
-          })
-        }
-      } catch (err: unknown) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        const msg =
-          axiosErr.response?.data?.message || 'Transaksi ditolak kasir'
-        toast.error(`Uji Validasi Kasir: DITOLAK`, {
-          description: `Kasir menolak ${studentToTest.nama}: ${msg}`,
-        })
-      }
-    },
-    []
-  )
 
 
   return (
@@ -182,28 +131,10 @@ export function KontrolSiswaPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Kontrol Siswa atas Nama Orang Tua
-            </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Pengaturan batas limit belanja harian dan larangan menu siswa
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => void refreshStudents()}
-              disabled={isLoading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Kontrol Siswa atas Nama Orang Tua
+          </h1>
         </div>
 
         {/* KPI Cards Ringkasan */}
@@ -305,7 +236,7 @@ export function KontrolSiswaPage() {
         />
 
         {/* Tabel Siswa */}
-        <Card>
+        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
@@ -342,13 +273,13 @@ export function KontrolSiswaPage() {
                               <img
                                 src={siswa.foto_url}
                                 alt={siswa.nama}
-                                className='h-10 w-10 rounded-full object-cover border'
+                                className='h-10 w-10 rounded-full object-cover'
                               />
                               <div>
                                 <p className='font-bold text-foreground flex items-center gap-1.5'>
                                   {siswa.nama}
                                   {siswa.is_blocked && (
-                                    <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 font-medium'>
+                                    <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 font-medium'>
                                       KARTU DIBLOKIR
                                     </Badge>
                                   )}
@@ -367,7 +298,7 @@ export function KontrolSiswaPage() {
                           <TableCell>
                             {siswa.parent_app_registered ? (
                               <Badge
-                                variant='outline'
+                                variant='secondary'
                                 className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] py-0.5 gap-1 font-medium'
                               >
                                 <Smartphone className='h-3 w-3' />
@@ -376,7 +307,7 @@ export function KontrolSiswaPage() {
                             ) : (
                               <div className='space-y-0.5'>
                                 <Badge
-                                  variant='outline'
+                                  variant='secondary'
                                   className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0.5 gap-1 font-medium'
                                 >
                                   <PhoneOff className='h-3 w-3' />
@@ -394,7 +325,7 @@ export function KontrolSiswaPage() {
                             {hasLimit ? (
                               <div className='space-y-1'>
                                 <Badge
-                                  variant='outline'
+                                  variant='secondary'
                                   className='border-0 bg-primary/15 text-primary text-[11px] py-0.5 font-mono font-medium'
                                 >
                                   {formatRupiah(siswa.limit_harian)} / hari
@@ -418,7 +349,7 @@ export function KontrolSiswaPage() {
                                 <div className='flex flex-wrap gap-1'>
                                   {blockedCatsCount > 0 && (
                                     <Badge
-                                      variant='outline'
+                                      variant='secondary'
                                       className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0 font-medium'
                                     >
                                       {blockedCatsCount} Kategori Diblokir
@@ -426,7 +357,7 @@ export function KontrolSiswaPage() {
                                   )}
                                   {blockedItemsCount > 0 && (
                                     <Badge
-                                      variant='outline'
+                                      variant='secondary'
                                       className='border-0 bg-destructive/15 text-destructive text-[10px] py-0 px-1.5 font-medium'
                                     >
                                       {blockedItemsCount} Item Spesifik
@@ -455,26 +386,15 @@ export function KontrolSiswaPage() {
 
                           {/* Aksi */}
                           <TableCell className='text-right'>
-                            <div className='flex items-center justify-end gap-1.5'>
+                            <div className='flex items-center justify-end'>
                               <Button
                                 size='sm'
-                                variant='ghost'
-                                onClick={() => void handleTestCashierValidation(siswa)}
-                                title='Uji coba simulasi belanja kasir dengan keranjang berisi Nasi Uduk & Es Teh'
-                                className='h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground'
-                              >
-                                <ShoppingCart className='h-3.5 w-3.5' />
-                                <span className='hidden xl:inline'>Uji Kasir</span>
-                              </Button>
-
-                              <Button
-                                size='sm'
-                                variant='outline'
+                                variant='secondary'
                                 onClick={() => {
                                   setSelectedStudent(siswa)
                                   setIsFormOpen(true)
                                 }}
-                                className='h-8 text-xs gap-1.5'
+                                className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                               >
                                 <Sliders className='h-3.5 w-3.5' />
                                 <span>Atur Limit & Blokir</span>
