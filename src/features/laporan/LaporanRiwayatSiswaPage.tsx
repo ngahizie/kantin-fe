@@ -260,17 +260,243 @@ export function LaporanRiwayatSiswaPage() {
   }
 
   const handlePrintReceipt = () => {
-    const originalTitle = document.title
-    document.title = ' '
-    window.print()
-    const handleAfterPrint = () => {
-      document.title = originalTitle
-      window.removeEventListener('afterprint', handleAfterPrint)
+    if (!selectedTrxForReceipt || !profil) return
+
+    const itemsHtml = selectedTrxForReceipt.items && selectedTrxForReceipt.items.length > 0
+      ? selectedTrxForReceipt.items.map((it) => `
+          <tr>
+            <td style="font-weight: bold; width: 28px; padding: 3px 0; vertical-align: top;">${it.qty}x</td>
+            <td style="padding: 3px 0; vertical-align: top;">${it.nama}</td>
+            <td style="text-align: right; font-weight: bold; white-space: nowrap; padding: 3px 0; vertical-align: top;">${formatRupiah(it.subtotal)}</td>
+          </tr>
+        `).join('')
+      : `<tr><td colspan="3" style="padding: 6px 0; color: #555; font-style: italic;">${selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}</td></tr>`
+
+    const receiptHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Struk Transaksi - ${selectedTrxForReceipt.referensiId}</title>
+  <style>
+    @page {
+      margin: 6mm auto;
+      size: 80mm auto;
     }
-    window.addEventListener('afterprint', handleAfterPrint)
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Courier New', Courier, monospace, sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #000;
+      background: #fff;
+      width: 72mm;
+      margin: 0 auto;
+      padding: 2mm 0;
+    }
+    .header {
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #000;
+    }
+    .store-name {
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sub-title {
+      font-size: 9px;
+      color: #333;
+      margin-top: 2px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .ref-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid #000;
+      border-radius: 4px;
+      background: #f8fafc;
+    }
+    .info-section {
+      padding: 8px 0;
+      border-bottom: 1px dashed #000;
+      font-size: 11px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .info-label {
+      color: #444;
+    }
+    .info-value {
+      font-weight: bold;
+      text-align: right;
+    }
+    .student-box {
+      border: 1px solid #000;
+      border-radius: 4px;
+      padding: 6px 8px;
+      margin: 8px 0;
+      background: #fafafa;
+    }
+    .student-title {
+      font-size: 9px;
+      color: #555;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .order-section {
+      padding: 8px 0;
+    }
+    .order-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .total-box {
+      padding-top: 8px;
+      border-top: 2px solid #000;
+      margin-top: 6px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .balance-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #333;
+      margin-top: 4px;
+    }
+    .footer {
+      text-align: center;
+      padding-top: 8px;
+      border-top: 1px dashed #000;
+      margin-top: 8px;
+      font-size: 9px;
+      color: #444;
+      line-height: 1.3;
+    }
+    .footer-brand {
+      margin-top: 4px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="store-name">SKOOLIA CANTEEN</div>
+    <div class="sub-title">STRUK TRANSAKSI DIGITAL KASIR</div>
+    <div>
+      <div style="font-size: 8px; color: #666; margin-top: 4px;">NO. REFERENSI TRANSAKSI:</div>
+      <div class="ref-badge">${selectedTrxForReceipt.referensiId}</div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="info-row">
+      <span class="info-label">Waktu:</span>
+      <span class="info-value">${formatDateTime(selectedTrxForReceipt.waktu)}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Titik Kasir:</span>
+      <span class="info-value">${selectedTrxForReceipt.titikKasir}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Petugas:</span>
+      <span class="info-value">${selectedTrxForReceipt.petugas}</span>
+    </div>
+  </div>
+
+  <div class="student-box">
+    <div class="student-title">Identitas Siswa:</div>
+    <div class="info-row" style="margin-bottom: 2px;">
+      <span style="font-weight: bold; font-size: 11px;">${profil.nama}</span>
+      <span style="font-size: 10px; color: #333;">NIS: ${profil.nis}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Kelas:</span>
+      <span style="font-weight: bold;">${profil.kelas}</span>
+    </div>
+  </div>
+
+  <div class="order-section">
+    <div class="order-title">Daftar Pesanan:</div>
+    <table class="items-table">
+      ${itemsHtml}
+    </table>
+  </div>
+
+  <div class="total-box">
+    <div class="total-row">
+      <span>TOTAL POTONG SALDO:</span>
+      <span>${formatRupiah(selectedTrxForReceipt.nominal)}</span>
+    </div>
+    <div class="balance-row">
+      <span>Sisa Saldo Kartu:</span>
+      <span style="font-weight: bold;">${formatRupiah(selectedTrxForReceipt.saldoSetelah)}</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Simpan bukti ini sebagai bukti transaksi resmi kantin sekolah.</p>
+    <p class="footer-brand">*** SKOOLIA CASHLESS CANTEEN ***</p>
+  </div>
+</body>
+</html>`
+
+    const existingFrame = document.getElementById('receipt-print-iframe')
+    if (existingFrame) {
+      existingFrame.remove()
+    }
+
+    const iframe = document.createElement('iframe')
+    iframe.id = 'receipt-print-iframe'
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    iframe.style.visibility = 'hidden'
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentWindow?.document
+    if (!doc) return
+
+    doc.open()
+    doc.write(receiptHtml)
+    doc.close()
+
     setTimeout(() => {
-      document.title = originalTitle
-    }, 1500)
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+      setTimeout(() => {
+        iframe.remove()
+      }, 3000)
+    }, 250)
   }
 
   return (
@@ -627,67 +853,6 @@ export function LaporanRiwayatSiswaPage() {
               className="sm:max-w-md font-sans border-0 border-none shadow-2xl p-0 overflow-hidden"
               style={{ border: 'none' }}
             >
-              {/* CSS terisolasi untuk cetak struk kasir rapi 1 halaman */}
-              <style>{`
-                @media print {
-                  @page {
-                    margin: 0;
-                    size: 80mm auto;
-                  }
-                  html, body {
-                    background: #ffffff !important;
-                    color: #000000 !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    height: auto !important;
-                    min-height: 0 !important;
-                    overflow: visible !important;
-                  }
-                  #root {
-                    display: none !important;
-                  }
-                  body * {
-                    visibility: hidden !important;
-                  }
-                  .printable-slip,
-                  .printable-slip * {
-                    visibility: visible !important;
-                    color: #000000 !important;
-                  }
-                  .printable-slip {
-                    position: fixed !important;
-                    left: 50% !important;
-                    top: 8mm !important;
-                    transform: translateX(-50%) !important;
-                    width: 76mm !important;
-                    max-width: 76mm !important;
-                    padding: 6mm 3mm !important;
-                    font-family: 'Courier New', Courier, monospace, sans-serif !important;
-                    background: #ffffff !important;
-                    color: #000000 !important;
-                    box-shadow: none !important;
-                    border: 1px dashed #000000 !important;
-                    border-radius: 6px !important;
-                    page-break-inside: avoid !important;
-                    break-inside: avoid !important;
-                    page-break-after: avoid !important;
-                    break-after: avoid !important;
-                  }
-                  .printable-slip .border-slate-300,
-                  .printable-slip .border-slate-200 {
-                    border-color: #000000 !important;
-                  }
-                  .printable-slip .bg-slate-100,
-                  .printable-slip .bg-slate-50 {
-                    background-color: transparent !important;
-                    border-color: #000000 !important;
-                  }
-                  .no-print {
-                    display: none !important;
-                  }
-                }
-              `}</style>
-
               <div className="p-5 space-y-4 bg-muted/30">
                 {/* Modal Title Bar (Screen Only) */}
                 <DialogHeader className="no-print">
