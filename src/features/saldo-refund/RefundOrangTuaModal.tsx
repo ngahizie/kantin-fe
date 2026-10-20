@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import {
-  Banknote,
-  Building,
   Upload,
   Lock,
   Image as ImageIcon,
@@ -279,38 +277,32 @@ function RefundOrangTuaFormContent({
             >
               <label
                 htmlFor='metode-transfer'
-                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
+                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TRANSFER_BANK'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
               >
-                <div className='flex items-center gap-2.5'>
-                  <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
-                  <div className='text-xs font-medium'>
-                    <div className='font-semibold text-sm'>Transfer Bank</div>
-                    <div className='text-muted-foreground text-[11px]'>Kirim ke rekening ortu</div>
-                  </div>
+                <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
+                <div className='text-xs font-medium'>
+                  <div className='font-semibold text-sm'>Transfer Bank</div>
+                  <div className='text-muted-foreground text-[11px]'>Kirim ke rekening ortu</div>
                 </div>
-                <Building className='h-4 w-4 text-primary shrink-0' />
               </label>
 
               <label
                 htmlFor='metode-tunai'
-                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
+                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TUNAI'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
               >
-                <div className='flex items-center gap-2.5'>
-                  <RadioGroupItem value='TUNAI' id='metode-tunai' />
-                  <div className='text-xs font-medium'>
-                    <div className='font-semibold text-sm'>Tunai (Kas TU)</div>
-                    <div className='text-muted-foreground text-[11px]'>Diserahkan langsung di TU</div>
-                  </div>
+                <RadioGroupItem value='TUNAI' id='metode-tunai' />
+                <div className='text-xs font-medium'>
+                  <div className='font-semibold text-sm'>Tunai (Kas TU)</div>
+                  <div className='text-muted-foreground text-[11px]'>Diserahkan langsung di TU</div>
                 </div>
-                <Banknote className='h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0' />
               </label>
             </RadioGroup>
           </div>
