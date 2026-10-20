@@ -375,19 +375,21 @@ function PindahSaldoFormContent({
 
           {/* Pratinjau Saldo Atomik Real-time */}
           {selectedDestination && (
-            <div className='rounded-xl border-0 bg-muted/50 dark:bg-muted/20 p-3.5 space-y-2.5'>
+            <div className='rounded-xl border-0 bg-muted/60 dark:bg-muted/20 p-4 space-y-3'>
               <div className='flex items-center justify-between text-xs font-bold text-foreground'>
                 <span>Pratinjau Mutasi Saldo Atomik</span>
-                <Badge variant='outline' className='border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[10px] py-0 font-medium'>
+                <Badge variant='outline' className='border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[10px] px-2.5 py-0.5 font-medium'>
                   2 Akun Sekaligus
                 </Badge>
               </div>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs'>
                 {/* Asal */}
-                <div className='rounded-lg bg-card p-2.5 border-0 shadow-none space-y-1'>
-                  <p className='text-[10px] text-muted-foreground font-semibold'>AKUN ASAL (LULUS)</p>
-                  <p className='font-semibold truncate text-foreground'>
+                <div className='rounded-lg bg-card p-3.5 border-0 shadow-none space-y-2'>
+                  <p className='text-[10px] text-muted-foreground font-semibold uppercase tracking-wider'>
+                    AKUN ASAL (LULUS)
+                  </p>
+                  <p className='font-bold truncate text-foreground text-xs'>
                     {siswaAsal.nama}
                   </p>
                   <div className='flex justify-between items-center text-[11px] pt-1'>
@@ -396,15 +398,17 @@ function PindahSaldoFormContent({
                     </span>
                     <span className='font-bold text-destructive font-mono'>Rp 0</span>
                   </div>
-                  <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 gap-1 w-full justify-center font-medium'>
+                  <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-[10px] py-1 gap-1 w-full justify-center font-medium'>
                     <Lock className='h-2.5 w-2.5' /> KARTU DIBLOKIR
                   </Badge>
                 </div>
 
                 {/* Tujuan */}
-                <div className='rounded-lg bg-card p-2.5 border-0 shadow-none space-y-1'>
-                  <p className='text-[10px] text-primary font-semibold'>PENERIMA (SAUDARA AKTIF)</p>
-                  <p className='font-semibold truncate text-foreground'>
+                <div className='rounded-lg bg-card p-3.5 border-0 shadow-none space-y-2'>
+                  <p className='text-[10px] text-primary font-semibold uppercase tracking-wider'>
+                    PENERIMA (SAUDARA AKTIF)
+                  </p>
+                  <p className='font-bold truncate text-foreground text-xs'>
                     {selectedDestination.nama}
                   </p>
                   <div className='flex justify-between items-center text-[11px] pt-1'>
@@ -417,7 +421,7 @@ function PindahSaldoFormContent({
                   </div>
                   <Badge
                     variant='outline'
-                    className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[9px] py-0 gap-1 w-full justify-center font-medium'
+                    className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] py-1 gap-1 w-full justify-center font-medium'
                   >
                     <ArrowRight className='h-2.5 w-2.5' /> Bertambah {formatRupiah(nominalTransfer)}
                   </Badge>
