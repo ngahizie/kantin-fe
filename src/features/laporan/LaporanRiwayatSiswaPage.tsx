@@ -642,19 +642,18 @@ export function LaporanRiwayatSiswaPage() {
                     overflow: visible !important;
                   }
                   #root,
-                  body > *:not([data-slot='dialog-portal']):not([data-radix-portal]) {
-                    display: none !important;
-                  }
                   [data-slot='dialog-overlay'],
                   [data-radix-dialog-overlay],
                   [data-slot='dialog-close'],
                   [data-radix-dialog-close],
+                  [data-radix-focus-guard],
                   button[aria-label="Close"],
                   .no-print {
                     display: none !important;
                   }
                   [data-slot='dialog-content'],
                   [role='dialog'] {
+                    display: block !important;
                     position: static !important;
                     transform: none !important;
                     top: auto !important;
