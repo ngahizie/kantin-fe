@@ -9,7 +9,6 @@ import {
   UtensilsCrossed,
   DollarSign,
   ShoppingCart,
-  Info,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -35,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
@@ -201,7 +199,7 @@ export function KontrolSiswaPage() {
               Kontrol Siswa atas Nama Orang Tua
             </h1>
             <p className='text-sm text-muted-foreground mt-1'>
-              Modul Admin Sekolah: Pengaturan Batas Limit Belanja & Larangan Menu Siswa (PRD §9.6)
+              Pengaturan batas limit belanja harian dan larangan menu siswa
             </p>
           </div>
 
@@ -218,21 +216,6 @@ export function KontrolSiswaPage() {
             </Button>
           </div>
         </div>
-
-        {/* Banner Penjelasan Perwalian Admin */}
-        <Alert className='border-primary/20 bg-primary/5 text-foreground'>
-          <Info className='h-4 w-4 text-primary' />
-          <AlertTitle className='font-semibold text-xs tracking-wide'>
-            Perwalian Admin Sekolah untuk Orang Tua Non-Aplikasi (PRD §9.6)
-          </AlertTitle>
-          <AlertDescription className='text-xs mt-1 leading-relaxed text-muted-foreground'>
-            Modul ini diperuntukkan bagi <strong>Admin Sekolah & TU</strong> untuk mewakili orang tua
-            yang belum menggunakan aplikasi mobile SKOOLIA. Pengaturan batas belanja harian dan blokir
-            menu kategori maupun item spesifik yang disimpan di sini akan{' '}
-            <strong>langsung tersimpan dan berlaku secara real-time pada validasi kasir POS</strong>{' '}
-            (PRD §6.1 Tahap 3 & 5).
-          </AlertDescription>
-        </Alert>
 
         {/* KPI Cards Ringkasan */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
