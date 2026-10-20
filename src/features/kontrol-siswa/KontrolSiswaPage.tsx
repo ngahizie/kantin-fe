@@ -246,7 +246,7 @@ export function KontrolSiswaPage() {
         </div>
 
         {/* Toolbar Pencarian & Filter */}
-        <Card>
+        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
           <CardContent className='p-4'>
             <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
               <div className='relative flex-1'>
@@ -255,13 +255,13 @@ export function KontrolSiswaPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder='Cari nama siswa, NIS, kelas, atau nama orang tua...'
-                  className='h-9 pl-8 text-xs'
+                  className='h-9 pl-8 text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none'
                 />
               </div>
 
               <div className='flex flex-wrap items-center gap-2'>
                 <Select value={appFilter} onValueChange={setAppFilter}>
-                  <SelectTrigger className='h-9 text-xs w-[170px]'>
+                  <SelectTrigger className='h-9 text-xs w-[170px] border-0 bg-background/80 dark:bg-background/40 shadow-none'>
                     <SelectValue placeholder='Status App Ortu' />
                   </SelectTrigger>
                   <SelectContent>
@@ -278,7 +278,7 @@ export function KontrolSiswaPage() {
                 </Select>
 
                 <Select value={limitFilter} onValueChange={setLimitFilter}>
-                  <SelectTrigger className='h-9 text-xs w-[170px]'>
+                  <SelectTrigger className='h-9 text-xs w-[170px] border-0 bg-background/80 dark:bg-background/40 shadow-none'>
                     <SelectValue placeholder='Status Pembatasan' />
                   </SelectTrigger>
                   <SelectContent>
@@ -302,7 +302,7 @@ export function KontrolSiswaPage() {
         </Card>
 
         {/* Tabel Siswa */}
-        <Card>
+        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
@@ -339,13 +339,13 @@ export function KontrolSiswaPage() {
                               <img
                                 src={siswa.foto_url}
                                 alt={siswa.nama}
-                                className='h-10 w-10 rounded-full object-cover border'
+                                className='h-10 w-10 rounded-full object-cover'
                               />
                               <div>
                                 <p className='font-bold text-foreground flex items-center gap-1.5'>
                                   {siswa.nama}
                                   {siswa.is_blocked && (
-                                    <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 font-medium'>
+                                    <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 font-medium'>
                                       KARTU DIBLOKIR
                                     </Badge>
                                   )}
@@ -364,7 +364,7 @@ export function KontrolSiswaPage() {
                           <TableCell>
                             {siswa.parent_app_registered ? (
                               <Badge
-                                variant='outline'
+                                variant='secondary'
                                 className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] py-0.5 gap-1 font-medium'
                               >
                                 <Smartphone className='h-3 w-3' />
@@ -373,7 +373,7 @@ export function KontrolSiswaPage() {
                             ) : (
                               <div className='space-y-0.5'>
                                 <Badge
-                                  variant='outline'
+                                  variant='secondary'
                                   className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0.5 gap-1 font-medium'
                                 >
                                   <PhoneOff className='h-3 w-3' />
@@ -391,7 +391,7 @@ export function KontrolSiswaPage() {
                             {hasLimit ? (
                               <div className='space-y-1'>
                                 <Badge
-                                  variant='outline'
+                                  variant='secondary'
                                   className='border-0 bg-primary/15 text-primary text-[11px] py-0.5 font-mono font-medium'
                                 >
                                   {formatRupiah(siswa.limit_harian)} / hari
@@ -415,7 +415,7 @@ export function KontrolSiswaPage() {
                                 <div className='flex flex-wrap gap-1'>
                                   {blockedCatsCount > 0 && (
                                     <Badge
-                                      variant='outline'
+                                      variant='secondary'
                                       className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0 font-medium'
                                     >
                                       {blockedCatsCount} Kategori Diblokir
@@ -423,7 +423,7 @@ export function KontrolSiswaPage() {
                                   )}
                                   {blockedItemsCount > 0 && (
                                     <Badge
-                                      variant='outline'
+                                      variant='secondary'
                                       className='border-0 bg-destructive/15 text-destructive text-[10px] py-0 px-1.5 font-medium'
                                     >
                                       {blockedItemsCount} Item Spesifik
@@ -466,12 +466,12 @@ export function KontrolSiswaPage() {
 
                               <Button
                                 size='sm'
-                                variant='outline'
+                                variant='secondary'
                                 onClick={() => {
                                   setSelectedStudent(siswa)
                                   setIsFormOpen(true)
                                 }}
-                                className='h-8 text-xs gap-1.5'
+                                className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                               >
                                 <Sliders className='h-3.5 w-3.5' />
                                 <span>Atur Limit & Blokir</span>
