@@ -466,18 +466,16 @@ function RefundOrangTuaFormContent({
           </Alert>
 
           {/* Persetujuan Petugas */}
-          <div className='flex items-start gap-2 pt-1'>
+          <div className='flex items-center gap-2 pt-1'>
             <input
               type='checkbox'
               id='agreement'
               checked={agreement}
               onChange={(e) => setAgreement(e.target.checked)}
-              className='mt-0.5 rounded border-gray-300 text-primary focus:ring-primary'
+              className='rounded border-gray-300 text-primary focus:ring-primary cursor-pointer'
             />
-            <Label htmlFor='agreement' className='text-[11px] font-normal leading-tight cursor-pointer'>
-              Saya menyatakan bahwa dana sebesar{' '}
-              <strong className='text-foreground'>{formatRupiah(siswa.saldo)}</strong> telah
-              diserahkan secara sah kepada orang tua/wali siswa yang bersangkutan.
+            <Label htmlFor='agreement' className='text-xs font-normal cursor-pointer select-none'>
+              Dana sebesar <strong className='text-foreground'>{formatRupiah(siswa.saldo)}</strong> telah diserahkan ke orang tua/wali.
             </Label>
           </div>
 
