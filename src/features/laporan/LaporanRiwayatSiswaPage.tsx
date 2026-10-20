@@ -612,7 +612,7 @@ export function LaporanRiwayatSiswaPage() {
               <style>{`
                 @media print {
                   @page {
-                    margin: 8mm auto;
+                    margin: 0;
                     size: auto;
                   }
                   html, body {
@@ -642,7 +642,7 @@ export function LaporanRiwayatSiswaPage() {
                     transform: none !important;
                     top: auto !important;
                     left: auto !important;
-                    margin: 0 auto !important;
+                    margin: 24px auto !important;
                     max-width: 420px !important;
                     padding: 0 !important;
                     border: 1px solid #cbd5e1 !important;
