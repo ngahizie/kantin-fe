@@ -59,8 +59,8 @@ export function GeneralError({
             <Button variant='outline' onClick={() => history.go(-1)}>
               Kembali
             </Button>
-            <Button variant='secondary' onClick={() => navigate({ to: '/kontrol-siswa' })}>
-              Halaman Kontrol Siswa
+            <Button onClick={() => navigate({ to: '/' })}>
+              Kembali ke Beranda
             </Button>
           </div>
         )}
