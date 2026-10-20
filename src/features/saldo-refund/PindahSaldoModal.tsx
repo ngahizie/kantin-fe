@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Check,
   Users,
-  Sparkles,
 } from 'lucide-react'
 import {
   Dialog,
@@ -257,8 +256,7 @@ function PindahSaldoFormContent({
           {siswaAsal.saudara_kandung && siswaAsal.saudara_kandung.length > 0 && (
             <div className='space-y-2'>
               <div className='flex items-center justify-between'>
-                <Label className='text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5'>
-                  <Sparkles className='h-3.5 w-3.5 text-amber-500' />
+                <Label className='text-xs font-semibold text-slate-700 dark:text-slate-300'>
                   Saudara Kandung Terdeteksi (Data Kartu Keluarga / Dapodik)
                 </Label>
                 <Badge variant='secondary' className='text-[10px] border-0'>
