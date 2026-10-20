@@ -354,7 +354,7 @@ export function MenuPage() {
                     <SelectItem value='all'>Semua Status</SelectItem>
                     <SelectItem value='active'>Hanya Aktif</SelectItem>
                     <SelectItem value='inactive'>Hanya Nonaktif</SelectItem>
-                    <SelectItem value='low_stock'>Stok Menipis (⚠️)</SelectItem>
+                    <SelectItem value='low_stock'>Stok Menipis</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
