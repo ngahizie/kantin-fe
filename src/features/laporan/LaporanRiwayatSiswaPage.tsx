@@ -608,85 +608,160 @@ export function LaporanRiwayatSiswaPage() {
             open={!!selectedTrxForReceipt}
             onOpenChange={(open) => !open && setSelectedTrxForReceipt(null)}
           >
-            <DialogContent className="sm:max-w-md font-sans">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-center justify-center font-bold">
-                  <Receipt className="h-5 w-5 text-primary" />
-                  <span>Struk Transaksi Digital Kantin</span>
-                </DialogTitle>
-                <DialogDescription className="text-center text-xs">
-                  SKOOLIA Kantin Cashless • Bukti Transaksi Resmi
-                </DialogDescription>
-              </DialogHeader>
+            <DialogContent className="sm:max-w-md font-sans border-0 shadow-lg p-0 overflow-hidden">
+              <style>{`
+                @media print {
+                  @page {
+                    margin: 8mm auto;
+                    size: auto;
+                  }
+                  html, body {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    height: auto !important;
+                    min-height: 0 !important;
+                    overflow: visible !important;
+                  }
+                  #root,
+                  body > *:not([data-slot='dialog-portal']):not([data-radix-portal]) {
+                    display: none !important;
+                  }
+                  [data-slot='dialog-overlay'],
+                  [data-radix-dialog-overlay],
+                  [data-slot='dialog-close'],
+                  [data-radix-dialog-close],
+                  button[aria-label="Close"],
+                  .no-print {
+                    display: none !important;
+                  }
+                  [data-slot='dialog-content'],
+                  [role='dialog'] {
+                    position: static !important;
+                    transform: none !important;
+                    top: auto !important;
+                    left: auto !important;
+                    margin: 0 auto !important;
+                    max-width: 420px !important;
+                    padding: 0 !important;
+                    border: 1px solid #cbd5e1 !important;
+                    border-radius: 12px !important;
+                    box-shadow: none !important;
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                    page-break-after: avoid !important;
+                    break-after: avoid !important;
+                  }
+                  .printable-struk {
+                    margin: 0 !important;
+                    padding: 20px !important;
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    border: none !important;
+                  }
+                  .printable-struk * {
+                    color: #000000 !important;
+                  }
+                  .printable-struk .text-muted-foreground {
+                    color: #64748b !important;
+                  }
+                  .printable-struk .text-primary {
+                    color: #000000 !important;
+                  }
+                  .printable-struk .printable-receipt-card {
+                    background-color: #f8fafc !important;
+                    border: 1px solid #e2e8f0 !important;
+                  }
+                  .printable-struk .border-b {
+                    border-bottom-color: #e2e8f0 !important;
+                  }
+                }
+              `}</style>
 
-              {selectedTrxForReceipt && profil && (
-                <div className="space-y-4 pt-2">
-                  <div className="rounded-lg border p-4 bg-muted/30 font-mono text-xs space-y-2">
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Waktu:</span>
-                      <span className="font-semibold">{formatDateTime(selectedTrxForReceipt.waktu)}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">No. Transaksi:</span>
-                      <span className="font-semibold">{selectedTrxForReceipt.referensiId}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Titik Kasir:</span>
-                      <span>{selectedTrxForReceipt.titikKasir}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Petugas:</span>
-                      <span>{selectedTrxForReceipt.petugas}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-muted-foreground">Siswa:</span>
-                      <span className="font-semibold">{profil.nama} ({profil.nis})</span>
+              <div className="printable-struk p-6">
+                <DialogHeader className="text-center pb-3 border-b">
+                  <DialogTitle className="flex items-center gap-2 justify-center font-bold text-base">
+                    <Receipt className="h-5 w-5 text-primary" />
+                    <span>Struk Transaksi Digital Kantin</span>
+                  </DialogTitle>
+                  <DialogDescription className="text-center text-xs text-muted-foreground">
+                    SKOOLIA Kantin Cashless • Bukti Transaksi Resmi
+                  </DialogDescription>
+                </DialogHeader>
+
+                {selectedTrxForReceipt && profil && (
+                  <div className="space-y-4 pt-3 font-mono text-xs">
+                    <div className="printable-receipt-card rounded-lg border-0 p-4 bg-muted/40 text-xs space-y-2">
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Waktu:</span>
+                        <span className="font-semibold text-foreground">{formatDateTime(selectedTrxForReceipt.waktu)}</span>
+                      </div>
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">No. Transaksi:</span>
+                        <span className="font-semibold text-foreground">{selectedTrxForReceipt.referensiId}</span>
+                      </div>
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Titik Kasir:</span>
+                        <span className="text-foreground">{selectedTrxForReceipt.titikKasir}</span>
+                      </div>
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Petugas:</span>
+                        <span className="text-foreground">{selectedTrxForReceipt.petugas}</span>
+                      </div>
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-muted-foreground">Siswa:</span>
+                        <span className="font-semibold text-foreground">{profil.nama} ({profil.nis})</span>
+                      </div>
+
+                      <div className="py-2 space-y-1.5 border-b">
+                        <p className="font-sans font-semibold text-muted-foreground text-[11px] uppercase">
+                          Daftar Pesanan:
+                        </p>
+                        {selectedTrxForReceipt.items?.map((it, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span>{it.qty}x {it.nama}</span>
+                            <span className="font-semibold">{formatRupiah(it.subtotal)}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-between text-sm font-bold pt-1">
+                        <span>TOTAL POTONG SALDO:</span>
+                        <span className="text-primary">{formatRupiah(selectedTrxForReceipt.nominal)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Sisa Saldo Kartu:</span>
+                        <span>{formatRupiah(selectedTrxForReceipt.saldoSetelah)}</span>
+                      </div>
                     </div>
 
-                    <div className="py-2 space-y-1.5 border-b">
-                      <p className="font-sans font-semibold text-muted-foreground text-[11px] uppercase">
-                        Daftar Pesanan:
-                      </p>
-                      {selectedTrxForReceipt.items?.map((it, idx) => (
-                        <div key={idx} className="flex justify-between">
-                          <span>{it.qty}x {it.nama}</span>
-                          <span className="font-semibold">{formatRupiah(it.subtotal)}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between text-sm font-bold pt-1">
-                      <span>TOTAL POTONG SALDO:</span>
-                      <span className="text-primary">{formatRupiah(selectedTrxForReceipt.nominal)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Sisa Saldo Kartu:</span>
-                      <span>{formatRupiah(selectedTrxForReceipt.saldoSetelah)}</span>
+                    <div className="no-print flex justify-end gap-2 pt-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setSelectedTrxForReceipt(null)}
+                        className="border-0"
+                      >
+                        Tutup
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          window.print()
+                        }}
+                        className="gap-1.5"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>Cetak Struk</span>
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedTrxForReceipt(null)}
-                    >
-                      Tutup
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => {
-                        window.print()
-                      }}
-                      className="gap-1.5"
-                    >
-                      <Printer className="h-4 w-4" />
-                      <span>Cetak Struk</span>
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         </div>
