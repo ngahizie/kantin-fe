@@ -391,7 +391,7 @@ export function MenuFormModal({
                         <Input
                           type='text'
                           inputMode='numeric'
-                          className='h-10 pl-10 font-mono font-medium border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
+                          className='h-10 pl-10 font-medium border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                           placeholder='0'
                           value={field.value ? formatNumber(field.value) : ''}
                           onChange={(e) => {

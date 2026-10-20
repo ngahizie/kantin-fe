@@ -318,7 +318,7 @@ export function MenuPage() {
                     setCurrentPage(1)
                   }}
                 >
-                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-xs text-foreground focus:ring-0 focus-visible:ring-0'>
+                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0'>
                     <div className='flex items-center gap-1.5 truncate'>
                       <Tag className='size-3.5 text-muted-foreground' />
                       <SelectValue placeholder='Kategori' />
@@ -344,7 +344,7 @@ export function MenuPage() {
                     setCurrentPage(1)
                   }}
                 >
-                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-xs text-foreground focus:ring-0 focus-visible:ring-0'>
+                  <SelectTrigger className='h-10 border-none bg-background/90 dark:bg-background/40 rounded-xl shadow-none text-sm text-foreground focus:ring-0 focus-visible:ring-0'>
                     <div className='flex items-center gap-1.5 truncate'>
                       <Filter className='size-3.5 text-muted-foreground' />
                       <SelectValue placeholder='Status' />
@@ -450,7 +450,7 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Harga Jual */}
-                        <TableCell className='text-right font-mono font-semibold text-foreground border-none py-3.5 tabular-nums text-sm'>
+                        <TableCell className='text-right font-semibold text-foreground border-none py-3.5 tabular-nums text-sm'>
                           {formatRupiah(item.hargaJual)}
                         </TableCell>
 
@@ -458,7 +458,7 @@ export function MenuPage() {
                         <TableCell className='text-center border-none py-3.5'>
                           <div className='flex flex-col items-center gap-0.5'>
                             <span
-                              className={`font-mono font-semibold text-sm tabular-nums ${
+                              className={`font-semibold text-sm tabular-nums ${
                                 isHabis
                                   ? 'text-destructive font-bold'
                                   : isStokMenipis
@@ -492,7 +492,7 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Stok Minimum */}
-                        <TableCell className='text-center font-mono text-xs text-muted-foreground border-none py-3.5 tabular-nums'>
+                        <TableCell className='text-center text-xs text-muted-foreground border-none py-3.5 tabular-nums'>
                           {formatNumber(item.stokMinimum)}
                         </TableCell>
 
