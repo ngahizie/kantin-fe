@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   UtensilsCrossed,
   Plus,
@@ -71,6 +71,11 @@ export function MenuPage() {
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const lastDeleteTargetRef = useRef<MenuItem | null>(null)
+  if (deleteTarget) {
+    lastDeleteTargetRef.current = deleteTarget
+  }
+  const activeDeleteTarget = deleteTarget || lastDeleteTargetRef.current
 
   // Load menu and kategori data
   const loadData = async () => {
@@ -177,11 +182,12 @@ export function MenuPage() {
   }
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return
+    const target = activeDeleteTarget
+    if (!target) return
     try {
       setIsDeleting(true)
-      await katalogApi.deleteMenu(deleteTarget.id)
-      toast.success(`Menu "${deleteTarget.nama}" berhasil dinonaktifkan`)
+      await katalogApi.deleteMenu(target.id)
+      toast.success(`Menu "${target.nama}" berhasil dinonaktifkan`)
       setDeleteTarget(null)
       loadData()
     } catch (err: unknown) {
@@ -195,25 +201,25 @@ export function MenuPage() {
 
   return (
     <>
-      <Header fixed>
+      <Header fixed className='border-b border-sidebar-border/50'>
+        <div className='flex items-center gap-2 overflow-hidden me-auto'>
+          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
+            Katalog Menu Kantin
+          </h1>
+        </div>
         <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
 
       <Main className='p-4 md:p-6 space-y-6'>
-        {/* Header Title & Actions */}
+        {/* Actions & Description */}
         <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Katalog Menu Kantin
-            </h1>
-            <p className='text-sm text-muted-foreground mt-0.5'>
-              Kelola menu makanan, minuman, harga jual rupiah, dan kontrol stok minimum kantin.
-            </p>
-          </div>
+          <p className='text-sm text-muted-foreground'>
+            Kelola menu makanan, minuman, harga jual rupiah, dan kontrol stok minimum kantin.
+          </p>
 
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 shrink-0'>
             <Button
               variant='outline'
               size='sm'
@@ -581,7 +587,7 @@ export function MenuPage() {
             <AlertDialogDescription className='space-y-2 pt-2'>
               <p>
                 Apakah Anda yakin ingin menonaktifkan menu{' '}
-                <strong className='text-foreground'>{deleteTarget?.nama}</strong>?
+                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
               </p>
               <p className='text-xs text-muted-foreground'>
                 Menu yang dinonaktifkan akan <strong>otomatis disembunyikan</strong> dari layar
