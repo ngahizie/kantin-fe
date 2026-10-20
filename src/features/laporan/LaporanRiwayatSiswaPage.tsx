@@ -371,11 +371,11 @@ export function LaporanRiwayatSiswaPage() {
 
           {/* STUDENT PROFILE CARD */}
           {profil && (
-            <Card className="border-primary/20 bg-linear-to-r from-card to-primary/5">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-xl font-bold border">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-xl font-bold border-0">
                       {profil.nama
                         .split(' ')
                         .map((n) => n[0])
@@ -387,10 +387,10 @@ export function LaporanRiwayatSiswaPage() {
                         <h2 className="text-xl font-bold tracking-tight">
                           {profil.nama}
                         </h2>
-                        <Badge variant="outline" className="font-mono text-xs">
+                        <Badge variant="secondary" className="border-0 font-mono text-xs bg-background/80 dark:bg-background/40">
                           NIS: {profil.nis}
                         </Badge>
-                        <Badge className="bg-primary/20 text-primary hover:bg-primary/20 text-xs">
+                        <Badge className="border-0 bg-primary/20 text-primary hover:bg-primary/20 text-xs">
                           {profil.kelas}
                         </Badge>
                       </div>
@@ -407,30 +407,30 @@ export function LaporanRiwayatSiswaPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 border-t pt-4 md:border-t-0 md:pt-0">
-                    <div className="rounded-xl border bg-card px-4 py-2.5 text-center">
+                  <div className="flex flex-wrap items-center gap-4 pt-4 md:pt-0">
+                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Saldo Berjalan
                       </p>
-                      <p className="text-lg font-bold font-mono text-primary">
+                      <p className="text-lg font-bold font-mono text-foreground">
                         {formatRupiah(profil.saldo)}
                       </p>
                     </div>
 
-                    <div className="rounded-xl border bg-card px-4 py-2.5 text-center">
+                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Belanja Hari Ini
                       </p>
-                      <p className="text-lg font-bold font-mono">
+                      <p className="text-lg font-bold font-mono text-foreground">
                         {formatRupiah(profil.belanjaHariIni)}
                       </p>
                     </div>
 
-                    <div className="rounded-xl border bg-card px-4 py-2.5 text-center">
+                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Limit Harian
                       </p>
-                      <p className="text-lg font-bold font-mono text-muted-foreground">
+                      <p className="text-lg font-bold font-mono text-foreground">
                         {formatRupiah(profil.limitHarian)}
                       </p>
                     </div>
@@ -438,10 +438,10 @@ export function LaporanRiwayatSiswaPage() {
                 </div>
 
                 {profil.catatanKontrol && (
-                  <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <div className="mt-4 flex items-start gap-2 rounded-lg bg-background/80 dark:bg-background/40 p-3 text-xs text-foreground/85 border-0">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span>
-                      <strong>Catatan Ortu:</strong> {profil.catatanKontrol}
+                      <strong className="text-foreground">Catatan Ortu:</strong> {profil.catatanKontrol}
                     </span>
                   </div>
                 )}
@@ -450,7 +450,7 @@ export function LaporanRiwayatSiswaPage() {
           )}
 
           {/* TABLE RIWAYAT TRANSAKSI SISWA */}
-          <Card>
+          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
@@ -491,7 +491,7 @@ export function LaporanRiwayatSiswaPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="overflow-hidden rounded-lg">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
@@ -533,16 +533,16 @@ export function LaporanRiwayatSiswaPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant="outline"
-                              className={
+                              variant="secondary"
+                              className={`border-0 text-xs font-medium ${
                                 trx.jenis === 'BELANJA'
-                                  ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                  ? 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
                                   : trx.jenis.startsWith('TOPUP')
-                                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
                                   : trx.jenis === 'VOID'
-                                  ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                                  : 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                              }
+                                  ? 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                                  : 'bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                              }`}
                             >
                               {trx.jenis}
                             </Badge>
