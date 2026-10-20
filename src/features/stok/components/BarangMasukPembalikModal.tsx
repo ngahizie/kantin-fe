@@ -69,7 +69,7 @@ function PembalikFormContent({
     e.preventDefault()
 
     if (!alasan.trim()) {
-      toast.error('Alasan pembalik wajib diisi (PRD §7.2)')
+      toast.error('Alasan pembalik wajib diisi')
       return
     }
 

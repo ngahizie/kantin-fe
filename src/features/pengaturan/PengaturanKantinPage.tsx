@@ -300,7 +300,7 @@ export const PengaturanKantinPage: React.FC = () => {
                     <p className='text-[11px] text-muted-foreground'>
                       Format <code>HH:mm</code> (24 jam). Sistem menutup sesi
                       secara otomatis pada jam yang ditentukan jika kasir belum
-                      tutup manual (PRD §6.4).
+                      tutup manual.
                     </p>
                   </div>
                 </CardContent>
@@ -342,7 +342,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       </div>
                       <p className='text-[11px] text-muted-foreground'>
                         Petugas kasir wajib menekan "Konfirmasi" sebelum transaksi
-                        tercatat (PRD §6.2). Nonaktifkan untuk 1-tap checkout cepat.
+                        tercatat. Nonaktifkan untuk 1-tap checkout cepat.
                       </p>
                     </div>
                     <Controller
@@ -545,7 +545,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       </p>
                     )}
                     <p className='text-[11px] text-muted-foreground'>
-                      Maksimal akumulasi saldo di kartu RFID siswa (PRD §10).
+                      Maksimal akumulasi saldo di kartu RFID siswa.
                     </p>
                   </div>
 

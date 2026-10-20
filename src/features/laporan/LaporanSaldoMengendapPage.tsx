@@ -223,7 +223,7 @@ export function LaporanSaldoMengendapPage() {
                     Laporan Saldo Mengendap
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Total dana titipan siswa & kartu tamu yang menjadi kewajiban sekolah (PRD §9.5).
+                    Total dana titipan siswa & kartu tamu yang menjadi kewajiban sekolah.
                   </p>
                 </div>
               </div>

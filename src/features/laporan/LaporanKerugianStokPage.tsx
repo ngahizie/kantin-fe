@@ -138,7 +138,7 @@ export function LaporanKerugianStokPage() {
       exportTableToExcel({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Kerugian Stok',
-        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA (PRD §9.5)',
+        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
@@ -208,7 +208,7 @@ export function LaporanKerugianStokPage() {
                     Laporan Kerugian Stok
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Pencatatan penyesuaian opname keluar (selisih fisik minus) dan barang rusak beserta nilai kerugiannya (Qty × HPP snapshot) — PRD §9.5.
+                    Pencatatan penyesuaian opname keluar (selisih fisik minus) dan barang rusak beserta nilai kerugiannya (Qty × HPP snapshot).
                   </p>
                 </div>
               </div>

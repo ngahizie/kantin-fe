@@ -143,7 +143,7 @@ export function LaporanLabaKotorPage() {
       exportTableToExcel({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Laba Kotor',
-        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA (PRD §9.5)',
+        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
@@ -212,7 +212,7 @@ export function LaporanLabaKotorPage() {
                     Laporan Laba Kotor
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Analisis profitabilitas kantin: Laba kotor = Penjualan bersih − Σ HPP item terjual (PRD §5 & §9.5).
+                    Analisis profitabilitas kantin: Laba kotor = Penjualan bersih − Σ HPP item terjual.
                   </p>
                 </div>
               </div>

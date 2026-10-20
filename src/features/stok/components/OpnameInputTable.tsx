@@ -275,7 +275,7 @@ export function OpnameInputTable({
         `Ada ${summary.berselisihTanpaAlasan.length} item berselisih yang belum memiliki alasan!`,
         {
           description:
-            'Setiap selisih stok wajib mencantumkan alasan sesuai regulasi audit PRD §7.3.',
+            'Setiap selisih stok wajib mencantumkan alasan penyebab selisih.',
         }
       )
       return

@@ -289,7 +289,7 @@ export function LaporanRekonsiliasiPage() {
                     Laporan Rekonsiliasi Harian
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Pemeriksaan invariant akuntansi: Topup − Refund = Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih (PRD §5).
+                    Pemeriksaan invariant akuntansi: Topup − Refund = Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih.
                   </p>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export function LaporanRekonsiliasiPage() {
             <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-card to-background">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground flex items-center justify-between">
-                  <span>Rumus Invariant Saldo (PRD §5)</span>
+                  <span>Rumus Invariant Saldo</span>
                   <Badge variant="outline" className="font-mono text-xs">
                     Audit Harian Otomatis
                   </Badge>

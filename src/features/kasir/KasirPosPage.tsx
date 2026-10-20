@@ -354,7 +354,7 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      // Langkah konfirmasi manual sesuai pengaturan operasional kantin (PRD §6.2)
+      // Langkah konfirmasi manual sesuai pengaturan operasional kantin
       if (pengaturan.konfirmasiManual) {
         setPendingScannedUid(scannedUid)
         setConfirmManualOpen(true)

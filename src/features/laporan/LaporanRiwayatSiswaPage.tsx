@@ -248,7 +248,7 @@ export function LaporanRiwayatSiswaPage() {
                     Riwayat Belanja per Siswa
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Histori transaksi lengkap dengan item & waktu untuk membantu klarifikasi komplain orang tua murid (PRD §9.5).
+                    Histori transaksi lengkap dengan item & waktu untuk membantu klarifikasi komplain orang tua murid.
                   </p>
                 </div>
               </div>

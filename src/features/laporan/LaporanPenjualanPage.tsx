@@ -265,7 +265,7 @@ export function LaporanPenjualanPage() {
                     Laporan Penjualan & Laba Kotor
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Analisis penjualan bersih, total HPP, dan laba kotor per menu, per kategori, per kasir, dan periode tanggal (PRD §9.5).
+                    Analisis penjualan bersih, total HPP, dan laba kotor per menu, per kategori, per kasir, dan periode tanggal.
                   </p>
                 </div>
               </div>
