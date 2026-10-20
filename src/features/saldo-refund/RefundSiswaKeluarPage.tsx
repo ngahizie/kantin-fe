@@ -335,7 +335,7 @@ export function RefundSiswaKeluarPage() {
 
           {/* TAB 1: DAFTAR SISWA MENUNGGU REFUND (SALDO > 0) */}
           <TabsContent value='pending' className='space-y-4 m-0'>
-            <Card>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
@@ -372,7 +372,7 @@ export function RefundSiswaKeluarPage() {
                                   <img
                                     src={siswa.foto_url}
                                     alt={siswa.nama}
-                                    className='h-10 w-10 rounded-full object-cover border'
+                                    className='h-10 w-10 rounded-full object-cover'
                                   />
                                   <div>
                                     <p className='font-bold text-foreground'>
@@ -487,12 +487,12 @@ export function RefundSiswaKeluarPage() {
                                   {/* Opsi B: Pindah ke Saudara */}
                                   <Button
                                     size='sm'
-                                    variant='outline'
+                                    variant='secondary'
                                     onClick={() => {
                                       setSelectedStudentTransfer(siswa)
                                       setIsTransferModalOpen(true)
                                     }}
-                                    className='h-8 text-xs gap-1.5'
+                                    className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                                   >
                                     <ArrowLeftRight className='h-3.5 w-3.5' />
                                     <span>Pindah Saudara</span>
@@ -512,7 +512,7 @@ export function RefundSiswaKeluarPage() {
 
           {/* TAB 2: RIWAYAT PEMROSESAN SELESAI */}
           <TabsContent value='completed' className='space-y-4 m-0'>
-            <Card>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
@@ -545,7 +545,7 @@ export function RefundSiswaKeluarPage() {
                                   <img
                                     src={siswa.foto_url}
                                     alt={siswa.nama}
-                                    className='h-9 w-9 rounded-full object-cover border'
+                                    className='h-9 w-9 rounded-full object-cover'
                                   />
                                   <div>
                                     <p className='font-semibold text-foreground'>
@@ -609,9 +609,9 @@ export function RefundSiswaKeluarPage() {
                               <TableCell className='text-right'>
                                 <Button
                                   size='sm'
-                                  variant='outline'
+                                  variant='secondary'
                                   onClick={() => handleOpenSlipFromHistory(siswa)}
-                                  className='h-8 text-xs gap-1.5'
+                                  className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                                 >
                                   <Eye className='h-3.5 w-3.5' />
                                   <span>Lihat Bukti</span>
