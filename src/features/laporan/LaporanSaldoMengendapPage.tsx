@@ -296,7 +296,7 @@ export function LaporanSaldoMengendapPage() {
 
             {/* TAB CONTENT: SALDO SISWA */}
             <TabsContent value="siswa" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Rincian Dana Titipan per Siswa
@@ -306,7 +306,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -361,12 +361,18 @@ export function LaporanSaldoMengendapPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 {siswa.isBlocked ? (
-                                  <Badge variant="destructive" className="text-xs gap-1">
+                                  <Badge
+                                    variant="secondary"
+                                    className="border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 text-xs gap-1 font-medium"
+                                  >
                                     <Ban className="h-3 w-3" />
                                     <span>Diblokir</span>
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-500 gap-1">
+                                  <Badge
+                                    variant="secondary"
+                                    className="border-0 bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs gap-1 font-medium"
+                                  >
                                     <UserCheck className="h-3 w-3" />
                                     <span>Aktif</span>
                                   </Badge>
@@ -404,7 +410,7 @@ export function LaporanSaldoMengendapPage() {
 
             {/* TAB CONTENT: SALDO KARTU TAMU */}
             <TabsContent value="kartu-tamu" className="space-y-4">
-              <Card>
+              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">
                     Rincian Dana Titipan per Kartu Tamu
@@ -414,7 +420,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
+                  <div className="overflow-hidden rounded-lg">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -460,8 +466,12 @@ export function LaporanSaldoMengendapPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <Badge
-                                  variant={kt.status === 'ACTIVE' ? 'default' : 'secondary'}
-                                  className="text-xs"
+                                  variant="secondary"
+                                  className={`border-0 text-xs font-medium ${
+                                    kt.status === 'ACTIVE'
+                                      ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}
                                 >
                                   {kt.status}
                                 </Badge>
