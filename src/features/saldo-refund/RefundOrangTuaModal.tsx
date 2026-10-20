@@ -277,41 +277,41 @@ function RefundOrangTuaFormContent({
               onValueChange={(v) => setMetode(v as 'TUNAI' | 'TRANSFER_BANK')}
               className='grid grid-cols-2 gap-3'
             >
-              <div
-                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 ${
+              <label
+                htmlFor='metode-transfer'
+                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TRANSFER_BANK'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
-                onClick={() => setMetode('TRANSFER_BANK')}
               >
                 <div className='flex items-center gap-2.5'>
                   <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
-                  <Label htmlFor='metode-transfer' className='cursor-pointer text-xs font-medium'>
+                  <div className='text-xs font-medium'>
                     <div className='font-semibold text-sm'>Transfer Bank</div>
                     <div className='text-muted-foreground text-[11px]'>Kirim ke rekening ortu</div>
-                  </Label>
+                  </div>
                 </div>
                 <Building className='h-4 w-4 text-primary shrink-0' />
-              </div>
+              </label>
 
-              <div
-                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 ${
+              <label
+                htmlFor='metode-tunai'
+                className={`flex items-center justify-between rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
                   metode === 'TUNAI'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-muted/60 hover:bg-muted/80 text-foreground'
                 }`}
-                onClick={() => setMetode('TUNAI')}
               >
                 <div className='flex items-center gap-2.5'>
                   <RadioGroupItem value='TUNAI' id='metode-tunai' />
-                  <Label htmlFor='metode-tunai' className='cursor-pointer text-xs font-medium'>
+                  <div className='text-xs font-medium'>
                     <div className='font-semibold text-sm'>Tunai (Kas TU)</div>
                     <div className='text-muted-foreground text-[11px]'>Diserahkan langsung di TU</div>
-                  </Label>
+                  </div>
                 </div>
                 <Banknote className='h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0' />
-              </div>
+              </label>
             </RadioGroup>
           </div>
 
