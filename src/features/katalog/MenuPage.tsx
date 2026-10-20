@@ -336,7 +336,7 @@ export function MenuPage() {
               </div>
 
               {/* Filter Status */}
-              <div className='w-full sm:w-40 shrink-0'>
+              <div className='w-full sm:w-48 shrink-0'>
                 <Select
                   value={selectedStatus}
                   onValueChange={(val) => {
