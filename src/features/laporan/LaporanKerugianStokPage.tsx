@@ -281,7 +281,7 @@ export function LaporanKerugianStokPage() {
                     placeholder="Cari menu, alasan, BA..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm bg-background/80 dark:bg-background/40 border-0"
+                    className="pl-8 text-sm bg-background/80 dark:bg-background/40 border-0 shadow-none"
                   />
                 </div>
 
@@ -289,7 +289,7 @@ export function LaporanKerugianStokPage() {
                   value={jenisFilter}
                   onValueChange={(v) => setJenisFilter(v as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK')}
                 >
-                  <SelectTrigger className="w-[170px] text-xs bg-background/80 dark:bg-background/40 border-0">
+                  <SelectTrigger className="w-[170px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
                     <SelectValue placeholder="Semua Jenis" />
                   </SelectTrigger>
                   <SelectContent>
@@ -303,7 +303,7 @@ export function LaporanKerugianStokPage() {
                   value={sortBy}
                   onValueChange={(v) => setSortBy(v as 'nilai_desc' | 'qty_desc' | 'waktu_desc')}
                 >
-                  <SelectTrigger className="w-[160px] text-xs bg-background/80 dark:bg-background/40 border-0">
+                  <SelectTrigger className="w-[160px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
                     <SelectValue placeholder="Urutkan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -362,18 +362,18 @@ export function LaporanKerugianStokPage() {
                             {item.namaMenu}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="secondary" className="border-0 text-xs bg-background/80 dark:bg-background/40">
                               {item.kategoriNama}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant="outline"
-                              className={
+                              variant="secondary"
+                              className={`border-0 text-xs font-medium ${
                                 item.jenis === 'BARANG_RUSAK'
-                                  ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                                  : 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                              }
+                                  ? 'bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-300'
+                                  : 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                              }`}
                             >
                               {item.jenis === 'BARANG_RUSAK' ? 'Barang Rusak' : 'Opname Keluar'}
                             </Badge>
