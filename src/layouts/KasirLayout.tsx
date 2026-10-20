@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link } from '@tanstack/react-router'
 import {
-  Store,
   WifiOff,
   Maximize2,
   Minimize2,
   ArrowLeft,
-  Clock,
   User,
   LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { useAuthStore } from '@/stores/auth-store'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -20,7 +16,6 @@ import useDialogState from '@/hooks/use-dialog-state'
 export function KasirLayout() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [time, setTime] = useState(new Date())
   const [signOutOpen, setSignOutOpen] = useDialogState()
   const { user } = useAuthStore().auth
 
@@ -36,12 +31,6 @@ export function KasirLayout() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
-
-  // Live clock
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
   }, [])
 
   // Toggle fullscreen
@@ -68,71 +57,43 @@ export function KasirLayout() {
       )}
 
       {/* Top Header Kasir POS */}
-      <header className='flex h-14 shrink-0 items-center justify-between border-b px-4 bg-card/60 backdrop-blur'>
+      <header className='flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border/50 bg-card px-4 shadow-none'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
-          <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm'>
-            <Store className='h-5 w-5' />
+          <div className='flex aspect-square size-8 items-center justify-center rounded-xl overflow-hidden bg-muted dark:bg-white p-1'>
+            <img
+              src='/logo.png'
+              alt='Kantin SKOOLIA'
+              className='size-full object-contain'
+            />
           </div>
           <div>
-            <div className='flex items-center gap-2'>
-              <span className='font-bold text-sm tracking-tight'>SKOOLIA Kantin POS</span>
-              <Badge variant='outline' className='text-xs font-normal border-primary/30 text-primary'>
-                Kasir 1
-              </Badge>
-            </div>
+            <span className='block font-bold text-sm tracking-tight'>SKOOLIA Kantin POS</span>
             <p className='text-xs text-muted-foreground flex items-center gap-1'>
               <User className='h-3 w-3' /> Petugas: {user?.nama || 'Ahmad Kasir'} (Aktif)
             </p>
           </div>
         </div>
 
-        {/* Sisi Tengah: Jam Real-time */}
-        <div className='hidden md:flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs text-muted-foreground'>
-          <Clock className='h-3.5 w-3.5 text-primary' />
-          <span className='font-medium text-foreground'>
-            {time.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
-          </span>
-          <span>•</span>
-          <span className='font-mono font-semibold text-foreground'>
-            {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </span>
-        </div>
 
         {/* Sisi Kanan: Status & Navigasi Cepat */}
         <div className='flex items-center gap-2'>
-          {/* Status Koneksi */}
-          {isOnline ? (
-            <Badge variant='secondary' className='hidden sm:flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'>
-              <span className='h-2 w-2 rounded-full bg-emerald-500 animate-pulse' />
-              Online
-            </Badge>
-          ) : (
-            <Badge variant='destructive' className='flex items-center gap-1'>
-              <WifiOff className='h-3 w-3' />
-              Offline
-            </Badge>
-          )}
-
           {/* Tombol Fullscreen */}
           <Button
             variant='ghost'
             size='icon'
-            className='h-8 w-8 text-muted-foreground hover:text-foreground'
+            className='h-8 w-8 text-muted-foreground hover:text-foreground rounded-xl'
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
           >
             {isFullscreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
           </Button>
 
-          {/* Theme switcher */}
-          <ThemeSwitch />
-
-          {/* Kembali ke Backoffice */}
-          <Button asChild variant='outline' size='sm' className='h-8 gap-1.5 text-xs font-medium ml-1'>
+          {/* Kembali ke Dashboard */}
+          <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl border-none bg-muted/70 dark:bg-muted/30 hover:bg-muted text-foreground shadow-none' title='Kembali ke Dashboard'>
             <Link to='/'>
               <ArrowLeft className='h-3.5 w-3.5' />
-              <span className='hidden sm:inline'>Back Office</span>
+              <span className='hidden sm:inline'>Kembali</span>
             </Link>
           </Button>
 
@@ -140,7 +101,7 @@ export function KasirLayout() {
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10'
+            className='h-8 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl'
             onClick={() => setSignOutOpen(true)}
             title='Keluar Akun'
           >

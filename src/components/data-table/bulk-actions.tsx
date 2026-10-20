@@ -144,13 +144,12 @@ export function DataTableBulkActions<TData>({
         onKeyDown={handleKeyDown}
         className={cn(
           'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl',
-          'transition-all delay-100 duration-300 ease-out hover:scale-105',
-          'focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+          'outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0'
         )}
       >
         <div
           className={cn(
-            'p-2 shadow-xl',
+            'p-2',
             'rounded-xl border',
             'bg-background/95 backdrop-blur-lg supports-backdrop-filter:bg-background/60',
             'flex items-center gap-x-2'

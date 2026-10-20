@@ -21,7 +21,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { KategoriItem } from '@/features/katalog/types'
@@ -230,9 +229,17 @@ export function InventarisPage() {
   return (
     <>
       <Header fixed>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
+        <div className='flex w-full items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
+              Manajemen Stok
+            </span>
+            <span className='text-muted-foreground text-xs'>/</span>
+            <span className='text-xs font-medium'>Laporan Inventaris</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <ProfileDropdown />
+          </div>
         </div>
       </Header>
 
@@ -268,7 +275,7 @@ export function InventarisPage() {
         {/* KPI Summary Cards */}
         <div className='grid grid-cols-2 md:grid-cols-5 gap-3.5'>
           {/* 1. Total Nilai Persediaan (Aset) */}
-          <Card className='col-span-2 md:col-span-1 border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='col-span-2 md:col-span-1 border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2 pt-4 px-4'>
               <CardDescription className='text-xs font-medium'>
                 Total Nilai Aset
@@ -283,7 +290,7 @@ export function InventarisPage() {
           </Card>
 
           {/* 2. Total SKU & Unit */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2 pt-4 px-4'>
               <CardDescription className='text-xs font-medium'>
                 Total SKU Terdaftar
@@ -301,7 +308,7 @@ export function InventarisPage() {
           </Card>
 
           {/* 3. Stok Aman */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2 pt-4 px-4'>
               <CardDescription className='text-xs font-medium text-emerald-600 dark:text-emerald-400'>
                 Stok Aman
@@ -319,7 +326,7 @@ export function InventarisPage() {
           </Card>
 
           {/* 4. Stok Menipis */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2 pt-4 px-4'>
               <CardDescription className='text-xs font-medium text-amber-600 dark:text-amber-400'>
                 Stok Menipis
@@ -337,7 +344,7 @@ export function InventarisPage() {
           </Card>
 
           {/* 5. Stok Habis */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2 pt-4 px-4'>
               <CardDescription className='text-xs font-medium text-rose-600 dark:text-rose-400'>
                 Stok Habis
@@ -417,7 +424,7 @@ export function InventarisPage() {
         </TableToolbar>
 
         {/* Data Table */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-sm'>
+        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>

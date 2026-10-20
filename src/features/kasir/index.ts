@@ -1,5 +1,4 @@
 export * from './KasirPosPage'
-export * from './KasirWelcomePage'
 export * from './components/MenuItemCard'
 export * from './components/MenuGrid'
 export * from './components/CartSidebar'

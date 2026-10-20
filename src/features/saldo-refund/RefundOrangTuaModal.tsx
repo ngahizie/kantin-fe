@@ -209,7 +209,7 @@ function RefundOrangTuaFormContent({
       }
 
       toast.success(`Refund sisa saldo ${siswa.nama} berhasil diproses!`, {
-        description: `Saldo Rp ${siswa.saldo.toLocaleString('id-ID')} diserahkan ke ${namaPenerima.trim()}. Kartu RFID lama otomatis diblokir permanen.`,
+        description: `Saldo ${formatRupiah(siswa.saldo)} diserahkan ke ${namaPenerima.trim()}. Kartu RFID lama otomatis diblokir permanen.`,
       })
 
       onOpenChange(false)

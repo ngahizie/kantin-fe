@@ -19,12 +19,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
-import type { UserRole } from '@/stores/useRoleStore'
+import { ROLE_CONFIGS, type UserRole } from '@/stores/useRoleStore'
 
 const formSchema = z.object({
   email: z
     .string()
-    .min(1, 'Masukkan username atau email staf.'),
+    .min(1, 'Masukkan username staf.'),
   password: z
     .string()
     .min(1, 'Masukkan kata sandi staf.')
@@ -91,9 +91,10 @@ export function UserAuthForm({
       }
 
       const rawRole = (resData.user.currentRole || 'admin') as UserRole
+      const cleanNama = (resData.user.nama || 'Staf Kantin').replace(/\s*\([^)]*\)$/, '')
       const authenticatedUser: AuthUser = {
         userId: resData.user.id,
-        nama: resData.user.nama,
+        nama: cleanNama,
         email: resData.user.email,
         sekolahId: resData.user.sekolah?.id || 10,
         sekolahNama: resData.user.sekolah?.nama || 'PAUD SKOOLIA',
@@ -105,8 +106,10 @@ export function UserAuthForm({
       auth.setAccessToken(resData.token)
       auth.setUser(authenticatedUser)
 
-      toast.success(`Selamat datang, ${authenticatedUser.nama}!`, {
-        description: `Peran aktif: ${rawRole.toUpperCase()} di ${authenticatedUser.sekolahNama}`,
+      const roleLabel = ROLE_CONFIGS[rawRole]?.label || rawRole
+
+      toast.success(`Selamat datang, ${cleanNama}!`, {
+        description: `Peran aktif: ${roleLabel} di ${authenticatedUser.sekolahNama}`,
       })
 
       // Tentukan rute navigasi tujuan berdasarkan role staf
@@ -147,13 +150,13 @@ export function UserAuthForm({
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs'>Username / Email</FormLabel>
+                <FormLabel className='text-xs'>Username</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder='Masukkan username atau email'
+                    placeholder='Masukkan username'
                     autoComplete='username'
                     disabled={isLoading}
-                    className='border-0 bg-background shadow-xs'
+                    className='border-0 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -173,7 +176,7 @@ export function UserAuthForm({
                     placeholder='Masukkan kata sandi'
                     autoComplete='current-password'
                     disabled={isLoading}
-                    className='border-0 bg-background shadow-xs'
+                    className='border-0 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>

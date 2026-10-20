@@ -105,16 +105,7 @@ export function useRfidScanner({
     }
   }, [enabled, minChars, maxIntervalMs, clearBuffer])
 
-  /**
-   * Helper untuk menyimulasikan tap RFID secara manual / programmatic
-   */
-  const simulateScan = useCallback((uid: string) => {
-    if (!uid) return
-    onScanRef.current(uid.trim())
-  }, [])
-
   return {
-    simulateScan,
     clearBuffer,
   }
 }

@@ -4,7 +4,7 @@ import { type Locator, userEvent } from 'vitest/browser'
 import { UserAuthForm } from './user-auth-form'
 
 const FORM_MESSAGES = {
-  emailEmpty: 'Masukkan username atau email staf.',
+  emailEmpty: 'Masukkan username staf.',
   passwordEmpty: 'Masukkan kata sandi staf.',
 } as const
 
@@ -64,7 +64,7 @@ describe('UserAuthForm', () => {
     beforeEach(async () => {
       vi.clearAllMocks()
       screen = await render(<UserAuthForm />)
-      emailInput = screen.getByRole('textbox', { name: /(Email atau Username Staf|Username \/ Email)/i })
+      emailInput = screen.getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i })
       passwordInput = screen.getByLabelText(/Kata Sandi/i)
       signInButton = screen.getByRole('button', { name: /Masuk ke Sistem Kantin/i })
     })
@@ -115,10 +115,10 @@ describe('UserAuthForm', () => {
     vi.clearAllMocks()
 
     const { getByRole, getByLabelText } = await render(
-      <UserAuthForm redirectTo='/settings' />
+      <UserAuthForm redirectTo='/menu' />
     )
 
-    await userEvent.fill(getByRole('textbox', { name: /(Email atau Username Staf|Username \/ Email)/i }), 'admin@skoolia.id')
+    await userEvent.fill(getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i }), 'admin@skoolia.id')
     await userEvent.fill(getByLabelText(/Kata Sandi/i), 'password123')
 
     await userEvent.click(getByRole('button', { name: /Masuk ke Sistem Kantin/i }))
@@ -128,7 +128,7 @@ describe('UserAuthForm', () => {
 
     await vi.waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({
-        to: '/settings',
+        to: '/menu',
         replace: true,
       })
     )

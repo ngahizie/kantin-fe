@@ -532,24 +532,24 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         'ROLE_TU_SEKOLAH',
         'ROLE_BENDAHARA',
       ]
-      let namaStaf = 'Wibisana Bama (Admin)'
+      let namaStaf = 'Wibisana Bama'
 
       if (email.includes('kasir')) {
         detectedRole = 'kasir'
         roleList = ['ROLE_PETUGAS_KANTIN']
-        namaStaf = 'Ahmad Kasir (Petugas POS)'
+        namaStaf = 'Ahmad Kasir'
       } else if (email.includes('pengelola')) {
         detectedRole = 'pengelola'
         roleList = ['ROLE_PENGELOLA_KANTIN']
-        namaStaf = 'Deryl Fabiensyah (Pengelola)'
+        namaStaf = 'Deryl Fabiensyah'
       } else if (email.includes('tu')) {
         detectedRole = 'tu'
         roleList = ['ROLE_TU_SEKOLAH']
-        namaStaf = 'Andika Pratama (Petugas TU)'
+        namaStaf = 'Andika Pratama'
       } else if (email.includes('bendahara')) {
         detectedRole = 'bendahara'
         roleList = ['ROLE_BENDAHARA']
-        namaStaf = 'Siti Rahma (Bendahara)'
+        namaStaf = 'Siti Rahma'
       }
 
       return {
@@ -2891,6 +2891,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const listSiswa = siswaList.map((s) => ({
         siswaId: s.siswa_id,
         nis: s.nis,
+        nisn: (s as unknown as { nisn?: string }).nisn || s.nis,
         nama: s.nama,
         kelas: s.kelas,
         saldo: s.saldo,

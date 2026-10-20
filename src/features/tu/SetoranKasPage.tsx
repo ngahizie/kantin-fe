@@ -41,8 +41,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { formatRupiah } from '@/lib/formatters'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import type { SetoranKasItem, TransaksiTopupDetail } from './types'
 
@@ -239,9 +238,7 @@ export function SetoranKasPage() {
   return (
     <>
       <Header fixed>
-        <Search showKbd={false} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+        <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
@@ -286,13 +283,13 @@ export function SetoranKasPage() {
 
         {/* Top KPI Cards */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Total Sistem (Penerimaan TU)
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
-                Rp {totalPenerimaanSistem.toLocaleString('id-ID')}
+                {formatRupiah(totalPenerimaanSistem)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 Dari{' '}
@@ -302,13 +299,13 @@ export function SetoranKasPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Total Uang Fisik Disetor
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
-                Rp {totalUangFisikDisetor.toLocaleString('id-ID')}
+                {formatRupiah(totalUangFisikDisetor)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 Fisik diterima & dihitung Bendahara
@@ -316,7 +313,7 @@ export function SetoranKasPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Akumulasi Selisih Kas Fisik
@@ -330,8 +327,8 @@ export function SetoranKasPage() {
                       : 'text-blue-600 dark:text-blue-400'
                 }`}
               >
-                {totalSelisihFisik > 0 ? '+' : ''}Rp{' '}
-                {totalSelisihFisik.toLocaleString('id-ID')}
+                {totalSelisihFisik > 0 ? '+' : ''}
+                {formatRupiah(totalSelisihFisik)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 {totalSelisihFisik === 0
@@ -343,7 +340,7 @@ export function SetoranKasPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Status Konfirmasi Setoran
@@ -408,7 +405,7 @@ export function SetoranKasPage() {
         </TableToolbar>
 
         {/* Rekapitulasi Table */}
-        <Card className='overflow-hidden border border-border bg-card shadow-xs'>
+        <Card className='overflow-hidden border border-border bg-card'>
           <CardHeader className='border-b bg-muted/20 px-6 py-4'>
             <div className='flex items-center justify-between'>
               <div>
@@ -500,23 +497,18 @@ export function SetoranKasPage() {
                               {item.total_transaksi} Transaksi
                             </div>
                             <div className='text-[11px] text-muted-foreground'>
-                              Siswa: Rp{' '}
-                              {item.total_topup_siswa.toLocaleString('id-ID')} |
-                              Tamu: Rp{' '}
-                              {item.total_topup_kartu_tamu.toLocaleString(
-                                'id-ID'
-                              )}
+                              Siswa: {formatRupiah(item.total_topup_siswa)} | Tamu: {formatRupiah(item.total_topup_kartu_tamu)}
                             </div>
                           </TableCell>
 
                           <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
-                            Rp {item.total_sistem.toLocaleString('id-ID')}
+                            {formatRupiah(item.total_sistem)}
                           </TableCell>
 
                           <TableCell className='text-right font-mono text-xs font-medium'>
                             {item.uang_fisik !== null ? (
                               <span className='font-semibold text-emerald-700 dark:text-emerald-400'>
-                                Rp {item.uang_fisik.toLocaleString('id-ID')}
+                                {formatRupiah(item.uang_fisik)}
                               </span>
                             ) : (
                               <span className='text-muted-foreground italic'>
@@ -540,14 +532,13 @@ export function SetoranKasPage() {
                               <Badge
                                 className='border-0 bg-destructive/15 text-[11px] font-medium text-destructive'
                               >
-                                Kurang -Rp{' '}
-                                {Math.abs(item.selisih).toLocaleString('id-ID')}
+                                Kurang -{formatRupiah(Math.abs(item.selisih))}
                               </Badge>
                             ) : (
                               <Badge
                                 className='border-0 bg-blue-500/15 text-[11px] font-medium text-blue-700 dark:text-blue-400'
                               >
-                                Lebih +Rp {item.selisih.toLocaleString('id-ID')}
+                                Lebih +{formatRupiah(item.selisih)}
                               </Badge>
                             )}
                           </TableCell>
@@ -610,7 +601,7 @@ export function SetoranKasPage() {
                                       setSelectedSetoranForConfirm(item)
                                       setIsConfirmModalOpen(true)
                                     }}
-                                    className='h-7 gap-1 bg-emerald-600 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700'
+                                    className='h-7 gap-1 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
                                   >
                                     <CheckCircle2 className='h-3.5 w-3.5' />
                                     Konfirmasi
@@ -692,8 +683,8 @@ export function SetoranKasPage() {
             </DialogTitle>
             <DialogDescription className='text-xs'>
               Daftar seluruh top-up tunai yang dilayani pada tanggal{' '}
-              {selectedSetoranForDetail?.tanggal} (Total: Rp{' '}
-              {selectedSetoranForDetail?.total_sistem.toLocaleString('id-ID')})
+              {selectedSetoranForDetail?.tanggal} (Total:{' '}
+              {formatRupiah(selectedSetoranForDetail?.total_sistem || 0)})
             </DialogDescription>
           </DialogHeader>
 
@@ -744,7 +735,7 @@ export function SetoranKasPage() {
                           {tx.penyetor}
                         </TableCell>
                         <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
-                          Rp {tx.nominal.toLocaleString('id-ID')}
+                          {formatRupiah(tx.nominal)}
                         </TableCell>
                       </TableRow>
                     )
@@ -827,20 +818,16 @@ export function SetoranKasPage() {
                 <div className='flex justify-between'>
                   <span>Total Sistem:</span>
                   <span className='font-bold'>
-                    Rp{' '}
-                    {selectedSetoranForPrint.total_sistem.toLocaleString(
-                      'id-ID'
-                    )}
+                    {formatRupiah(selectedSetoranForPrint.total_sistem)}
                   </span>
                 </div>
                 <div className='flex justify-between'>
                   <span>Total Uang Fisik Disetor:</span>
                   <span className='font-bold text-emerald-700 dark:text-emerald-400'>
-                    Rp{' '}
-                    {(
+                    {formatRupiah(
                       selectedSetoranForPrint.uang_fisik ||
-                      selectedSetoranForPrint.total_sistem
-                    ).toLocaleString('id-ID')}
+                        selectedSetoranForPrint.total_sistem
+                    )}
                   </span>
                 </div>
                 <div className='flex justify-between border-t pt-1 font-semibold'>
@@ -854,7 +841,7 @@ export function SetoranKasPage() {
                     }
                   >
                     {selectedSetoranForPrint.selisih !== null
-                      ? `${selectedSetoranForPrint.selisih >= 0 ? '+' : ''}Rp ${selectedSetoranForPrint.selisih.toLocaleString('id-ID')}`
+                      ? `${selectedSetoranForPrint.selisih > 0 ? '+' : ''}${formatRupiah(selectedSetoranForPrint.selisih)}`
                       : 'Rp 0 (Pas)'}
                   </span>
                 </div>

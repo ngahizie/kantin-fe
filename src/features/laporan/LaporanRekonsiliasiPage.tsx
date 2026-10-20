@@ -1,17 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Scale,
-  CheckCircle2,
-  AlertTriangle,
   Download,
-  RefreshCw,
   Search,
-  Wallet,
-  ArrowDownLeft,
   ShieldAlert,
-  Coins,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -35,7 +26,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { laporanApi } from './api/laporan-api'
@@ -44,30 +34,14 @@ import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem } from './types'
 export function LaporanRekonsiliasiPage() {
   const [data, setData] = useState<RingkasanRekonsiliasi | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [simulasiSelisih, setSimulasiSelisih] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-
-  const loadData = async (overrideSimulasi?: boolean) => {
-    try {
-      setIsLoading(true)
-      const isSim = overrideSimulasi !== undefined ? overrideSimulasi : simulasiSelisih
-      const res = await laporanApi.getRekonsiliasi({
-        simulasiSelisih: isSim,
-      })
-      setData(res)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat rekonsiliasi'
-      toast.error('Gagal Memuat Laporan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
-    const init = async () => {
+    const loadData = async () => {
       try {
-        const res = await laporanApi.getRekonsiliasi({ simulasiSelisih: false })
+        setIsLoading(true)
+        const res = await laporanApi.getRekonsiliasi()
         if (!isMounted) return
         setData(res)
       } catch (err: unknown) {
@@ -78,26 +52,11 @@ export function LaporanRekonsiliasiPage() {
         if (isMounted) setIsLoading(false)
       }
     }
-    void init()
+    void loadData()
     return () => {
       isMounted = false
     }
   }, [])
-
-  const handleToggleSimulasi = () => {
-    const nextVal = !simulasiSelisih
-    setSimulasiSelisih(nextVal)
-    void loadData(nextVal)
-    if (nextVal) {
-      toast.warning('Mode Simulasi Selisih Aktif', {
-        description: 'Menampilkan kondisi invariant TIDAK seimbang (selisih Rp 75.000) untuk pengujian UI.',
-      })
-    } else {
-      toast.success('Mode Seimbang Dipulihkan', {
-        description: 'Invariant akuntansi kembali seimbang (selisih Rp 0).',
-      })
-    }
-  }
 
   // Baris Rincian Pos Akuntansi
   const rincianPos: ArusPosRekonsiliasiItem[] = useMemo(() => {
@@ -263,76 +222,34 @@ export function LaporanRekonsiliasiPage() {
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Pusat Laporan Keuangan
+              Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
             <span className="text-xs font-medium">Rekonsiliasi Harian</span>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>
       </Header>
 
-      <Main fixed>
+      <Main>
         <div className="space-y-6 pb-12">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Scale className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Rekonsiliasi Harian
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Pemeriksaan invariant akuntansi: Topup − Refund = Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih.
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Rekonsiliasi Harian
+              </h1>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* Tombol Simulasi Selisih untuk pengujian Banner Merah */}
-              <Button
-                variant={simulasiSelisih ? 'destructive' : 'outline'}
-                size="sm"
-                onClick={handleToggleSimulasi}
-                className="gap-2 shadow-xs"
-              >
-                {simulasiSelisih ? (
-                  <>
-                    <ToggleRight className="h-4 w-4" />
-                    <span>Mode Selisih Aktif (Rp 75.000)</span>
-                  </>
-                ) : (
-                  <>
-                    <ToggleLeft className="h-4 w-4" />
-                    <span>Uji Banner Selisih Merah</span>
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleExportExcel}
                 disabled={isLoading || !data}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
@@ -344,11 +261,11 @@ export function LaporanRekonsiliasiPage() {
           {data && !data.seimbang && (
             <div
               data-testid="banner-peringatan-selisih"
-              className="relative overflow-hidden rounded-xl border-2 border-red-600 bg-red-50 p-6 text-red-950 shadow-xl dark:border-red-500 dark:bg-red-950/80 dark:text-red-100"
+              className="relative overflow-hidden rounded-xl border-2 border-red-600 bg-red-50 p-6 text-red-950 dark:border-red-500 dark:bg-red-950/80 dark:text-red-100"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white shadow-md">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
                     <ShieldAlert className="h-7 w-7 animate-pulse" />
                   </div>
                   <div className="space-y-1">
@@ -375,72 +292,28 @@ export function LaporanRekonsiliasiPage() {
                       <span className="rounded-md bg-red-200/80 px-2.5 py-1 font-medium text-red-900 dark:bg-red-900/60 dark:text-red-200">
                         Total Penggunaan: {formatRupiah(data.totalPenggunaan)}
                       </span>
-                      <span className="rounded-md bg-red-600 px-2.5 py-1 font-bold text-white shadow-xs">
+                      <span className="rounded-md bg-red-600 px-2.5 py-1 font-bold text-white">
                         Perlu Investigasi Bendahara & TU
                       </span>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleToggleSimulasi()}
-                    className="shadow-sm"
-                  >
-                    Atur Kembali ke Seimbang
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ✅ BANNER STATUS SEIMBANG HIJAU (KETIKA SELISIH == 0) */}
-          {data && data.seimbang && (
-            <div
-              data-testid="banner-status-seimbang"
-              className="flex items-start gap-4 rounded-xl border border-emerald-500/50 bg-emerald-50/80 p-5 text-emerald-950 shadow-xs dark:border-emerald-500/40 dark:bg-emerald-950/40 dark:text-emerald-100"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-emerald-800 dark:text-emerald-300">
-                    INVARIANT AKUNTANSI TEREKONSILIASI LENGKAP
-                  </h2>
-                  <Badge className="bg-emerald-600 text-white font-mono text-xs hover:bg-emerald-600">
-                    STATUS: SEIMBANG (0 SELISIH)
-                  </Badge>
-                </div>
-                <p className="text-sm text-emerald-800/90 dark:text-emerald-200/90">
-                  Seluruh arus dana masuk dan keluar cocok 100%. Rumus invariant akuntansi terpenuhi:
-                  {' '}
-                  <span className="font-medium font-mono text-xs bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded">
-                    Topup ({formatRupiah(data.totalTopupSemua)}) − Refund ({formatRupiah(data.totalRefundSemua)}) = Saldo Mengendap ({formatRupiah(data.saldoMengendap)}) + Penjualan ({formatRupiah(data.penjualanBersih)})
-                  </span>
-                  . Pembukuan siap diaudit oleh Kepala Sekolah.
-                </p>
               </div>
             </div>
           )}
 
           {/* INVARIANT FORMULA EVALUATION CARD */}
           {data && (
-            <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-card to-background">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground flex items-center justify-between">
-                  <span>Rumus Invariant Saldo</span>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    Audit Harian Otomatis
-                  </Badge>
+                <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+                  Invariant Saldo
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center">
                   {/* Sisi Kiri */}
-                  <div className="rounded-xl border bg-card p-4 shadow-2xs space-y-1">
+                  <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
                       Sisi 1: Top-up Bersih
                     </p>
@@ -454,17 +327,15 @@ export function LaporanRekonsiliasiPage() {
 
                   {/* Simbol Sama Dengan */}
                   <div className="flex flex-col items-center justify-center">
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border-2 ${
+                    <span
+                      className={`text-2xl font-black ${
                         data.seimbang
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400'
-                          : 'border-red-500 bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
                       }`}
                     >
-                      <span className="text-xl font-black">
-                        {data.seimbang ? '=' : '≠'}
-                      </span>
-                    </div>
+                      {data.seimbang ? '=' : '≠'}
+                    </span>
                     <span
                       className={`mt-1 text-xs font-bold ${
                         data.seimbang ? 'text-emerald-600' : 'text-red-600'
@@ -477,7 +348,7 @@ export function LaporanRekonsiliasiPage() {
                   </div>
 
                   {/* Sisi Kanan */}
-                  <div className="rounded-xl border bg-card p-4 shadow-2xs space-y-1">
+                  <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
                       Sisi 2: Penggunaan & Saldo
                     </p>
@@ -495,94 +366,72 @@ export function LaporanRekonsiliasiPage() {
 
           {/* METRIC SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
                   Total Top-up Masuk
                 </CardTitle>
-                <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
-                  <ArrowDownLeft className="h-4 w-4" />
-                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold tracking-tight">
                   {data ? formatRupiah(data.totalTopupSemua) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
                   <span>Tunai: {data ? formatRupiah(data.topupTunai) : '-'}</span>
                   <span>Online: {data ? formatRupiah(data.topupOnline) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
                   Penjualan Bersih
                 </CardTitle>
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600">
-                  <Coins className="h-4 w-4" />
-                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold tracking-tight">
                   {data ? formatRupiah(data.penjualanBersih) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
                   <span>Bruto: {data ? formatRupiah(data.penjualan) : '-'}</span>
-                  <span className="text-amber-600">Void: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
+                  <span className="text-amber-600 font-medium">Void: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
                   Saldo Mengendap (Kewajiban)
                 </CardTitle>
-                <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-600">
-                  <Wallet className="h-4 w-4" />
-                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold tracking-tight">
                   {data ? formatRupiah(data.saldoMengendap) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
                   <span>Siswa: {data ? formatRupiah(data.saldoSiswa) : '-'}</span>
                   <span>Tamu: {data ? formatRupiah(data.saldoKartuTamu) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className={data && !data.seimbang ? 'border-red-500 bg-red-50/20 dark:bg-red-950/20' : ''}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Card className={data && !data.seimbang ? 'border-0 bg-red-500/10 dark:bg-red-950/30' : 'border-0 bg-muted/70 dark:bg-muted/30'}>
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
                   Status Rekonsiliasi
                 </CardTitle>
-                <div
-                  className={`rounded-lg p-2 ${
-                    data?.seimbang
-                      ? 'bg-emerald-500/10 text-emerald-600'
-                      : 'bg-red-500/10 text-red-600'
-                  }`}
-                >
-                  {data?.seimbang ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4" />
-                  )}
-                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div
                   className={`text-2xl font-bold tracking-tight ${
-                    data?.seimbang ? 'text-emerald-600' : 'text-red-600'
+                    data?.seimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                   }`}
                 >
                   {data?.seimbang ? 'SEIMBANG' : `SELISIH ${formatRupiah(data?.selisih || 0)}`}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1.5">
                   {data?.seimbang
                     ? '100% Invariant Akuntansi Terpenuhi'
                     : 'Periksa fisik kas & ledger'}
@@ -592,7 +441,7 @@ export function LaporanRekonsiliasiPage() {
           </div>
 
           {/* RINCIAN TABEL POS REKONSILIASI & LEDGER */}
-          <Card>
+          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
@@ -610,16 +459,16 @@ export function LaporanRekonsiliasiPage() {
                     placeholder="Cari pos mutasi..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm"
+                    className="pl-8 text-sm bg-background"
                   />
                 </div>
               </div>
             </CardHeader>
 
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="rounded-lg border-0 overflow-hidden bg-card/60 dark:bg-card/30">
                 <Table>
-                  <TableHeader className="bg-muted/50">
+                  <TableHeader className="bg-muted/80 dark:bg-muted/50">
                     <TableRow>
                       <TableHead className="w-12 text-center">#</TableHead>
                       <TableHead>Pos Akuntansi / Ledger</TableHead>
@@ -653,13 +502,12 @@ export function LaporanRekonsiliasiPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant="outline"
                               className={
                                 posItem.kategori === 'MASUK'
-                                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  ? 'border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                                   : posItem.kategori === 'KELUAR'
-                                  ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                                  : 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                  ? 'border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                                  : 'border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400'
                               }
                             >
                               {posItem.kategori}
@@ -667,9 +515,9 @@ export function LaporanRekonsiliasiPage() {
                           </TableCell>
                           <TableCell className="text-center font-mono text-xs">
                             {posItem.arah === 'KREDIT' ? (
-                              <span className="text-emerald-600 font-bold">+ KREDIT</span>
+                              <span className="text-emerald-600 font-bold">KREDIT</span>
                             ) : posItem.arah === 'DEBIT' ? (
-                              <span className="text-blue-600 font-bold">− DEBIT</span>
+                              <span className="text-blue-600 font-bold">DEBIT</span>
                             ) : (
                               <span className="text-muted-foreground">STATUS</span>
                             )}

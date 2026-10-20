@@ -1,13 +1,7 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Coins,
-  TrendingUp,
   Download,
-  RefreshCw,
-  Receipt,
-  Percent,
-  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -30,11 +24,27 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { laporanApi } from './api/laporan-api'
 import type { RingkasanPenjualan, BarisPenjualanItem } from './types'
+
+const getCategoryBadgeClass = (kategori: string) => {
+  const k = (kategori || '').toLowerCase()
+  if (k.includes('berat')) {
+    return 'border-0 bg-orange-500/15 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
+  }
+  if (k.includes('dingin') || k.includes('minum')) {
+    return 'border-0 bg-cyan-500/15 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300'
+  }
+  if (k.includes('snack') || k.includes('roti')) {
+    return 'border-0 bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+  }
+  if (k.includes('hangat')) {
+    return 'border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+  }
+  return 'border-0 bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
+}
 
 export function LaporanLabaKotorPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanPenjualan | null>(null)
@@ -44,23 +54,6 @@ export function LaporanLabaKotorPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [marginFilter, setMarginFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
   const [sortBy, setSortBy] = useState<'laba_desc' | 'margin_desc' | 'omset_desc'>('laba_desc')
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resRingkasan, resItems] = await Promise.all([
-        laporanApi.getPenjualan(),
-        laporanApi.getPenjualanPerItem(),
-      ])
-      setRingkasan(resRingkasan)
-      setItems(resItems)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat laba kotor'
-      toast.error('Gagal Memuat Laporan Laba Kotor', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -135,7 +128,7 @@ export function LaporanLabaKotorPage() {
       exportTableToExcel({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Laba Kotor',
-        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
+        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA (PRD §9.5)',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
@@ -178,56 +171,34 @@ export function LaporanLabaKotorPage() {
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Pusat Laporan Keuangan
+              Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
             <span className="text-xs font-medium">Laba Kotor</span>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>
       </Header>
 
-      <Main fixed>
+      <Main>
         <div className="space-y-6 pb-12">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Coins className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Laba Kotor
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Analisis profitabilitas kantin: Laba kotor = Penjualan bersih − Σ HPP item terjual.
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Laba Kotor
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleExportExcel}
                 disabled={isLoading || !ringkasan}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
@@ -237,14 +208,11 @@ export function LaporanLabaKotorPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Laba Kotor
                 </CardTitle>
-                <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-emerald-600">
@@ -256,14 +224,11 @@ export function LaporanLabaKotorPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Rata-rata Gross Margin
                 </CardTitle>
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600">
-                  <Percent className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
@@ -275,14 +240,11 @@ export function LaporanLabaKotorPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Beban Pokok Penjualan (HPP)
                 </CardTitle>
-                <div className="rounded-lg bg-orange-500/10 p-2 text-orange-600">
-                  <Receipt className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -294,14 +256,11 @@ export function LaporanLabaKotorPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Menu Juara Laba
                 </CardTitle>
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-600">
-                  <Sparkles className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-base font-bold tracking-tight truncate">
@@ -315,7 +274,7 @@ export function LaporanLabaKotorPage() {
           </div>
 
           {/* TABEL PROFITABILITAS PER MENU */}
-          <Card>
+          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
@@ -364,7 +323,7 @@ export function LaporanLabaKotorPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="overflow-hidden rounded-lg">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
@@ -403,7 +362,10 @@ export function LaporanLabaKotorPage() {
                             {item.nama}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
+                            >
                               {item.kategoriNama}
                             </Badge>
                           </TableCell>

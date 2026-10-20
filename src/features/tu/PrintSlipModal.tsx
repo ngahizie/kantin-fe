@@ -9,6 +9,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatRupiah } from '@/lib/formatters'
 import {
   Dialog,
   DialogContent,
@@ -135,7 +136,7 @@ export function PrintSlipModal({
         {/* Outer Receipt Container (Screen & Print Wrapper) */}
         <div className='no-print-bg flex justify-center bg-muted/40 p-5 dark:bg-background'>
           {/* Authentic Printable Thermal Receipt Slip */}
-          <div className='printable-slip w-full space-y-4 rounded-xl border border-slate-300 bg-white p-5 font-mono text-xs text-slate-900 shadow-sm'>
+          <div className='printable-slip w-full space-y-4 rounded-xl border border-slate-300 bg-white p-5 font-mono text-xs text-slate-900'>
             {/* Header Nota */}
             <div className='print-border-dashed space-y-1 border-b border-dashed border-slate-300 pb-3 text-center'>
               <div className='flex items-center justify-center gap-1 text-sm font-bold tracking-tight text-slate-900 uppercase'>
@@ -209,13 +210,13 @@ export function PrintSlipModal({
               <div className='print-dark-override flex items-center justify-between text-[11px] text-slate-600'>
                 <span>Saldo Awal Siswa:</span>
                 <span className='font-medium text-slate-800'>
-                  Rp {slipData.saldo_awal.toLocaleString('id-ID')}
+                  {formatRupiah(slipData.saldo_awal)}
                 </span>
               </div>
               <div className='print-dark-override flex items-center justify-between text-xs font-bold text-emerald-700'>
                 <span>Nominal Setoran Tunai (+):</span>
                 <span className='text-sm'>
-                  Rp {slipData.nominal.toLocaleString('id-ID')}
+                  {formatRupiah(slipData.nominal)}
                 </span>
               </div>
 
@@ -225,7 +226,7 @@ export function PrintSlipModal({
                   SALDO BARU:
                 </span>
                 <span className='print-dark-override font-mono text-base text-emerald-700'>
-                  Rp {slipData.saldo_baru.toLocaleString('id-ID')}
+                  {formatRupiah(slipData.saldo_baru)}
                 </span>
               </div>
             </div>
@@ -261,7 +262,7 @@ export function PrintSlipModal({
             <Button
               type='button'
               onClick={handlePrint}
-              className='h-9 gap-2 bg-emerald-600 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700'
+              className='h-9 gap-2 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
             >
               <Printer className='h-4 w-4' />
               Cetak Slip Nota

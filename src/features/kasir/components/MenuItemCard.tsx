@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Plus, Utensils, AlertCircle } from 'lucide-react'
+import { Utensils, AlertCircle } from 'lucide-react'
 import { formatRupiah } from '@/lib/formatters'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import type { MenuItem } from '@/features/katalog/types'
 
@@ -42,21 +41,21 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       aria-disabled={isHabis}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border transition-all duration-200 select-none ${
+      className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none select-none ${
         isHabis
-          ? 'cursor-not-allowed border-dashed bg-muted/40 opacity-60'
-          : 'cursor-pointer hover:border-primary/60 hover:shadow-md active:scale-[0.98]'
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer'
       }`}
     >
       {/* Gambar & Badges */}
-      <div className='relative aspect-4/3 w-full overflow-hidden bg-muted/60'>
+      <div className='relative aspect-4/3 w-full overflow-hidden bg-muted/50 dark:bg-muted/50'>
         {menu.fotoUrl && !imageError ? (
           <img
             src={menu.fotoUrl}
             alt={menu.nama}
             onError={() => setImageError(true)}
-            className={`h-full w-full object-cover transition-transform duration-300 ${
-              isHabis ? 'grayscale filter' : 'group-hover:scale-105'
+            className={`h-full w-full object-cover ${
+              isHabis ? 'grayscale filter' : ''
             }`}
             loading='lazy'
           />
@@ -67,22 +66,22 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         )}
 
         {/* Badge Status Stok di Pojok Kiri Atas */}
-        <div className='absolute top-2 left-2 flex flex-col gap-1'>
+        <div className='absolute top-2.5 left-2.5 flex flex-col gap-1'>
           {isHabis ? (
-            <Badge variant='destructive' className='font-bold shadow-sm'>
+            <Badge variant='destructive' className='rounded-full border-none font-semibold text-[10px] px-2.5 py-0.5 uppercase tracking-wide shadow-none'>
               Habis
             </Badge>
           ) : isMenipis ? (
             <Badge
-              variant='outline'
-              className='border-amber-500 bg-amber-500/90 font-bold text-amber-950 shadow-sm dark:text-amber-100'
+              variant='secondary'
+              className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold text-[10px] px-2.5 py-0.5 uppercase tracking-wide shadow-none'
             >
               <AlertCircle className='mr-1 h-3 w-3' /> Sisa {availableStock}
             </Badge>
           ) : (
             <Badge
               variant='secondary'
-              className='bg-background/85 text-xs font-medium text-foreground shadow-xs backdrop-blur-xs'
+              className='rounded-full border-none bg-background/90 text-xs font-semibold text-foreground shadow-none backdrop-blur-xs px-2.5 py-0.5'
             >
               Stok: {availableStock}
             </Badge>
@@ -91,8 +90,8 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
         {/* Badge Jumlah di Keranjang di Pojok Kanan Atas */}
         {cartQty > 0 && (
-          <div className='absolute top-2 right-2 animate-in duration-200 zoom-in-75'>
-            <Badge className='bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground shadow-md'>
+          <div className='absolute top-2.5 right-2.5 animate-in duration-200 zoom-in-75'>
+            <Badge className='rounded-full border-none bg-primary text-primary-foreground font-semibold text-[10px] px-2.5 py-0.5 shadow-none'>
               {cartQty}x di keranjang
             </Badge>
           </div>
@@ -100,10 +99,10 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       </div>
 
       {/* Konten Menu */}
-      <div className='flex flex-1 flex-col justify-between p-3'>
+      <div className='flex flex-1 flex-col justify-between p-3.5'>
         <div>
           <h4
-            className='line-clamp-2 text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary'
+            className='line-clamp-2 text-sm font-semibold tracking-tight text-foreground'
             title={menu.nama}
           >
             {menu.nama}
@@ -113,30 +112,12 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
           </span>
         </div>
 
-        {/* Harga & Tombol Tambah */}
-        <div className='mt-3 flex items-center justify-between gap-2 border-t pt-2'>
-          <div className='flex flex-col'>
-            <span className='text-xs text-muted-foreground'>Harga</span>
-            <span className='text-sm font-bold text-primary sm:text-base'>
-              {formatRupiah(menu.hargaJual)}
-            </span>
-          </div>
-
-          <Button
-            type='button'
-            size='sm'
-            variant={isHabis ? 'outline' : 'default'}
-            disabled={isHabis}
-            onClick={(e) => {
-              e.stopPropagation()
-              handleCardClick()
-            }}
-            className='h-8 min-w-[36px] touch-manipulation px-2.5'
-            title={isHabis ? 'Stok habis' : `Tambah ${menu.nama} ke keranjang`}
-          >
-            <Plus className='h-4 w-4' />
-            <span className='hidden text-xs font-medium sm:inline'>Pilih</span>
-          </Button>
+        {/* Harga */}
+        <div className='mt-3 flex flex-col border-none pt-1'>
+          <span className='text-xs text-muted-foreground'>Harga</span>
+          <span className='text-base font-bold tracking-tight text-primary tabular-nums sm:text-lg'>
+            {formatRupiah(menu.hargaJual)}
+          </span>
         </div>
       </div>
     </Card>

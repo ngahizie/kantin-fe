@@ -23,7 +23,7 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         data-slot='scroll-area-viewport'
         className={cn(
-          'size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1',
+          'size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
           orientation === 'horizontal' && 'overflow-x-auto!'
         )}
       >

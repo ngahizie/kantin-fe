@@ -137,7 +137,7 @@ export function RiwayatOpnameTable({
       />
 
       {/* Table */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden shadow-sm">
+      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>

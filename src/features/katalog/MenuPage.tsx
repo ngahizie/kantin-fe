@@ -14,8 +14,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search as SearchComp } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -63,7 +61,13 @@ export function MenuPage() {
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [activeDeleteTarget, setActiveDeleteTarget] = useState<MenuItem | null>(null)
+  const handleDeleteClick = (item: MenuItem) => {
+    setDeleteTarget(item)
+    setActiveDeleteTarget(item)
+  }
 
+  
   // Load menu and kategori data
   const loadData = async () => {
     try {
@@ -131,11 +135,12 @@ export function MenuPage() {
   const filteredMenu = useMemo(() => {
     return menuList.filter((item) => {
       // 1. Search Query
-      const matchSearch = item.nama.toLowerCase().includes(searchQuery.toLowerCase())
+      const query = (searchQuery || '').trim().toLowerCase()
+      const matchSearch = !query || (item?.nama ?? '').toLowerCase().includes(query)
 
       // 2. Kategori Filter
       const matchKategori =
-        selectedKategoriId === 'all' || String(item.kategoriId) === selectedKategoriId
+        selectedKategoriId === 'all' || String(item?.kategoriId ?? '') === selectedKategoriId
 
       // 3. Status Filter
       let matchStatus = true
@@ -144,7 +149,7 @@ export function MenuPage() {
       } else if (selectedStatus === 'inactive') {
         matchStatus = item.aktif === false
       } else if (selectedStatus === 'low_stock') {
-        matchStatus = item.aktif && item.stokBerjalan <= (item.stokMinimum || 0)
+        matchStatus = (item?.aktif === true) && (item?.stokBerjalan ?? 0) <= (item?.stokMinimum ?? 0)
       }
 
       return matchSearch && matchKategori && matchStatus
@@ -169,11 +174,12 @@ export function MenuPage() {
   }
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return
+    const target = activeDeleteTarget
+    if (!target) return
     try {
       setIsDeleting(true)
-      await katalogApi.deleteMenu(deleteTarget.id)
-      toast.success(`Menu "${deleteTarget.nama}" berhasil dinonaktifkan`)
+      await katalogApi.deleteMenu(target.id)
+      toast.success(`Menu "${target.nama}" berhasil dinonaktifkan`)
       setDeleteTarget(null)
       loadData()
     } catch (err: unknown) {
@@ -187,81 +193,77 @@ export function MenuPage() {
 
   return (
     <>
-      <Header fixed>
-        <SearchComp showKbd={false} />
+      <Header fixed className='border-b border-sidebar-border/50'>
+        <div className='flex items-center gap-2 overflow-hidden me-auto'>
+          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
+            Katalog Menu Kantin
+          </h1>
+        </div>
         <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
           <ProfileDropdown />
         </div>
       </Header>
 
-      <Main className='p-4 md:p-6 space-y-6'>
-        {/* Header Title & Actions */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Katalog Menu Kantin
-            </h1>
-            <p className='text-sm text-muted-foreground mt-0.5'>
-              Kelola menu makanan, minuman, harga jual rupiah, dan kontrol stok minimum kantin.
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={loadData}
-              disabled={loading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Segarkan
-            </Button>
-            <Button size='sm' onClick={handleAdd} className='gap-1.5 shadow-xs'>
-              <Plus className='size-4' />
-              Tambah Menu Baru
-            </Button>
-          </div>
+      <Main className='space-y-6 pb-12'>
+        {/* Actions */}
+        <div className='flex items-center justify-end gap-2'>
+          <Button
+            variant='secondary'
+            size='sm'
+            onClick={loadData}
+            disabled={loading}
+            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Segarkan
+          </Button>
+          <Button
+            size='sm'
+            onClick={handleAdd}
+            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
+          >
+            <Plus className='size-4' />
+            Tambah Menu Baru
+          </Button>
         </div>
 
         {/* Ringkasan Widgets */}
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Total Menu</p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>{stats.total}</h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Terdaftar di katalog</p>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Menu</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Terdaftar di katalog</p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Menu Aktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Aktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {stats.aktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Tampil di kasir POS</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Tampil di kasir POS</p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Stok Menipis / Habis</p>
-              <h3 className='mt-0.5 text-xl font-bold text-amber-600 dark:text-amber-400'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Menipis / Habis</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
                 {stats.stokMenipis}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Perlu restock segera</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Perlu restock segera</p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Menu Nonaktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-muted-foreground'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Nonaktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
                 {stats.nonaktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Disembunyikan</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Disembunyikan</p>
             </CardContent>
           </Card>
         </div>
@@ -323,37 +325,37 @@ export function MenuPage() {
           <CardContent className='p-0 overflow-x-auto'>
             <Table>
               <TableHeader>
-                <TableRow className='bg-muted/40 hover:bg-muted/40'>
-                  <TableHead className='w-16 text-center'>Foto</TableHead>
-                  <TableHead>Nama Menu</TableHead>
-                  <TableHead className='w-36'>Kategori</TableHead>
-                  <TableHead className='w-32 text-right'>Harga Jual</TableHead>
-                  <TableHead className='w-28 text-center'>Stok Berjalan</TableHead>
-                  <TableHead className='w-24 text-center'>Satuan</TableHead>
-                  <TableHead className='w-28 text-center'>Stok Min.</TableHead>
-                  <TableHead className='w-24 text-center'>Status</TableHead>
-                  <TableHead className='w-28 text-right'>Aksi</TableHead>
+                <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
+                  <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>Foto</TableHead>
+                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>Nama Menu</TableHead>
+                  <TableHead className='w-36 border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori</TableHead>
+                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Harga Jual</TableHead>
+                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Berjalan</TableHead>
+                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Satuan</TableHead>
+                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Min.</TableHead>
+                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</TableHead>
+                  <TableHead className='w-28 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className='h-40 text-center text-muted-foreground'>
+                  <TableRow className='border-none'>
+                    <TableCell colSpan={9} className='h-40 text-center text-muted-foreground border-none px-6'>
                       <div className='flex items-center justify-center gap-2'>
                         <RefreshCw className='size-4 animate-spin' />
                         <span>Memuat data katalog menu...</span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : paginatedMenu.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className='h-40 text-center text-muted-foreground'>
+                ) : filteredMenu.length === 0 ? (
+                  <TableRow className='border-none'>
+                    <TableCell colSpan={9} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <UtensilsCrossed className='size-8 text-muted-foreground/40' />
-                        <p className='font-medium'>Tidak ada menu ditemukan</p>
+                        <p className='font-semibold text-foreground'>Tidak ada menu ditemukan</p>
                         <p className='text-xs text-muted-foreground'>
                           {searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all'
-                            ? 'Coba atur ulang filter pencarian Anda'
+                            ? 'Coba gunakan kata kunci atau atur ulang filter pencarian lainnya'
                             : 'Mulai dengan menambahkan menu baru ke katalog'}
                         </p>
                       </div>
@@ -367,10 +369,10 @@ export function MenuPage() {
                     const isHabis = item.stokBerjalan <= 0
 
                     return (
-                      <TableRow key={item.id} className='hover:bg-muted/30'>
+                      <TableRow key={item.id} className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'>
                         {/* Foto Thumbnail */}
-                        <TableCell className='p-2 text-center'>
-                          <div className='size-11 rounded-lg border bg-muted/40 overflow-hidden flex items-center justify-center mx-auto shrink-0'>
+                        <TableCell className='text-center border-none py-3.5 ps-6'>
+                          <div className='size-11 rounded-xl border-none bg-background/80 dark:bg-background/20 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
                             {item.fotoUrl ? (
                               <img
                                 src={katalogApi.getImageUrl(item.fotoUrl)}
@@ -388,31 +390,31 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Nama Menu */}
-                        <TableCell>
-                          <div className='font-medium text-foreground'>{item.nama}</div>
-                          <div className='text-[11px] text-muted-foreground'>ID: #{item.id}</div>
+                        <TableCell className='border-none py-3.5 ps-2'>
+                          <div className='font-semibold text-foreground text-sm'>{item.nama}</div>
+                          <div className='text-[11px] text-muted-foreground tabular-nums'>ID: #{item.id}</div>
                         </TableCell>
 
                         {/* Kategori */}
-                        <TableCell>
+                        <TableCell className='border-none py-3.5'>
                           <Badge
-                            variant='outline'
-                            className='border-0 bg-muted/60 text-muted-foreground font-normal text-xs'
+                            variant='secondary'
+                            className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                           >
                             {kategoriNama}
                           </Badge>
                         </TableCell>
 
                         {/* Harga Jual */}
-                        <TableCell className='text-right font-mono font-semibold text-foreground'>
+                        <TableCell className='text-right font-semibold text-foreground border-none py-3.5 tabular-nums text-sm'>
                           {formatRupiah(item.hargaJual)}
                         </TableCell>
 
                         {/* Stok Berjalan */}
-                        <TableCell className='text-center'>
+                        <TableCell className='text-center border-none py-3.5'>
                           <div className='flex flex-col items-center gap-0.5'>
                             <span
-                              className={`font-mono font-semibold text-sm ${
+                              className={`font-semibold text-sm tabular-nums ${
                                 isHabis
                                   ? 'text-destructive font-bold'
                                   : isStokMenipis
@@ -424,15 +426,15 @@ export function MenuPage() {
                             </span>
                             {isHabis ? (
                               <Badge
-                                variant='outline'
-                                className='border-0 bg-destructive/15 text-destructive text-[9px] px-1.5 py-0 h-3.5 leading-none font-medium'
+                                variant='secondary'
+                                className='rounded-full border-none bg-destructive/15 text-destructive text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
                               >
                                 Habis
                               </Badge>
                             ) : isStokMenipis ? (
                               <Badge
-                                variant='outline'
-                                className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] px-1.5 py-0 h-3.5 leading-none font-medium'
+                                variant='secondary'
+                                className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
                               >
                                 Menipis
                               </Badge>
@@ -441,28 +443,28 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Satuan */}
-                        <TableCell className='text-center text-xs font-medium text-muted-foreground uppercase'>
+                        <TableCell className='text-center text-xs font-semibold text-muted-foreground uppercase border-none py-3.5'>
                           {item.satuan || 'PCS'}
                         </TableCell>
 
                         {/* Stok Minimum */}
-                        <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                        <TableCell className='text-center text-xs text-muted-foreground border-none py-3.5 tabular-nums'>
                           {formatNumber(item.stokMinimum)}
                         </TableCell>
 
                         {/* Status Aktif */}
-                        <TableCell className='text-center'>
+                        <TableCell className='text-center border-none py-3.5'>
                           {item.aktif ? (
                             <Badge
-                              variant='outline'
-                              className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium'
+                              variant='secondary'
+                              className='rounded-full border-none bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                             >
                               Aktif
                             </Badge>
                           ) : (
                             <Badge
-                              variant='outline'
-                              className='border-0 bg-muted text-muted-foreground text-[11px] font-medium'
+                              variant='secondary'
+                              className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
                             >
                               Nonaktif
                             </Badge>
@@ -470,12 +472,12 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Aksi */}
-                        <TableCell className='text-right'>
+                        <TableCell className='text-right border-none py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1'>
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 text-muted-foreground hover:text-foreground'
+                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
                               onClick={() => handleEdit(item)}
                               title='Ubah Menu'
                             >
@@ -484,8 +486,8 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 text-muted-foreground hover:text-destructive'
-                              onClick={() => setDeleteTarget(item)}
+                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
+                              onClick={() => handleDeleteClick(item)}
                               title='Nonaktifkan Menu'
                             >
                               <Trash2 className='size-4' />
@@ -502,28 +504,28 @@ export function MenuPage() {
 
           {/* Pagination Footer */}
           {totalPages > 1 && (
-            <div className='p-4 border-t flex items-center justify-between'>
-              <div className='text-xs text-muted-foreground'>
+            <div className='p-4 flex items-center justify-between'>
+              <div className='text-xs font-medium text-muted-foreground tabular-nums'>
                 Halaman <span className='font-semibold text-foreground'>{currentPage}</span> dari{' '}
                 <span className='font-semibold text-foreground'>{totalPages}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Button
-                  variant='outline'
+                  variant='secondary'
                   size='sm'
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className='gap-1 h-8 text-xs'
+                  className='gap-1 h-8 text-xs border-none bg-background/80 dark:bg-background/20 hover:bg-background text-foreground rounded-xl shadow-none'
                 >
                   <ChevronLeft className='size-3.5' />
                   Sebelumnya
                 </Button>
                 <Button
-                  variant='outline'
+                  variant='secondary'
                   size='sm'
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className='gap-1 h-8 text-xs'
+                  className='gap-1 h-8 text-xs border-none bg-background/80 dark:bg-background/20 hover:bg-background text-foreground rounded-xl shadow-none'
                 >
                   Selanjutnya
                   <ChevronRight className='size-3.5' />
@@ -545,16 +547,18 @@ export function MenuPage() {
 
       {/* Alert Dialog Konfirmasi Nonaktifkan Menu */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
           <AlertDialogHeader>
-            <div className='flex items-center gap-2 text-destructive'>
-              <AlertTriangle className='size-5' />
-              <AlertDialogTitle>Nonaktifkan Menu?</AlertDialogTitle>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive'>
+                <AlertTriangle className='size-5' />
+              </div>
+              <AlertDialogTitle className='text-lg font-bold'>Nonaktifkan Menu?</AlertDialogTitle>
             </div>
-            <AlertDialogDescription className='space-y-2 pt-2'>
+            <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
               <p>
                 Apakah Anda yakin ingin menonaktifkan menu{' '}
-                <strong className='text-foreground'>{deleteTarget?.nama}</strong>?
+                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
               </p>
               <p className='text-xs text-muted-foreground'>
                 Menu yang dinonaktifkan akan <strong>otomatis disembunyikan</strong> dari layar
@@ -563,12 +567,17 @@ export function MenuPage() {
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+          <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+            >
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
               {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
             </AlertDialogAction>

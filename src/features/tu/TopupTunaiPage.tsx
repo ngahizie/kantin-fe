@@ -23,8 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { formatRupiah } from '@/lib/formatters'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
 
@@ -169,9 +168,9 @@ export function TopupTunaiPage() {
 
       if (result) {
         toast.success(
-          `Top-up Rp ${nominalNum.toLocaleString('id-ID')} berhasil!`,
+          `Top-up ${formatRupiah(nominalNum)} berhasil!`,
           {
-            description: `Saldo baru ${currentStudent.nama}: Rp ${result.saldo_baru.toLocaleString('id-ID')}`,
+            description: `Saldo baru ${currentStudent.nama}: ${formatRupiah(result.saldo_baru)}`,
           }
         )
 
@@ -210,9 +209,7 @@ export function TopupTunaiPage() {
   return (
     <>
       <Header fixed>
-        <Search showKbd={false} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+        <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
@@ -246,7 +243,7 @@ export function TopupTunaiPage() {
 
         {/* Ringkasan Status Header Cards */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Total Siswa Terdaftar
@@ -257,7 +254,7 @@ export function TopupTunaiPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Status Kartu Siswa
@@ -268,13 +265,13 @@ export function TopupTunaiPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30 shadow-xs transition-all hover:shadow-md'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
                 Batas Saldo Maksimal
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
-                Rp {MAX_SALDO_SEKOLAH.toLocaleString('id-ID')}
+                {formatRupiah(MAX_SALDO_SEKOLAH)}
               </h3>
             </CardContent>
           </Card>
@@ -293,7 +290,7 @@ export function TopupTunaiPage() {
 
           {/* Right Column: Topup Form (7 Cols) */}
           <div className='space-y-6 lg:col-span-7'>
-            <Card className='border border-border bg-card shadow-xs'>
+            <Card className='border border-border bg-card'>
               <CardHeader className='pb-4'>
                 <CardTitle className='text-lg font-semibold'>
                   Form Pengisian Saldo Tunai
@@ -318,14 +315,14 @@ export function TopupTunaiPage() {
                           variant={
                             nominalNum === preset ? 'default' : 'outline'
                           }
-                          className={`h-11 text-xs font-semibold transition-all sm:text-sm ${
+                          className={`h-11 text-xs font-semibold sm:text-sm ${
                             nominalNum === preset
-                              ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
+                              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                               : 'border-border bg-background hover:bg-muted text-foreground'
                           }`}
                           onClick={() => handleSelectPreset(preset)}
                         >
-                          Rp {preset.toLocaleString('id-ID')}
+                          {formatRupiah(preset)}
                         </Button>
                       ))}
                     </div>
@@ -385,13 +382,13 @@ export function TopupTunaiPage() {
                           <div className='flex justify-between text-muted-foreground'>
                             <span>Saldo Siswa saat ini:</span>
                             <span className='font-mono font-medium text-foreground'>
-                              Rp {saldoSaatIni.toLocaleString('id-ID')}
+                              {formatRupiah(saldoSaatIni)}
                             </span>
                           </div>
                           <div className='flex justify-between font-medium text-emerald-600 dark:text-emerald-400'>
                             <span>Nominal Top-up (+):</span>
                             <span className='font-mono font-bold'>
-                              Rp {nominalNum.toLocaleString('id-ID')}
+                              {formatRupiah(nominalNum)}
                             </span>
                           </div>
                           <div className='flex justify-between border-t border-border pt-2 text-base font-bold text-foreground'>
@@ -403,7 +400,7 @@ export function TopupTunaiPage() {
                                   : 'text-emerald-600 dark:text-emerald-400'
                               }`}
                             >
-                              Rp {saldoBaru.toLocaleString('id-ID')}
+                              {formatRupiah(saldoBaru)}
                             </span>
                           </div>
                         </div>
@@ -422,12 +419,12 @@ export function TopupTunaiPage() {
                           <AlertDescription className='mt-1 text-xs leading-relaxed'>
                             Saldo baru (
                             <strong>
-                              Rp {saldoBaru.toLocaleString('id-ID')}
+                              {formatRupiah(saldoBaru)}
                             </strong>
                             ) melampaui batas maksimum yang diizinkan sekolah
                             sebesar{' '}
                             <strong>
-                              Rp {MAX_SALDO_SEKOLAH.toLocaleString('id-ID')}
+                              {formatRupiah(MAX_SALDO_SEKOLAH)}
                             </strong>
                             . Kurangi nominal top-up.
                           </AlertDescription>
@@ -457,7 +454,7 @@ export function TopupTunaiPage() {
                   <Button
                     type='submit'
                     disabled={!isValidSubmit || isSubmitting}
-                    className='h-11 w-full gap-2 bg-emerald-600 text-sm font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50'
+                    className='h-11 w-full gap-2 bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50'
                   >
                     {isSubmitting ? (
                       <>

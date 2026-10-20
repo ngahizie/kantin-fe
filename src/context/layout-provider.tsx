@@ -1,25 +1,17 @@
-import { createContext, useContext, useState } from 'react'
-import { getCookie, setCookie } from '@/lib/cookies'
+import { createContext, useContext, useMemo } from 'react'
 
-export type Collapsible = 'offcanvas' | 'icon' | 'none'
-type Variant = 'inset' | 'sidebar' | 'floating'
+export type Collapsible = 'icon' | 'offcanvas' | 'none'
+type Variant = 'sidebar'
 
-// Cookie constants following the pattern from sidebar.tsx
-const LAYOUT_COLLAPSIBLE_COOKIE_NAME = 'layout_collapsible'
-const LAYOUT_VARIANT_COOKIE_NAME = 'layout_variant'
-const LAYOUT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
-
-// Default values
-const DEFAULT_VARIANT = 'inset'
-const DEFAULT_COLLAPSIBLE = 'icon'
+// Default values: variant sidebar, layout default (expanded, no collapse)
+const DEFAULT_VARIANT: Variant = 'sidebar'
+const DEFAULT_COLLAPSIBLE: Collapsible = 'none'
 
 type LayoutContextType = {
   resetLayout: () => void
-
   defaultCollapsible: Collapsible
   collapsible: Collapsible
   setCollapsible: (collapsible: Collapsible) => void
-
   defaultVariant: Variant
   variant: Variant
   setVariant: (variant: Variant) => void
@@ -32,49 +24,19 @@ type LayoutProviderProps = {
 }
 
 export function LayoutProvider({ children }: LayoutProviderProps) {
-  const [collapsible, _setCollapsible] = useState<Collapsible>(() => {
-    const saved = getCookie(LAYOUT_COLLAPSIBLE_COOKIE_NAME)
-    return (saved as Collapsible) || DEFAULT_COLLAPSIBLE
-  })
-
-  const [variant, _setVariant] = useState<Variant>(() => {
-    const saved = getCookie(LAYOUT_VARIANT_COOKIE_NAME)
-    return (saved as Variant) || DEFAULT_VARIANT
-  })
-
-  const setCollapsible = (newCollapsible: Collapsible) => {
-    _setCollapsible(newCollapsible)
-    setCookie(
-      LAYOUT_COLLAPSIBLE_COOKIE_NAME,
-      newCollapsible,
-      LAYOUT_COOKIE_MAX_AGE
-    )
-  }
-
-  const setVariant = (newVariant: Variant) => {
-    _setVariant(newVariant)
-    setCookie(LAYOUT_VARIANT_COOKIE_NAME, newVariant, LAYOUT_COOKIE_MAX_AGE)
-  }
-
-  const resetLayout = () => {
-    setCollapsible(DEFAULT_COLLAPSIBLE)
-    setVariant(DEFAULT_VARIANT)
-  }
-
-  const contextValue: LayoutContextType = {
-    resetLayout,
+  const contextValue: LayoutContextType = useMemo(() => ({
+    resetLayout: () => null,
     defaultCollapsible: DEFAULT_COLLAPSIBLE,
-    collapsible,
-    setCollapsible,
+    collapsible: DEFAULT_COLLAPSIBLE,
+    setCollapsible: () => null,
     defaultVariant: DEFAULT_VARIANT,
-    variant,
-    setVariant,
-  }
+    variant: DEFAULT_VARIANT,
+    setVariant: () => null,
+  }), [])
 
   return <LayoutContext value={contextValue}>{children}</LayoutContext>
 }
 
-// Define the hook for the provider
 // eslint-disable-next-line react-refresh/only-export-components
 export function useLayout() {
   const context = useContext(LayoutContext)

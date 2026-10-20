@@ -343,7 +343,7 @@ export function OpnameInputTable({
     <div className="space-y-4">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md">
+        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium">
               Progress Audit Fisik
@@ -359,7 +359,7 @@ export function OpnameInputTable({
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md">
+        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium">
               Total Item Berselisih
@@ -387,7 +387,7 @@ export function OpnameInputTable({
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md">
+        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium">
               Estimasi Nilai Kerugian
@@ -403,7 +403,7 @@ export function OpnameInputTable({
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30 shadow-sm transition-all hover:shadow-md">
+        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-medium">
               Estimasi Nilai Kelebihan
@@ -526,7 +526,7 @@ export function OpnameInputTable({
       )}
 
       {/* Table */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden shadow-sm">
+      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -750,7 +750,7 @@ export function OpnameInputTable({
               </p>
             </div>
 
-            <div className="rounded-lg border-0 bg-muted/60 dark:bg-muted/25 p-3 space-y-2 text-xs shadow-xs">
+            <div className="rounded-lg border-0 bg-muted/60 dark:bg-muted/25 p-3 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Menu Diaudit:</span>
                 <span className="font-semibold">

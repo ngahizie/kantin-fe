@@ -1,41 +1,39 @@
-# Kantin Cashless SKOOLIA - Frontend (kantin-fe)
+# Kantin Cashless - Frontend (kantin-fe)
 
-Kantin Cashless SKOOLIA adalah aplikasi antarmuka web untuk operasional transaksi non-tunai kantin sekolah. Aplikasi ini terintegrasi dengan ekosistem identitas SKOOLIA (admin-be) dan backend pencatatan transaksi (kantin-be).
-
----
-
-## Arsitektur Aplikasi
-
-Aplikasi dibangun menggunakan model antarmuka ganda berbasis TanStack Router:
-
-1. Terminal Kasir POS (/kasir):
-   - Dirancang khusus untuk kecepatan pelayanan antrean transaksi tap kartu RFID siswa.
-   - Mode layar penuh (kiosk mode) tanpa sidebar navigasi.
-   - Dilengkapi sinkronisasi status jaringan, jam operasional, dan integrasi hardware reader RFID USB.
-
-2. Backoffice Pengelola (/ dan /backoffice):
-   - Panel manajemen operasional untuk administrator, pengelola kantin, petugas tata usaha, dan bendahara.
-   - Navigasi modular berbasis Role-Based Access Control (RBAC).
-   - Menyediakan dashboard metrik penjualan harian, pemantauan status rekonsiliasi kas, peringatan stok minimum, dan pengelolaan saldo.
+Aplikasi antarmuka web untuk sistem transaksi non-tunai kantin sekolah berbasis kartu RFID. Aplikasi ini berkomunikasi dengan backend pencatatan transaksi (`kantin-be`) dan layanan otentikasi identitas staf (`admin-be`).
 
 ---
 
-## Tech Stack
+## Modul Antarmuka
 
-| Kategori | Teknologi | Deskripsi |
+Aplikasi menggunakan arsitektur antarmuka ganda berbasis TanStack Router:
+
+1. **Terminal Kasir POS (`/kasir`)**
+   - Layar penuh (*kiosk mode*) yang dioptimalkan untuk kecepatan pelayanan antrean transaksi tap kartu RFID siswa.
+   - Terintegrasi dengan pemindai RFID hardware USB, indikator audio beeper transaksi, pencegahan mutasi ganda (*idempotency key*), pembatalan (*void*), dan rekapitulasi sesi kasir.
+
+2. **Backoffice Pengelola (`/`)**
+   - Panel manajemen terpusat dengan navigasi berbasis peran pengguna (*Role-Based Access Control*).
+   - Mencakup dashboard analitik penjualan, manajemen menu dan kategori, pemantauan stok fisik dan kartu stok, kontrol batasan belanja siswa, refund saldo, rekapitulasi laporan keuangan (ekspor Excel), dan pengaturan titik kasir.
+
+---
+
+## Stack Teknologi
+
+| Komponen | Teknologi | Keterangan |
 |---|---|---|
-| Runtime & Framework | React 19, TypeScript 5.9 | Library UI utama dan pengetikan statis ketat |
-| Tooling & Bundler | Vite 7 | Server pengembangan dan bundler produksi |
-| Styling | Tailwind CSS v4 | Framework utility styling berbasis CSS modern |
-| Routing | @tanstack/react-router | Router berbasis file dengan type safety penuh |
-| State Management | Zustand | Manajemen state global untuk antarmuka kasir dan RBAC |
-| Server State | @tanstack/react-query | Manajemen cache dan fetching data asynchronous |
-| Komponen UI | Radix UI, shadcn/ui, Lucide Icons | Primitif komponen antarmuka yang aksesibel |
-| Visualisasi Data | Recharts | Grafik batang dan tren statistik penjualan |
-| Form & Validasi | React Hook Form, Zod | Penanganan formulir dan skema validasi data |
-| HTTP Client | Axios | Klien HTTP terpusat dengan interceptor Bearer token |
-| Utilitas Ekspor | xlsx | Pustaka pembuatan berkas laporan spreadsheet Excel |
-| Mock Layer | Custom Axios Adapter | Simulasi respons API untuk pengujian lokal mandiri |
+| Runtime & Bahasa | React 19, TypeScript 6.0 | Antarmuka komponen reaktif dengan pengetikan statis |
+| Bundler & Tooling | Vite 8, PNPM | Server pengembangan lokal dan pembungkus bundel produksi |
+| Styling | Tailwind CSS v4 | Utilitas tata letak dan tema |
+| Routing | @tanstack/react-router | Router berbasis berkas bertipe ketat (*type-safe*) |
+| State Management | Zustand | Manajemen state global (keranjang kasir, auth, pengaturan) |
+| Server State & Caching | @tanstack/react-query | Pengambilan data asynchronous dan sinkronisasi cache server |
+| Komponen UI | Radix UI, shadcn/ui, Lucide Icons | Primitif antarmuka aksesibel dan ikon standar |
+| Visualisasi Data | Recharts | Komponen grafik statistik dan tren penjualan |
+| Form & Validasi | React Hook Form, Zod | Pengelolaan formulir dan validasi skema data |
+| HTTP Client | Axios | Klien HTTP terpusat dengan interceptor JWT token |
+| Ekspor Data | xlsx | Generator berkas laporan spreadsheet Excel |
+| Testing & Kualitas | Vitest, Playwright, ESLint, Knip | Pengujian unit/integrasi browser headless dan audit kode |
 
 ---
 
@@ -43,24 +41,32 @@ Aplikasi dibangun menggunakan model antarmuka ganda berbasis TanStack Router:
 
 ```text
 kantin-fe/
+├── public/                 # Aset statis publik (logo.png)
 ├── src/
-│   ├── assets/            # Aset statis gambar dan ikon
-│   ├── components/        # Komponen UI bersama (shadcn/ui, layout shell, navigasi)
-│   ├── context/           # Penyedia konteks React (tema, layout)
-│   ├── features/          # Modul fungsional (dashboard, kasir, tu, auth, users)
-│   ├── hooks/             # Custom hooks
-│   ├── layouts/           # Shell tata letak (BackofficeLayout, KasirLayout)
-│   ├── lib/               # Klien API terpusat, fungsi format, dan utilitas umum
-│   ├── mocks/             # Mock data dan adapter API untuk pengujian lokal
-│   ├── routes/            # Definisi rute berbasis struktur berkas TanStack Router
-│   ├── stores/            # State global Zustand (auth, RBAC simulator)
-│   ├── styles/            # Berkas CSS global dan tema
-│   ├── main.tsx           # Titik masuk aplikasi
-│   └── routeTree.gen.ts   # Berkas registrasi rute yang dibuat otomatis oleh compiler
-├── .env.example           # Contoh variabel konfigurasi lingkungan
-├── package.json           # Dependensi dan skrip proyek
-├── tsconfig.json          # Konfigurasi compiler TypeScript
-└── vite.config.ts         # Konfigurasi bundler Vite
+│   ├── components/         # Komponen UI bersama (shadcn/ui, layout shell, dialog)
+│   ├── config/             # Konfigurasi tema dan navigasi
+│   ├── context/            # Penyedia konteks React (tema, layout)
+│   ├── features/           # Modul fitur (kasir, dashboard, katalog, stok, laporan, dll.)
+│   ├── hooks/              # Custom hooks (RFID scanner, audio beep, online status)
+│   ├── layouts/            # Shell tata letak aplikasi (KasirLayout)
+│   ├── lib/                # Klien API Axios terpusat, format data, ekspor Excel
+│   ├── mocks/              # Mock data dan adapter untuk pengujian lokal mandiri
+│   ├── routes/             # Definisi rute berbasis berkas TanStack Router
+│   ├── stores/             # State global Zustand (cart, auth, rbac, pengaturan)
+│   ├── styles/             # Berkas CSS global Tailwind v4
+│   ├── test-utils/         # Utilitas pendukung lingkungan pengujian
+│   ├── main.tsx            # Titik masuk utama aplikasi React
+│   └── routeTree.gen.ts    # Pohon rute terkompilasi otomatis
+├── .env.example            # Template variabel lingkungan
+├── components.json         # Konfigurasi resmi shadcn/ui CLI
+├── eslint.config.js        # Konfigurasi linter kode ESLint
+├── index.html              # Titik masuk utama dokumen HTML
+├── knip.config.ts          # Konfigurasi audit kode mati (Knip)
+├── package.json            # Manifest pustaka dan skrip perintah proyek
+├── pnpm-lock.yaml          # Berkas pengunci versi eksak dependensi
+├── pnpm-workspace.yaml     # Kebijakan izin kompilasi dependensi pnpm
+├── tsconfig.json           # Konfigurasi induk TypeScript
+└── vite.config.ts          # Konfigurasi bundler Vite dan Vitest
 ```
 
 ---
@@ -68,46 +74,46 @@ kantin-fe/
 ## Prasyarat Sistem
 
 - Node.js versi 20.x LTS atau lebih baru
-- Package manager pnpm versi 9.x atau npm versi 10.x
+- Package manager pnpm versi 9.x atau 10.x
 
 ---
 
 ## Instalasi dan Menjalankan Proyek
 
-1. Kloning repositori dan masuk ke direktori proyek:
+1. Kloning repositori dan buka direktori proyek:
    ```bash
-   git clone https://github.com/Derylfabiensyah/kantin-fe.git
+   git clone https://github.com/ngahizie/kantin-fe.git
    cd kantin-fe
    ```
 
-2. Pasang seluruh dependensi:
+2. Pasang dependensi:
    ```bash
    pnpm install
    ```
 
-3. Siapkan berkas konfigurasi lingkungan:
+3. Siapkan berkas variabel lingkungan:
    ```bash
    cp .env.example .env
    ```
 
-4. Jalankan server pengembangan:
+4. Jalankan server pengembangan lokal:
    ```bash
-   pnpm dev
+   pnpm run dev
    ```
-   Aplikasi aktif pada alamat http://localhost:5173.
+   Aplikasi dapat diakses melalui `http://localhost:5173`.
 
 ---
 
 ## Konfigurasi Variabel Lingkungan
 
-Seluruh konfigurasi lingkungan diatur melalui berkas .env:
+Konfigurasi lingkungan didefinisikan pada berkas `.env`:
 
-| Variabel | Tipe | Wajib | Nilai Default | Penjelasan |
+| Variabel | Tipe | Wajib | Nilai Standar | Keterangan |
 |---|---|---|---|---|
-| VITE_API_URL | String | Ya | http://localhost:8080 | Alamat endpoint API server backend kantin-be |
-| VITE_ADMIN_BE_URL | String | Ya | http://localhost:8081 | Alamat endpoint API autentikasi SKOOLIA admin-be |
-| VITE_USE_MOCK | Boolean | Tidak | true | Flag untuk mengaktifkan mock API tanpa dependensi server backend |
-| VITE_APP_NAME | String | Tidak | Kantin Cashless SKOOLIA | Nama aplikasi yang ditampilkan pada judul dan antarmuka |
+| `VITE_API_URL` | String | Ya | `http://localhost:8082` | Endpoint API server backend transaksi kantin-be |
+| `VITE_ADMIN_BE_URL` | String | Ya | `http://localhost:8081` | Endpoint API autentikasi staf admin-be |
+| `VITE_USE_MOCK` | Boolean | Ya | `false` | Status aktivasi mock layer API lokal |
+| `VITE_APP_NAME` | String | Tidak | `Kantin Cashless` | Nama aplikasi pada judul antarmuka |
 
 ---
 
@@ -115,14 +121,9 @@ Seluruh konfigurasi lingkungan diatur melalui berkas .env:
 
 | Perintah | Deskripsi |
 |---|---|
-| pnpm dev | Menjalankan server pengembangan lokal dengan Hot Module Replacement |
-| pnpm build | Memvalidasi tipe data TypeScript dan melakukan kompilasi bundel produksi |
-| pnpm preview | Menjalankan preview lokal dari hasil kompilasi produksi di folder dist |
-| pnpm lint | Menjalankan ESLint untuk memeriksa standar kualitas dan aturan kode |
-| pnpm exec tsc -b | Menjalankan pengecekan tipe data TypeScript di seluruh proyek |
-
----
-
-## Lisensi
-
-Didistribusikan di bawah lisensi MIT sesuai ketentuan template satnaing/shadcn-admin. Informasi lengkap tersedia pada berkas LICENSE.
+| `pnpm run dev` | Menjalankan server pengembangan lokal dengan Hot Module Replacement |
+| `pnpm run build` | Menjalankan validasi tipe TypeScript (`tsc -b`) dan kompilasi produksi ke folder `dist` |
+| `pnpm run preview` | Menjalankan preview lokal dari hasil kompilasi produksi di folder `dist` |
+| `pnpm test` | Menjalankan seluruh pengujian unit dan integrasi dengan Vitest (Chromium headless) |
+| `pnpm run lint` | Menjalankan ESLint untuk memeriksa kualitas kode dan standar arsitektur |
+| `pnpm run knip` | Menjalankan audit untuk mendeteksi berkas, ekspor, dan dependensi yang tidak terpakai |

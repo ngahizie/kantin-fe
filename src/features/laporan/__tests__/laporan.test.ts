@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import * as XLSX from 'xlsx'
+import { setupMockAdapter } from '@/mocks/mock-adapter'
+import { apiClient } from '@/lib/api-client'
 import { laporanApi } from '../api/laporan-api'
 import {
   exportTableToExcel,
@@ -8,6 +10,9 @@ import {
 import { formatRupiah } from '@/lib/formatters'
 
 describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
   describe('Laporan Rekonsiliasi Harian & Invariant Saldo (PRD §5 & §9.5)', () => {
     it('memeriksa invariant akuntansi: Topup - Refund = Saldo Mengendap + Penjualan Bersih', async () => {
       const data = await laporanApi.getRekonsiliasi()

@@ -26,7 +26,7 @@ export const sidebarData: SidebarData = {
   teams: [
     {
       name: 'Kantin SKOOLIA',
-      logo: '/images/logo.png',
+      logo: '/logo.png',
       plan: 'PAUD SKOOLIA',
     },
   ],
@@ -41,7 +41,7 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'Kasir POS (Layar Penuh)',
+          title: 'Kasir POS',
           url: '/kasir',
           icon: ShoppingCart,
           roles: ['admin', 'kasir', 'pengelola'],
@@ -67,7 +67,7 @@ export const sidebarData: SidebarData = {
           icon: Boxes,
           items: [
             {
-              title: 'Barang Masuk (Restock)',
+              title: 'Barang Masuk',
               url: '/stok/masuk',
             },
             {
@@ -94,6 +94,7 @@ export const sidebarData: SidebarData = {
           title: 'Top-up Tunai Siswa',
           url: '/tu/topup',
           icon: Banknote,
+          roles: ['admin', 'tu'],
         },
         {
           title: 'Setoran Kas TU Harian',
@@ -122,7 +123,7 @@ export const sidebarData: SidebarData = {
           icon: ArrowLeftRight,
         },
         {
-          title: 'Kontrol Siswa (Ortu)',
+          title: 'Kontrol Siswa',
           url: '/kontrol-siswa',
           icon: ShieldCheck,
         },
@@ -133,7 +134,7 @@ export const sidebarData: SidebarData = {
       roles: ['admin', 'bendahara', 'pengelola'],
       items: [
         {
-          title: 'Pusat Laporan Keuangan',
+          title: 'Laporan Keuangan',
           icon: FileSpreadsheet,
           roles: ['admin', 'bendahara', 'pengelola', 'tu'],
           items: [
@@ -160,10 +161,6 @@ export const sidebarData: SidebarData = {
             {
               title: 'Laporan Kerugian Stok',
               url: '/laporan/kerugian-stok',
-            },
-            {
-              title: 'Nilai Persediaan',
-              url: '/stok/inventaris',
             },
           ],
         },

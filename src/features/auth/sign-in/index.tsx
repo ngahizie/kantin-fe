@@ -14,7 +14,7 @@ export function SignIn() {
 
   return (
     <AuthLayout>
-      <Card className='w-full max-w-[390px] gap-5 border-0 bg-muted/60 dark:bg-muted/25 shadow-md py-8 px-6 sm:px-7'>
+      <Card className='w-full max-w-[390px] gap-5 border-0 bg-muted/70 dark:bg-muted/40 py-8 px-6 sm:px-7'>
         <CardHeader className='pb-1 px-0'>
           <CardTitle className='text-xl font-bold tracking-tight'>
             Masuk Staf Kantin

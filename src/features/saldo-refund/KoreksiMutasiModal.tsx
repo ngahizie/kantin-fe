@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import apiClient from '@/lib/api-client'
+import { formatRupiah } from '@/lib/formatters'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -207,7 +208,7 @@ function KoreksiMutasiFormContent({
       }
 
       toast.success(
-        `Mutasi Koreksi ${arah === 'DEBIT' ? 'DEBIT (-Rp ' : 'KREDIT (+Rp '}${nominalNum.toLocaleString('id-ID')}) berhasil dicatat!`
+        `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (-${formatRupiah(nominalNum)})` : `KREDIT (+${formatRupiah(nominalNum)})`} berhasil dicatat!`
       )
 
       onSuccess?.(newKoreksi)
@@ -331,8 +332,7 @@ function KoreksiMutasiFormContent({
                   value={s.siswa_id.toString()}
                   className='text-xs'
                 >
-                  {s.nama} — {s.kelas} (Saldo: Rp{' '}
-                  {s.saldo.toLocaleString('id-ID')})
+                  {s.nama} — {s.kelas} (Saldo: {formatRupiah(s.saldo)})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -350,8 +350,8 @@ function KoreksiMutasiFormContent({
                   className='text-xs'
                 >
                   {c.nomor_kartu}{' '}
-                  {c.label_pemegang ? `(${c.label_pemegang})` : ''} — Saldo: Rp{' '}
-                  {c.saldo.toLocaleString('id-ID')}
+                  {c.label_pemegang ? `(${c.label_pemegang})` : ''} — Saldo:{' '}
+                  {formatRupiah(c.saldo)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -369,7 +369,7 @@ function KoreksiMutasiFormContent({
               Saldo Berjalan Saat Ini:
             </span>
             <span className='font-mono text-sm font-bold text-foreground'>
-              Rp {saldoSaatIni.toLocaleString('id-ID')}
+              {formatRupiah(saldoSaatIni)}
             </span>
           </div>
         </div>
@@ -464,7 +464,7 @@ function KoreksiMutasiFormContent({
         </div>
       </div>
 
-      {/* Visualisasi Simulasi Dampak Saldo */}
+      {/* Visualisasi Proyeksi Dampak Saldo */}
       <div className='space-y-2 rounded-lg border bg-muted/30 p-3'>
         <span className='block text-xs font-semibold text-muted-foreground'>
           Proyeksi Dampak Saldo Ledger:
@@ -475,7 +475,7 @@ function KoreksiMutasiFormContent({
               Saldo Awal:
             </span>
             <span className='font-semibold'>
-              Rp {saldoSaatIni.toLocaleString('id-ID')}
+              {formatRupiah(saldoSaatIni)}
             </span>
           </div>
           <div className='text-center'>
@@ -490,8 +490,7 @@ function KoreksiMutasiFormContent({
                   : 'border-0 bg-emerald-500/15 text-[11px] text-emerald-600 dark:text-emerald-400'
               }
             >
-              {arah === 'DEBIT' ? '-' : '+'}Rp{' '}
-              {nominalNum.toLocaleString('id-ID')}
+              {arah === 'DEBIT' ? '-' : '+'}{formatRupiah(nominalNum)}
             </Badge>
           </div>
           <div className='text-right'>
@@ -503,7 +502,7 @@ function KoreksiMutasiFormContent({
                 isSaldoMinus ? 'text-destructive underline' : 'text-primary'
               }`}
             >
-              Rp {saldoSetelah.toLocaleString('id-ID')}
+              {formatRupiah(saldoSetelah)}
             </span>
           </div>
         </div>

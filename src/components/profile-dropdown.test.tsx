@@ -5,7 +5,7 @@ import { ProfileDropdown } from './profile-dropdown'
 
 const mockAuthUser = {
   userId: '1',
-  nama: 'Wibisana Bama (Admin)',
+  nama: 'Wibisana Bama',
   email: 'admin@skoolia.id',
   sekolahId: 10,
   sekolahNama: 'SMA Negeri 1 SKOOLIA',
@@ -65,7 +65,7 @@ describe('ProfileDropdown', () => {
     // Klik untuk membuka dropdown
     await userEvent.click(triggerButton)
 
-    await expect.element(getByText('Wibisana Bama (Admin)')).toBeInTheDocument()
+    await expect.element(getByText('Wibisana Bama')).toBeInTheDocument()
     await expect.element(getByText('admin@skoolia.id')).toBeInTheDocument()
   })
 })

@@ -26,7 +26,7 @@ export function TeamSwitcher({ teams }: TeamSwitcherProps) {
           <div
             className={`flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden ${
               typeof activeTeam.logo === 'string'
-                ? 'bg-white shadow-xs p-0.5'
+                ? 'bg-muted dark:bg-white p-1'
                 : 'bg-sidebar-primary text-sidebar-primary-foreground'
             }`}
           >

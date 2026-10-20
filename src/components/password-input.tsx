@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
 
 type PasswordInputProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -14,35 +13,39 @@ export function PasswordInput({
   className,
   disabled,
   ref,
+  id,
   ...props
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = React.useState(false)
 
   return (
-    <div className='relative rounded-md'>
+    <div
+      className={cn(
+        'relative flex h-9 w-full items-center rounded-md border-0 bg-card dark:bg-input/30 overflow-hidden outline-none',
+        className
+      )}
+    >
       <input
         type={showPassword ? 'text' : 'password'}
-        className={cn(
-          'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
+        id={id}
+        className='h-full w-full bg-transparent px-3 py-1 pr-10 text-sm outline-none focus:outline-none focus-visible:outline-none border-0 focus:ring-0 focus-visible:ring-0 shadow-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden'
         ref={ref}
         disabled={disabled}
         {...props}
       />
-      <Button
+      <button
         type='button'
-        size='icon'
-        variant='ghost'
+        tabIndex={-1}
         disabled={disabled}
-        className='absolute inset-e-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md text-muted-foreground'
+        aria-label={showPassword ? 'Hide password' : 'Show password'}
+        className='absolute right-2.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none border-0 bg-transparent cursor-pointer disabled:pointer-events-none disabled:opacity-50'
         onClick={() => setShowPassword((prev) => !prev)}
       >
         {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
         <span className='sr-only'>
           {showPassword ? 'Hide password' : 'Show password'}
         </span>
-      </Button>
+      </button>
     </div>
   )
 }

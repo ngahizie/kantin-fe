@@ -155,7 +155,7 @@ export function RiwayatStokTable({
       />
 
       {/* Tabel Mutasi */}
-      <div className='overflow-hidden rounded-xl border-0 bg-muted/60 dark:bg-muted/25 shadow-sm'>
+      <div className='overflow-hidden rounded-xl border-0 bg-muted/60 dark:bg-muted/25'>
         <div className='overflow-x-auto'>
           <Table>
             <TableHeader>

@@ -12,8 +12,6 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search as SearchComp } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -173,12 +171,11 @@ export function KontrolSiswaPage() {
     []
   )
 
+
   return (
     <>
-      <Header>
-        <SearchComp showKbd={false} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+      <Header fixed>
+        <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
@@ -211,7 +208,7 @@ export function KontrolSiswaPage() {
 
         {/* KPI Cards Ringkasan */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-          <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Total Siswa Terdaftar
@@ -225,7 +222,7 @@ export function KontrolSiswaPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Ortu Belum Pakai App
@@ -240,7 +237,7 @@ export function KontrolSiswaPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Limit Belanja Aktif
@@ -255,7 +252,7 @@ export function KontrolSiswaPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30'>
+          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Larangan Menu Aktif
@@ -308,7 +305,7 @@ export function KontrolSiswaPage() {
         />
 
         {/* Tabel Siswa */}
-        <Card className='shadow-xs'>
+        <Card>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>

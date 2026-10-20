@@ -47,8 +47,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search as SearchComp } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { formatRupiah } from '@/lib/formatters'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import type { MutasiKoreksiItem, TransaksiSesiTutupItem } from './types'
 
@@ -257,16 +256,13 @@ export function KoreksiBendaharaPage() {
   return (
     <>
       <Header fixed>
-        <SearchComp showKbd={false} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+        <div className='ms-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
 
-      <Main>
-        <div className='space-y-6 pb-12'>
-          {/* Header Title & Actions */}
+      <Main className='space-y-6 pb-12'>
+        {/* Header Title & Actions */}
           <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
             <div>
               <h1 className='text-2xl font-bold tracking-tight text-foreground'>
@@ -314,7 +310,7 @@ export function KoreksiBendaharaPage() {
 
           {/* KPI Summary Cards */}
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-            <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30 transition-all hover:shadow-md'>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
                   Total Mutasi Koreksi Audit
@@ -328,13 +324,13 @@ export function KoreksiBendaharaPage() {
               </CardContent>
             </Card>
 
-            <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30 transition-all hover:shadow-md'>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
                   Total Pembalik Kredit (+Saldo)
                 </p>
                 <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
-                  Rp {totalKoreksiKredit.toLocaleString('id-ID')}
+                  {formatRupiah(totalKoreksiKredit)}
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
                   Pengembalian dana sesi tertutup
@@ -342,13 +338,13 @@ export function KoreksiBendaharaPage() {
               </CardContent>
             </Card>
 
-            <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30 transition-all hover:shadow-md'>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
                   Total Pembalik Debit (-Saldo)
                 </p>
                 <h3 className='mt-0.5 text-xl font-bold text-destructive'>
-                  Rp {totalKoreksiDebit.toLocaleString('id-ID')}
+                  {formatRupiah(totalKoreksiDebit)}
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
                   Pembatalan kelebihan top-up TU
@@ -356,7 +352,7 @@ export function KoreksiBendaharaPage() {
               </CardContent>
             </Card>
 
-            <Card className='border-0 bg-muted/70 shadow-xs dark:bg-muted/30 transition-all hover:shadow-md'>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
                   Transaksi Lampau Dibalik
@@ -426,7 +422,7 @@ export function KoreksiBendaharaPage() {
               />
 
               {/* Tabel Mutasi Koreksi */}
-              <Card className='overflow-hidden shadow-xs'>
+              <Card className='overflow-hidden'>
                 <CardHeader className='border-b bg-muted/20 px-6 py-4'>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -574,18 +570,18 @@ export function KoreksiBendaharaPage() {
                                       : 'text-emerald-700 dark:text-emerald-400'
                                   }
                                 >
-                                  {k.arah === 'DEBIT' ? '-' : '+'}Rp{' '}
-                                  {k.nominal.toLocaleString('id-ID')}
+                                  {k.arah === 'DEBIT' ? '-' : '+'}
+                                  {formatRupiah(k.nominal)}
                                 </span>
                               </TableCell>
 
                               <TableCell className='text-right font-mono text-xs'>
                                 <span className='text-muted-foreground'>
-                                  Rp {k.saldo_sebelum.toLocaleString('id-ID')}
+                                  {formatRupiah(k.saldo_sebelum)}
                                 </span>{' '}
                                 →{' '}
                                 <span className='font-bold text-foreground'>
-                                  Rp {k.saldo_setelah.toLocaleString('id-ID')}
+                                  {formatRupiah(k.saldo_setelah)}
                                 </span>
                               </TableCell>
 
@@ -649,7 +645,7 @@ export function KoreksiBendaharaPage() {
                 </AlertDescription>
               </Alert>
 
-              <Card className='overflow-hidden shadow-xs'>
+              <Card className='overflow-hidden'>
                 <CardHeader className='border-b bg-muted/20 px-6 py-4'>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -734,15 +730,14 @@ export function KoreksiBendaharaPage() {
                                     key={idx}
                                     className='text-[11px] text-muted-foreground'
                                   >
-                                    {it.qty}x {it.nama} (Rp{' '}
-                                    {it.subtotal.toLocaleString('id-ID')})
+                                    {it.qty}x {it.nama} ({formatRupiah(it.subtotal)})
                                   </div>
                                 ))}
                               </div>
                             </TableCell>
 
                             <TableCell className='text-right font-mono text-xs font-bold text-primary'>
-                              Rp {tx.total.toLocaleString('id-ID')}
+                              {formatRupiah(tx.total)}
                             </TableCell>
 
                             <TableCell className='text-center'>
@@ -791,7 +786,6 @@ export function KoreksiBendaharaPage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
       </Main>
 
       {/* Modal Dialog Form Buat Mutasi Koreksi */}
@@ -887,20 +881,15 @@ export function KoreksiBendaharaPage() {
                 <div className='flex justify-between'>
                   <span>Nominal Koreksi:</span>
                   <span className='font-bold text-primary'>
-                    Rp {selectedKoreksiForPrint.nominal.toLocaleString('id-ID')}
+                    {formatRupiah(selectedKoreksiForPrint.nominal)}
                   </span>
                 </div>
                 <div className='flex justify-between border-t pt-1'>
                   <span>Saldo Awal → Saldo Baru:</span>
                   <span className='font-semibold'>
-                    Rp{' '}
-                    {selectedKoreksiForPrint.saldo_sebelum.toLocaleString(
-                      'id-ID'
-                    )}{' '}
-                    → Rp{' '}
-                    {selectedKoreksiForPrint.saldo_setelah.toLocaleString(
-                      'id-ID'
-                    )}
+                    {formatRupiah(selectedKoreksiForPrint.saldo_sebelum)}{' '}
+                    →{' '}
+                    {formatRupiah(selectedKoreksiForPrint.saldo_setelah)}
                   </span>
                 </div>
               </div>

@@ -17,11 +17,13 @@ type ConfirmDialogProps = {
   disabled?: boolean
   desc: React.JSX.Element | string
   cancelBtnText?: string
+  cancelBtnClassName?: string
   confirmText?: React.ReactNode
   destructive?: boolean
   isLoading?: boolean
   className?: string
   children?: React.ReactNode
+  onOpenAutoFocus?: (e: Event) => void
 } & (
   | { form: string; handleConfirm?: undefined }
   | { form?: undefined; handleConfirm: () => void }
@@ -35,16 +37,21 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
     className,
     confirmText,
     cancelBtnText,
+    cancelBtnClassName,
     destructive,
     isLoading,
     disabled = false,
     form,
     handleConfirm,
+    onOpenAutoFocus,
     ...actions
   } = props
   return (
     <AlertDialog {...actions}>
-      <AlertDialogContent className={cn(className && className)}>
+      <AlertDialogContent
+        className={cn(className && className)}
+        onOpenAutoFocus={onOpenAutoFocus ?? ((e) => e.preventDefault())}
+      >
         <AlertDialogHeader className='text-start'>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription asChild>
@@ -53,7 +60,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         </AlertDialogHeader>
         {children}
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>
+          <AlertDialogCancel className={cancelBtnClassName} disabled={isLoading}>
             {cancelBtnText ?? 'Cancel'}
           </AlertDialogCancel>
           <Button
