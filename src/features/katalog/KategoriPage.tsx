@@ -151,7 +151,7 @@ export function KategoriPage() {
         </div>
       </Header>
 
-      <Main className='p-4 md:p-6 space-y-6'>
+      <Main className='space-y-6 pb-12'>
         {/* Actions */}
         <div className='flex items-center justify-end gap-2'>
           <Button
