@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Search,
   PhoneOff,
@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   UtensilsCrossed,
   DollarSign,
-  ShoppingCart,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -31,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
 import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
@@ -128,43 +126,7 @@ export function KontrolSiswaPage() {
     )
   }
 
-  // Quick live validator test for demo / verification
-  const handleTestCashierValidation = useCallback(
-    async (studentToTest: KartuSiswaMock) => {
-      // Sample cart: Nasi Uduk (ID 1, Kat 1) + Es Teh Manis (ID 9, Kat 3)
-      const testItems = [
-        { menuId: 1, qty: 1 },
-        { menuId: 9, qty: 1 },
-      ]
 
-      try {
-        const res = await apiClient.post('/api/kasir/tap', {
-          rfidUid: studentToTest.uid,
-          titikKasirId: 1,
-          items: testItems,
-          idempotencyKey: `TAP-TEST-${Date.now()}-${studentToTest.siswa_id}`,
-        })
-        if (
-          res.data?.status === 'SUCCESS' ||
-          res.data?.responseCode === 200 ||
-          res.data?.code === 200
-        ) {
-          const total = (res.data?.data?.total || 16000) as number
-          toast.success(`Uji Validasi Kasir: LOLOS`, {
-            description: `Siswa ${studentToTest.nama} lolos membeli Nasi Uduk & Es Teh (${formatRupiah(total)}).`,
-          })
-        }
-      } catch (err: unknown) {
-        const axiosErr = err as { response?: { data?: { message?: string } } }
-        const msg =
-          axiosErr.response?.data?.message || 'Transaksi ditolak kasir'
-        toast.error(`Uji Validasi Kasir: DITOLAK`, {
-          description: `Kasir menolak ${studentToTest.nama}: ${msg}`,
-        })
-      }
-    },
-    []
-  )
 
 
   return (
@@ -452,18 +414,7 @@ export function KontrolSiswaPage() {
 
                           {/* Aksi */}
                           <TableCell className='text-right'>
-                            <div className='flex items-center justify-end gap-1.5'>
-                              <Button
-                                size='sm'
-                                variant='ghost'
-                                onClick={() => void handleTestCashierValidation(siswa)}
-                                title='Uji coba simulasi belanja kasir dengan keranjang berisi Nasi Uduk & Es Teh'
-                                className='h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground'
-                              >
-                                <ShoppingCart className='h-3.5 w-3.5' />
-                                <span className='hidden xl:inline'>Uji Kasir</span>
-                              </Button>
-
+                            <div className='flex items-center justify-end'>
                               <Button
                                 size='sm'
                                 variant='secondary'
