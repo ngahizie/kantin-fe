@@ -258,6 +258,20 @@ export function LaporanRiwayatSiswaPage() {
     }
   }
 
+  const handlePrintReceipt = () => {
+    const originalTitle = document.title
+    document.title = ' '
+    window.print()
+    const handleAfterPrint = () => {
+      document.title = originalTitle
+      window.removeEventListener('afterprint', handleAfterPrint)
+    }
+    window.addEventListener('afterprint', handleAfterPrint)
+    setTimeout(() => {
+      document.title = originalTitle
+    }, 1500)
+  }
+
   return (
     <>
       <Header fixed>
@@ -750,9 +764,7 @@ export function LaporanRiwayatSiswaPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => {
-                          window.print()
-                        }}
+                        onClick={handlePrintReceipt}
                         className="gap-1.5"
                       >
                         <Printer className="h-4 w-4" />
