@@ -1,3 +1,4 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
   Search,
@@ -422,133 +423,109 @@ export function OpnameInputTable({
       </div>
 
       {/* Toolbar & Filters */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 shadow-sm">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="flex flex-1 items-center gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:max-w-xs">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cari nama menu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-9 text-sm bg-background"
-                />
-              </div>
+      <TableToolbar
+        searchPlaceholder='Cari nama menu...'
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={[
+          {
+            title: 'Kategori',
+            options: kategoriList.map((k) => ({
+              label: k.nama,
+              value: String(k.id),
+            })),
+            selectedValues: selectedKategori !== 'ALL' ? [selectedKategori] : [],
+            onSelect: (vals) => setSelectedKategori(vals[0] || 'ALL'),
+            isSingleSelect: true,
+          },
+          {
+            title: 'Status Hitung',
+            options: [
+              { label: 'Hanya Berselisih', value: 'SELISIH' },
+              { label: 'Sesuai (0 Selisih)', value: 'SESUAI' },
+              { label: 'Belum Dihitung', value: 'BELUM_DIISI' },
+            ],
+            selectedValues: filterSelisih !== 'ALL' ? [filterSelisih] : [],
+            onSelect: (vals) => setFilterSelisih((vals[0] as any) || 'ALL'),
+            isSingleSelect: true,
+          },
+        ]}
+        isFiltered={Boolean(searchQuery || selectedKategori !== 'ALL' || filterSelisih !== 'ALL')}
+        onReset={() => {
+          setSearchQuery('')
+          setSelectedKategori('ALL')
+          setFilterSelisih('ALL')
+        }}
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleIsiSemuaSesuaiSistem}
+          className="text-xs h-8"
+        >
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+          Samakan Sistem
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResetAll}
+          className="text-xs h-8 text-muted-foreground"
+        >
+          <RotateCcw className="h-3.5 w-3.5 mr-1" />
+          Reset Form
+        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  size="sm"
+                  disabled={
+                    summary.totalDihitung === 0 ||
+                    summary.berselisihTanpaAlasan.length > 0 ||
+                    isLoading
+                  }
+                  onClick={handleOpenConfirm}
+                  className="text-xs h-8 font-semibold bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+                >
+                  <Send className="h-3.5 w-3.5 mr-1" />
+                  Simpan Berita Acara ({summary.totalDihitung})
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {summary.berselisihTanpaAlasan.length > 0 && (
+              <TooltipContent className="bg-destructive text-destructive-foreground text-xs p-2">
+                ⚠️ Ada {summary.berselisihTanpaAlasan.length} baris
+                berselisih belum diberi alasan
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      </TableToolbar>
 
-              <Select
-                value={selectedKategori}
-                onValueChange={setSelectedKategori}
-              >
-                <SelectTrigger className="h-9 w-[160px] text-xs bg-background">
-                  <SelectValue placeholder="Semua Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Semua Kategori</SelectItem>
-                  {kategoriList.map((k) => (
-                    <SelectItem key={k.id} value={String(k.id)}>
-                      {k.nama}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filterSelisih}
-                onValueChange={(v) =>
-                  setFilterSelisih(
-                    v as 'ALL' | 'SELISIH' | 'SESUAI' | 'BELUM_DIISI'
-                  )
-                }
-              >
-                <SelectTrigger className="h-9 w-[150px] text-xs bg-background">
-                  <Filter className="h-3.5 w-3.5 mr-1" />
-                  <SelectValue placeholder="Status Hitung" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Semua Baris</SelectItem>
-                  <SelectItem value="SELISIH">Hanya Berselisih</SelectItem>
-                  <SelectItem value="SESUAI">Sesuai (0 Selisih)</SelectItem>
-                  <SelectItem value="BELUM_DIISI">Belum Dihitung</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleIsiSemuaSesuaiSistem}
-                className="text-xs h-9 border-0 bg-background hover:bg-muted/60"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                Samakan dengan Sistem
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetSemua}
-                className="text-xs h-9 border-0 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Reset
-              </Button>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        disabled={
-                          summary.totalDihitung === 0 ||
-                          summary.berselisihTanpaAlasan.length > 0 ||
-                          isLoading
-                        }
-                        onClick={handleOpenConfirm}
-                        className="text-xs h-9 font-semibold bg-primary text-primary-foreground shadow hover:bg-primary/90"
-                      >
-                        <Send className="h-3.5 w-3.5 mr-1" />
-                        Simpan Berita Acara ({summary.totalDihitung})
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {summary.berselisihTanpaAlasan.length > 0 && (
-                    <TooltipContent className="bg-destructive text-destructive-foreground text-xs p-2">
-                      ⚠️ Ada {summary.berselisihTanpaAlasan.length} baris
-                      berselisih belum diberi alasan
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+      {/* Warning banner if there are discrepancies without reason */}
+      {summary.berselisihTanpaAlasan.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              Terdapat{' '}
+              <strong>{summary.berselisihTanpaAlasan.length} menu</strong>{' '}
+              yang memiliki selisih fisik tetapi alasan belum dipilih.
+              Alasan wajib diisi sebelum menyimpan berita acara.
+            </span>
           </div>
-
-          {/* Warning banner if there are discrepancies without reason */}
-          {summary.berselisihTanpaAlasan.length > 0 && (
-            <div className="flex items-center justify-between px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>
-                  Terdapat{' '}
-                  <strong>{summary.berselisihTanpaAlasan.length} menu</strong>{' '}
-                  yang memiliki selisih fisik tetapi alasan belum dipilih.
-                  Alasan wajib diisi sebelum menyimpan berita acara.
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setFilterSelisih('SELISIH')}
-                className="h-6 text-xs text-amber-500 hover:text-amber-400 p-1"
-              >
-                Lihat Baris Berselisih
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFilterSelisih('SELISIH')}
+            className="h-6 text-xs text-amber-500 hover:text-amber-400 p-1"
+          >
+            Lihat Baris Berselisih
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
       <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden shadow-sm">
