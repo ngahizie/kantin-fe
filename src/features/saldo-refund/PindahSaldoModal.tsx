@@ -263,7 +263,7 @@ function PindahSaldoFormContent({
                   <Sparkles className='h-3.5 w-3.5 text-amber-500' />
                   Saudara Kandung Terdeteksi (Data Kartu Keluarga / Dapodik)
                 </Label>
-                <Badge variant='secondary' className='text-[10px]'>
+                <Badge variant='secondary' className='text-[10px] border-0'>
                   Rekomendasi
                 </Badge>
               </div>
@@ -342,7 +342,7 @@ function PindahSaldoFormContent({
             </div>
 
             {searchQuery && (
-              <div className='max-h-40 overflow-y-auto rounded-lg border bg-popover text-popover-foreground divide-y'>
+              <div className='max-h-40 overflow-y-auto rounded-lg border-0 bg-popover text-popover-foreground shadow-md divide-y divide-border/20'>
                 {filteredStudents.length === 0 ? (
                   <p className='text-xs text-muted-foreground p-3 text-center'>
                     Tidak ada siswa aktif ditemukan.
