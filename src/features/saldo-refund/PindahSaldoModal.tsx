@@ -433,7 +433,7 @@ function PindahSaldoFormContent({
           {/* Input Berita Acara */}
           <div className='space-y-1.5'>
             <Label htmlFor='beritaAcara' className='text-xs'>
-              Berita Acara / Keterangan Transfer *
+              Berita Acara / Keterangan Transfer <span className='text-destructive'>*</span>
             </Label>
             <Textarea
               id='beritaAcara'

@@ -313,7 +313,7 @@ function RefundOrangTuaFormContent({
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
                   <Label htmlFor='bank' className='text-xs'>
-                    Bank Tujuan *
+                    Bank Tujuan <span className='text-destructive'>*</span>
                   </Label>
                   <Select value={bank} onValueChange={setBank}>
                     <SelectTrigger id='bank' className='h-9 text-xs border-0 bg-background/80 shadow-none'>
@@ -331,7 +331,7 @@ function RefundOrangTuaFormContent({
 
                 <div className='space-y-1.5'>
                   <Label htmlFor='noRekening' className='text-xs'>
-                    Nomor Rekening Tujuan *
+                    Nomor Rekening Tujuan <span className='text-destructive'>*</span>
                   </Label>
                   <Input
                     id='noRekening'
@@ -345,7 +345,7 @@ function RefundOrangTuaFormContent({
 
               <div className='space-y-1.5'>
                 <Label htmlFor='namaRekening' className='text-xs'>
-                  Nama Pemilik Rekening *
+                  Nama Pemilik Rekening <span className='text-destructive'>*</span>
                 </Label>
                 <Input
                   id='namaRekening'
@@ -362,7 +362,7 @@ function RefundOrangTuaFormContent({
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div className='space-y-1.5'>
               <Label htmlFor='namaPenerima' className='text-xs'>
-                Nama Orang Tua / Penerima *
+                Nama Orang Tua / Penerima <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
                 <User className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
@@ -378,7 +378,7 @@ function RefundOrangTuaFormContent({
 
             <div className='space-y-1.5'>
               <Label htmlFor='kontakPenerima' className='text-xs'>
-                No. HP / WhatsApp Ortu *
+                No. HP / WhatsApp Ortu <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
                 <Phone className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
