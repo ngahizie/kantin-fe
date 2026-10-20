@@ -1,11 +1,7 @@
   import { useState, useEffect, useMemo } from 'react'
 import {
-  AlertTriangle,
   Download,
   Search,
-  DollarSign,
-  Boxes,
-  Flame,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -201,17 +197,14 @@ export function LaporanKerugianStokPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-destructive/30 bg-destructive/5">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-destructive">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Nilai Kerugian
                 </CardTitle>
-                <div className="rounded-lg bg-destructive/20 p-2 text-destructive">
-                  <DollarSign className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-destructive">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.totalKerugian) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -220,17 +213,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Qty Hilang / Rusak
                 </CardTitle>
-                <div className="rounded-lg bg-orange-500/10 p-2 text-orange-600">
-                  <Boxes className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? `${formatNumber(ringkasan.totalQtyHilang)} Unit` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -239,17 +229,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Barang Rusak / Basi
                 </CardTitle>
-                <div className="rounded-lg bg-red-500/10 p-2 text-red-600">
-                  <Flame className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-red-600">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.kerugianBarangRusak) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -258,17 +245,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Selisih Audit Opname
                 </CardTitle>
-                <div className="rounded-lg bg-amber-500/10 p-2 text-amber-600">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-amber-600">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.kerugianOpname) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -279,7 +263,7 @@ export function LaporanKerugianStokPage() {
           </div>
 
           {/* TABEL RINCIAN MUTASI KERUGIAN */}
-          <Card>
+          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
@@ -297,7 +281,7 @@ export function LaporanKerugianStokPage() {
                     placeholder="Cari menu, alasan, BA..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm"
+                    className="pl-8 text-sm bg-background/80 dark:bg-background/40 border-0"
                   />
                 </div>
 
@@ -305,7 +289,7 @@ export function LaporanKerugianStokPage() {
                   value={jenisFilter}
                   onValueChange={(v) => setJenisFilter(v as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK')}
                 >
-                  <SelectTrigger className="w-[170px] text-xs">
+                  <SelectTrigger className="w-[170px] text-xs bg-background/80 dark:bg-background/40 border-0">
                     <SelectValue placeholder="Semua Jenis" />
                   </SelectTrigger>
                   <SelectContent>
@@ -319,7 +303,7 @@ export function LaporanKerugianStokPage() {
                   value={sortBy}
                   onValueChange={(v) => setSortBy(v as 'nilai_desc' | 'qty_desc' | 'waktu_desc')}
                 >
-                  <SelectTrigger className="w-[160px] text-xs">
+                  <SelectTrigger className="w-[160px] text-xs bg-background/80 dark:bg-background/40 border-0">
                     <SelectValue placeholder="Urutkan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -332,7 +316,7 @@ export function LaporanKerugianStokPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
