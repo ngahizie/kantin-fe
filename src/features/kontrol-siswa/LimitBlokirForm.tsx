@@ -5,7 +5,6 @@ import {
   Tag,
   UtensilsCrossed,
   Search,
-  Info,
   RotateCcw,
   Smartphone,
   PhoneOff,
@@ -264,8 +263,7 @@ function LimitBlokirFormContent({
                   )}
                 </div>
 
-                <div className='rounded-lg bg-blue-500/10 p-2.5 border-0 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2'>
-                  <Info className='h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5' />
+                <div className='rounded-lg bg-blue-500/10 p-2.5 border-0 text-xs text-blue-900 dark:text-blue-200'>
                   <span>
                     Jika belanja hari ini melebihi{' '}
                     <strong>{formatRupiah(nominalLimitNum)}</strong>, kasir akan otomatis menolak
