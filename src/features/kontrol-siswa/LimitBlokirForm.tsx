@@ -59,16 +59,16 @@ function LimitBlokirFormContent({
   onClose,
   onSaveSuccess,
 }: LimitBlokirFormContentProps) {
-  const hasLimitInitial = student.limit_harian_enabled !== false && student.limit_harian > 0
+  const hasLimitInitial = student.limit_harian_enabled !== false && (student.limit_harian ?? 0) > 0
   const [limitEnabled, setLimitEnabled] = useState(hasLimitInitial)
   const [limitNominal, setLimitNominal] = useState<string>(
     student.limit_harian ? student.limit_harian.toString() : '25000'
   )
   const [blockedCategoryIds, setBlockedCategoryIds] = useState<number[]>(
-    student.blocked_categories || []
+    Array.isArray(student.blocked_categories) ? student.blocked_categories : []
   )
   const [blockedItemIds, setBlockedItemIds] = useState<number[]>(
-    student.blocked_items || []
+    Array.isArray(student.blocked_items) ? student.blocked_items : []
   )
   const [catatan, setCatatan] = useState(student.catatan_kontrol || '')
   const [menuSearch, setMenuSearch] = useState('')
@@ -97,11 +97,15 @@ function LimitBlokirFormContent({
   }
 
   const filteredMenuItems = menuList.filter((item) => {
-    const matchCat = menuCatFilter === 'ALL' || item.kategori_id === menuCatFilter
+    const itemCatId = (item as unknown as { kategoriId?: number }).kategoriId ?? item.kategori_id
+    const itemCatNama = item.kategori_nama || categories.find((c) => c.id === itemCatId)?.nama || ''
+    const itemNama = item.nama || ''
+
+    const matchCat = menuCatFilter === 'ALL' || itemCatId === menuCatFilter
     const matchText =
       !menuSearch ||
-      item.nama.toLowerCase().includes(menuSearch.toLowerCase()) ||
-      item.kategori_nama.toLowerCase().includes(menuSearch.toLowerCase())
+      itemNama.toLowerCase().includes(menuSearch.toLowerCase()) ||
+      itemCatNama.toLowerCase().includes(menuSearch.toLowerCase())
     return matchCat && matchText
   })
 
@@ -115,7 +119,7 @@ function LimitBlokirFormContent({
     setIsSubmitting(true)
 
     try {
-      const res = await apiClient
+      await apiClient
         .put('/api/kontrol-kartu/limit-harian', {
           subjekTipe: 'SISWA',
           subjekId: student.siswa_id,
@@ -138,7 +142,7 @@ function LimitBlokirFormContent({
       })
 
       onClose()
-      onSaveSuccess(res?.data?.data || updatedStudent)
+      onSaveSuccess(updatedStudent)
     } catch {
       toast.error('Gagal menyimpan pengaturan kontrol siswa.')
     } finally {
@@ -303,24 +307,20 @@ function LimitBlokirFormContent({
                   <div
                     key={kat.id}
                     onClick={() => handleToggleCategory(kat.id)}
-                    className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all ${
+                    className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all select-none ${
                       isBlocked
                         ? 'border-0 bg-destructive/15 ring-1 ring-destructive/30'
                         : 'border-0 bg-background/80 hover:bg-background'
                     }`}
                   >
-                    <div className='flex items-center gap-2.5'>
+                    <div className='flex items-center gap-2.5 pointer-events-none'>
                       <Checkbox
                         checked={isBlocked}
-                        onCheckedChange={() => handleToggleCategory(kat.id)}
                         id={`cat-${kat.id}`}
                       />
-                      <Label
-                        htmlFor={`cat-${kat.id}`}
-                        className='text-xs font-semibold cursor-pointer text-foreground'
-                      >
+                      <span className='text-xs font-semibold text-foreground'>
                         {kat.nama}
-                      </Label>
+                      </span>
                     </div>
 
                     <Badge
@@ -412,14 +412,21 @@ function LimitBlokirFormContent({
                 </p>
               ) : (
                 filteredMenuItems.map((item) => {
-                  const isCatBlocked = blockedCategoryIds.includes(item.kategori_id)
+                  const itemCatId = (item as unknown as { kategoriId?: number }).kategoriId ?? item.kategori_id
+                  const itemCatNama = item.kategori_nama || categories.find((c) => c.id === itemCatId)?.nama || 'Menu'
+                  const itemHarga = (item as unknown as { hargaJual?: number }).hargaJual ?? item.harga_jual ?? 0
+                  const isCatBlocked = blockedCategoryIds.includes(itemCatId)
                   const isItemBlocked = blockedItemIds.includes(item.id)
 
                   return (
                     <div
                       key={item.id}
-                      onClick={() => !isCatBlocked && handleToggleItem(item.id)}
-                      className={`p-2.5 flex items-center justify-between text-xs transition-colors ${
+                      onClick={() => {
+                        if (!isCatBlocked) {
+                          handleToggleItem(item.id)
+                        }
+                      }}
+                      className={`p-2.5 flex items-center justify-between text-xs transition-colors select-none ${
                         isCatBlocked
                           ? 'bg-amber-500/10 dark:bg-amber-950/20 opacity-80 cursor-not-allowed'
                           : isItemBlocked
@@ -427,11 +434,10 @@ function LimitBlokirFormContent({
                           : 'hover:bg-muted/50 cursor-pointer'
                       }`}
                     >
-                      <div className='flex items-center gap-3 min-w-0'>
+                      <div className='flex items-center gap-3 min-w-0 pointer-events-none'>
                         <Checkbox
                           checked={isItemBlocked || isCatBlocked}
                           disabled={isCatBlocked}
-                          onCheckedChange={() => !isCatBlocked && handleToggleItem(item.id)}
                           id={`menu-${item.id}`}
                         />
                         {item.foto_url && (
@@ -449,17 +455,17 @@ function LimitBlokirFormContent({
                                 variant='secondary'
                                 className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] py-0 font-medium shrink-0'
                               >
-                                Terblokir Kategori ({item.kategori_nama})
+                                Terblokir Kategori ({itemCatNama})
                               </Badge>
                             )}
                           </p>
                           <p className='text-[11px] text-muted-foreground'>
-                            {item.kategori_nama} • {formatRupiah(item.harga_jual)}
+                            {itemCatNama} • {formatRupiah(itemHarga)}
                           </p>
                         </div>
                       </div>
 
-                      <div className='shrink-0 ml-2'>
+                      <div className='shrink-0 ml-2 pointer-events-none'>
                         {isCatBlocked ? (
                           <Badge variant='secondary' className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-medium'>
                             Kategori Blokir
@@ -548,11 +554,32 @@ export function LimitBlokirForm({
           apiClient.get('/api/katalog/menu').catch(() => null),
         ])
         if (isMounted) {
-          if (catRes?.data?.data && Array.isArray(catRes.data.data)) {
-            setCategories(catRes.data.data)
-          }
+          const loadedCategories: KategoriMock[] =
+            catRes?.data?.data && Array.isArray(catRes.data.data)
+              ? catRes.data.data
+              : MOCK_KATEGORI
+          setCategories(loadedCategories)
+
           if (menuRes?.data?.data && Array.isArray(menuRes.data.data)) {
-            setMenuList(menuRes.data.data)
+            const rawMenus = menuRes.data.data as Record<string, unknown>[]
+            const normalizedMenus: MenuItemMock[] = rawMenus.map((m) => {
+              const catId = Number(m.kategoriId ?? m.kategori_id ?? 1)
+              const catMatch = loadedCategories.find((c) => c.id === catId)
+              return {
+                id: Number(m.id),
+                nama: String(m.nama || ''),
+                kategori_id: catId,
+                kategori_nama: String(m.kategori_nama || catMatch?.nama || 'Umum'),
+                harga_jual: Number(m.hargaJual ?? m.harga_jual ?? 0),
+                stok: Number(m.stokBerjalan ?? m.stok ?? 0),
+                stok_minimum: Number(m.stokMinimum ?? m.stok_minimum ?? 0),
+                satuan: String(m.satuan || 'PCS'),
+                foto_url: (m.fotoUrl as string) || (m.foto_url as string) || undefined,
+                is_active: m.aktif !== false && m.is_active !== false,
+                hpp: Number(m.hpp ?? 0),
+              }
+            })
+            setMenuList(normalizedMenus)
           }
         }
       } catch {

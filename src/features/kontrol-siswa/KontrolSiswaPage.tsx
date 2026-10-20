@@ -110,10 +110,10 @@ export function KontrolSiswaPage() {
       const q = searchQuery.toLowerCase().trim()
       if (q) {
         return (
-          s.nama.toLowerCase().includes(q) ||
-          s.nis.toLowerCase().includes(q) ||
-          s.kelas.toLowerCase().includes(q) ||
-          (s.parent_name && s.parent_name.toLowerCase().includes(q))
+          (s.nama?.toLowerCase() ?? '').includes(q) ||
+          (s.nis?.toLowerCase() ?? '').includes(q) ||
+          (s.kelas?.toLowerCase() ?? '').includes(q) ||
+          Boolean(s.parent_name && s.parent_name.toLowerCase().includes(q))
         )
       }
       return true
