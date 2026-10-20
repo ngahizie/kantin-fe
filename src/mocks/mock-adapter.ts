@@ -2891,6 +2891,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const listSiswa = siswaList.map((s) => ({
         siswaId: s.siswa_id,
         nis: s.nis,
+        nisn: (s as any).nisn || s.nis,
         nama: s.nama,
         kelas: s.kelas,
         saldo: s.saldo,
