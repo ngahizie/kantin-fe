@@ -301,7 +301,7 @@ export function LaporanRiwayatSiswaPage() {
                     setIsDropdownOpen(true)
                     e.target.select()
                   }}
-                  className="pl-8 pr-8 text-xs h-9 shadow-none"
+                  className="pl-8 pr-8 text-xs h-9 border-0 bg-background/80 dark:bg-background/40 shadow-none"
                 />
                 {searchStudentQuery && (
                   <button
@@ -319,7 +319,7 @@ export function LaporanRiwayatSiswaPage() {
 
                 {/* Dropdown Hasil Pencarian Siswa */}
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border bg-popover text-popover-foreground shadow-lg">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border-0 bg-popover text-popover-foreground shadow-lg">
                     {filteredStudents.length === 0 ? (
                       <div className="p-3 text-center text-xs text-muted-foreground">
                         Siswa tidak ditemukan.
@@ -468,7 +468,7 @@ export function LaporanRiwayatSiswaPage() {
                     placeholder="Cari transaksi / menu..."
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
-                    className="pl-8 text-sm"
+                    className="pl-8 text-sm border-0 bg-background/80 dark:bg-background/40 shadow-none"
                   />
                 </div>
 
@@ -476,7 +476,7 @@ export function LaporanRiwayatSiswaPage() {
                   value={jenisFilter}
                   onValueChange={(v) => setJenisFilter(v)}
                 >
-                  <SelectTrigger className="w-[160px] text-xs">
+                  <SelectTrigger className="w-[160px] text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none">
                     <SelectValue placeholder="Semua Mutasi" />
                   </SelectTrigger>
                   <SelectContent>
