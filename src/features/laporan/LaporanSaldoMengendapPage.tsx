@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Wallet,
   Users,
   CreditCard,
   Download,
@@ -213,17 +212,14 @@ export function LaporanSaldoMengendapPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card className="border-primary/30 bg-primary/5">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-primary">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Dana Titipan (Kewajiban Sekolah)
                 </CardTitle>
-                <div className="rounded-lg bg-primary/20 p-2 text-primary">
-                  <Wallet className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-primary">
+                <div className="text-2xl font-bold tracking-tight">
                   {ringkasan ? formatRupiah(ringkasan.total) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -232,14 +228,11 @@ export function LaporanSaldoMengendapPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Saldo Mengendap Siswa
                 </CardTitle>
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-600">
-                  <Users className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
@@ -251,14 +244,11 @@ export function LaporanSaldoMengendapPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Saldo Mengendap Kartu Tamu
                 </CardTitle>
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-600">
-                  <CreditCard className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
