@@ -206,19 +206,19 @@ export function KategoriPage() {
 
         {/* Search & Table Card */}
         <Card className='border border-border bg-card shadow-xs'>
-          <div className='p-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-            <div className='relative w-full sm:w-72'>
-              <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-              <Input
-                placeholder='Cari nama kategori...'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-8 h-9 text-sm'
-              />
-            </div>
-            <div className='text-xs text-muted-foreground'>
-              Menampilkan {filteredKategori.length} dari {kategoriList.length} kategori
-            </div>
+          <div className='p-4 border-b'>
+            <TableToolbar
+              searchPlaceholder='Cari nama kategori...'
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              isFiltered={Boolean(searchQuery)}
+              onReset={() => setSearchQuery('')}
+            >
+              <Button size='sm' onClick={handleAdd} className='h-8 gap-1.5 text-xs shadow-xs'>
+                <Plus className='size-4' />
+                Tambah Kategori
+              </Button>
+            </TableToolbar>
           </div>
 
           <CardContent className='p-0'>

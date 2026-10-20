@@ -278,79 +278,58 @@ export function MenuPage() {
 
         {/* Filter Controls & Search */}
         <Card className='border border-border bg-card shadow-xs'>
-          <div className='p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-3'>
-            <div className='flex flex-1 flex-col sm:flex-row items-center gap-3'>
-              {/* Search Bar */}
-              <div className='relative w-full sm:w-72'>
-                <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-                <Input
-                  placeholder='Cari nama menu...'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
+          <div className='p-4 border-b'>
+            <TableToolbar
+              searchPlaceholder='Cari nama menu...'
+              searchValue={searchQuery}
+              onSearchChange={(val) => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              filters={[
+                {
+                  title: 'Kategori',
+                  options: kategoriList.map((kat) => ({
+                    label: kat.nama,
+                    value: String(kat.id),
+                  })),
+                  selectedValues: selectedKategoriId !== 'all' ? [selectedKategoriId] : [],
+                  onSelect: (vals) => {
+                    setSelectedKategoriId(vals[0] || 'all')
                     setCurrentPage(1)
-                  }}
-                  className='pl-8 h-9 text-sm'
-                />
-              </div>
-
-              {/* Filter Kategori */}
-              <div className='w-full sm:w-48'>
-                <Select
-                  value={selectedKategoriId}
-                  onValueChange={(val) => {
-                    setSelectedKategoriId(val)
+                  },
+                  isSingleSelect: true,
+                },
+                {
+                  title: 'Status',
+                  options: [
+                    { label: 'Hanya Aktif', value: 'active' },
+                    { label: 'Hanya Nonaktif', value: 'inactive' },
+                    { label: 'Stok Menipis (⚠️)', value: 'low_stock' },
+                  ],
+                  selectedValues: selectedStatus !== 'all' ? [selectedStatus] : [],
+                  onSelect: (vals) => {
+                    setSelectedStatus(vals[0] || 'all')
                     setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className='h-9 text-xs'>
-                    <div className='flex items-center gap-1.5 truncate'>
-                      <Tag className='size-3.5 text-muted-foreground' />
-                      <SelectValue placeholder='Kategori' />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>Semua Kategori</SelectItem>
-                    {kategoriList.map((kat) => (
-                      <SelectItem key={kat.id} value={String(kat.id)}>
-                        {kat.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filter Status */}
-              <div className='w-full sm:w-44'>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={(val) => {
-                    setSelectedStatus(val)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className='h-9 text-xs'>
-                    <div className='flex items-center gap-1.5 truncate'>
-                      <Filter className='size-3.5 text-muted-foreground' />
-                      <SelectValue placeholder='Status' />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>Semua Status</SelectItem>
-                    <SelectItem value='active'>Hanya Aktif</SelectItem>
-                    <SelectItem value='inactive'>Hanya Nonaktif</SelectItem>
-                    <SelectItem value='low_stock'>Stok Menipis (⚠️)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className='text-xs text-muted-foreground shrink-0'>
-              Menampilkan {filteredMenu.length} menu
-            </div>
+                  },
+                  isSingleSelect: true,
+                },
+              ]}
+              isFiltered={Boolean(searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all')}
+              onReset={() => {
+                setSearchQuery('')
+                setSelectedKategoriId('all')
+                setSelectedStatus('all')
+                setCurrentPage(1)
+              }}
+            >
+              <Button size='sm' onClick={handleOpenAddModal} className='h-8 gap-1.5 text-xs shadow-xs'>
+                <Plus className='size-4' />
+                Tambah Menu
+              </Button>
+            </TableToolbar>
           </div>
 
-          {/* Tabel Menu */}
           <CardContent className='p-0 overflow-x-auto'>
             <Table>
               <TableHeader>
