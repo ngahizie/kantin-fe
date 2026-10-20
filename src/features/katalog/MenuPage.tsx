@@ -241,39 +241,39 @@ export function MenuPage() {
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
           <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Total Menu</p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>{stats.total}</h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Terdaftar di katalog</p>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Menu</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Terdaftar di katalog</p>
             </CardContent>
           </Card>
 
           <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Menu Aktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Aktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {stats.aktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Tampil di kasir POS</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Tampil di kasir POS</p>
             </CardContent>
           </Card>
 
           <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Stok Menipis / Habis</p>
-              <h3 className='mt-0.5 text-xl font-bold text-amber-600 dark:text-amber-400'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Menipis / Habis</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
                 {stats.stokMenipis}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Perlu restock segera</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Perlu restock segera</p>
             </CardContent>
           </Card>
 
           <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>Menu Nonaktif</p>
-              <h3 className='mt-0.5 text-xl font-bold text-muted-foreground'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Nonaktif</p>
+              <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
                 {stats.nonaktif}
               </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>Disembunyikan</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>Disembunyikan</p>
             </CardContent>
           </Card>
         </div>
@@ -283,7 +283,7 @@ export function MenuPage() {
           <div className='p-4 flex flex-col md:flex-row md:items-center justify-between gap-3'>
             <div className='flex flex-1 flex-col sm:flex-row items-center gap-3'>
               {/* Search Bar */}
-              <div className='relative w-full sm:w-72'>
+              <div className='relative w-full max-w-[280px] sm:w-64'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground' />
                 <Input
                   placeholder='Cari nama menu...'
@@ -360,8 +360,8 @@ export function MenuPage() {
               </div>
             </div>
 
-            <div className='text-xs text-muted-foreground shrink-0'>
-              Menampilkan {filteredMenu.length} menu
+            <div className='text-xs font-medium text-muted-foreground tabular-nums shrink-0'>
+              Menampilkan {filteredMenu.length} dari {menuList.length} menu
             </div>
           </div>
 
@@ -391,15 +391,15 @@ export function MenuPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : paginatedMenu.length === 0 ? (
+                ) : filteredMenu.length === 0 ? (
                   <TableRow className='border-none'>
-                    <TableCell colSpan={9} className='h-40 text-center text-muted-foreground border-none px-6'>
+                    <TableCell colSpan={9} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <UtensilsCrossed className='size-8 text-muted-foreground/40' />
-                        <p className='font-medium'>Tidak ada menu ditemukan</p>
+                        <p className='font-semibold text-foreground'>Tidak ada menu ditemukan</p>
                         <p className='text-xs text-muted-foreground'>
                           {searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all'
-                            ? 'Coba atur ulang filter pencarian Anda'
+                            ? 'Coba gunakan kata kunci atau atur ulang filter pencarian lainnya'
                             : 'Mulai dengan menambahkan menu baru ke katalog'}
                         </p>
                       </div>
@@ -415,8 +415,8 @@ export function MenuPage() {
                     return (
                       <TableRow key={item.id} className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'>
                         {/* Foto Thumbnail */}
-                        <TableCell className='p-2 text-center border-none ps-6'>
-                          <div className='size-11 rounded-xl border-none bg-background/80 dark:bg-background/30 overflow-hidden flex items-center justify-center mx-auto shrink-0'>
+                        <TableCell className='text-center border-none py-3.5 ps-6'>
+                          <div className='size-11 rounded-xl border-none bg-background/80 dark:bg-background/20 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
                             {item.fotoUrl ? (
                               <img
                                 src={katalogApi.getImageUrl(item.fotoUrl)}
@@ -434,13 +434,13 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Nama Menu */}
-                        <TableCell className='border-none ps-2'>
-                          <div className='font-medium text-foreground'>{item.nama}</div>
-                          <div className='text-[11px] text-muted-foreground'>ID: #{item.id}</div>
+                        <TableCell className='border-none py-3.5 ps-2'>
+                          <div className='font-semibold text-foreground text-sm'>{item.nama}</div>
+                          <div className='text-[11px] text-muted-foreground tabular-nums'>ID: #{item.id}</div>
                         </TableCell>
 
                         {/* Kategori */}
-                        <TableCell className='border-none'>
+                        <TableCell className='border-none py-3.5'>
                           <Badge
                             variant='secondary'
                             className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none'
@@ -450,15 +450,15 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Harga Jual */}
-                        <TableCell className='text-right font-mono font-semibold text-foreground border-none'>
+                        <TableCell className='text-right font-mono font-semibold text-foreground border-none py-3.5 tabular-nums text-sm'>
                           {formatRupiah(item.hargaJual)}
                         </TableCell>
 
                         {/* Stok Berjalan */}
-                        <TableCell className='text-center border-none'>
+                        <TableCell className='text-center border-none py-3.5'>
                           <div className='flex flex-col items-center gap-0.5'>
                             <span
-                              className={`font-mono font-semibold text-sm ${
+                              className={`font-mono font-semibold text-sm tabular-nums ${
                                 isHabis
                                   ? 'text-destructive font-bold'
                                   : isStokMenipis
@@ -471,14 +471,14 @@ export function MenuPage() {
                             {isHabis ? (
                               <Badge
                                 variant='secondary'
-                                className='rounded-full border-none bg-destructive/15 text-destructive text-[9px] px-2 py-0.5 font-semibold shadow-none'
+                                className='rounded-full border-none bg-destructive/15 text-destructive text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
                               >
                                 Habis
                               </Badge>
                             ) : isStokMenipis ? (
                               <Badge
                                 variant='secondary'
-                                className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] px-2 py-0.5 font-semibold shadow-none'
+                                className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
                               >
                                 Menipis
                               </Badge>
@@ -487,17 +487,17 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Satuan */}
-                        <TableCell className='text-center text-xs font-medium text-muted-foreground uppercase border-none'>
+                        <TableCell className='text-center text-xs font-semibold text-muted-foreground uppercase border-none py-3.5'>
                           {item.satuan || 'PCS'}
                         </TableCell>
 
                         {/* Stok Minimum */}
-                        <TableCell className='text-center font-mono text-xs text-muted-foreground border-none'>
+                        <TableCell className='text-center font-mono text-xs text-muted-foreground border-none py-3.5 tabular-nums'>
                           {formatNumber(item.stokMinimum)}
                         </TableCell>
 
                         {/* Status Aktif */}
-                        <TableCell className='text-center border-none'>
+                        <TableCell className='text-center border-none py-3.5'>
                           {item.aktif ? (
                             <Badge
                               variant='secondary'
@@ -516,7 +516,7 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Aksi */}
-                        <TableCell className='text-right border-none pe-6'>
+                        <TableCell className='text-right border-none py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1'>
                             <Button
                               variant='ghost'
@@ -549,7 +549,7 @@ export function MenuPage() {
           {/* Pagination Footer */}
           {totalPages > 1 && (
             <div className='p-4 flex items-center justify-between'>
-              <div className='text-xs text-muted-foreground'>
+              <div className='text-xs font-medium text-muted-foreground tabular-nums'>
                 Halaman <span className='font-semibold text-foreground'>{currentPage}</span> dari{' '}
                 <span className='font-semibold text-foreground'>{totalPages}</span>
               </div>

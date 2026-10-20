@@ -190,8 +190,8 @@ export function MenuFormModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto border-none rounded-2xl shadow-none bg-card'>
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className='text-lg font-bold'>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
+          <DialogDescription className='text-xs text-muted-foreground'>
             {isEditing
               ? 'Perbarui detail nama, kategori, harga jual rupiah, dan batas stok minimum.'
               : 'Lengkapi informasi menu baru untuk ditampilkan pada kasir POS.'}
@@ -292,7 +292,7 @@ export function MenuFormModal({
               name='nama'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className='text-xs font-semibold'>
                     Nama Menu <span className='text-destructive'>*</span>
                   </FormLabel>
                   <FormControl>
@@ -315,7 +315,7 @@ export function MenuFormModal({
                 name='kategoriId'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
+                    <FormLabel className='text-xs font-semibold'>
                       Kategori <span className='text-destructive'>*</span>
                     </FormLabel>
                     <Select
@@ -346,7 +346,7 @@ export function MenuFormModal({
                 name='satuan'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
+                    <FormLabel className='text-xs font-semibold'>
                       Satuan Penjualan <span className='text-destructive'>*</span>
                     </FormLabel>
                     <Select
@@ -380,7 +380,7 @@ export function MenuFormModal({
                 name='hargaJual'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
+                    <FormLabel className='text-xs font-semibold'>
                       Harga Jual (Rp) <span className='text-destructive'>*</span>
                     </FormLabel>
                     <FormControl>
@@ -403,7 +403,7 @@ export function MenuFormModal({
                         />
                       </div>
                     </FormControl>
-                    <FormDescription className='text-[11px]'>
+                    <FormDescription className='text-xs'>
                       Tersimpan sebagai integer rupiah murni tanpa desimal.
                     </FormDescription>
                     <FormMessage />
@@ -416,7 +416,7 @@ export function MenuFormModal({
                 name='stokMinimum'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ambang Stok Minimum</FormLabel>
+                    <FormLabel className='text-xs font-semibold'>Ambang Stok Minimum</FormLabel>
                     <FormControl>
                       <Input
                         type='number'
@@ -428,7 +428,7 @@ export function MenuFormModal({
                         className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                       />
                     </FormControl>
-                    <FormDescription className='text-[11px]'>
+                    <FormDescription className='text-xs'>
                       Peringatan restock jika stok berjalan ≤ angka ini.
                     </FormDescription>
                     <FormMessage />
@@ -440,7 +440,7 @@ export function MenuFormModal({
             {/* Toggle Status Aktif */}
             <div className='flex items-center justify-between rounded-xl border-none p-3 bg-muted/40'>
               <div className='space-y-0.5'>
-                <Label className='text-sm font-medium'>Status Aktif Menu</Label>
+                <Label className='text-xs font-semibold'>Status Aktif Menu</Label>
                 <p className='text-xs text-muted-foreground'>
                   Menu nonaktif otomatis disembunyikan dari layar kasir POS.
                 </p>
