@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Search,
-  RefreshCw,
   PhoneOff,
   Smartphone,
   Sliders,
@@ -40,7 +39,7 @@ import { LimitBlokirForm } from './LimitBlokirForm'
 
 export function KontrolSiswaPage() {
   const [students, setStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
-  const [isLoading, setIsLoading] = useState(false)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [appFilter, setAppFilter] = useState<string>('ALL')
   const [limitFilter, setLimitFilter] = useState<string>('ALL')
@@ -67,19 +66,7 @@ export function KontrolSiswaPage() {
     }
   }, [])
 
-  const refreshStudents = async () => {
-    setIsLoading(true)
-    try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat')
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
-      }
-    } catch {
-      // Fallback
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   // KPI Calculations
   const nonAppCount = useMemo(() => {
@@ -190,28 +177,10 @@ export function KontrolSiswaPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Kontrol Siswa atas Nama Orang Tua
-            </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Pengaturan batas limit belanja harian dan larangan menu siswa
-            </p>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => void refreshStudents()}
-              disabled={isLoading}
-              className='gap-1.5'
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Kontrol Siswa atas Nama Orang Tua
+          </h1>
         </div>
 
         {/* KPI Cards Ringkasan */}
