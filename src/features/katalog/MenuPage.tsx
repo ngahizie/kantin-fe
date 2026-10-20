@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Filter,
   Image as ImageIcon,
+  X,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -144,11 +145,12 @@ export function MenuPage() {
   const filteredMenu = useMemo(() => {
     return menuList.filter((item) => {
       // 1. Search Query
-      const matchSearch = item.nama.toLowerCase().includes(searchQuery.toLowerCase())
+      const query = (searchQuery || '').trim().toLowerCase()
+      const matchSearch = !query || (item?.nama ?? '').toLowerCase().includes(query)
 
       // 2. Kategori Filter
       const matchKategori =
-        selectedKategoriId === 'all' || String(item.kategoriId) === selectedKategoriId
+        selectedKategoriId === 'all' || String(item?.kategoriId ?? '') === selectedKategoriId
 
       // 3. Status Filter
       let matchStatus = true
@@ -157,7 +159,7 @@ export function MenuPage() {
       } else if (selectedStatus === 'inactive') {
         matchStatus = item.aktif === false
       } else if (selectedStatus === 'low_stock') {
-        matchStatus = item.aktif && item.stokBerjalan <= (item.stokMinimum || 0)
+        matchStatus = (item?.aktif === true) && (item?.stokBerjalan ?? 0) <= (item?.stokMinimum ?? 0)
       }
 
       return matchSearch && matchKategori && matchStatus
