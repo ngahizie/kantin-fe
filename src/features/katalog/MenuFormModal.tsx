@@ -188,7 +188,7 @@ export function MenuFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto'>
+      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto border-none rounded-2xl shadow-none bg-card'>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
           <DialogDescription>
@@ -201,7 +201,7 @@ export function MenuFormModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 py-1'>
             {/* Foto Produk Section */}
-            <div className='rounded-lg border bg-muted/20 p-3 space-y-3'>
+            <div className='rounded-xl border-none bg-muted/40 p-3 space-y-3'>
               <Label className='text-xs font-semibold text-foreground flex items-center justify-between'>
                 <span>Foto Produk</span>
                 <span className='text-[11px] font-normal text-muted-foreground'>
@@ -210,7 +210,7 @@ export function MenuFormModal({
               </Label>
 
               <div className='flex items-center gap-4'>
-                <div className='relative size-20 rounded-lg border-2 border-dashed border-border bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
+                <div className='relative size-20 rounded-xl border-none bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
                   {previewUrl ? (
                     <>
                       <img
@@ -249,9 +249,9 @@ export function MenuFormModal({
                     />
                     <Button
                       type='button'
-                      variant='outline'
+                      variant='secondary'
                       size='sm'
-                      className='gap-1.5 text-xs'
+                      className='gap-1.5 text-xs border-none bg-background/80 dark:bg-background/20 text-foreground hover:bg-background rounded-xl shadow-none'
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || isSubmitting}
                     >
@@ -300,6 +300,7 @@ export function MenuFormModal({
                       placeholder='Contoh: Nasi Goreng Spesial, Es Teh Manis'
                       {...field}
                       disabled={isSubmitting}
+                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                     />
                   </FormControl>
                   <FormMessage />
@@ -323,11 +324,11 @@ export function MenuFormModal({
                       disabled={isSubmitting}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus:ring-0 focus-visible:ring-0 text-sm'>
                           <SelectValue placeholder='Pilih Kategori' />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className='border-none rounded-xl shadow-none'>
                         {activeKategori.map((k) => (
                           <SelectItem key={k.id} value={String(k.id)}>
                             {k.nama}
@@ -354,11 +355,11 @@ export function MenuFormModal({
                       disabled={isSubmitting}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus:ring-0 focus-visible:ring-0 text-sm'>
                           <SelectValue placeholder='Pilih Satuan' />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className='border-none rounded-xl shadow-none'>
                         {SATUAN_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -390,7 +391,7 @@ export function MenuFormModal({
                         <Input
                           type='text'
                           inputMode='numeric'
-                          className='pl-10 font-mono font-medium'
+                          className='h-10 pl-10 font-mono font-medium border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                           placeholder='0'
                           value={field.value ? formatNumber(field.value) : ''}
                           onChange={(e) => {
@@ -424,6 +425,7 @@ export function MenuFormModal({
                         value={field.value}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                         disabled={isSubmitting}
+                        className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                       />
                     </FormControl>
                     <FormDescription className='text-[11px]'>
@@ -436,7 +438,7 @@ export function MenuFormModal({
             </div>
 
             {/* Toggle Status Aktif */}
-            <div className='flex items-center justify-between rounded-lg border p-3 bg-muted/10'>
+            <div className='flex items-center justify-between rounded-xl border-none p-3 bg-muted/40'>
               <div className='space-y-0.5'>
                 <Label className='text-sm font-medium'>Status Aktif Menu</Label>
                 <p className='text-xs text-muted-foreground'>
@@ -456,16 +458,21 @@ export function MenuFormModal({
               />
             </div>
 
-            <DialogFooter className='pt-3 sm:justify-end gap-2'>
+            <DialogFooter className='pt-3 sm:justify-end gap-2 sm:gap-2.5'>
               <Button
                 type='button'
-                variant='outline'
+                variant='secondary'
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
               >
                 Batal
               </Button>
-              <Button type='submit' disabled={isSubmitting} className='gap-1.5'>
+              <Button
+                type='submit'
+                disabled={isSubmitting}
+                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className='size-4 animate-spin' />
