@@ -5,7 +5,6 @@ import {
 } from '@/mocks/mock-data'
 import {
   RefreshCw,
-  Search,
   Plus,
   ArrowDownRight,
   ArrowUpRight,
@@ -36,14 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,

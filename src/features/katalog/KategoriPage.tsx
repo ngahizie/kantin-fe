@@ -1,9 +1,9 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Tag,
   Plus,
   RefreshCw,
-  Search,
   Pencil,
   Trash2,
   AlertTriangle,
@@ -16,7 +16,6 @@ import { Search as SearchComp } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,

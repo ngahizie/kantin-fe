@@ -5,14 +5,12 @@ import {
   AlertTriangle,
   Download,
   RefreshCw,
-  Search,
   DollarSign,
   Boxes,
   Flame,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -21,13 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -343,7 +334,7 @@ export function LaporanKerugianStokPage() {
                       { label: 'Opname Keluar (Audit)', value: 'OPNAME_KELUAR' },
                     ],
                     selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
-                    onSelect: (vals) => setJenisFilter((vals[0] as any) || 'ALL'),
+                    onSelect: (vals) => setJenisFilter((vals[0] as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK') || 'ALL'),
                     isSingleSelect: true,
                   },
                   {
@@ -354,7 +345,7 @@ export function LaporanKerugianStokPage() {
                       { label: 'Waktu Terbaru', value: 'waktu_desc' },
                     ],
                     selectedValues: sortBy !== 'nilai_desc' ? [sortBy] : [],
-                    onSelect: (vals) => setSortBy((vals[0] as any) || 'nilai_desc'),
+                    onSelect: (vals) => setSortBy((vals[0] as 'nilai_desc' | 'qty_desc' | 'waktu_desc') || 'nilai_desc'),
                     isSingleSelect: true,
                   },
                 ]}

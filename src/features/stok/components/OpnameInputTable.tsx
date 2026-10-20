@@ -1,8 +1,13 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
-  Search,
-  Filter,
   RotateCcw,
   CheckCircle2,
   AlertTriangle,
@@ -19,13 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -446,7 +444,7 @@ export function OpnameInputTable({
               { label: 'Belum Dihitung', value: 'BELUM_DIISI' },
             ],
             selectedValues: filterSelisih !== 'ALL' ? [filterSelisih] : [],
-            onSelect: (vals) => setFilterSelisih((vals[0] as any) || 'ALL'),
+            onSelect: (vals) => setFilterSelisih((vals[0] as 'ALL' | 'SELISIH' | 'SESUAI' | 'BELUM_DIISI') || 'ALL'),
             isSingleSelect: true,
           },
         ]}
@@ -469,7 +467,7 @@ export function OpnameInputTable({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleResetAll}
+          onClick={handleResetSemua}
           className="text-xs h-8 text-muted-foreground"
         >
           <RotateCcw className="h-3.5 w-3.5 mr-1" />

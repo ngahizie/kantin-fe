@@ -1,16 +1,14 @@
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   UtensilsCrossed,
   Plus,
   RefreshCw,
-  Search,
   Pencil,
   Trash2,
   AlertTriangle,
-  Tag,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Image as ImageIcon,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -20,15 +18,7 @@ import { Search as SearchComp } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -282,7 +272,7 @@ export function MenuPage() {
             <TableToolbar
               searchPlaceholder='Cari nama menu...'
               searchValue={searchQuery}
-              onSearchChange={(val) => {
+              onSearchChange={(val: string) => {
                 setSearchQuery(val)
                 setCurrentPage(1)
               }}
@@ -294,7 +284,7 @@ export function MenuPage() {
                     value: String(kat.id),
                   })),
                   selectedValues: selectedKategoriId !== 'all' ? [selectedKategoriId] : [],
-                  onSelect: (vals) => {
+                  onSelect: (vals: string[]) => {
                     setSelectedKategoriId(vals[0] || 'all')
                     setCurrentPage(1)
                   },
@@ -308,7 +298,7 @@ export function MenuPage() {
                     { label: 'Stok Menipis (⚠️)', value: 'low_stock' },
                   ],
                   selectedValues: selectedStatus !== 'all' ? [selectedStatus] : [],
-                  onSelect: (vals) => {
+                  onSelect: (vals: string[]) => {
                     setSelectedStatus(vals[0] || 'all')
                     setCurrentPage(1)
                   },
@@ -323,7 +313,7 @@ export function MenuPage() {
                 setCurrentPage(1)
               }}
             >
-              <Button size='sm' onClick={handleOpenAddModal} className='h-8 gap-1.5 text-xs shadow-xs'>
+              <Button size='sm' onClick={handleAdd} className='h-8 gap-1.5 text-xs shadow-xs'>
                 <Plus className='size-4' />
                 Tambah Menu
               </Button>

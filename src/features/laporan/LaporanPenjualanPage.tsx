@@ -4,7 +4,6 @@ import {
   TrendingUp,
   Download,
   RefreshCw,
-  Search,
   ShoppingCart,
   Receipt,
   Tag,
@@ -14,7 +13,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -416,7 +414,7 @@ export function LaporanPenjualanPage() {
                           { label: 'Laba Terbesar', value: 'laba' },
                         ],
                         selectedValues: [sortBy],
-                        onSelect: (vals) => setSortBy((vals[0] as any) || 'terlaris'),
+                        onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba') || 'terlaris'),
                         isSingleSelect: true,
                       },
                     ]

@@ -1,7 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Search,
   Download,
   History,
   PackagePlus,
@@ -9,16 +8,8 @@ import {
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -388,7 +379,7 @@ export function InventarisPage() {
                 { label: 'Stok Habis (0)', value: 'HABIS' },
               ],
               selectedValues: selectedStatus !== 'ALL' ? [selectedStatus] : [],
-              onSelect: (vals) => setSelectedStatus((vals[0] as any) || 'ALL'),
+              onSelect: (vals) => setSelectedStatus((vals[0] as 'ALL' | 'AMAN' | 'MENIPIS' | 'HABIS') || 'ALL'),
               isSingleSelect: true,
             },
             {
@@ -401,7 +392,7 @@ export function InventarisPage() {
                 { label: 'Nama Menu (A-Z)', value: 'NAMA_ASC' },
               ],
               selectedValues: sortBy !== 'NILAI_DESC' ? [sortBy] : [],
-              onSelect: (vals) => setSortBy((vals[0] as any) || 'NILAI_DESC'),
+              onSelect: (vals) => setSortBy((vals[0] as typeof sortBy) || 'NILAI_DESC'),
               isSingleSelect: true,
             },
           ]}

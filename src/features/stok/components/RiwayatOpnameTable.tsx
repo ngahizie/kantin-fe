@@ -1,22 +1,12 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
-  Search,
-  Filter,
   AlertOctagon,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Card } from '@/components/ui/card'
 import type { RiwayatStokItem, JenisMutasiStok } from '../types'
 
 interface RiwayatOpnameTableProps {

@@ -5,14 +5,12 @@ import {
   TrendingUp,
   Download,
   RefreshCw,
-  Search,
   Receipt,
   Percent,
   Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -21,13 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -348,7 +339,7 @@ export function LaporanLabaKotorPage() {
                       { label: 'Margin Tipis (< 20%)', value: 'LOW' },
                     ],
                     selectedValues: marginFilter !== 'ALL' ? [marginFilter] : [],
-                    onSelect: (vals) => setMarginFilter((vals[0] as any) || 'ALL'),
+                    onSelect: (vals) => setMarginFilter((vals[0] as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'ALL'),
                     isSingleSelect: true,
                   },
                   {
@@ -359,7 +350,7 @@ export function LaporanLabaKotorPage() {
                       { label: 'Omset Tertinggi', value: 'omset_desc' },
                     ],
                     selectedValues: sortBy !== 'laba_desc' ? [sortBy] : [],
-                    onSelect: (vals) => setSortBy((vals[0] as any) || 'laba_desc'),
+                    onSelect: (vals) => setSortBy((vals[0] as 'laba_desc' | 'margin_desc' | 'omset_desc') || 'laba_desc'),
                     isSingleSelect: true,
                   },
                 ]}

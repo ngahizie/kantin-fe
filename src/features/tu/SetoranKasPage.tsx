@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
   RefreshCw,
-  Search as SearchIcon,
   CheckCircle2,
   AlertTriangle,
   Calendar,
@@ -31,13 +30,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
