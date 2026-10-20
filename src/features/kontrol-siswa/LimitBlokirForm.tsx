@@ -151,7 +151,7 @@ function LimitBlokirFormContent({
           }).catch(() => null)
         ),
         ...catsToBlock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-kategori', {
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
             subjekId: student.siswa_id,
             kategoriId: id,
@@ -159,7 +159,7 @@ function LimitBlokirFormContent({
           }).catch(() => null)
         ),
         ...catsToUnblock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-kategori', {
+          apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
             subjekId: student.siswa_id,
             kategoriId: id,

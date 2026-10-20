@@ -1,10 +1,16 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import { RefundOrangTuaModal } from './RefundOrangTuaModal'
 import { MOCK_SISWA_NONAKTIF } from '@/mocks/mock-data'
+import { setupMockAdapter } from '@/mocks/mock-adapter'
+import { apiClient } from '@/lib/api-client'
 
 describe('RefundOrangTuaModal', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
   it('dapat berganti dari Transfer Bank ke Tunai dan kembali lagi ke Transfer Bank tanpa kendala', async () => {
     const siswa = MOCK_SISWA_NONAKTIF[0] // Raditya Pratama
     const { getByText } = await render(
@@ -50,6 +56,20 @@ describe('RefundOrangTuaModal', () => {
     const onRefundSuccess = vi.fn()
     const onOpenChange = vi.fn()
 
+    // Mock eksplisit apiClient.post agar submit selalu sukses di lingkungan pengujian CI
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        code: 200,
+        status: 'SUCCESS',
+        message: 'Refund ke orang tua berhasil diproses',
+        data: {},
+      },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as never,
+    })
+
     const { getByRole } = await render(
       <RefundOrangTuaModal
         open={true}
@@ -70,5 +90,7 @@ describe('RefundOrangTuaModal', () => {
     // Berhasil memanggil onRefundSuccess dan menutup modal secara async
     await expect.poll(() => onRefundSuccess.mock.calls.length).toBe(1)
     expect(onOpenChange).toHaveBeenCalledWith(false)
+
+    postSpy.mockRestore()
   })
 })
