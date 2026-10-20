@@ -1,9 +1,7 @@
   import { useState, useEffect, useMemo } from 'react'
 import {
-  PackageX,
   AlertTriangle,
   Download,
-  RefreshCw,
   Search,
   DollarSign,
   Boxes,
@@ -53,22 +51,7 @@ export function LaporanKerugianStokPage() {
   const [jenisFilter, setJenisFilter] = useState<'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK'>('ALL')
   const [sortBy, setSortBy] = useState<'nilai_desc' | 'qty_desc' | 'waktu_desc'>('nilai_desc')
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resList, resRingkasan] = await Promise.all([
-        laporanApi.getKerugianStok(),
-        laporanApi.getRingkasanKerugianStok(),
-      ])
-      setKerugianList(resList)
-      setRingkasan(resRingkasan)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat kerugian stok'
-      toast.error('Gagal Memuat Laporan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   useEffect(() => {
     let isMounted = true
@@ -197,33 +180,12 @@ export function LaporanKerugianStokPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-destructive/10 text-destructive flex h-10 w-10 items-center justify-center rounded-xl">
-                  <PackageX className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Kerugian Stok
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Pencatatan penyesuaian opname keluar (selisih fisik minus) dan barang rusak beserta nilai kerugiannya (Qty × HPP snapshot) — PRD §9.5.
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Kerugian Stok
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
