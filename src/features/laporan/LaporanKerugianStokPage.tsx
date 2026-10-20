@@ -1,13 +1,7 @@
   import { useState, useEffect, useMemo } from 'react'
 import {
-  PackageX,
-  AlertTriangle,
   Download,
-  RefreshCw,
   Search,
-  DollarSign,
-  Boxes,
-  Flame,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -53,22 +47,7 @@ export function LaporanKerugianStokPage() {
   const [jenisFilter, setJenisFilter] = useState<'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK'>('ALL')
   const [sortBy, setSortBy] = useState<'nilai_desc' | 'qty_desc' | 'waktu_desc'>('nilai_desc')
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
-      const [resList, resRingkasan] = await Promise.all([
-        laporanApi.getKerugianStok(),
-        laporanApi.getRingkasanKerugianStok(),
-      ])
-      setKerugianList(resList)
-      setRingkasan(resRingkasan)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat kerugian stok'
-      toast.error('Gagal Memuat Laporan', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   useEffect(() => {
     let isMounted = true
@@ -197,33 +176,12 @@ export function LaporanKerugianStokPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-destructive/10 text-destructive flex h-10 w-10 items-center justify-center rounded-xl">
-                  <PackageX className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Laporan Kerugian Stok
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Pencatatan penyesuaian opname keluar (selisih fisik minus) dan barang rusak beserta nilai kerugiannya (Qty × HPP snapshot) — PRD §9.5.
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Laporan Kerugian Stok
+              </h1>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
-
               <Button
                 variant="default"
                 size="sm"
@@ -239,17 +197,14 @@ export function LaporanKerugianStokPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-destructive/30 bg-destructive/5">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-semibold text-destructive">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Nilai Kerugian
                 </CardTitle>
-                <div className="rounded-lg bg-destructive/20 p-2 text-destructive">
-                  <DollarSign className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-destructive">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.totalKerugian) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -258,17 +213,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Qty Hilang / Rusak
                 </CardTitle>
-                <div className="rounded-lg bg-orange-500/10 p-2 text-orange-600">
-                  <Boxes className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? `${formatNumber(ringkasan.totalQtyHilang)} Unit` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -277,17 +229,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Barang Rusak / Basi
                 </CardTitle>
-                <div className="rounded-lg bg-red-500/10 p-2 text-red-600">
-                  <Flame className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-red-600">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.kerugianBarangRusak) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -296,17 +245,14 @@ export function LaporanKerugianStokPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Selisih Audit Opname
                 </CardTitle>
-                <div className="rounded-lg bg-amber-500/10 p-2 text-amber-600">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-amber-600">
+                <div className="text-2xl font-bold tracking-tight text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.kerugianOpname) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -317,7 +263,7 @@ export function LaporanKerugianStokPage() {
           </div>
 
           {/* TABEL RINCIAN MUTASI KERUGIAN */}
-          <Card>
+          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
@@ -335,7 +281,7 @@ export function LaporanKerugianStokPage() {
                     placeholder="Cari menu, alasan, BA..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 text-sm"
+                    className="pl-8 text-sm bg-background/80 dark:bg-background/40 border-0 shadow-none"
                   />
                 </div>
 
@@ -343,7 +289,7 @@ export function LaporanKerugianStokPage() {
                   value={jenisFilter}
                   onValueChange={(v) => setJenisFilter(v as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK')}
                 >
-                  <SelectTrigger className="w-[170px] text-xs">
+                  <SelectTrigger className="w-[170px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
                     <SelectValue placeholder="Semua Jenis" />
                   </SelectTrigger>
                   <SelectContent>
@@ -357,7 +303,7 @@ export function LaporanKerugianStokPage() {
                   value={sortBy}
                   onValueChange={(v) => setSortBy(v as 'nilai_desc' | 'qty_desc' | 'waktu_desc')}
                 >
-                  <SelectTrigger className="w-[160px] text-xs">
+                  <SelectTrigger className="w-[160px] text-xs bg-background/80 dark:bg-background/40 border-0 shadow-none">
                     <SelectValue placeholder="Urutkan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -370,7 +316,7 @@ export function LaporanKerugianStokPage() {
             </CardHeader>
 
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
@@ -416,18 +362,18 @@ export function LaporanKerugianStokPage() {
                             {item.namaMenu}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="secondary" className="border-0 text-xs bg-background/80 dark:bg-background/40">
                               {item.kategoriNama}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant="outline"
-                              className={
+                              variant="secondary"
+                              className={`border-0 text-xs font-medium ${
                                 item.jenis === 'BARANG_RUSAK'
-                                  ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                                  : 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                              }
+                                  ? 'bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-300'
+                                  : 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                              }`}
                             >
                               {item.jenis === 'BARANG_RUSAK' ? 'Barang Rusak' : 'Opname Keluar'}
                             </Badge>

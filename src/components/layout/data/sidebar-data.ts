@@ -162,10 +162,6 @@ export const sidebarData: SidebarData = {
               title: 'Laporan Kerugian Stok',
               url: '/laporan/kerugian-stok',
             },
-            {
-              title: 'Nilai Persediaan',
-              url: '/stok/inventaris',
-            },
           ],
         },
         {
