@@ -340,7 +340,7 @@ function KonfirmasiSetoranFormContent({
             Perhatian: Terdapat Selisih Kas Fisik
           </AlertTitle>
           <AlertDescription className='mt-1 text-xs'>
-            Sesuai PRD §9.2, selisih kas fisik <strong>wajib dicatat</strong>{' '}
+            Selisih kas fisik <strong>wajib dicatat</strong>{' '}
             dan tidak boleh dihapus atau ditutupi. Mohon tuliskan alasan atau
             Berita Acara penyebab selisih di bawah ini.
           </AlertDescription>

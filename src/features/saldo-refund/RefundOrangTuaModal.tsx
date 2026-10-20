@@ -456,7 +456,7 @@ function RefundOrangTuaFormContent({
           <Alert className='border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
             <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
             <AlertTitle className='text-xs font-semibold'>
-              Konfirmasi Efek Otomatis Sistem (PRD §9.3)
+              Konfirmasi Efek Otomatis Sistem
             </AlertTitle>
             <AlertDescription className='text-[11px] leading-relaxed mt-1'>
               Setelah refund diproses: <strong>saldo siswa akan menjadi Rp 0</strong> dan kartu RFID

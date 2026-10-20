@@ -269,7 +269,7 @@ function LimitBlokirFormContent({
                   <span>
                     Jika belanja hari ini melebihi{' '}
                     <strong>{formatRupiah(nominalLimitNum)}</strong>, kasir akan otomatis menolak
-                    transaksi dengan pesan <em>"Melebihi limit harian"</em> (PRD §6.1 Tahap 5).
+                    transaksi dengan pesan <em>"Melebihi limit harian"</em> .
                   </span>
                 </div>
               </div>
@@ -292,7 +292,7 @@ function LimitBlokirFormContent({
                 Blokir Seluruh Kategori Menu
               </Label>
               <p className='text-xs text-muted-foreground'>
-                Menceklis kategori akan memblokir <strong>seluruh menu</strong> di bawah kategori tersebut (PRD §6.1 Tahap 3)
+                Menceklis kategori akan memblokir <strong>seluruh menu</strong> di bawah kategori tersebut
               </p>
             </div>
 

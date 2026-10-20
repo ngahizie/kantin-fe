@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Tag,
   Plus,
@@ -50,12 +50,13 @@ export function KategoriPage() {
   // Dialog konfirmasi delete / nonaktifkan
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const lastDeleteTargetRef = useRef<KategoriItem | null>(null)
-  if (deleteTarget) {
-    lastDeleteTargetRef.current = deleteTarget
+  const [activeDeleteTarget, setActiveDeleteTarget] = useState<KategoriItem | null>(null)
+  const handleDeleteClick = (kat: KategoriItem) => {
+    setDeleteTarget(kat)
+    setActiveDeleteTarget(kat)
   }
-  const activeDeleteTarget = deleteTarget || lastDeleteTargetRef.current
 
+  
   const loadData = async () => {
     try {
       setLoading(true)
@@ -336,7 +337,7 @@ export function KategoriPage() {
                               variant='ghost'
                               size='icon'
                               className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
-                              onClick={() => setDeleteTarget(kat)}
+                              onClick={() => handleDeleteClick(kat)}
                               title='Nonaktifkan Kategori'
                             >
                               <Trash2 className='size-4' />

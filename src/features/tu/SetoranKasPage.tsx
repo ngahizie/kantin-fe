@@ -260,7 +260,7 @@ export function SetoranKasPage() {
             <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
               Pencatatan penerimaan uang tunai top-up harian per petugas TU,
               verifikasi uang fisik oleh Bendahara, dan pencatatan selisih kas
-              fisik (PRD §9.2 & §9.5).
+              fisik.
             </p>
           </div>
           <div className='flex items-center gap-2'>

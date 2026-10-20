@@ -8,7 +8,6 @@ import {
   Lock,
   Users,
   Eye,
-  Building,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -33,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
 import { MOCK_SISWA_NONAKTIF, type SiswaNonaktifMock } from '@/mocks/mock-data'
@@ -257,7 +255,7 @@ export function RefundSiswaKeluarPage() {
               Refund Saldo Siswa Keluar / Lulus
             </h1>
             <p className='text-sm text-muted-foreground mt-1'>
-              Pilar Kasir TU, Kartu Tamu, Saldo & Laporan — PRD §9.3 Pengembalian Dana Titipan Siswa
+              Pengembalian dana titipan siswa nonaktif dan pemindahan saldo
             </p>
           </div>
 
@@ -274,21 +272,6 @@ export function RefundSiswaKeluarPage() {
             </Button>
           </div>
         </div>
-
-        {/* Banner Penjelasan Sistem */}
-        <Alert className='border-blue-500/30 bg-blue-500/10 text-blue-950 dark:text-blue-200'>
-          <Building className='h-4 w-4 text-blue-600 dark:text-blue-400' />
-          <AlertTitle className='font-semibold text-xs tracking-wide'>
-            Kewajiban Pengembalian Dana Titipan Siswa Nonaktif (PRD §9.3 & §9.5)
-          </AlertTitle>
-          <AlertDescription className='text-xs mt-1 leading-relaxed'>
-            Sistem secara otomatis mendeteksi siswa nonaktif (lulus, pindah, atau keluar) yang masih
-            memiliki sisa saldo digital di kantin. Petugas dapat memilih <strong>Opsi A (Refund ke Orang Tua)</strong> via tunai/transfer, atau{' '}
-            <strong>Opsi B (Pindah Saldo ke Saudara Kandung Aktif)</strong> secara atomik. Setelah
-            diproses, saldo siswa otomatis menjadi <strong>Rp 0</strong> dan kartu RFID fisik lama{' '}
-            <strong>langsung diblokir permanen</strong>.
-          </AlertDescription>
-        </Alert>
 
         {/* KPI Cards Ringkasan */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -345,7 +328,7 @@ export function RefundSiswaKeluarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Blokir instan otomatis server (PRD §11.11)
+              Blokir instan otomatis server
             </CardContent>
           </Card>
         </div>

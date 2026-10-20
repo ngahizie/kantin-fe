@@ -511,7 +511,7 @@ function KoreksiMutasiFormContent({
           <Alert variant='destructive' className='py-2 text-xs'>
             <ShieldAlert className='h-3.5 w-3.5' />
             <AlertDescription className='text-xs'>
-              Koreksi DEBIT melebihi saldo berjalan! Sesuai PRD §6.2, saldo
+              Koreksi debit melebihi saldo berjalan! Saldo
               tidak boleh minus dalam kondisi apa pun.
             </AlertDescription>
           </Alert>
@@ -599,7 +599,7 @@ export function KoreksiMutasiModal({
           </DialogTitle>
           <DialogDescription className='text-sm text-muted-foreground'>
             Koreksi salah input top-up tunai atau transaksi pada sesi kasir
-            yang sudah ditutup (PRD §9.2 & §11.7)
+            yang sudah ditutup.
           </DialogDescription>
         </DialogHeader>
 

@@ -63,9 +63,7 @@ function SidebarProvider({
   const [openMobile, setOpenMobile] = React.useState(false)
 
   // Sidebar selalu terbuka (fitur buka tutup dihapus total)
-  const open = true
-  const state = 'expanded'
-  const setOpen = React.useCallback(
+    const setOpen = React.useCallback(
     (_value: boolean | ((value: boolean) => boolean)) => {},
     []
   )

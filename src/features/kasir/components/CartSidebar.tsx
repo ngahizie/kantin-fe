@@ -34,7 +34,7 @@ export interface CartSidebarProps {
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
   onCheckout,
-  onManualRfidOpen,
+  onManualRfidOpen: _onManualRfidOpen,
   isProcessing = false,
   isOffline = false,
   isSessionClosed = false,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Search,
   RefreshCw,
@@ -8,7 +8,7 @@ import {
   CheckCircle2,
   UtensilsCrossed,
   DollarSign,
-  Info,
+  ShoppingCart,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
 import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
@@ -141,6 +141,44 @@ export function KontrolSiswaPage() {
     )
   }
 
+  // Quick live validator test for demo / verification
+  const handleTestCashierValidation = useCallback(
+    async (studentToTest: KartuSiswaMock) => {
+      // Sample cart: Nasi Uduk (ID 1, Kat 1) + Es Teh Manis (ID 9, Kat 3)
+      const testItems = [
+        { menuId: 1, qty: 1 },
+        { menuId: 9, qty: 1 },
+      ]
+
+      try {
+        const res = await apiClient.post('/api/kasir/tap', {
+          rfidUid: studentToTest.uid,
+          titikKasirId: 1,
+          items: testItems,
+          idempotencyKey: `TAP-TEST-${Date.now()}-${studentToTest.siswa_id}`,
+        })
+        if (
+          res.data?.status === 'SUCCESS' ||
+          res.data?.responseCode === 200 ||
+          res.data?.code === 200
+        ) {
+          const total = (res.data?.data?.total || 16000) as number
+          toast.success(`Uji Validasi Kasir: LOLOS`, {
+            description: `Siswa ${studentToTest.nama} lolos membeli Nasi Uduk & Es Teh (${formatRupiah(total)}).`,
+          })
+        }
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { data?: { message?: string } } }
+        const msg =
+          axiosErr.response?.data?.message || 'Transaksi ditolak kasir'
+        toast.error(`Uji Validasi Kasir: DITOLAK`, {
+          description: `Kasir menolak ${studentToTest.nama}: ${msg}`,
+        })
+      }
+    },
+    []
+  )
+
 
   return (
     <>
@@ -158,7 +196,7 @@ export function KontrolSiswaPage() {
               Kontrol Siswa atas Nama Orang Tua
             </h1>
             <p className='text-sm text-muted-foreground mt-1'>
-              Modul Admin Sekolah: Pengaturan Batas Limit Belanja & Larangan Menu Siswa (PRD §9.6)
+              Pengaturan batas limit belanja harian dan larangan menu siswa
             </p>
           </div>
 
@@ -175,21 +213,6 @@ export function KontrolSiswaPage() {
             </Button>
           </div>
         </div>
-
-        {/* Banner Penjelasan Perwalian Admin */}
-        <Alert className='border-primary/20 bg-primary/5 text-foreground'>
-          <Info className='h-4 w-4 text-primary' />
-          <AlertTitle className='font-semibold text-xs tracking-wide'>
-            Perwalian Admin Sekolah untuk Orang Tua Non-Aplikasi (PRD §9.6)
-          </AlertTitle>
-          <AlertDescription className='text-xs mt-1 leading-relaxed text-muted-foreground'>
-            Modul ini diperuntukkan bagi <strong>Admin Sekolah & TU</strong> untuk mewakili orang tua
-            yang belum menggunakan aplikasi mobile SKOOLIA. Pengaturan batas belanja harian dan blokir
-            menu kategori maupun item spesifik yang disimpan di sini akan{' '}
-            <strong>langsung tersimpan dan berlaku secara real-time pada validasi kasir POS</strong>{' '}
-            (PRD §6.1 Tahap 3 & 5).
-          </AlertDescription>
-        </Alert>
 
         {/* KPI Cards Ringkasan */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -461,6 +484,16 @@ export function KontrolSiswaPage() {
                           {/* Aksi */}
                           <TableCell className='text-right'>
                             <div className='flex items-center justify-end gap-1.5'>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={() => void handleTestCashierValidation(siswa)}
+                                title='Uji coba simulasi belanja kasir dengan keranjang berisi Nasi Uduk & Es Teh'
+                                className='h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground'
+                              >
+                                <ShoppingCart className='h-3.5 w-3.5' />
+                                <span className='hidden xl:inline'>Uji Kasir</span>
+                              </Button>
 
                               <Button
                                 size='sm'

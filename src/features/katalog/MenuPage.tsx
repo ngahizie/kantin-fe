@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   UtensilsCrossed,
   Plus,
@@ -72,12 +72,13 @@ export function MenuPage() {
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const lastDeleteTargetRef = useRef<MenuItem | null>(null)
-  if (deleteTarget) {
-    lastDeleteTargetRef.current = deleteTarget
+  const [activeDeleteTarget, setActiveDeleteTarget] = useState<MenuItem | null>(null)
+  const handleDeleteClick = (item: MenuItem) => {
+    setDeleteTarget(item)
+    setActiveDeleteTarget(item)
   }
-  const activeDeleteTarget = deleteTarget || lastDeleteTargetRef.current
 
+  
   // Load menu and kategori data
   const loadData = async () => {
     try {
@@ -531,7 +532,7 @@ export function MenuPage() {
                               variant='ghost'
                               size='icon'
                               className='size-8 rounded-xl border-none text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
-                              onClick={() => setDeleteTarget(item)}
+                              onClick={() => handleDeleteClick(item)}
                               title='Nonaktifkan Menu'
                             >
                               <Trash2 className='size-4' />

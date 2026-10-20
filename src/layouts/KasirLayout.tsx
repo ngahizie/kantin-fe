@@ -48,7 +48,7 @@ export function KasirLayout() {
 
   return (
     <div className='flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground select-none'>
-      {/* Banner Peringatan Offline (PRD §6.5) */}
+      {/* Banner Peringatan Offline */}
       {!isOnline && (
         <div className='flex items-center justify-center gap-2 bg-destructive py-2 text-sm font-semibold text-destructive-foreground animate-pulse'>
           <WifiOff className='h-4 w-4' />
