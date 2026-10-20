@@ -233,7 +233,11 @@ function LimitBlokirFormContent({
                       size='sm'
                       variant={nominalLimitNum === amount ? 'default' : 'secondary'}
                       onClick={() => setLimitNominal(amount.toString())}
-                      className='h-7 text-xs px-2.5 font-mono border-0 bg-background/80 hover:bg-background shadow-none'
+                      className={`h-7 text-xs px-2.5 font-mono border-0 shadow-none ${
+                        nominalLimitNum === amount
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          : 'bg-background/80 text-foreground hover:bg-background'
+                      }`}
                     >
                       {formatRupiah(amount)}
                     </Button>
@@ -373,7 +377,11 @@ function LimitBlokirFormContent({
                   size='sm'
                   variant={menuCatFilter === 'ALL' ? 'default' : 'secondary'}
                   onClick={() => setMenuCatFilter('ALL')}
-                  className='h-8 text-[11px] px-2.5 border-0 bg-background/80 shadow-none'
+                  className={`h-8 text-[11px] px-2.5 border-0 shadow-none ${
+                    menuCatFilter === 'ALL'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-background/80 text-foreground hover:bg-background'
+                  }`}
                 >
                   Semua
                 </Button>
@@ -384,7 +392,11 @@ function LimitBlokirFormContent({
                     size='sm'
                     variant={menuCatFilter === c.id ? 'default' : 'secondary'}
                     onClick={() => setMenuCatFilter(c.id)}
-                    className='h-8 text-[11px] px-2.5 whitespace-nowrap border-0 bg-background/80 shadow-none'
+                    className={`h-8 text-[11px] px-2.5 whitespace-nowrap border-0 shadow-none ${
+                      menuCatFilter === c.id
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'bg-background/80 text-foreground hover:bg-background'
+                    }`}
                   >
                     {c.nama}
                   </Button>
