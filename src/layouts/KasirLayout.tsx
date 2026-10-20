@@ -57,7 +57,7 @@ export function KasirLayout() {
       )}
 
       {/* Top Header Kasir POS */}
-      <header className='flex h-14 shrink-0 items-center justify-between border-none bg-card px-4 shadow-none backdrop-blur'>
+      <header className='flex h-14 shrink-0 items-center justify-between border-none bg-card px-4 shadow-none'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
           <div className='flex aspect-square size-8 items-center justify-center rounded-xl overflow-hidden bg-muted dark:bg-white p-1'>

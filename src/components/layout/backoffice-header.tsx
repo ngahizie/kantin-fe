@@ -9,7 +9,7 @@ export interface BackofficeHeaderProps {
 
 export function BackofficeHeader({ className, fixed = true }: BackofficeHeaderProps) {
   return (
-    <Header fixed={fixed} className={cn('bg-background/95 backdrop-blur border-b border-sidebar-border/50', className)}>
+    <Header fixed={fixed} className={cn('border-b border-sidebar-border/50', className)}>
       {/* Sisi Kiri: Teks Rata Kiri */}
       <div className='flex items-center gap-2 overflow-hidden me-auto'>
         <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
