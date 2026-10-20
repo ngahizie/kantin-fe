@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  History,
   Search,
   Download,
-  RefreshCw,
   User,
   Phone,
   Receipt,
   Printer,
   AlertCircle,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -58,6 +57,10 @@ import type {
 export function LaporanRiwayatSiswaPage() {
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [selectedSiswaId, setSelectedSiswaId] = useState<number>(101)
+  const [searchStudentQuery, setSearchStudentQuery] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
+
   const [profil, setProfil] = useState<ProfilSiswaRiwayat | null>(null)
   const [riwayat, setRiwayat] = useState<RiwayatBelanjaSiswaItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -70,6 +73,28 @@ export function LaporanRiwayatSiswaPage() {
   const [selectedTrxForReceipt, setSelectedTrxForReceipt] =
     useState<RiwayatBelanjaSiswaItem | null>(null)
 
+  // Tutup dropdown saat klik di luar
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false)
+        const currentStudent = siswaList.find((s) => s.siswaId === selectedSiswaId)
+        if (currentStudent) {
+          setSearchStudentQuery(
+            `${currentStudent.nis} - ${currentStudent.nama} (${currentStudent.kelas})`
+          )
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [siswaList, selectedSiswaId])
+
   // Load daftar siswa terlebih dahulu
   useEffect(() => {
     let isMounted = true
@@ -78,8 +103,22 @@ export function LaporanRiwayatSiswaPage() {
         const list = await laporanApi.getSiswaSaldoList()
         if (!isMounted) return
         setSiswaList(list)
-        if (list.length > 0 && !selectedSiswaId) {
-          setSelectedSiswaId(list[0].siswaId)
+
+        const searchParams = new URLSearchParams(window.location.search)
+        const paramId = searchParams.get('siswaId')
+        const initialId = paramId
+          ? Number(paramId)
+          : list.length > 0
+          ? list[0].siswaId
+          : 101
+
+        setSelectedSiswaId(initialId)
+        const initialStudent =
+          list.find((s) => s.siswaId === initialId) || list[0]
+        if (initialStudent) {
+          setSearchStudentQuery(
+            `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
+          )
         }
       } catch (_err: unknown) {
         if (!isMounted) return
@@ -90,21 +129,25 @@ export function LaporanRiwayatSiswaPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedSiswaId])
+  }, [])
 
-  // Load riwayat ketika selectedSiswaId berubah atau tombol refresh ditekan
-  const loadRiwayat = async (id: number) => {
-    try {
-      setIsLoading(true)
-      const res = await laporanApi.getRiwayatBelanjaSiswa(id)
-      setProfil(res.profil)
-      setRiwayat(res.riwayat)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat siswa'
-      toast.error('Gagal Memuat Riwayat', { description: msg })
-    } finally {
-      setIsLoading(false)
-    }
+  // Filter pencarian siswa di search box
+  const filteredStudents = useMemo(() => {
+    if (!searchStudentQuery.trim()) return siswaList
+    const q = searchStudentQuery.toLowerCase().trim()
+    return siswaList.filter((s) => {
+      const matchNis = s.nis.toLowerCase().includes(q)
+      const matchNisn = s.nisn ? s.nisn.toLowerCase().includes(q) : false
+      const matchNama = s.nama.toLowerCase().includes(q)
+      const matchKelas = s.kelas.toLowerCase().includes(q)
+      return matchNis || matchNisn || matchNama || matchKelas
+    })
+  }, [siswaList, searchStudentQuery])
+
+  const handleSelectStudent = (s: SiswaSaldoDetail) => {
+    setSelectedSiswaId(s.siswaId)
+    setSearchStudentQuery(`${s.nis} - ${s.nama} (${s.kelas})`)
+    setIsDropdownOpen(false)
   }
 
   useEffect(() => {
@@ -237,51 +280,81 @@ export function LaporanRiwayatSiswaPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                  <History className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Riwayat Belanja per Siswa
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Histori transaksi lengkap dengan item & waktu untuk membantu klarifikasi komplain orang tua murid (PRD §9.5).
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Riwayat Belanja per Siswa
+              </h1>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* Pilih Siswa Selector */}
-              <div className="w-64">
-                <Select
-                  value={String(selectedSiswaId)}
-                  onValueChange={(val) => setSelectedSiswaId(Number(val))}
-                >
-                  <SelectTrigger className="w-full text-xs">
-                    <SelectValue placeholder="Pilih Siswa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {siswaList.map((s) => (
-                      <SelectItem key={s.siswaId} value={String(s.siswaId)}>
-                        {s.nis} - {s.nama} ({s.kelas})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Search Box Siswa (NIS/NISN/Nama) */}
+              <div ref={searchContainerRef} className="relative w-72 sm:w-80">
+                <Search className="text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Cari NIS, NISN, atau Nama Siswa..."
+                  value={searchStudentQuery}
+                  onChange={(e) => {
+                    setSearchStudentQuery(e.target.value)
+                    setIsDropdownOpen(true)
+                  }}
+                  onFocus={(e) => {
+                    setIsDropdownOpen(true)
+                    e.target.select()
+                  }}
+                  className="pl-8 pr-8 text-xs h-9 shadow-none"
+                />
+                {searchStudentQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchStudentQuery('')
+                      setIsDropdownOpen(true)
+                    }}
+                    className="text-muted-foreground hover:text-foreground absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5"
+                    title="Kosongkan pencarian"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void loadRiwayat(selectedSiswaId)}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Segarkan</span>
-              </Button>
+                {/* Dropdown Hasil Pencarian Siswa */}
+                {isDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border bg-popover text-popover-foreground shadow-lg">
+                    {filteredStudents.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-muted-foreground">
+                        Siswa tidak ditemukan.
+                      </div>
+                    ) : (
+                      <div className="p-1">
+                        {filteredStudents.map((s) => (
+                          <button
+                            key={s.siswaId}
+                            type="button"
+                            onClick={() => handleSelectStudent(s)}
+                            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-accent hover:text-accent-foreground ${
+                              selectedSiswaId === s.siswaId
+                                ? 'bg-accent/80 font-semibold'
+                                : ''
+                            }`}
+                          >
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {s.nama}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                NIS: {s.nis} {s.nisn ? `• NISN: ${s.nisn}` : ''} • {s.kelas}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="border-0 text-[10px]">
+                              {s.kelas}
+                            </Badge>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Button
                 variant="default"
