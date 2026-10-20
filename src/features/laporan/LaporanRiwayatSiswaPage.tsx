@@ -7,7 +7,6 @@ import {
   FileText,
   Building2,
   Printer,
-  AlertCircle,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -679,8 +678,7 @@ export function LaporanRiwayatSiswaPage() {
                 </div>
 
                 {profil.catatanKontrol && (
-                  <div className="mt-4 flex items-start gap-2 rounded-lg bg-background/80 dark:bg-background/40 p-3 text-xs text-foreground/85 border-0">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="mt-4 rounded-lg bg-background/80 dark:bg-background/40 p-3 text-xs text-foreground/85 border-0">
                     <span>
                       <strong className="text-foreground">Catatan Ortu:</strong> {profil.catatanKontrol}
                     </span>
