@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   RefreshCw,
-  AlertTriangle,
   CheckCircle2,
   User,
 } from 'lucide-react'
@@ -16,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
@@ -125,21 +123,19 @@ export function RefundKartuModal({
           </div>
         </div>
 
-        {/* Warning */}
-        <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
-          <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
-          <AlertDescription className='text-xs leading-relaxed'>
-            <strong>Perhatian:</strong> Setelah dikonfirmasi —
-            <ul className='mt-1.5 space-y-0.5 list-disc list-inside'>
-              <li>
-                Saldo <strong>{formatRupiah(kartu.saldo)}</strong> di-refund tunai
-              </li>
-              <li>Saldo kartu direset menjadi Rp 0</li>
-              <li>Label pemegang dikosongkan (kartu siap pakai ulang)</li>
-              <li>Status kartu berubah menjadi <strong>AVAILABLE</strong></li>
-            </ul>
-          </AlertDescription>
-        </Alert>
+        {/* Catatan Informasi */}
+        <div className='p-3.5 bg-muted/70 dark:bg-muted/30 rounded-xl text-xs leading-relaxed text-foreground'>
+          <strong className='font-semibold text-foreground block mb-1'>Perhatian:</strong>
+          <span className='text-muted-foreground'>Setelah dikonfirmasi —</span>
+          <ul className='mt-1.5 space-y-1 list-disc list-inside text-muted-foreground'>
+            <li>
+              Saldo <strong className='text-foreground'>{formatRupiah(kartu.saldo)}</strong> di-refund tunai
+            </li>
+            <li>Saldo kartu direset menjadi Rp 0</li>
+            <li>Label pemegang dikosongkan (kartu siap pakai ulang)</li>
+            <li>Status kartu berubah menjadi <strong className='text-foreground'>AVAILABLE</strong></li>
+          </ul>
+        </div>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           {/* Nama Penerima */}
