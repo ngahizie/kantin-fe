@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  AlertCircle,
   ArrowRight,
   RefreshCw,
   CheckCircle2,
@@ -16,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -248,17 +246,16 @@ export function TopupKartuTamuModal({
               </div>
 
               {isExceedingLimit && (
-                <Alert variant='destructive'>
-                  <AlertCircle className='h-4 w-4' />
-                  <AlertTitle className='text-xs font-bold uppercase'>
+                <div className='p-3.5 border-0 bg-destructive/10 text-destructive rounded-xl text-xs leading-relaxed'>
+                  <strong className='text-xs font-bold uppercase tracking-wide block mb-1'>
                     Melebihi Batas Maksimum!
-                  </AlertTitle>
-                  <AlertDescription className='text-xs'>
+                  </strong>
+                  <p className='text-xs leading-relaxed text-destructive/90'>
                     Batas saldo Kartu Tamu:{' '}
                     <strong>{formatRupiah(MAX_SALDO_KARTU_TAMU)}</strong>.
                     Kurangi nominal top-up.
-                  </AlertDescription>
-                </Alert>
+                  </p>
+                </div>
               )}
             </div>
           )}

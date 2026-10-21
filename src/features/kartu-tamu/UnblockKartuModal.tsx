@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
   FileText,
 } from 'lucide-react'
 import {
@@ -17,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import type { KartuTamuMock } from '@/mocks/mock-data'
@@ -107,15 +105,14 @@ export function UnblockKartuModal({
         </div>
 
         {/* Informasi Pemulihan */}
-        <Alert className='border-0 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200'>
-          <AlertCircle className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
-          <AlertTitle className='text-xs font-bold uppercase tracking-wide'>
+        <div className='p-3.5 border-0 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200 rounded-xl text-xs leading-relaxed'>
+          <strong className='text-xs font-bold uppercase tracking-wide block mb-1 text-emerald-800 dark:text-emerald-300'>
             Pemulihan Kartu Fisik
-          </AlertTitle>
-          <AlertDescription className='text-xs leading-relaxed mt-1'>
+          </strong>
+          <p className='text-xs leading-relaxed'>
             Membuka blokir akan mengubah status kartu menjadi <strong>AVAILABLE (Tersedia)</strong>. Kartu fisik RFID ini dapat kembali dipinjamkan kepada guru, staf, atau tamu baru di layanan TU.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
 
         {/* Alasan / Catatan TU */}
         <div className='space-y-2'>

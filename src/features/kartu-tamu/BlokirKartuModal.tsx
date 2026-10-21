@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   ShieldAlert,
   RefreshCw,
-  AlertTriangle,
   ArrowRight,
   Info,
 } from 'lucide-react'
@@ -16,7 +15,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
@@ -164,17 +162,16 @@ export function BlokirKartuModal({
         </div>
 
         {/* Danger Warning */}
-        <Alert variant='destructive'>
-          <AlertTriangle className='h-4 w-4' />
-          <AlertTitle className='text-xs font-bold uppercase tracking-wide'>
+        <div className='p-3.5 border-0 bg-destructive/10 text-destructive rounded-xl text-xs leading-relaxed'>
+          <strong className='text-xs font-bold uppercase tracking-wide block mb-1'>
             Peringatan — Tindakan Permanen
-          </AlertTitle>
-          <AlertDescription className='text-xs leading-relaxed mt-1'>
+          </strong>
+          <p className='text-xs leading-relaxed text-destructive/90'>
             Setelah diblokir, kartu ini <strong>tidak dapat digunakan</strong> di
             kasir. Blokir berlaku <strong>instan</strong> — tap berikutnya pasti
             ditolak. Status tidak dapat dikembalikan ke ACTIVE secara otomatis.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
 
         <div className='space-y-4'>
           {/* Transfer Saldo Option */}
