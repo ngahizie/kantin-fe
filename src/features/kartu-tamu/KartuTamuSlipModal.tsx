@@ -269,9 +269,9 @@ export function KartuTamuSlipModal({
           <div className='flex items-center gap-2 w-full sm:w-auto justify-end'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={() => onOpenChange(false)}
-              className='text-xs h-9'
+              className='text-xs h-9 border-0'
             >
               Selesai
             </Button>

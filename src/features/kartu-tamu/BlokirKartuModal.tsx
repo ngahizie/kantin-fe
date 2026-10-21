@@ -180,7 +180,7 @@ export function BlokirKartuModal({
           {/* Transfer Saldo Option */}
           {kartu.saldo > 0 && (
             <div className='space-y-3'>
-              <div className='flex items-start space-x-3 p-3.5 border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors'>
+              <div className='flex items-start space-x-3 p-3.5 border-0 bg-muted/70 dark:bg-muted/30 rounded-xl cursor-pointer hover:bg-muted/90 transition-colors'>
                 <Checkbox
                   id='transfer-saldo'
                   checked={transferSaldo}
@@ -214,7 +214,7 @@ export function BlokirKartuModal({
                     Pilih Kartu Tujuan Transfer
                   </Label>
                   {transferTargets.length === 0 ? (
-                    <div className='flex items-center gap-2 p-3 bg-muted/40 rounded-lg border border-dashed'>
+                    <div className='flex items-center gap-2 p-3 bg-muted/70 dark:bg-muted/30 rounded-lg border-0'>
                       <Info className='h-4 w-4 text-muted-foreground' />
                       <p className='text-xs text-muted-foreground'>
                         Tidak ada Kartu Tamu aktif lain yang tersedia.
@@ -248,7 +248,7 @@ export function BlokirKartuModal({
           )}
 
           {kartu.saldo === 0 && (
-            <div className='flex items-center gap-2 p-3 bg-muted/40 rounded-xl border border-dashed'>
+            <div className='flex items-center gap-2 p-3 bg-muted/70 dark:bg-muted/30 rounded-xl border-0'>
               <Info className='h-4 w-4 text-muted-foreground shrink-0' />
               <p className='text-xs text-muted-foreground'>
                 Saldo kartu sudah Rp 0. Tidak ada saldo yang perlu ditransfer.
@@ -260,9 +260,9 @@ export function BlokirKartuModal({
         <DialogFooter className='gap-2 mt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             onClick={handleClose}
-            className='flex-1 sm:flex-none'
+            className='border-0 flex-1 sm:flex-none'
           >
             Batal
           </Button>

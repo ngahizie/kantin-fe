@@ -134,7 +134,7 @@ export function TopupKartuTamuModal({
               <span className='font-bold font-mono text-foreground'>
                 {kartu.nomor_kartu}
               </span>
-              <Badge variant='outline' className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-medium'>
+              <Badge variant='secondary' className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-medium'>
                 AKTIF
               </Badge>
             </div>
@@ -161,9 +161,9 @@ export function TopupKartuTamuModal({
                 <Button
                   key={preset}
                   type='button'
-                  variant={nominalNum === preset ? 'default' : 'outline'}
+                  variant={nominalNum === preset ? 'default' : 'secondary'}
                   size='sm'
-                  className='h-10 text-xs font-semibold'
+                  className='h-10 text-xs font-semibold border-0'
                   onClick={() => setNominal(preset.toString())}
                 >
                   {(preset / 1000).toFixed(0)}rb
@@ -266,9 +266,9 @@ export function TopupKartuTamuModal({
           <DialogFooter className='gap-2 pt-1'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={handleClose}
-              className='flex-1 sm:flex-none'
+              className='border-0 flex-1 sm:flex-none'
             >
               Batal
             </Button>

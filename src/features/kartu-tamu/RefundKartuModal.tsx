@@ -126,7 +126,7 @@ export function RefundKartuModal({
         </div>
 
         {/* Warning */}
-        <Alert className='border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
+        <Alert className='border-0 bg-amber-500/10 text-amber-900 dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
           <AlertDescription className='text-xs leading-relaxed'>
             <strong>Perhatian:</strong> Setelah dikonfirmasi —
@@ -166,9 +166,9 @@ export function RefundKartuModal({
           <DialogFooter className='gap-2 pt-1'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={handleClose}
-              className='flex-1 sm:flex-none'
+              className='border-0 flex-1 sm:flex-none'
             >
               Batal
             </Button>

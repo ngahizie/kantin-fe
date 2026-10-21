@@ -100,14 +100,14 @@ export function UnblockKartuModal({
             </p>
           </div>
           <div className='text-right shrink-0'>
-            <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
+            <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
               Status: DIBLOKIR
             </Badge>
           </div>
         </div>
 
         {/* Informasi Pemulihan */}
-        <Alert className='border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200'>
+        <Alert className='border-0 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200'>
           <AlertCircle className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
           <AlertTitle className='text-xs font-bold uppercase tracking-wide'>
             Pemulihan Kartu Fisik
@@ -141,9 +141,9 @@ export function UnblockKartuModal({
         <DialogFooter className='gap-2 mt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             onClick={handleClose}
-            className='flex-1 sm:flex-none'
+            className='border-0 flex-1 sm:flex-none'
           >
             Batal
           </Button>

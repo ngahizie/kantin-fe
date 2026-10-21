@@ -147,7 +147,7 @@ export function RegisterKartuModal({
                 Nomor Kartu Berikutnya
               </span>
             </div>
-            <Badge variant='outline' className='font-mono text-sm font-bold px-2.5 py-0.5 border-0 bg-primary/10 text-primary'>
+            <Badge variant='secondary' className='font-mono text-sm font-bold px-2.5 py-0.5 border-0 bg-primary/10 text-primary'>
               {nextNomor}
             </Badge>
           </div>
@@ -206,7 +206,7 @@ export function RegisterKartuModal({
         </div>
 
         <DialogFooter className='gap-2 mt-2'>
-          <Button variant='outline' onClick={handleClose} className='flex-1 sm:flex-none'>
+          <Button variant='secondary' onClick={handleClose} className='border-0 flex-1 sm:flex-none'>
             Batal
           </Button>
           <Button
