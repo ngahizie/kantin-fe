@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
   CreditCard,
-  RefreshCw,
   Plus,
   Wallet,
   ArrowLeftRight,
@@ -103,36 +102,20 @@ export function KartuTamuPage() {
   const [selectedCard, setSelectedCard] = useState<KartuTamuMock | null>(null)
   const [slipData, setSlipData] = useState<KartuTamuSlipData | null>(null)
   const [isSlipOpen, setIsSlipOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     let isMounted = true
     const load = async () => {
-      setIsLoading(true)
       try {
         const loadedCards = await fetchCardsWithBalances()
         if (isMounted) setCards(loadedCards)
       } catch {
         if (isMounted) setCards(MOCK_KARTU_TAMU)
-      } finally {
-        if (isMounted) setIsLoading(false)
       }
     }
     void load()
     return () => { isMounted = false }
   }, [])
-
-  const handleRefresh = async () => {
-    setIsLoading(true)
-    try {
-      const loadedCards = await fetchCardsWithBalances()
-      setCards(loadedCards)
-    } catch {
-      setCards(MOCK_KARTU_TAMU)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const openModal = (type: ModalType, card?: KartuTamuMock) => {
     setSelectedCard(card ?? null)
@@ -230,21 +213,8 @@ export function KartuTamuPage() {
               <h1 className='text-2xl font-bold tracking-tight text-foreground'>
                 Manajemen Kartu Tamu
               </h1>
-              <p className='text-sm text-muted-foreground'>
-                Registrasi, top-up, pengembalian, dan pemblokiran kartu tamu RFID.
-              </p>
             </div>
             <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className='gap-1.5 text-xs'
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                Muat Ulang
-              </Button>
               <Button
                 size='sm'
                 onClick={() => openModal('register')}
