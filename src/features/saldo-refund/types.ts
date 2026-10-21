@@ -163,14 +163,194 @@ export interface TransaksiSesiTutupItem {
   subjek_id: number
   subjek_nama: string
   subjek_info: string
+  kartu_uid?: string
   total: number
-  items: Array<{
+  items?: Array<{
     menu_id: number
     nama: string
     qty: number
     harga: number
     subtotal: number
   }>
-  status: 'SELESAI' | 'DIKOREKSI'
+  status: 'SELESAI' | 'DIKOREKSI' | 'VOID' | 'SUKSES'
   koreksi_referensi_id?: string
+  dapat_dikoreksi?: boolean
+  dapatDikoreksi?: boolean
+  alasan_void?: string | null
+  alasanVoid?: string | null
+  void_at?: string | null
+  voidAt?: string | null
+}
+
+export interface HalamanResponse<T> {
+  items: T[]
+  total: number
+  halaman: number
+  ukuran: number
+  totalHalaman: number
+}
+
+export interface TransaksiKasirItemResponse {
+  id: number
+  waktu: string
+  sesiKasirId: number
+  titikKasirId?: number | null
+  titikKasirNama?: string | null
+  petugasId?: number | null
+  subjekTipe: SubjekTipe
+  subjekId: number
+  subjekNama?: string | null
+  kartuUid?: string | null
+  total: number
+  status: 'SUKSES' | 'VOID'
+  alasanVoid?: string | null
+  voidAt?: string | null
+  dapatDikoreksi: boolean
+}
+
+export function mapTransaksiKasirItemToSesiTutup(
+  raw: any,
+  siswaList?: Array<{ siswa_id: number; nama: string; kelas?: string; nis?: string }>
+): TransaksiSesiTutupItem {
+  const id = raw?.id !== undefined ? String(raw.id) : ''
+  const sesiKasirId = Number(raw?.sesiKasirId ?? raw?.sesi_kasir_id ?? 0)
+  const titikKasir =
+    raw?.titikKasirNama ??
+    raw?.titik_kasir ??
+    (raw?.titikKasirId ? `Titik #${raw.titikKasirId}` : 'Kantin')
+  const petugasKasir =
+    raw?.petugas_kasir ??
+    (raw?.petugasId ? `Petugas #${raw.petugasId}` : 'Kasir')
+  const subjekTipe = (raw?.subjekTipe ?? raw?.subjek_tipe ?? 'SISWA') as SubjekTipe
+  const subjekId = Number(raw?.subjekId ?? raw?.subjek_id ?? 0)
+  const kartuUid = raw?.kartuUid ?? raw?.kartu_uid ?? undefined
+
+  const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
+  let subjekNama = raw?.subjekNama ?? raw?.subjek_nama ?? ''
+  if (!subjekNama) {
+    if (subjekTipe === 'SISWA') {
+      subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
+    } else {
+      subjekNama = `Kartu Tamu #${subjekId}`
+    }
+  }
+
+  let subjekInfo = raw?.subjekInfo ?? raw?.subjek_info ?? ''
+  if (!subjekInfo) {
+    if (subjekTipe === 'SISWA') {
+      subjekInfo = matchedSiswa
+        ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
+        : kartuUid
+          ? `Kartu: ${kartuUid}`
+          : `ID: ${subjekId}`
+    } else {
+      subjekInfo = kartuUid ? `Kartu: ${kartuUid}` : `ID: ${subjekId}`
+    }
+  }
+
+  const rawStatus = String(raw?.status || '').toUpperCase()
+  let status: 'SELESAI' | 'DIKOREKSI' | 'VOID' | 'SUKSES' = 'SELESAI'
+  if (rawStatus === 'VOID') {
+    status = 'VOID'
+  } else if (rawStatus === 'DIKOREKSI') {
+    status = 'DIKOREKSI'
+  } else if (rawStatus === 'SUKSES') {
+    status = 'SUKSES'
+  }
+
+  const dapatDikoreksi =
+    raw?.dapatDikoreksi !== undefined
+      ? Boolean(raw.dapatDikoreksi)
+      : raw?.dapat_dikoreksi !== undefined
+        ? Boolean(raw.dapat_dikoreksi)
+        : status === 'SUKSES' || status === 'SELESAI'
+
+  return {
+    id,
+    waktu: raw?.waktu || new Date().toISOString(),
+    sesi_kasir_id: sesiKasirId,
+    titik_kasir: titikKasir,
+    petugas_kasir: petugasKasir,
+    subjek_tipe: subjekTipe,
+    subjek_id: subjekId,
+    subjek_nama: subjekNama,
+    subjek_info: subjekInfo,
+    kartu_uid: kartuUid,
+    total: Number(raw?.total) || 0,
+    items: Array.isArray(raw?.items) ? raw.items : [],
+    status,
+    koreksi_referensi_id: raw?.koreksi_referensi_id ?? raw?.koreksiReferensiId,
+    dapat_dikoreksi: dapatDikoreksi,
+    dapatDikoreksi,
+    alasan_void: raw?.alasanVoid ?? raw?.alasan_void ?? null,
+    alasanVoid: raw?.alasanVoid ?? raw?.alasan_void ?? null,
+    void_at: raw?.voidAt ?? raw?.void_at ?? null,
+    voidAt: raw?.voidAt ?? raw?.void_at ?? null,
+  }
+}
+
+export function mapMutasiKoreksiItem(
+  raw: any,
+  siswaList?: Array<{ siswa_id: number; nama: string; kelas?: string; nis?: string }>
+): MutasiKoreksiItem {
+  const id = raw?.id !== undefined ? raw.id : ''
+  const referensiId = String(raw?.referensiId ?? raw?.referensi_id ?? '')
+  const subjekTipe = (raw?.subjekTipe ?? raw?.subjek_tipe ?? 'SISWA') as SubjekTipe
+  const subjekId = Number(raw?.subjekId ?? raw?.subjek_id ?? 0)
+
+  const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
+  let subjekNama = raw?.subjekNama ?? raw?.subjek_nama ?? ''
+  if (!subjekNama) {
+    if (subjekTipe === 'SISWA') {
+      subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
+    } else {
+      subjekNama = `Kartu Tamu #${subjekId}`
+    }
+  }
+
+  let subjekInfo = raw?.subjekInfo ?? raw?.subjek_info ?? ''
+  if (!subjekInfo) {
+    if (subjekTipe === 'SISWA') {
+      subjekInfo = matchedSiswa
+        ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
+        : `ID: ${subjekId}`
+    } else {
+      subjekInfo = `ID: ${subjekId}`
+    }
+  }
+
+  const arah = (raw?.arah ?? 'DEBIT') as ArahMutasi
+  const nominal = Number(raw?.nominal) || 0
+  const saldoSebelum = Number(raw?.saldoSebelum ?? raw?.saldo_sebelum ?? 0)
+  const saldoSetelah = Number(raw?.saldoSetelah ?? raw?.saldo_setelah ?? 0)
+  const alasan = raw?.keterangan ?? raw?.alasan ?? ''
+  const bendaharaId = Number(raw?.aktorId ?? raw?.bendahara_id ?? 0)
+  const bendaharaNama =
+    raw?.bendahara_nama ?? (bendaharaId ? `Bendahara #${bendaharaId}` : 'Bendahara')
+  const transaksiId = raw?.transaksiId ?? raw?.transaksi_terkait_id
+
+  const jenisKoreksi =
+    raw?.jenis_koreksi ??
+    raw?.jenisKoreksi ??
+    (transaksiId ? 'PEMBALIK_TRANSAKSI_KASIR' : 'PENYESUAIAN_AUDIT')
+
+  return {
+    id,
+    referensi_id: referensiId,
+    waktu: raw?.waktu || new Date().toISOString(),
+    subjek_tipe: subjekTipe,
+    subjek_id: subjekId,
+    subjek_nama: subjekNama,
+    subjek_info: subjekInfo,
+    jenis_koreksi: jenisKoreksi,
+    arah,
+    nominal,
+    saldo_sebelum: saldoSebelum,
+    saldo_setelah: saldoSetelah,
+    alasan,
+    bendahara_id: bendaharaId,
+    bendahara_nama: bendaharaNama,
+    transaksi_terkait_id: transaksiId,
+    sesi_kasir_id: raw?.sesiKasirId ?? raw?.sesi_kasir_id,
+  }
 }
