@@ -38,10 +38,11 @@ import { TopupKartuTamuModal } from './TopupKartuTamuModal'
 import { RefundKartuModal } from './RefundKartuModal'
 import { BlokirKartuModal } from './BlokirKartuModal'
 import { UnblockKartuModal } from './UnblockKartuModal'
+import { RiwayatKartuTamuModal } from './RiwayatKartuTamuModal'
 import { KartuTamuSlipModal, type KartuTamuSlipData } from './KartuTamuSlipModal'
 import { mapBackendToKartuTamu, type KartuTamuBackendDto } from './types'
 
-type ModalType = 'register' | 'topup' | 'refund' | 'blokir' | 'unblock' | null
+type ModalType = 'register' | 'topup' | 'refund' | 'blokir' | 'unblock' | 'riwayat' | null
 
 const STATUS_CONFIG = {
   ACTIVE: {
@@ -506,16 +507,14 @@ export function KartuTamuPage() {
                                 </Tooltip>
                               )}
 
-                              {/* Riwayat (placeholder) */}
+                              {/* Riwayat Transaksi */}
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     size='icon'
                                     variant='ghost'
                                     className='h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted'
-                                    onClick={() => {
-                                      // Placeholder: riwayat transaksi per kartu
-                                    }}
+                                    onClick={() => openModal('riwayat', k)}
                                   >
                                     <Eye className='h-4 w-4' />
                                   </Button>
@@ -593,6 +592,11 @@ export function KartuTamuPage() {
         onOpenChange={(o) => !o && closeModal()}
         kartu={selectedCard}
         onUnblockSuccess={handleUnblockSuccess}
+      />
+      <RiwayatKartuTamuModal
+        open={activeModal === 'riwayat'}
+        onOpenChange={(o) => !o && closeModal()}
+        kartu={selectedCard}
       />
       <KartuTamuSlipModal
         open={isSlipOpen}

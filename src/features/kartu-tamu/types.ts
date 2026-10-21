@@ -53,3 +53,52 @@ export function mapBackendToKartuTamu(
     last_used_at: raw.diubahPada || raw.last_used_at,
   }
 }
+
+export interface TransaksiItemRingkas {
+  menuId?: number
+  namaMenu: string
+  hargaJual: number
+  qty: number
+  subtotal: number
+}
+
+export interface RiwayatTransaksiItem {
+  transaksiId: number
+  waktu: string
+  total: number
+  totalHpp?: number
+  status: 'BERHASIL' | 'VOID' | 'PENDING' | string
+  kartuUid?: string
+  petugasId?: number
+  titikKasirId?: number
+  alasanVoid?: string
+  voidAt?: string
+  items?: TransaksiItemRingkas[]
+}
+
+export interface MutasiSaldoItem {
+  id: number
+  jenis: 'TOPUP' | 'BELANJA' | 'REFUND' | 'KOREKSI' | 'PINDAH_KARTU_HILANG' | string
+  arah: 'MASUK' | 'KELUAR'
+  nominal: number
+  saldoSetelah: number
+  keterangan: string
+  waktu: string
+}
+
+export interface RiwayatKartuTamuData {
+  kartuId: number
+  nomorKartu: string
+  labelPemegang: string
+  aktif: boolean
+  saldo: number
+  transaksi?: {
+    items: RiwayatTransaksiItem[]
+    total: number
+    halaman: number
+    ukuran: number
+    totalHalaman: number
+  }
+  mutasi?: MutasiSaldoItem[]
+}
+
