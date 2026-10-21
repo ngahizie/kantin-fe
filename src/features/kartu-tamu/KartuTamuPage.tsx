@@ -514,7 +514,7 @@ export function KartuTamuPage() {
                                     size='icon'
                                     variant='ghost'
                                     className='h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted'
-                                    onClick={() => openModal('riwayat', k)}
+                                    onClick={() => openModal('riwayat', card)}
                                   >
                                     <Eye className='h-4 w-4' />
                                   </Button>
