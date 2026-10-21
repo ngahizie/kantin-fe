@@ -219,10 +219,13 @@ export function BlokirKartuModal({
                     </div>
                   ) : (
                     <Select value={targetKartuId} onValueChange={setTargetKartuId}>
-                      <SelectTrigger id='target-kartu' className='h-11'>
+                      <SelectTrigger
+                        id='target-kartu'
+                        className='h-11 border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+                      >
                         <SelectValue placeholder='Pilih kartu tujuan...' />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className='border-0 shadow-xl'>
                         {transferTargets.map((c) => (
                           <SelectItem key={c.id} value={c.id.toString()}>
                             <div className='flex items-center gap-2'>
