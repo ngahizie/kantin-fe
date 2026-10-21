@@ -93,7 +93,7 @@ export function KartuTamuSlipModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md p-0 overflow-hidden sm:rounded-2xl border-border'>
+      <DialogContent className='max-w-md p-0 overflow-hidden sm:rounded-2xl border-0 shadow-2xl'>
         <style>{`
           @media print {
             @page { margin: 0; size: 80mm auto; }
@@ -269,9 +269,9 @@ export function KartuTamuSlipModal({
           <div className='flex items-center gap-2 w-full sm:w-auto justify-end'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={() => onOpenChange(false)}
-              className='text-xs h-9'
+              className='text-xs h-9 border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Selesai
             </Button>

@@ -2097,6 +2097,97 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         }
       }
 
+      // GET: Riwayat transaksi & mutasi kartu tamu
+      if (method === 'get' && url.includes('/riwayat')) {
+        const match = url.match(/\/kartu-tamu\/(\d+)\/riwayat/)
+        const id = match ? Number(match[1]) : 0
+        const card = kartuTamuList.find((k) => k.id === id) || kartuTamuList[0]
+
+        const dummyTransaksi = [
+          {
+            transaksiId: 301,
+            waktu: new Date(Date.now() - 3600000 * 2).toISOString(),
+            total: 25000,
+            totalHpp: 18000,
+            status: 'BERHASIL',
+            kartuUid: card?.uid || '04KT01A1',
+            petugasId: 1,
+            titikKasirId: 1,
+            items: [
+              { menuId: 1, namaMenu: 'Nasi Goreng Spesial', hargaJual: 15000, qty: 1, subtotal: 15000 },
+              { menuId: 2, namaMenu: 'Es Teh Manis', hargaJual: 5000, qty: 2, subtotal: 10000 },
+            ],
+          },
+          {
+            transaksiId: 289,
+            waktu: new Date(Date.now() - 3600000 * 24).toISOString(),
+            total: 12000,
+            totalHpp: 9000,
+            status: 'BERHASIL',
+            kartuUid: card?.uid || '04KT01A1',
+            petugasId: 1,
+            titikKasirId: 2,
+            items: [
+              { menuId: 4, namaMenu: 'Roti Bakar Cokelat Keju', hargaJual: 12000, qty: 1, subtotal: 12000 },
+            ],
+          },
+        ]
+
+        const dummyMutasi = [
+          {
+            id: 101,
+            jenis: 'TOPUP',
+            arah: 'MASUK' as const,
+            nominal: 50000,
+            saldoSetelah: (card?.saldo ?? 50000),
+            keterangan: 'Top-up tunai di loket TU',
+            waktu: new Date(Date.now() - 3600000 * 30).toISOString(),
+          },
+          {
+            id: 102,
+            jenis: 'BELANJA',
+            arah: 'KELUAR' as const,
+            nominal: 12000,
+            saldoSetelah: (card?.saldo ?? 50000) - 12000,
+            keterangan: 'Transaksi di Kasir Kantin 2 (#TRX-289)',
+            waktu: new Date(Date.now() - 3600000 * 24).toISOString(),
+          },
+          {
+            id: 103,
+            jenis: 'BELANJA',
+            arah: 'KELUAR' as const,
+            nominal: 25000,
+            saldoSetelah: (card?.saldo ?? 50000) - 37000,
+            keterangan: 'Transaksi di Kasir Kantin 1 (#TRX-301)',
+            waktu: new Date(Date.now() - 3600000 * 2).toISOString(),
+          },
+        ]
+
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Riwayat transaksi kartu tamu berhasil dimuat',
+            data: {
+              kartuId: card?.id ?? id,
+              nomorKartu: card?.nomor_kartu ?? `KT-${id}`,
+              labelPemegang: card?.label_pemegang ?? '',
+              aktif: card?.is_active ?? true,
+              saldo: card?.saldo ?? 0,
+              transaksi: {
+                items: dummyTransaksi,
+                total: dummyTransaksi.length,
+                halaman: 0,
+                ukuran: 20,
+                totalHalaman: 1,
+              },
+              mutasi: dummyMutasi,
+            },
+          },
+        }
+      }
+
       // GET: Ambil daftar kartu tamu
       if (method === 'get') {
         return {

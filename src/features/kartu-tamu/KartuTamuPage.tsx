@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
   CreditCard,
-  RefreshCw,
   Plus,
   Wallet,
   ArrowLeftRight,
@@ -39,10 +38,11 @@ import { TopupKartuTamuModal } from './TopupKartuTamuModal'
 import { RefundKartuModal } from './RefundKartuModal'
 import { BlokirKartuModal } from './BlokirKartuModal'
 import { UnblockKartuModal } from './UnblockKartuModal'
+import { RiwayatKartuTamuModal } from './RiwayatKartuTamuModal'
 import { KartuTamuSlipModal, type KartuTamuSlipData } from './KartuTamuSlipModal'
 import { mapBackendToKartuTamu, type KartuTamuBackendDto } from './types'
 
-type ModalType = 'register' | 'topup' | 'refund' | 'blokir' | 'unblock' | null
+type ModalType = 'register' | 'topup' | 'refund' | 'blokir' | 'unblock' | 'riwayat' | null
 
 const STATUS_CONFIG = {
   ACTIVE: {
@@ -103,36 +103,20 @@ export function KartuTamuPage() {
   const [selectedCard, setSelectedCard] = useState<KartuTamuMock | null>(null)
   const [slipData, setSlipData] = useState<KartuTamuSlipData | null>(null)
   const [isSlipOpen, setIsSlipOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     let isMounted = true
     const load = async () => {
-      setIsLoading(true)
       try {
         const loadedCards = await fetchCardsWithBalances()
         if (isMounted) setCards(loadedCards)
       } catch {
         if (isMounted) setCards(MOCK_KARTU_TAMU)
-      } finally {
-        if (isMounted) setIsLoading(false)
       }
     }
     void load()
     return () => { isMounted = false }
   }, [])
-
-  const handleRefresh = async () => {
-    setIsLoading(true)
-    try {
-      const loadedCards = await fetchCardsWithBalances()
-      setCards(loadedCards)
-    } catch {
-      setCards(MOCK_KARTU_TAMU)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const openModal = (type: ModalType, card?: KartuTamuMock) => {
     setSelectedCard(card ?? null)
@@ -230,21 +214,8 @@ export function KartuTamuPage() {
               <h1 className='text-2xl font-bold tracking-tight text-foreground'>
                 Manajemen Kartu Tamu
               </h1>
-              <p className='text-sm text-muted-foreground'>
-                Registrasi, top-up, pengembalian, dan pemblokiran kartu tamu RFID.
-              </p>
             </div>
             <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className='gap-1.5 text-xs'
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                Muat Ulang
-              </Button>
               <Button
                 size='sm'
                 onClick={() => openModal('register')}
@@ -316,7 +287,7 @@ export function KartuTamuPage() {
           </div>
 
           {/* Table Section */}
-          <div className='bg-card rounded-xl border shadow-xs overflow-hidden'>
+          <div className='border-0 bg-muted/70 dark:bg-muted/30 rounded-xl overflow-hidden'>
             {/* Table Header & Toolbar */}
             <div className='p-4 border-b'>
               <TableToolbar
@@ -447,7 +418,7 @@ export function KartuTamuPage() {
                         {/* Status */}
                         <TableCell className='text-center'>
                           <Badge
-                            variant='outline'
+                            variant='secondary'
                             className={`text-xs gap-1 font-medium ${statusCfg.className}`}
                           >
                             <StatusIcon className='h-3 w-3' />
@@ -536,16 +507,14 @@ export function KartuTamuPage() {
                                 </Tooltip>
                               )}
 
-                              {/* Riwayat (placeholder) */}
+                              {/* Riwayat Transaksi */}
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     size='icon'
                                     variant='ghost'
                                     className='h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted'
-                                    onClick={() => {
-                                      // Placeholder: riwayat transaksi per kartu
-                                    }}
+                                    onClick={() => openModal('riwayat', card)}
                                   >
                                     <Eye className='h-4 w-4' />
                                   </Button>
@@ -569,7 +538,7 @@ export function KartuTamuPage() {
                 const Icon = cfg.icon
                 return (
                   <div key={key} className='flex items-center gap-1.5'>
-                    <Badge variant='outline' className={`text-xs gap-1 font-medium ${cfg.className}`}>
+                    <Badge variant='secondary' className={`text-xs gap-1 font-medium ${cfg.className}`}>
                       <Icon className='h-3 w-3' />
                       {cfg.label}
                     </Badge>
@@ -623,6 +592,11 @@ export function KartuTamuPage() {
         onOpenChange={(o) => !o && closeModal()}
         kartu={selectedCard}
         onUnblockSuccess={handleUnblockSuccess}
+      />
+      <RiwayatKartuTamuModal
+        open={activeModal === 'riwayat'}
+        onOpenChange={(o) => !o && closeModal()}
+        kartu={selectedCard}
       />
       <KartuTamuSlipModal
         open={isSlipOpen}

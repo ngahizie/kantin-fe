@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  AlertCircle,
   ArrowRight,
   RefreshCw,
   CheckCircle2,
@@ -16,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -117,7 +115,7 @@ export function TopupKartuTamuModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md sm:rounded-2xl'>
+      <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
             Top-up Saldo Kartu Tamu
@@ -134,7 +132,7 @@ export function TopupKartuTamuModal({
               <span className='font-bold font-mono text-foreground'>
                 {kartu.nomor_kartu}
               </span>
-              <Badge variant='outline' className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-medium'>
+              <Badge variant='secondary' className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-medium'>
                 AKTIF
               </Badge>
             </div>
@@ -161,9 +159,9 @@ export function TopupKartuTamuModal({
                 <Button
                   key={preset}
                   type='button'
-                  variant={nominalNum === preset ? 'default' : 'outline'}
+                  variant={nominalNum === preset ? 'default' : 'secondary'}
                   size='sm'
-                  className='h-10 text-xs font-semibold'
+                  className='h-10 text-xs font-semibold border-0'
                   onClick={() => setNominal(preset.toString())}
                 >
                   {(preset / 1000).toFixed(0)}rb
@@ -248,17 +246,16 @@ export function TopupKartuTamuModal({
               </div>
 
               {isExceedingLimit && (
-                <Alert variant='destructive'>
-                  <AlertCircle className='h-4 w-4' />
-                  <AlertTitle className='text-xs font-bold uppercase'>
+                <div className='p-3.5 border-0 bg-destructive/10 text-destructive rounded-xl text-xs leading-relaxed'>
+                  <strong className='text-xs font-bold uppercase tracking-wide block mb-1'>
                     Melebihi Batas Maksimum!
-                  </AlertTitle>
-                  <AlertDescription className='text-xs'>
+                  </strong>
+                  <p className='text-xs leading-relaxed text-destructive/90'>
                     Batas saldo Kartu Tamu:{' '}
                     <strong>{formatRupiah(MAX_SALDO_KARTU_TAMU)}</strong>.
                     Kurangi nominal top-up.
-                  </AlertDescription>
-                </Alert>
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -266,9 +263,9 @@ export function TopupKartuTamuModal({
           <DialogFooter className='gap-2 pt-1'>
             <Button
               type='button'
-              variant='outline'
+              variant='secondary'
               onClick={handleClose}
-              className='flex-1 sm:flex-none'
+              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none flex-1 sm:flex-none'
             >
               Batal
             </Button>

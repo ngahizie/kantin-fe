@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Sparkles,
   RefreshCw,
   CheckCircle2,
   Hash,
@@ -129,7 +128,7 @@ export function RegisterKartuModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md sm:rounded-2xl'>
+      <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
             Daftarkan Kartu Tamu Baru
@@ -148,7 +147,7 @@ export function RegisterKartuModal({
                 Nomor Kartu Berikutnya
               </span>
             </div>
-            <Badge variant='outline' className='font-mono text-sm font-bold px-2.5 py-0.5 border-0 bg-primary/10 text-primary'>
+            <Badge variant='secondary' className='font-mono text-sm font-bold px-2.5 py-0.5 border-0 bg-primary/10 text-primary'>
               {nextNomor}
             </Badge>
           </div>
@@ -193,16 +192,13 @@ export function RegisterKartuModal({
               Label Pemegang{' '}
               <span className='text-muted-foreground/60 normal-case font-normal'>(opsional)</span>
             </Label>
-            <div className='relative'>
-              <Sparkles className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-              <Input
-                id='label-pemegang'
-                placeholder='Contoh: Pak Budi Guru, Tamu Seminar, Ibu Ratna TU'
-                value={labelPemegang}
-                onChange={(e) => setLabelPemegang(e.target.value)}
-                className='pl-9 h-11 text-sm'
-              />
-            </div>
+            <Input
+              id='label-pemegang'
+              placeholder='Contoh: Pak Budi Guru, Tamu Seminar, Ibu Ratna TU'
+              value={labelPemegang}
+              onChange={(e) => setLabelPemegang(e.target.value)}
+              className='h-11 text-sm'
+            />
             <p className='text-xs text-muted-foreground'>
               Label bisa diubah nanti. Kosongkan jika kartu belum dipinjamkan.
             </p>
@@ -210,7 +206,12 @@ export function RegisterKartuModal({
         </div>
 
         <DialogFooter className='gap-2 mt-2'>
-          <Button variant='outline' onClick={handleClose} className='flex-1 sm:flex-none'>
+          <Button
+            type='button'
+            variant='secondary'
+            onClick={handleClose}
+            className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none flex-1 sm:flex-none'
+          >
             Batal
           </Button>
           <Button

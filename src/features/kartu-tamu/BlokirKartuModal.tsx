@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   ShieldAlert,
   RefreshCw,
-  AlertTriangle,
   ArrowRight,
   Info,
 } from 'lucide-react'
@@ -16,7 +15,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
@@ -135,7 +133,7 @@ export function BlokirKartuModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md sm:rounded-2xl'>
+      <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-destructive'>
             Blokir Kartu Hilang / Rusak
@@ -164,23 +162,22 @@ export function BlokirKartuModal({
         </div>
 
         {/* Danger Warning */}
-        <Alert variant='destructive'>
-          <AlertTriangle className='h-4 w-4' />
-          <AlertTitle className='text-xs font-bold uppercase tracking-wide'>
+        <div className='p-3.5 border-0 bg-destructive/10 text-destructive rounded-xl text-xs leading-relaxed'>
+          <strong className='text-xs font-bold uppercase tracking-wide block mb-1'>
             Peringatan — Tindakan Permanen
-          </AlertTitle>
-          <AlertDescription className='text-xs leading-relaxed mt-1'>
+          </strong>
+          <p className='text-xs leading-relaxed text-destructive/90'>
             Setelah diblokir, kartu ini <strong>tidak dapat digunakan</strong> di
             kasir. Blokir berlaku <strong>instan</strong> — tap berikutnya pasti
             ditolak. Status tidak dapat dikembalikan ke ACTIVE secara otomatis.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
 
         <div className='space-y-4'>
           {/* Transfer Saldo Option */}
           {kartu.saldo > 0 && (
             <div className='space-y-3'>
-              <div className='flex items-start space-x-3 p-3.5 border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors'>
+              <div className='flex items-start space-x-3 p-3.5 border-0 bg-muted/70 dark:bg-muted/30 rounded-xl cursor-pointer hover:bg-muted/90 transition-colors'>
                 <Checkbox
                   id='transfer-saldo'
                   checked={transferSaldo}
@@ -214,7 +211,7 @@ export function BlokirKartuModal({
                     Pilih Kartu Tujuan Transfer
                   </Label>
                   {transferTargets.length === 0 ? (
-                    <div className='flex items-center gap-2 p-3 bg-muted/40 rounded-lg border border-dashed'>
+                    <div className='flex items-center gap-2 p-3 bg-muted/70 dark:bg-muted/30 rounded-lg border-0'>
                       <Info className='h-4 w-4 text-muted-foreground' />
                       <p className='text-xs text-muted-foreground'>
                         Tidak ada Kartu Tamu aktif lain yang tersedia.
@@ -222,10 +219,13 @@ export function BlokirKartuModal({
                     </div>
                   ) : (
                     <Select value={targetKartuId} onValueChange={setTargetKartuId}>
-                      <SelectTrigger id='target-kartu' className='h-11'>
+                      <SelectTrigger
+                        id='target-kartu'
+                        className='h-11 border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+                      >
                         <SelectValue placeholder='Pilih kartu tujuan...' />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className='border-0 shadow-xl'>
                         {transferTargets.map((c) => (
                           <SelectItem key={c.id} value={c.id.toString()}>
                             <div className='flex items-center gap-2'>
@@ -248,7 +248,7 @@ export function BlokirKartuModal({
           )}
 
           {kartu.saldo === 0 && (
-            <div className='flex items-center gap-2 p-3 bg-muted/40 rounded-xl border border-dashed'>
+            <div className='flex items-center gap-2 p-3 bg-muted/70 dark:bg-muted/30 rounded-xl border-0'>
               <Info className='h-4 w-4 text-muted-foreground shrink-0' />
               <p className='text-xs text-muted-foreground'>
                 Saldo kartu sudah Rp 0. Tidak ada saldo yang perlu ditransfer.
@@ -260,9 +260,9 @@ export function BlokirKartuModal({
         <DialogFooter className='gap-2 mt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             onClick={handleClose}
-            className='flex-1 sm:flex-none'
+            className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none flex-1 sm:flex-none'
           >
             Batal
           </Button>

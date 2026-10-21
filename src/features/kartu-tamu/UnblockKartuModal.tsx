@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
   FileText,
 } from 'lucide-react'
 import {
@@ -17,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import type { KartuTamuMock } from '@/mocks/mock-data'
@@ -79,7 +77,7 @@ export function UnblockKartuModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md sm:rounded-2xl'>
+      <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Buka Blokir Kartu Tamu
@@ -100,22 +98,21 @@ export function UnblockKartuModal({
             </p>
           </div>
           <div className='text-right shrink-0'>
-            <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
+            <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
               Status: DIBLOKIR
             </Badge>
           </div>
         </div>
 
         {/* Informasi Pemulihan */}
-        <Alert className='border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200'>
-          <AlertCircle className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
-          <AlertTitle className='text-xs font-bold uppercase tracking-wide'>
+        <div className='p-3.5 border-0 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200 rounded-xl text-xs leading-relaxed'>
+          <strong className='text-xs font-bold uppercase tracking-wide block mb-1 text-emerald-800 dark:text-emerald-300'>
             Pemulihan Kartu Fisik
-          </AlertTitle>
-          <AlertDescription className='text-xs leading-relaxed mt-1'>
+          </strong>
+          <p className='text-xs leading-relaxed'>
             Membuka blokir akan mengubah status kartu menjadi <strong>AVAILABLE (Tersedia)</strong>. Kartu fisik RFID ini dapat kembali dipinjamkan kepada guru, staf, atau tamu baru di layanan TU.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
 
         {/* Alasan / Catatan TU */}
         <div className='space-y-2'>
@@ -141,9 +138,9 @@ export function UnblockKartuModal({
         <DialogFooter className='gap-2 mt-2'>
           <Button
             type='button'
-            variant='outline'
+            variant='secondary'
             onClick={handleClose}
-            className='flex-1 sm:flex-none'
+            className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none flex-1 sm:flex-none'
           >
             Batal
           </Button>
