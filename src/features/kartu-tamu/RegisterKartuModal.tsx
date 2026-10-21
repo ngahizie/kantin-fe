@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Sparkles,
   RefreshCw,
   CheckCircle2,
   Hash,
@@ -193,16 +192,13 @@ export function RegisterKartuModal({
               Label Pemegang{' '}
               <span className='text-muted-foreground/60 normal-case font-normal'>(opsional)</span>
             </Label>
-            <div className='relative'>
-              <Sparkles className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-              <Input
-                id='label-pemegang'
-                placeholder='Contoh: Pak Budi Guru, Tamu Seminar, Ibu Ratna TU'
-                value={labelPemegang}
-                onChange={(e) => setLabelPemegang(e.target.value)}
-                className='pl-9 h-11 text-sm'
-              />
-            </div>
+            <Input
+              id='label-pemegang'
+              placeholder='Contoh: Pak Budi Guru, Tamu Seminar, Ibu Ratna TU'
+              value={labelPemegang}
+              onChange={(e) => setLabelPemegang(e.target.value)}
+              className='h-11 text-sm'
+            />
             <p className='text-xs text-muted-foreground'>
               Label bisa diubah nanti. Kosongkan jika kartu belum dipinjamkan.
             </p>
