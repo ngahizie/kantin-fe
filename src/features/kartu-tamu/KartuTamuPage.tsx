@@ -286,7 +286,7 @@ export function KartuTamuPage() {
           </div>
 
           {/* Table Section */}
-          <div className='bg-card rounded-xl border shadow-xs overflow-hidden'>
+          <div className='border-0 bg-muted/70 dark:bg-muted/30 rounded-xl overflow-hidden'>
             {/* Table Header & Toolbar */}
             <div className='p-4 border-b'>
               <TableToolbar
@@ -417,7 +417,7 @@ export function KartuTamuPage() {
                         {/* Status */}
                         <TableCell className='text-center'>
                           <Badge
-                            variant='outline'
+                            variant='secondary'
                             className={`text-xs gap-1 font-medium ${statusCfg.className}`}
                           >
                             <StatusIcon className='h-3 w-3' />
@@ -539,7 +539,7 @@ export function KartuTamuPage() {
                 const Icon = cfg.icon
                 return (
                   <div key={key} className='flex items-center gap-1.5'>
-                    <Badge variant='outline' className={`text-xs gap-1 font-medium ${cfg.className}`}>
+                    <Badge variant='secondary' className={`text-xs gap-1 font-medium ${cfg.className}`}>
                       <Icon className='h-3 w-3' />
                       {cfg.label}
                     </Badge>
