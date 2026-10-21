@@ -37,7 +37,6 @@ import { Main } from '@/components/layout/main'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import apiClient from '@/lib/api-client'
-import { MOCK_MENU } from '@/mocks/mock-data'
 import type { RingkasanPenjualan, RingkasanRekonsiliasi } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
 
@@ -49,66 +48,7 @@ const SALES_TREND_DATA = [
   { hari: 'Kam (29 Sep)', makanan: 1580000, minuman: 530000, snack: 240000, total: 2350000, transaksi: 160 },
   { hari: 'Jum (30 Sep)', makanan: 1820000, minuman: 610000, snack: 250000, total: 2680000, transaksi: 185 },
   { hari: 'Sab (01 Okt)', makanan: 980000, minuman: 320000, snack: 150000, total: 1450000, transaksi: 92 },
-  { hari: 'Hari Ini', makanan: 1680000, minuman: 560000, snack: 245000, total: 2485000, transaksi: 168 },
-]
-
-// Baseline transaksi demo
-const FALLBACK_TRANSACTIONS = [
-  {
-    id: 'TRX-94821',
-    waktu: '11:42:15',
-    nama: 'Budi Santoso',
-    identitas: 'Kelas X IPA 1 (NIS: 2026001)',
-    tipe: 'Siswa',
-    item: 'Nasi Uduk Komplit, Es Teh Manis',
-    total: 16000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94820',
-    waktu: '11:40:02',
-    nama: 'Pak Budi Hartono',
-    identitas: 'Kartu Tamu (KT-004)',
-    tipe: 'Tamu/Guru',
-    item: 'Nasi Goreng Ayam',
-    total: 15000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94819',
-    waktu: '11:38:44',
-    nama: 'Ahmad Fauzi',
-    identitas: 'Kelas XII IPA 3 (NIS: 2026003)',
-    tipe: 'Siswa',
-    item: 'Ayam Geprek Sambal Bawang, Air Mineral',
-    total: 18000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94818',
-    waktu: '11:35:10',
-    nama: 'Dewi Anggraini',
-    identitas: 'Kelas XI MIPA 2 (NIS: 2026005)',
-    tipe: 'Siswa',
-    item: 'Donat Gula Halus, Susu UHT Cokelat',
-    total: 10000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94817',
-    waktu: '11:31:28',
-    nama: 'Rifki Pratama',
-    identitas: 'Kelas X IPS 2 (NIS: 2026011)',
-    tipe: 'Siswa',
-    item: 'Roti Cokelat Keju',
-    total: 5000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
+  { hari: 'Hari Ini', makanan: 0, minuman: 0, snack: 0, total: 0, transaksi: 0 },
 ]
 
 interface LowStockDisplayItem {
@@ -145,7 +85,7 @@ export function DashboardPage() {
   const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
-  const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>(FALLBACK_TRANSACTIONS)
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
   // Fetch data awal saat komponen dibuka
   useEffect(() => {
     let isMounted = true
@@ -188,7 +128,7 @@ export function DashboardPage() {
         }
 
         // 4. Data Menu & Stok
-        if (menuRes.status === 'fulfilled' && Array.isArray(menuRes.value) && menuRes.value.length > 0) {
+        if (menuRes.status === 'fulfilled' && Array.isArray(menuRes.value)) {
           setMenuItems(menuRes.value)
         }
 
@@ -199,7 +139,7 @@ export function DashboardPage() {
             const mapped: RecentTransactionDisplayItem[] = rawItems.slice(0, 5).map((trx: Record<string, unknown>) => {
               const timeStr = trx.waktu
                 ? new Date(String(trx.waktu)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                : '11:42:15'
+                : '-'
               const isSiswa = trx.subjekTipe === 'SISWA'
               const isTamu = trx.subjekTipe === 'KARTU_TAMU'
               return {
@@ -217,7 +157,11 @@ export function DashboardPage() {
               }
             })
             setRecentTransactions(mapped)
+          } else {
+            setRecentTransactions([])
           }
+        } else if (trxRes.status === 'fulfilled') {
+          setRecentTransactions([])
         }
       } catch {
         // Fallback graceful
@@ -231,25 +175,15 @@ export function DashboardPage() {
     }
   }, [])
 
-  // Normalisasi data menu dari BE atau fallback MOCK_MENU
+  // Normalisasi data menu dari BE
   const effectiveMenuItems: LowStockDisplayItem[] = useMemo(() => {
-    if (menuItems.length > 0) {
-      return menuItems.map((m) => ({
-        id: m.id,
-        nama: m.nama,
-        kategori_nama: (m.kategoriId && kategoriMap[m.kategoriId]) || 'Umum',
-        stok: m.stokBerjalan ?? 0,
-        stok_minimum: m.stokMinimum ?? 5,
-        satuan: m.satuan || 'Porsi',
-      }))
-    }
-    return MOCK_MENU.map((m) => ({
+    return menuItems.map((m) => ({
       id: m.id,
       nama: m.nama,
-      kategori_nama: m.kategori_nama,
-      stok: m.stok,
-      stok_minimum: m.stok_minimum,
-      satuan: m.satuan,
+      kategori_nama: (m.kategoriId && kategoriMap[m.kategoriId]) || 'Umum',
+      stok: m.stokBerjalan ?? 0,
+      stok_minimum: m.stokMinimum ?? 5,
+      satuan: m.satuan || 'Porsi',
     }))
   }, [menuItems, kategoriMap])
 
@@ -259,8 +193,8 @@ export function DashboardPage() {
   }, [effectiveMenuItems])
 
   // Hitung metrik hari ini dari BE
-  const todaySales = penjualan?.penjualanBersih ?? penjualan?.penjualanBruto ?? 2485000
-  const todayTransactions = Number(penjualan?.jumlahTransaksi ?? 168)
+  const todaySales = penjualan?.penjualanBersih ?? penjualan?.penjualanBruto ?? 0
+  const todayTransactions = Number(penjualan?.jumlahTransaksi ?? 0)
   const avgPerTransaction = todayTransactions > 0 ? Math.round(todaySales / todayTransactions) : 0
   const selisihKas = rekonsiliasi?.selisih ?? 0
   const isKasSeimbang = rekonsiliasi ? rekonsiliasi.seimbang : true
@@ -268,7 +202,7 @@ export function DashboardPage() {
   // Grafik tren penjualan 7 hari yang tersinkronisasi dinamis
   const chartData = useMemo(() => {
     return SALES_TREND_DATA.map((item, idx) => {
-      if (idx === SALES_TREND_DATA.length - 1 && todaySales > 0) {
+      if (idx === SALES_TREND_DATA.length - 1) {
         return {
           ...item,
           makanan: Math.round(todaySales * 0.68),
@@ -577,29 +511,38 @@ export function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.map((trx) => (
-                    <TableRow key={trx.id} className='text-xs'>
-                      <TableCell className='ps-6 py-3'>
-                        <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
-                        <div className='text-[10px] text-muted-foreground tabular-nums'>{trx.id}</div>
-                      </TableCell>
-                      <TableCell className='py-3'>
-                        <div className='font-semibold text-foreground'>{trx.nama}</div>
-                        <div className='text-[10px] text-muted-foreground'>{trx.identitas}</div>
-                      </TableCell>
-                      <TableCell className='text-muted-foreground py-3'>
-                        {trx.item}
-                      </TableCell>
-                      <TableCell className='text-right font-semibold text-foreground tabular-nums py-3'>
-                        {formatRupiah(trx.total)}
-                      </TableCell>
-                      <TableCell className='text-center pe-6 py-3'>
-                        <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 uppercase tracking-wide'>
-                          {trx.status}
-                        </Badge>
+                  {recentTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                        <ShoppingCart className='size-6 text-muted-foreground/50 mx-auto mb-1 opacity-70' />
+                        Belum ada aktivitas transaksi kasir hari ini.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    recentTransactions.map((trx) => (
+                      <TableRow key={trx.id} className='text-xs'>
+                        <TableCell className='ps-6 py-3'>
+                          <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
+                          <div className='text-[10px] text-muted-foreground tabular-nums'>{trx.id}</div>
+                        </TableCell>
+                        <TableCell className='py-3'>
+                          <div className='font-semibold text-foreground'>{trx.nama}</div>
+                          <div className='text-[10px] text-muted-foreground'>{trx.identitas}</div>
+                        </TableCell>
+                        <TableCell className='text-muted-foreground py-3'>
+                          {trx.item}
+                        </TableCell>
+                        <TableCell className='text-right font-semibold text-foreground tabular-nums py-3'>
+                          {formatRupiah(trx.total)}
+                        </TableCell>
+                        <TableCell className='text-center pe-6 py-3'>
+                          <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 uppercase tracking-wide'>
+                            {trx.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
