@@ -93,7 +93,7 @@ export function KartuTamuSlipModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md p-0 overflow-hidden sm:rounded-2xl border-border'>
+      <DialogContent className='max-w-md p-0 overflow-hidden sm:rounded-2xl border-0 shadow-2xl'>
         <style>{`
           @media print {
             @page { margin: 0; size: 80mm auto; }

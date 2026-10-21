@@ -97,7 +97,7 @@ export function RefundKartuModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md sm:rounded-2xl'>
+      <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
             Pengembalian Kartu & Refund Tunai
