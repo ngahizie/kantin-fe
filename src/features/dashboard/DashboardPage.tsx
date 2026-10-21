@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   TrendingUp,
   ShoppingCart,
@@ -6,7 +6,6 @@ import {
   Scale,
   CheckCircle2,
   Banknote,
-  RefreshCw,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -25,7 +24,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -148,8 +146,6 @@ export function DashboardPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>(FALLBACK_TRANSACTIONS)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-
   // Fetch data awal saat komponen dibuka
   useEffect(() => {
     let isMounted = true
@@ -235,73 +231,6 @@ export function DashboardPage() {
     }
   }, [])
 
-  // Fungsi refresh manual
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
-    try {
-      const [
-        penjualanRes,
-        rekonsiliasiRes,
-        menuRes,
-        kategoriRes,
-        trxRes,
-      ] = await Promise.allSettled([
-        laporanApi.getPenjualan(),
-        laporanApi.getRekonsiliasi(),
-        katalogApi.getMenuList(),
-        katalogApi.getKategoriList(),
-        apiClient.get('/api/kasir/transaksi', { params: { ukuran: 5, halaman: 0 } }),
-      ])
-
-      if (penjualanRes.status === 'fulfilled' && penjualanRes.value) {
-        setPenjualan(penjualanRes.value)
-      }
-      if (rekonsiliasiRes.status === 'fulfilled' && rekonsiliasiRes.value) {
-        setRekonsiliasi(rekonsiliasiRes.value)
-      }
-      if (kategoriRes.status === 'fulfilled' && Array.isArray(kategoriRes.value)) {
-        const map: Record<number, string> = {}
-        kategoriRes.value.forEach((k) => {
-          map[k.id] = k.nama
-        })
-        setKategoriMap(map)
-      }
-      if (menuRes.status === 'fulfilled' && Array.isArray(menuRes.value) && menuRes.value.length > 0) {
-        setMenuItems(menuRes.value)
-      }
-      if (trxRes.status === 'fulfilled' && trxRes.value?.data?.data) {
-        const rawItems = trxRes.value.data.data.items || trxRes.value.data.data
-        if (Array.isArray(rawItems) && rawItems.length > 0) {
-          const mapped: RecentTransactionDisplayItem[] = rawItems.slice(0, 5).map((trx: Record<string, unknown>) => {
-            const timeStr = trx.waktu
-              ? new Date(String(trx.waktu)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-              : '11:42:15'
-            const isSiswa = trx.subjekTipe === 'SISWA'
-            const isTamu = trx.subjekTipe === 'KARTU_TAMU'
-            return {
-              id: `TRX-${trx.id}`,
-              waktu: timeStr,
-              nama: String(trx.subjekNama || (isSiswa ? `Siswa #${trx.subjekId}` : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
-              identitas: isTamu
-                ? (trx.kartuUid ? `Kartu: ${trx.kartuUid}` : 'Kartu Tamu')
-                : (trx.subjekId ? `ID: ${trx.subjekId}` : 'Siswa Kantin'),
-              tipe: isTamu ? 'Tamu/Guru' : 'Siswa',
-              item: trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Tap RFID',
-              total: Number(trx.total ?? 0),
-              metode: 'RFID Tap',
-              status: String(trx.status || 'SUKSES'),
-            }
-          })
-          setRecentTransactions(mapped)
-        }
-      }
-    } catch {
-      // Fallback graceful
-    } finally {
-      setIsRefreshing(false)
-    }
-  }, [])
-
   // Normalisasi data menu dari BE atau fallback MOCK_MENU
   const effectiveMenuItems: LowStockDisplayItem[] = useMemo(() => {
     if (menuItems.length > 0) {
@@ -359,28 +288,6 @@ export function DashboardPage() {
       <BackofficeHeader />
 
       <Main className='space-y-6 pb-12'>
-        {/* Header Title & Tombol Segarkan */}
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-xl font-bold tracking-tight text-foreground'>
-              Dashboard Kantin
-            </h1>
-            <p className='text-xs text-muted-foreground'>
-              Ringkasan performa penjualan harian, status kas, dan persediaan kantin
-            </p>
-          </div>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => void handleRefresh()}
-            disabled={isRefreshing}
-            className='h-8 text-xs gap-1.5 border-0 bg-muted/60 hover:bg-muted text-foreground'
-          >
-            <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Segarkan</span>
-          </Button>
-        </div>
-
         {/* ===== 4 Kartu Metrik Utama ===== */}
         <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
           {/* Card 1: Penjualan Hari Ini */}
