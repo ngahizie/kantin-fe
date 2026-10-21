@@ -1520,9 +1520,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
-    // GET /api/kasir/transaksi or /api/transaksi/sesi-tutup or /api/v1/kasir/transaksi-lampau
+    // GET /api/kasir/transaksi/sesi-tutup or /api/kasir/transaksi or /api/transaksi/sesi-tutup or /api/v1/kasir/transaksi-lampau
     if (
-      (url.includes('/api/kasir/transaksi') ||
+      (url.includes('/api/kasir/transaksi/sesi-tutup') ||
+        url.includes('/api/kasir/transaksi') ||
         url.includes('/api/transaksi/sesi-tutup') ||
         url.includes('/api/v1/kasir/transaksi-lampau')) &&
       method === 'get'
@@ -1532,7 +1533,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         data: {
           code: 200,
           status: 'SUCCESS',
-          data: transaksiSesiTutupList,
+          data: {
+            items: transaksiSesiTutupList,
+            total: transaksiSesiTutupList.length,
+            halaman: 0,
+            ukuran: 20,
+            totalHalaman: 1,
+          },
         },
       }
     }
