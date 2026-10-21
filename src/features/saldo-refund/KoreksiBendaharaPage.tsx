@@ -17,7 +17,6 @@ import {
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { TableToolbar } from '@/components/data-table'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -77,7 +76,6 @@ export function KoreksiBendaharaPage() {
   useEffect(() => {
     let isMounted = true
     const load = async () => {
-      setIsLoading(true)
       try {
         const [resKoreksi, resTx] = await Promise.all([
           apiClient.get('/api/saldo/koreksi').catch(() => null),
@@ -102,8 +100,6 @@ export function KoreksiBendaharaPage() {
           setKoreksiList(MOCK_KOREKSI_BENDAHARA)
           setTransaksiList(MOCK_TRANSAKSI_SESI_TUTUP)
         }
-      } finally {
-        if (isMounted) setIsLoading(false)
       }
     }
     void load()
@@ -240,10 +236,10 @@ export function KoreksiBendaharaPage() {
           </div>
           <div className='flex items-center gap-2'>
             <Button
-              variant='outline'
+              variant='secondary'
               size='sm'
               onClick={handleExportCSV}
-              className='gap-1.5 text-xs'
+              className='gap-1.5 text-xs border-0 bg-muted/80 shadow-none'
             >
               <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
               Ekspor CSV
@@ -376,7 +372,7 @@ export function KoreksiBendaharaPage() {
               />
 
               {/* Tabel Mutasi Koreksi */}
-              <Card className='overflow-hidden'>
+              <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden'>
                 <CardHeader className='border-b bg-muted/20 px-6 py-4'>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -388,7 +384,7 @@ export function KoreksiBendaharaPage() {
                         oleh Bendahara Sekolah
                       </CardDescription>
                     </div>
-                    <Badge variant='outline' className='font-mono text-xs'>
+                    <Badge variant='secondary' className='border-0 font-mono text-xs'>
                       {filteredKoreksi.length} Rekaman Audit
                     </Badge>
                   </div>
@@ -562,13 +558,13 @@ export function KoreksiBendaharaPage() {
 
                               <TableCell className='pr-6 text-right'>
                                 <Button
-                                  variant='outline'
+                                  variant='secondary'
                                   size='sm'
                                   onClick={() => {
                                     setSelectedKoreksiForPrint(k)
                                     setIsPrintModalOpen(true)
                                   }}
-                                  className='h-7 gap-1 text-xs'
+                                  className='h-7 gap-1 text-xs border-0'
                                 >
                                   <Printer className='h-3.5 w-3.5' />
                                   Berita Acara
@@ -586,20 +582,7 @@ export function KoreksiBendaharaPage() {
 
             {/* TAB 2: LOOKUP SESI KASIR SELESAI / TRANSAKSI LAMPAU */}
             <TabsContent value='transaksi-lampau' className='space-y-4'>
-              <Alert className='border-sky-300 bg-sky-50/70 py-2.5 text-xs text-sky-900 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300'>
-                <ReceiptText className='h-4 w-4 text-sky-600 dark:text-sky-400' />
-                <AlertTitle className='text-xs font-semibold'>
-                  Daftar Transaksi Sesi Kasir Yang Sudah Ditutup
-                </AlertTitle>
-                <AlertDescription className='mt-0.5 text-xs'>
-                  Kasir biasa tidak dapat mem-void transaksi pada sesi yang
-                  sudah ditutup. Anda selaku Bendahara dapat membuat{' '}
-                  <strong>Koreksi Pembalik Saldo</strong> untuk menyelesaikan
-                  komplain siswa / ortu dengan 1-klik tombol di bawah.
-                </AlertDescription>
-              </Alert>
-
-              <Card className='overflow-hidden'>
+              <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden'>
                 <CardHeader className='border-b bg-muted/20 px-6 py-4'>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -878,7 +861,8 @@ export function KoreksiBendaharaPage() {
 
           <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant='outline'
+              variant='secondary'
+              className='border-0'
               onClick={() => setIsPrintModalOpen(false)}
             >
               Tutup
