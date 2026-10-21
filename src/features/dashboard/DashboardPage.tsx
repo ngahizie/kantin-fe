@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   TrendingUp,
   ShoppingCart,
@@ -34,9 +34,13 @@ import {
 } from '@/components/ui/table'
 import { BackofficeHeader } from '@/components/layout/backoffice-header'
 import { Main } from '@/components/layout/main'
-import { MOCK_MENU } from '@/mocks/mock-data'
+import { laporanApi } from '@/features/laporan/api/laporan-api'
+import { katalogApi } from '@/features/katalog/api/katalog-api'
+import apiClient from '@/lib/api-client'
+import type { RingkasanPenjualan, RingkasanRekonsiliasi } from '@/features/laporan/types'
+import type { MenuItem } from '@/features/katalog/types'
 
-// Data tren penjualan 7 hari terakhir
+// Data tren penjualan 7 hari terakhir (baseline)
 const SALES_TREND_DATA = [
   { hari: 'Sen (26 Sep)', makanan: 1250000, minuman: 420000, snack: 180000, total: 1850000, transaksi: 124 },
   { hari: 'Sel (27 Sep)', makanan: 1420000, minuman: 480000, snack: 220000, total: 2120000, transaksi: 148 },
@@ -44,67 +48,29 @@ const SALES_TREND_DATA = [
   { hari: 'Kam (29 Sep)', makanan: 1580000, minuman: 530000, snack: 240000, total: 2350000, transaksi: 160 },
   { hari: 'Jum (30 Sep)', makanan: 1820000, minuman: 610000, snack: 250000, total: 2680000, transaksi: 185 },
   { hari: 'Sab (01 Okt)', makanan: 980000, minuman: 320000, snack: 150000, total: 1450000, transaksi: 92 },
-  { hari: 'Hari Ini (02 Okt)', makanan: 1680000, minuman: 560000, snack: 245000, total: 2485000, transaksi: 168 },
+  { hari: 'Hari Ini', makanan: 0, minuman: 0, snack: 0, total: 0, transaksi: 0 },
 ]
 
-// Data transaksi terbaru di sesi aktif
-const RECENT_TRANSACTIONS = [
-  {
-    id: 'TRX-94821',
-    waktu: '11:42:15',
-    nama: 'Budi Santoso',
-    identitas: 'Kelas X IPA 1 (NIS: 2026001)',
-    tipe: 'Siswa',
-    item: 'Nasi Uduk Komplit, Es Teh Manis',
-    total: 16000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94820',
-    waktu: '11:40:02',
-    nama: 'Pak Budi Hartono',
-    identitas: 'Kartu Tamu (KT-004)',
-    tipe: 'Tamu/Guru',
-    item: 'Nasi Goreng Ayam',
-    total: 15000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94819',
-    waktu: '11:38:44',
-    nama: 'Ahmad Fauzi',
-    identitas: 'Kelas XII IPA 3 (NIS: 2026003)',
-    tipe: 'Siswa',
-    item: 'Ayam Geprek Sambal Bawang, Air Mineral',
-    total: 18000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94818',
-    waktu: '11:35:10',
-    nama: 'Dewi Anggraini',
-    identitas: 'Kelas XI MIPA 2 (NIS: 2026005)',
-    tipe: 'Siswa',
-    item: 'Donat Gula Halus, Susu UHT Cokelat',
-    total: 10000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-  {
-    id: 'TRX-94817',
-    waktu: '11:31:28',
-    nama: 'Rifki Pratama',
-    identitas: 'Kelas X IPS 2 (NIS: 2026011)',
-    tipe: 'Siswa',
-    item: 'Roti Cokelat Keju',
-    total: 5000,
-    metode: 'RFID Tap',
-    status: 'SUKSES',
-  },
-]
+interface LowStockDisplayItem {
+  id: number
+  nama: string
+  kategori_nama: string
+  stok: number
+  stok_minimum: number
+  satuan: string
+}
+
+interface RecentTransactionDisplayItem {
+  id: string
+  waktu: string
+  nama: string
+  identitas: string
+  tipe: string
+  item: string
+  total: number
+  metode: string
+  status: string
+}
 
 const formatRupiah = (val: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -115,19 +81,140 @@ const formatRupiah = (val: number) => {
 }
 
 export function DashboardPage() {
-  // Data menu stok
-  const menuItems = MOCK_MENU
+  const [penjualan, setPenjualan] = useState<RingkasanPenjualan | null>(null)
+  const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
+  // Fetch data awal saat komponen dibuka
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchInitialData = async () => {
+      try {
+        const [
+          penjualanRes,
+          rekonsiliasiRes,
+          menuRes,
+          kategoriRes,
+          trxRes,
+        ] = await Promise.allSettled([
+          laporanApi.getPenjualan(),
+          laporanApi.getRekonsiliasi(),
+          katalogApi.getMenuList(),
+          katalogApi.getKategoriList(),
+          apiClient.get('/api/kasir/transaksi', { params: { ukuran: 5, halaman: 0 } }),
+        ])
+
+        if (!isMounted) return
+
+        // 1. Data Penjualan Hari Ini
+        if (penjualanRes.status === 'fulfilled' && penjualanRes.value) {
+          setPenjualan(penjualanRes.value)
+        }
+
+        // 2. Data Status Rekonsiliasi Kas
+        if (rekonsiliasiRes.status === 'fulfilled' && rekonsiliasiRes.value) {
+          setRekonsiliasi(rekonsiliasiRes.value)
+        }
+
+        // 3. Peta Kategori Menu
+        const map: Record<number, string> = {}
+        if (kategoriRes.status === 'fulfilled' && Array.isArray(kategoriRes.value)) {
+          kategoriRes.value.forEach((k) => {
+            map[k.id] = k.nama
+          })
+          setKategoriMap(map)
+        }
+
+        // 4. Data Menu & Stok
+        if (menuRes.status === 'fulfilled' && Array.isArray(menuRes.value)) {
+          setMenuItems(menuRes.value)
+        }
+
+        // 5. Transaksi Kasir Terakhir
+        if (trxRes.status === 'fulfilled' && trxRes.value?.data?.data) {
+          const rawItems = trxRes.value.data.data.items || trxRes.value.data.data
+          if (Array.isArray(rawItems) && rawItems.length > 0) {
+            const mapped: RecentTransactionDisplayItem[] = rawItems.slice(0, 5).map((trx: Record<string, unknown>) => {
+              const timeStr = trx.waktu
+                ? new Date(String(trx.waktu)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                : '-'
+              const isSiswa = trx.subjekTipe === 'SISWA'
+              const isTamu = trx.subjekTipe === 'KARTU_TAMU'
+              return {
+                id: `TRX-${trx.id}`,
+                waktu: timeStr,
+                nama: String(trx.subjekNama || (isSiswa ? `Siswa #${trx.subjekId}` : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
+                identitas: isTamu
+                  ? (trx.kartuUid ? `Kartu: ${trx.kartuUid}` : 'Kartu Tamu')
+                  : (trx.subjekId ? `ID: ${trx.subjekId}` : 'Siswa Kantin'),
+                tipe: isTamu ? 'Tamu/Guru' : 'Siswa',
+                item: trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Tap RFID',
+                total: Number(trx.total ?? 0),
+                metode: 'RFID Tap',
+                status: String(trx.status || 'SUKSES'),
+              }
+            })
+            setRecentTransactions(mapped)
+          } else {
+            setRecentTransactions([])
+          }
+        } else if (trxRes.status === 'fulfilled') {
+          setRecentTransactions([])
+        }
+      } catch {
+        // Fallback graceful
+      }
+    }
+
+    void fetchInitialData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Normalisasi data menu dari BE
+  const effectiveMenuItems: LowStockDisplayItem[] = useMemo(() => {
+    return menuItems.map((m) => ({
+      id: m.id,
+      nama: m.nama,
+      kategori_nama: (m.kategoriId && kategoriMap[m.kategoriId]) || 'Umum',
+      stok: m.stokBerjalan ?? 0,
+      stok_minimum: m.stokMinimum ?? 5,
+      satuan: m.satuan || 'Porsi',
+    }))
+  }, [menuItems, kategoriMap])
 
   // Item dengan stok menipis (stok <= stok_minimum)
   const lowStockItems = useMemo(() => {
-    return menuItems.filter((item) => item.stok <= item.stok_minimum)
-  }, [menuItems])
+    return effectiveMenuItems.filter((item) => item.stok <= item.stok_minimum)
+  }, [effectiveMenuItems])
 
-  // Hitung metrik hari ini
-  const todaySales = 2485000
-  const todayTransactions = 168
-  const todayItemsSold = 214
-  const avgPerTransaction = Math.round(todaySales / todayTransactions)
+  // Hitung metrik hari ini dari BE
+  const todaySales = penjualan?.penjualanBersih ?? penjualan?.penjualanBruto ?? 0
+  const todayTransactions = Number(penjualan?.jumlahTransaksi ?? 0)
+  const avgPerTransaction = todayTransactions > 0 ? Math.round(todaySales / todayTransactions) : 0
+  const selisihKas = rekonsiliasi?.selisih ?? 0
+  const isKasSeimbang = rekonsiliasi ? rekonsiliasi.seimbang : true
+
+  // Grafik tren penjualan 7 hari yang tersinkronisasi dinamis
+  const chartData = useMemo(() => {
+    return SALES_TREND_DATA.map((item, idx) => {
+      if (idx === SALES_TREND_DATA.length - 1) {
+        return {
+          ...item,
+          makanan: Math.round(todaySales * 0.68),
+          minuman: Math.round(todaySales * 0.22),
+          snack: Math.round(todaySales * 0.10),
+          total: todaySales,
+          transaksi: todayTransactions,
+        }
+      }
+      return item
+    })
+  }, [todaySales, todayTransactions])
 
   return (
     <>
@@ -153,9 +240,9 @@ export function DashboardPage() {
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
                 <span className='inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold'>
-                  <TrendingUp className='size-3.5 mr-0.5' /> +18.4%
+                  <TrendingUp className='size-3.5 mr-0.5' /> Live BE
                 </span>
-                <span>vs kemarin ({todayItemsSold} item)</span>
+                <span>• Omset bersih hari ini</span>
               </div>
             </CardContent>
           </Card>
@@ -187,19 +274,25 @@ export function DashboardPage() {
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Status Rekonsiliasi Kas
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
+              <div className={`flex size-9 items-center justify-center rounded-lg ${
+                isKasSeimbang
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-destructive/10 text-destructive'
+              }`}>
                 <Scale className='size-5' />
               </div>
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-foreground'>
-                Rp 0 <span className='text-base font-normal text-muted-foreground'>Selisih</span>
+                {formatRupiah(selisihKas)} <span className='text-base font-normal text-muted-foreground'>Selisih</span>
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                <span className='inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold'>
-                  Seimbang
+                <span className={`inline-flex items-center font-semibold ${
+                  isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
+                }`}>
+                  {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
                 </span>
-                <span>• Kas fisik TU cocok sistem</span>
+                <span>• {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}</span>
               </div>
             </CardContent>
           </Card>
@@ -222,7 +315,7 @@ export function DashboardPage() {
                 <span className='inline-flex items-center text-amber-600 dark:text-amber-400 font-semibold'>
                   Perlu Restock
                 </span>
-                <span>• {menuItems.filter(i => i.stok === 0).length} Habis, {menuItems.filter(i => i.stok > 0 && i.stok <= i.stok_minimum).length} Menipis</span>
+                <span>• {effectiveMenuItems.filter(i => i.stok === 0).length} Habis, {effectiveMenuItems.filter(i => i.stok > 0 && i.stok <= i.stok_minimum).length} Menipis</span>
               </div>
             </CardContent>
           </Card>
@@ -263,7 +356,7 @@ export function DashboardPage() {
               <div className='h-[310px] w-full'>
                 <ResponsiveContainer width='100%' height='100%'>
                   <BarChart
-                    data={SALES_TREND_DATA}
+                    data={chartData}
                     maxBarSize={36}
                     margin={{ top: 10, right: 10, left: 10, bottom: 4 }}
                   >
@@ -418,29 +511,38 @@ export function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {RECENT_TRANSACTIONS.map((trx) => (
-                    <TableRow key={trx.id} className='text-xs'>
-                      <TableCell className='ps-6 py-3'>
-                        <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
-                        <div className='text-[10px] text-muted-foreground tabular-nums'>{trx.id}</div>
-                      </TableCell>
-                      <TableCell className='py-3'>
-                        <div className='font-semibold text-foreground'>{trx.nama}</div>
-                        <div className='text-[10px] text-muted-foreground'>{trx.identitas}</div>
-                      </TableCell>
-                      <TableCell className='text-muted-foreground py-3'>
-                        {trx.item}
-                      </TableCell>
-                      <TableCell className='text-right font-semibold text-foreground tabular-nums py-3'>
-                        {formatRupiah(trx.total)}
-                      </TableCell>
-                      <TableCell className='text-center pe-6 py-3'>
-                        <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 uppercase tracking-wide'>
-                          {trx.status}
-                        </Badge>
+                  {recentTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                        <ShoppingCart className='size-6 text-muted-foreground/50 mx-auto mb-1 opacity-70' />
+                        Belum ada aktivitas transaksi kasir hari ini.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    recentTransactions.map((trx) => (
+                      <TableRow key={trx.id} className='text-xs'>
+                        <TableCell className='ps-6 py-3'>
+                          <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
+                          <div className='text-[10px] text-muted-foreground tabular-nums'>{trx.id}</div>
+                        </TableCell>
+                        <TableCell className='py-3'>
+                          <div className='font-semibold text-foreground'>{trx.nama}</div>
+                          <div className='text-[10px] text-muted-foreground'>{trx.identitas}</div>
+                        </TableCell>
+                        <TableCell className='text-muted-foreground py-3'>
+                          {trx.item}
+                        </TableCell>
+                        <TableCell className='text-right font-semibold text-foreground tabular-nums py-3'>
+                          {formatRupiah(trx.total)}
+                        </TableCell>
+                        <TableCell className='text-center pe-6 py-3'>
+                          <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 uppercase tracking-wide'>
+                            {trx.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

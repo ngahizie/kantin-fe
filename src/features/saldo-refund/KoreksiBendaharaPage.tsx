@@ -4,7 +4,6 @@ import {
   MOCK_TRANSAKSI_SESI_TUTUP,
 } from '@/mocks/mock-data'
 import {
-  RefreshCw,
   Plus,
   ArrowDownRight,
   ArrowUpRight,
@@ -58,7 +57,6 @@ export function KoreksiBendaharaPage() {
   const [transaksiList, setTransaksiList] = useState<TransaksiSesiTutupItem[]>(
     MOCK_TRANSAKSI_SESI_TUTUP
   )
-  const [isLoading, setIsLoading] = useState(false)
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('')
@@ -113,35 +111,6 @@ export function KoreksiBendaharaPage() {
       isMounted = false
     }
   }, [])
-
-  const handleRefresh = async () => {
-    setIsLoading(true)
-    try {
-      const [resKoreksi, resTx] = await Promise.all([
-        apiClient.get('/api/saldo/koreksi').catch(() => null),
-        apiClient.get('/api/transaksi/sesi-tutup').catch(() => null),
-      ])
-
-      if (resKoreksi?.data?.data && Array.isArray(resKoreksi.data.data)) {
-        setKoreksiList(resKoreksi.data.data)
-      } else {
-        setKoreksiList(MOCK_KOREKSI_BENDAHARA)
-      }
-
-      if (resTx?.data?.data && Array.isArray(resTx.data.data)) {
-        setTransaksiList(resTx.data.data)
-      } else {
-        setTransaksiList(MOCK_TRANSAKSI_SESI_TUTUP)
-      }
-      toast.success('Data mutasi koreksi audit berhasil dimuat ulang')
-    } catch {
-      setKoreksiList(MOCK_KOREKSI_BENDAHARA)
-      setTransaksiList(MOCK_TRANSAKSI_SESI_TUTUP)
-      toast.success('Data mutasi koreksi audit berhasil dimuat ulang')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleCreateSuccess = (newKoreksi: MutasiKoreksiItem) => {
     setKoreksiList((prev) => [newKoreksi, ...prev])
@@ -263,50 +232,35 @@ export function KoreksiBendaharaPage() {
 
       <Main className='space-y-6 pb-12'>
         {/* Header Title & Actions */}
-          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-                Mutasi Koreksi Bendahara
-              </h1>
-              <p className='text-sm text-muted-foreground'>
-                Otoritas pembetulan kesalahan transaksi dan mutasi pembalik saldo sesi kasir yang telah ditutup.
-              </p>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className='gap-1.5 text-xs'
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-                />
-                Muat Ulang
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleExportCSV}
-                className='gap-1.5 text-xs'
-              >
-                <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-                Ekspor CSV
-              </Button>
-              <Button
-                size='sm'
-                onClick={() => {
-                  setSelectedTxForKoreksi(null)
-                  setIsCreateModalOpen(true)
-                }}
-                className='gap-1.5 text-xs'
-              >
-                <Plus className='h-4 w-4' />
-                Buat Koreksi Saldo
-              </Button>
-            </div>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Mutasi Koreksi Bendahara
+            </h1>
           </div>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExportCSV}
+              className='gap-1.5 text-xs'
+            >
+              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
+              Ekspor CSV
+            </Button>
+            <Button
+              size='sm'
+              onClick={() => {
+                setSelectedTxForKoreksi(null)
+                setIsCreateModalOpen(true)
+              }}
+              className='gap-1.5 text-xs'
+            >
+              <Plus className='h-4 w-4' />
+              Buat Koreksi Saldo
+            </Button>
+          </div>
+        </div>
 
           {/* KPI Summary Cards */}
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
