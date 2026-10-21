@@ -206,7 +206,12 @@ export function RegisterKartuModal({
         </div>
 
         <DialogFooter className='gap-2 mt-2'>
-          <Button variant='secondary' onClick={handleClose} className='border-0 flex-1 sm:flex-none'>
+          <Button
+            type='button'
+            variant='secondary'
+            onClick={handleClose}
+            className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none flex-1 sm:flex-none'
+          >
             Batal
           </Button>
           <Button

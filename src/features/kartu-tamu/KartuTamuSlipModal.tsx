@@ -271,7 +271,7 @@ export function KartuTamuSlipModal({
               type='button'
               variant='secondary'
               onClick={() => onOpenChange(false)}
-              className='text-xs h-9 border-0'
+              className='text-xs h-9 border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Selesai
             </Button>
