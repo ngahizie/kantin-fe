@@ -114,19 +114,23 @@ function KonfirmasiSetoranFormContent({
 
       const res = await apiClient.post('/api/saldo/setoran-tu', payload)
 
-      const updatedData: SetoranKasItem = (res.data
-        ?.data as SetoranKasItem) || {
+      const beData = (res.data?.data || {}) as Record<string, any>
+      const updatedData: SetoranKasItem = {
         ...setoran,
-        uang_fisik: uangFisik,
-        selisih,
+        id: beData.referensiId || setoran.id,
+        uang_fisik:
+          beData.jumlahDisetor !== undefined ? beData.jumlahDisetor : uangFisik,
+        selisih:
+          beData.selisih !== undefined ? -beData.selisih : selisih,
         status: 'TERKONFIRMASI',
         catatan:
+          beData.catatan ||
           catatan.trim() ||
           (selisih === 0
             ? 'Uang fisik pas sesuai total sistem'
             : `Selisih kas ${selisih < 0 ? 'kurang' : 'lebih'} ${formatRupiah(Math.abs(selisih))}`),
         bendahara_nama: bendaharaNama,
-        konfirmasi_pada: new Date().toISOString(),
+        konfirmasi_pada: beData.waktu || new Date().toISOString(),
       }
 
       toast.success(

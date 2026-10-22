@@ -43,18 +43,25 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah } from '@/lib/formatters'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
-import type { SetoranKasItem, TransaksiTopupDetail } from './types'
+import {
+  type SetoranKasItem,
+  type TransaksiTopupDetail,
+  mapRekapSetoranTuItem,
+} from './types'
+
+const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
 export function SetoranKasPage() {
   const { auth } = useAuthStore()
   const isBendaharaOrAdmin = auth.hasRole(['admin', 'bendahara'])
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = new Date().toLocaleDateString('en-CA')
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [setoranList, setSetoranList] =
-    useState<SetoranKasItem[]>(MOCK_SETORAN_KAS)
+  const [setoranList, setSetoranList] = useState<SetoranKasItem[]>(() =>
+    useMock ? MOCK_SETORAN_KAS : []
+  )
   const [isLoading, setIsLoading] = useState(false)
 
   // State modal konfirmasi
@@ -82,25 +89,36 @@ export function SetoranKasPage() {
         })
 
         if (isMounted) {
-          if (res.data?.data && Array.isArray(res.data.data)) {
-            setSetoranList(res.data.data)
-          } else {
+          const rawItems = res.data?.data
+          if (Array.isArray(rawItems)) {
+            setSetoranList(
+              rawItems.map((item: any) =>
+                mapRekapSetoranTuItem(item, selectedDate)
+              )
+            )
+          } else if (useMock) {
             const filteredMock = MOCK_SETORAN_KAS.filter(
               (s) => s.tanggal === selectedDate
             )
             setSetoranList(
               filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
             )
+          } else {
+            setSetoranList([])
           }
         }
       } catch {
         if (isMounted) {
-          const filteredMock = MOCK_SETORAN_KAS.filter(
-            (s) => s.tanggal === selectedDate
-          )
-          setSetoranList(
-            filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-          )
+          if (useMock) {
+            const filteredMock = MOCK_SETORAN_KAS.filter(
+              (s) => s.tanggal === selectedDate
+            )
+            setSetoranList(
+              filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
+            )
+          } else {
+            setSetoranList([])
+          }
         }
       } finally {
         if (isMounted) setIsLoading(false)
@@ -119,23 +137,30 @@ export function SetoranKasPage() {
         params: { tanggal: selectedDate },
       })
 
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setSetoranList(res.data.data)
-      } else {
+      const rawItems = res.data?.data
+      if (Array.isArray(rawItems)) {
+        setSetoranList(
+          rawItems.map((item: any) => mapRekapSetoranTuItem(item, selectedDate))
+        )
+      } else if (useMock) {
         const filteredMock = MOCK_SETORAN_KAS.filter(
           (s) => s.tanggal === selectedDate
         )
-        setSetoranList(
-          filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-        )
+        setSetoranList(filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS)
+      } else {
+        setSetoranList([])
       }
       toast.success('Data rekapitulasi setoran kas TU berhasil dimuat ulang')
     } catch {
-      const filteredMock = MOCK_SETORAN_KAS.filter(
-        (s) => s.tanggal === selectedDate
-      )
-      setSetoranList(filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS)
-      toast.success('Data rekapitulasi setoran kas TU berhasil dimuat ulang')
+      if (useMock) {
+        const filteredMock = MOCK_SETORAN_KAS.filter(
+          (s) => s.tanggal === selectedDate
+        )
+        setSetoranList(filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS)
+        toast.success('Data rekapitulasi setoran kas TU berhasil dimuat ulang')
+      } else {
+        toast.error('Gagal memuat ulang rekapitulasi setoran kas TU')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -151,9 +176,11 @@ export function SetoranKasPage() {
   // Filtered list based on search and status
   const filteredList = useMemo(() => {
     return setoranList.filter((item) => {
+      const pNama = (item.petugas_nama || '').toLowerCase()
+      const sId = (item.id || '').toLowerCase()
+      const query = (searchQuery || '').toLowerCase().trim()
       const matchSearch =
-        item.petugas_nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.id.toLowerCase().includes(searchQuery.toLowerCase())
+        !query || pNama.includes(query) || sId.includes(query)
 
       let matchStatus = true
       if (statusFilter === 'MENUNGGU_KONFIRMASI') {
@@ -170,7 +197,7 @@ export function SetoranKasPage() {
 
   // Summary Metrics Calculation
   const totalPenerimaanSistem = useMemo(() => {
-    return filteredList.reduce((acc, curr) => acc + curr.total_sistem, 0)
+    return filteredList.reduce((acc, curr) => acc + (curr.total_sistem || 0), 0)
   }, [filteredList])
 
   const totalUangFisikDisetor = useMemo(() => {
@@ -293,7 +320,7 @@ export function SetoranKasPage() {
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 Dari{' '}
-                {filteredList.reduce((acc, c) => acc + c.total_transaksi, 0)}{' '}
+                {filteredList.reduce((acc, c) => acc + (c.total_transaksi || 0), 0)}{' '}
                 transaksi top-up tunai
               </p>
             </CardContent>
@@ -708,9 +735,19 @@ export function SetoranKasPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedSetoranForDetail?.rincian_transaksi.map(
-                    (tx: TransaksiTopupDetail) => (
-                      <TableRow key={tx.id}>
+                  {(selectedSetoranForDetail?.rincian_transaksi || []).length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className='h-24 text-center text-xs text-muted-foreground'
+                      >
+                        Rincian detail transaksi top-up tersimpan di sistem riwayat mutasi kasir/TU.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedSetoranForDetail?.rincian_transaksi.map(
+                      (tx: TransaksiTopupDetail) => (
+                        <TableRow key={tx.id}>
                         <TableCell className='text-xs'>
                           <div className='font-mono font-medium'>
                             {new Date(tx.waktu).toLocaleTimeString('id-ID', {
@@ -738,7 +775,7 @@ export function SetoranKasPage() {
                           {formatRupiah(tx.nominal)}
                         </TableCell>
                       </TableRow>
-                    )
+                    ))
                   )}
                 </TableBody>
               </Table>
