@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type UserRole = 'admin' | 'pengelola' | 'tu' | 'bendahara' | 'kasir'
+export type UserRole = 'admin' | 'pengelola' | 'tu' | 'bendahara' | 'kasir' | 'kepsek'
 
 export interface RoleConfig {
   id: UserRole
@@ -15,6 +15,12 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Admin Sekolah',
     description: 'Akses penuh ke semua modul sistem kantin',
     badgeColor: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
+  },
+  kepsek: {
+    id: 'kepsek',
+    label: 'Kepala Sekolah',
+    description: 'Akses pemantauan dan laporan eksekutif kantin sekolah',
+    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
   },
   pengelola: {
     id: 'pengelola',

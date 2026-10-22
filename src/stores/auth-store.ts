@@ -10,6 +10,7 @@ export interface AuthUser {
   userId: string | number
   nama: string
   email: string
+  username?: string
   sekolahId: number
   sekolahNama: string
   roles: string[]
@@ -61,7 +62,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     useRoleStore.getState().setRole(initialUser.currentRole)
     useRoleStore.getState().setSchoolName(initialUser.sekolahNama)
     useRoleStore.getState().setUserName(initialUser.nama)
-    useRoleStore.getState().setUserEmail(initialUser.email)
+    useRoleStore.getState().setUserEmail(initialUser.username || initialUser.email)
   }
 
   return {
@@ -76,7 +77,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
           useRoleStore.getState().setRole(user.currentRole)
           useRoleStore.getState().setSchoolName(user.sekolahNama)
           useRoleStore.getState().setUserName(user.nama)
-          useRoleStore.getState().setUserEmail(user.email)
+          useRoleStore.getState().setUserEmail(user.username || user.email)
         } else {
           localStorage.removeItem(AUTH_USER_STORAGE)
           useRoleStore.getState().setUserName('')
