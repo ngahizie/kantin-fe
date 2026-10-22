@@ -1984,9 +1984,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
                 subjekTipe,
                 subjekId,
                 diblokir: siswa.is_blocked,
+                adaLimit: Boolean(
+                  siswa.limit_harian_enabled && (siswa.limit_harian ?? 0) > 0
+                ),
                 limitHarian: siswa.limit_harian_enabled
                   ? siswa.limit_harian
                   : null,
+                menuDiblokir: siswa.blocked_items || [],
+                kategoriDiblokir: siswa.blocked_categories || [],
               },
             },
           }
