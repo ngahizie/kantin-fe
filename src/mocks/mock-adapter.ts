@@ -3134,7 +3134,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     const riwayatSiswaMatch = url.match(/\/api\/laporan\/siswa\/(\d+)\/riwayat/)
     if (riwayatSiswaMatch && method === 'get') {
       const sId = Number(riwayatSiswaMatch[1])
-      const targetSiswa = siswaList.find((s) => s.siswa_id === sId) || siswaList[0]
+      const targetSiswa = siswaList.find((s) => s.siswa_id === sId)
+      if (!targetSiswa) {
+        return { status: 404, data: { message: `Siswa ${sId} tidak ditemukan` } }
+      }
       const riwayatList = MOCK_RIWAYAT_SISWA[sId] || [
         {
           id: `TRX-20261008-${sId}`,

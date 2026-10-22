@@ -50,7 +50,7 @@ import type {
 
 export function LaporanRiwayatSiswaPage() {
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
-  const [selectedSiswaId, setSelectedSiswaId] = useState<number>(101)
+  const [selectedSiswaId, setSelectedSiswaId] = useState<number | null>(null)
   const [searchStudentQuery, setSearchStudentQuery] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const searchContainerRef = useRef<HTMLDivElement>(null)
@@ -104,19 +104,24 @@ export function LaporanRiwayatSiswaPage() {
           ? Number(paramId)
           : list.length > 0
           ? list[0].siswaId
-          : 101
+          : null
 
-        setSelectedSiswaId(initialId)
-        const initialStudent =
-          list.find((s) => s.siswaId === initialId) || list[0]
-        if (initialStudent) {
-          setSearchStudentQuery(
-            `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
-          )
+        if (initialId) {
+          setSelectedSiswaId(initialId)
+          const initialStudent =
+            list.find((s) => s.siswaId === initialId) || list[0]
+          if (initialStudent) {
+            setSearchStudentQuery(
+              `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
+            )
+          }
+        } else {
+          setIsLoading(false)
         }
       } catch (_err: unknown) {
         if (!isMounted) return
         toast.error('Gagal Memuat Daftar Siswa')
+        setIsLoading(false)
       }
     }
     void init()
@@ -145,28 +150,62 @@ export function LaporanRiwayatSiswaPage() {
   }
 
   useEffect(() => {
+    if (!selectedSiswaId) return
     let isMounted = true
     const fetchRiwayat = async (id: number) => {
+      setIsLoading(true)
       try {
         const res = await laporanApi.getRiwayatBelanjaSiswa(id)
         if (!isMounted) return
-        setProfil(res.profil)
-        setRiwayat(res.riwayat)
+        const currentStudent = siswaList.find((s) => s.siswaId === id)
+        const profilData: ProfilSiswaRiwayat = {
+          ...res.profil,
+          nis: res.profil.nis && res.profil.nis !== '-' ? res.profil.nis : (currentStudent?.nis || '-'),
+          nama: res.profil.nama && res.profil.nama !== 'Siswa' ? res.profil.nama : (currentStudent?.nama || 'Siswa'),
+          kelas: res.profil.kelas && res.profil.kelas !== '-' ? res.profil.kelas : (currentStudent?.kelas || '-'),
+          saldo: res.profil.saldo ?? (currentStudent?.saldo || 0),
+          limitHarian: res.profil.limitHarian ?? (currentStudent?.limitHarian || 0),
+          isBlocked: res.profil.isBlocked ?? (currentStudent?.isBlocked || false),
+          parentName: res.profil.parentName && res.profil.parentName !== '-' ? res.profil.parentName : (currentStudent?.parentName || '-'),
+          parentPhone: res.profil.parentPhone && res.profil.parentPhone !== '-' ? res.profil.parentPhone : (currentStudent?.parentPhone || '-'),
+        }
+        setProfil(profilData)
+        setRiwayat(res.riwayat || [])
       } catch (err: unknown) {
         if (!isMounted) return
-        const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat siswa'
-        toast.error('Gagal Memuat Riwayat', { description: msg })
+        const isNotFound =
+          (err as { response?: { status?: number } })?.response?.status === 404 ||
+          (err as { status?: number })?.status === 404 ||
+          (err instanceof Error && err.message?.includes('404'))
+
+        if (isNotFound) {
+          const currentStudent = siswaList.find((s) => s.siswaId === id)
+          setProfil({
+            siswaId: id,
+            nis: currentStudent?.nis || '-',
+            nama: currentStudent?.nama || 'Siswa',
+            kelas: currentStudent?.kelas || '-',
+            saldo: currentStudent?.saldo || 0,
+            belanjaHariIni: currentStudent?.belanjaHariIni || 0,
+            limitHarian: currentStudent?.limitHarian || 0,
+            isBlocked: currentStudent?.isBlocked || false,
+            parentName: currentStudent?.parentName || '-',
+            parentPhone: currentStudent?.parentPhone || '-',
+          })
+          setRiwayat([])
+        } else {
+          const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat siswa'
+          toast.error('Gagal Memuat Riwayat', { description: msg })
+        }
       } finally {
         if (isMounted) setIsLoading(false)
       }
     }
-    if (selectedSiswaId) {
-      void fetchRiwayat(selectedSiswaId)
-    }
+    void fetchRiwayat(selectedSiswaId)
     return () => {
       isMounted = false
     }
-  }, [selectedSiswaId])
+  }, [selectedSiswaId, siswaList])
 
   // Filter riwayat
   const filteredRiwayat = useMemo(() => {
@@ -191,6 +230,11 @@ export function LaporanRiwayatSiswaPage() {
   const handleExportExcel = () => {
     if (!profil) {
       toast.error('Data profil siswa belum siap')
+      return
+    }
+
+    if (filteredRiwayat.length === 0) {
+      toast.info('Tidak ada riwayat transaksi untuk diekspor')
       return
     }
 
@@ -746,7 +790,9 @@ export function LaporanRiwayatSiswaPage() {
                     ) : filteredRiwayat.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                          Tidak ditemukan transaksi untuk kriteria pencarian ini.
+                          {searchFilter || jenisFilter !== 'ALL'
+                            ? 'Tidak ditemukan transaksi untuk kriteria pencarian ini.'
+                            : 'Siswa ini belum memiliki histori transaksi atau saldo di kantin.'}
                         </TableCell>
                       </TableRow>
                     ) : (
