@@ -185,6 +185,15 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(belanjaTrx?.titikKasir).toBeDefined()
       expect(belanjaTrx?.petugas).toBeDefined()
     })
+
+    it('menangani secara aman siswa tanpa catatan saldo/transaksi di backend (404) menjadi profil fallback dan riwayat kosong', async () => {
+      const { profil, riwayat } = await laporanApi.getRiwayatBelanjaSiswa(999999)
+
+      expect(profil).toBeDefined()
+      expect(profil.siswaId).toBe(999999)
+      expect(profil.saldo).toBe(0)
+      expect(riwayat).toEqual([])
+    })
   })
 
   describe('Laporan Kerugian Stok (PRD §9.5)', () => {

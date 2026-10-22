@@ -161,18 +161,45 @@ export const laporanApi = {
 
   /**
    * Mengambil Riwayat Transaksi & Belanja Lengkap per Siswa (Komplain Ortu)
+   * Mengembalikan profil kosong dan riwayat [] jika siswa belum memiliki riwayat (404 Not Found)
    */
   async getRiwayatBelanjaSiswa(
     siswaId: number,
     params?: LaporanFilterParams
   ): Promise<{ profil: ProfilSiswaRiwayat; riwayat: RiwayatBelanjaSiswaItem[] }> {
-    const res = await apiClient.get<
-      ApiResponse<{
-        profil: ProfilSiswaRiwayat
-        riwayat: RiwayatBelanjaSiswaItem[]
-      }>
-    >(`/api/laporan/siswa/${siswaId}/riwayat`, { params })
-    return res.data.data
+    try {
+      const res = await apiClient.get<
+        ApiResponse<{
+          profil: ProfilSiswaRiwayat
+          riwayat: RiwayatBelanjaSiswaItem[]
+        }>
+      >(`/api/laporan/siswa/${siswaId}/riwayat`, { params })
+      return res.data.data
+    } catch (err: unknown) {
+      const is404 =
+        (err as { response?: { status?: number } })?.response?.status === 404 ||
+        (err as { status?: number })?.status === 404 ||
+        (err instanceof Error && err.message?.includes('404'))
+
+      if (is404) {
+        return {
+          profil: {
+            siswaId,
+            nis: '-',
+            nama: 'Siswa',
+            kelas: '-',
+            saldo: 0,
+            belanjaHariIni: 0,
+            limitHarian: 0,
+            isBlocked: false,
+            parentName: '-',
+            parentPhone: '-',
+          },
+          riwayat: [],
+        }
+      }
+      throw err
+    }
   },
 
   /**
