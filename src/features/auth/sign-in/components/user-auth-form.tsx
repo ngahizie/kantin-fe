@@ -90,12 +90,24 @@ export function UserAuthForm({
         throw new Error('Respon login tidak memuat token otentikasi')
       }
 
-      const rawRole = (resData.user.currentRole || 'admin') as UserRole
+      const inputUsername = data.email.trim()
+      const serverUsername = resData.user.email || inputUsername
+      let rawRole = (resData.user.currentRole || 'admin') as UserRole
+
+      if (
+        resData.user.roles?.includes('ROLE_KEPSEK') ||
+        serverUsername.toLowerCase().includes('kepsek') ||
+        inputUsername.toLowerCase().includes('kepsek')
+      ) {
+        rawRole = 'kepsek'
+      }
+
       const cleanNama = (resData.user.nama || 'Staf Kantin').replace(/\s*\([^)]*\)$/, '')
       const authenticatedUser: AuthUser = {
         userId: resData.user.id,
         nama: cleanNama,
         email: resData.user.email,
+        username: serverUsername,
         sekolahId: resData.user.sekolah?.id || 10,
         sekolahNama: resData.user.sekolah?.nama || 'PAUD SKOOLIA',
         roles: resData.user.roles || ['ROLE_ADMIN'],
@@ -108,7 +120,7 @@ export function UserAuthForm({
 
       const roleLabel = ROLE_CONFIGS[rawRole]?.label || rawRole
 
-      toast.success(`Selamat datang, ${cleanNama}!`, {
+      toast.success(`Selamat datang, ${serverUsername}!`, {
         description: `Peran aktif: ${roleLabel} di ${authenticatedUser.sekolahNama}`,
       })
 
