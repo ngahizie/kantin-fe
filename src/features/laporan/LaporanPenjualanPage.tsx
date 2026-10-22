@@ -71,12 +71,16 @@ export function LaporanPenjualanPage() {
     let isMounted = true
     const init = async () => {
       try {
-        const [resRingkasan, resItems, resKategoris, resKasirs] = await Promise.all([
+        const [resRingkasan, resItems, resKategoris] = await Promise.all([
           laporanApi.getPenjualan(),
           laporanApi.getPenjualanPerItem(),
           laporanApi.getPenjualanPerKategori(),
-          laporanApi.getPenjualanPerKasir(),
         ])
+        const resKasirs = await laporanApi.getPenjualanPerKasir().catch((err) => {
+          // eslint-disable-next-line no-console
+          console.warn('Endpoint penjualan per kasir belum tersedia atau gagal:', err)
+          return []
+        })
         if (!isMounted) return
         setRingkasan(resRingkasan)
         setItems(resItems)

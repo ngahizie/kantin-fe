@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { useSearch } from '@/context/search-provider'
+import { useRoleStore } from '@/stores/useRoleStore'
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,11 +12,13 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { sidebarData } from './layout/data/sidebar-data'
+import { filterNavGroupsByRole } from './layout/nav-utils'
 import { ScrollArea } from './ui/scroll-area'
 
 export function CommandMenu() {
   const navigate = useNavigate()
   const { open, setOpen } = useSearch()
+  const { currentRole } = useRoleStore()
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -25,13 +28,17 @@ export function CommandMenu() {
     [setOpen]
   )
 
+  const allowedNavGroups = React.useMemo(() => {
+    return filterNavGroupsByRole(sidebarData.navGroups, currentRole)
+  }, [currentRole])
+
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>
       <CommandInput placeholder='Type a command or search...' />
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+          {allowedNavGroups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {
                 if (navItem.url)

@@ -33,12 +33,13 @@ export const sidebarData: SidebarData = {
   navGroups: [
     {
       title: 'Kasir & Ringkasan',
-      roles: ['admin', 'pengelola', 'kasir', 'tu', 'bendahara'],
+      roles: ['admin', 'pengelola', 'kasir', 'tu', 'bendahara', 'kepsek'],
       items: [
         {
           title: 'Dashboard Ringkasan',
           url: '/',
           icon: LayoutDashboard,
+          roles: ['admin', 'pengelola', 'tu', 'bendahara', 'kepsek'],
         },
         {
           title: 'Kasir POS',
@@ -50,37 +51,44 @@ export const sidebarData: SidebarData = {
     },
     {
       title: 'Katalog & Inventaris',
-      roles: ['admin', 'pengelola'],
+      roles: ['admin', 'pengelola', 'bendahara'],
       items: [
         {
           title: 'Katalog Menu',
           url: '/menu',
           icon: UtensilsCrossed,
+          roles: ['admin', 'pengelola'],
         },
         {
           title: 'Kategori Menu',
           url: '/kategori',
           icon: Tag,
+          roles: ['admin', 'pengelola'],
         },
         {
           title: 'Manajemen Stok',
           icon: Boxes,
+          roles: ['admin', 'pengelola', 'bendahara'],
           items: [
             {
               title: 'Barang Masuk',
               url: '/stok/masuk',
+              roles: ['admin', 'pengelola', 'bendahara'],
             },
             {
               title: 'Stok Opname & Rusak',
               url: '/stok/opname',
+              roles: ['admin', 'pengelola', 'bendahara'],
             },
             {
               title: 'Kartu Stok Mutasi',
               url: '/stok/kartu',
+              roles: ['admin', 'pengelola', 'bendahara'],
             },
             {
               title: 'Laporan Inventaris',
               url: '/stok/inventaris',
+              roles: ['admin', 'pengelola', 'bendahara'],
             },
           ],
         },
@@ -94,73 +102,84 @@ export const sidebarData: SidebarData = {
           title: 'Top-up Tunai Siswa',
           url: '/tu/topup',
           icon: Banknote,
-          roles: ['admin', 'tu'],
+          roles: ['admin', 'tu', 'bendahara'],
         },
         {
           title: 'Setoran Kas TU Harian',
           url: '/tu/setoran',
           icon: Receipt,
+          roles: ['admin', 'tu', 'bendahara'],
         },
         {
           title: 'Manajemen Kartu Tamu',
           url: '/kartu-tamu',
           icon: CreditCard,
+          roles: ['admin', 'tu', 'bendahara'],
         },
       ],
     },
     {
       title: 'Saldo & Pengawasan',
-      roles: ['admin', 'bendahara'],
+      roles: ['admin', 'bendahara', 'kepsek'],
       items: [
         {
           title: 'Mutasi Koreksi Bendahara',
           url: '/saldo/koreksi',
           icon: ReceiptText,
+          roles: ['admin', 'bendahara', 'kepsek'],
         },
         {
           title: 'Refund Saldo Siswa',
           url: '/saldo/refund',
           icon: ArrowLeftRight,
+          roles: ['admin', 'bendahara', 'kepsek'],
         },
         {
           title: 'Kontrol Siswa',
           url: '/kontrol-siswa',
           icon: ShieldCheck,
+          roles: ['admin'],
         },
       ],
     },
     {
       title: 'Laporan & Pengaturan',
-      roles: ['admin', 'bendahara', 'pengelola'],
+      roles: ['admin', 'bendahara', 'pengelola', 'kepsek'],
       items: [
         {
           title: 'Laporan Keuangan',
           icon: FileSpreadsheet,
-          roles: ['admin', 'bendahara', 'pengelola', 'tu'],
+          roles: ['admin', 'bendahara', 'pengelola', 'kepsek'],
           items: [
             {
               title: 'Rekonsiliasi Harian',
               url: '/laporan/rekonsiliasi',
+              roles: ['admin', 'bendahara', 'kepsek'],
             },
             {
               title: 'Penjualan & Laba Kotor',
               url: '/laporan/penjualan',
+              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
             {
               title: 'Analisis Laba Kotor',
               url: '/laporan/laba-kotor',
+              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
             {
               title: 'Saldo Mengendap',
               url: '/laporan/saldo-mengendap',
+              roles: ['admin', 'bendahara', 'kepsek'],
             },
             {
               title: 'Riwayat Belanja Siswa',
               url: '/laporan/riwayat-siswa',
+              roles: ['admin', 'bendahara'],
             },
             {
               title: 'Laporan Kerugian Stok',
               url: '/laporan/kerugian-stok',
+              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
           ],
         },
@@ -172,10 +191,12 @@ export const sidebarData: SidebarData = {
             {
               title: 'Operasional Kantin',
               url: '/pengaturan',
+              roles: ['admin'],
             },
             {
               title: 'Manajemen Titik Kasir',
               url: '/pengaturan/titik-kasir',
+              roles: ['admin'],
             },
           ],
         },

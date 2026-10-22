@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { sidebarData } from '@/components/layout/data/sidebar-data'
+import { filterNavGroupsByRole } from '@/components/layout/nav-utils'
 import { NavGroup } from '@/components/layout/nav-group'
 import { TeamSwitcher } from '@/components/layout/team-switcher'
 
@@ -18,20 +19,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Filter navigasi sidebar dinamis sesuai role yang sedang aktif
   const filteredNavGroups = useMemo(() => {
-    return sidebarData.navGroups
-      .filter((group) => {
-        if (!group.roles || group.roles.length === 0) return true
-        if (currentRole === 'admin') return true
-        return group.roles.includes(currentRole)
-      })
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => {
-          if (!item.roles || item.roles.length === 0) return true
-          if (currentRole === 'admin') return true
-          return item.roles.includes(currentRole)
-        }),
-      }))
+    return filterNavGroupsByRole(sidebarData.navGroups, currentRole)
   }, [currentRole])
 
   const teams = [
