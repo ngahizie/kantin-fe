@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth-store'
+import { useRoleStore } from '@/stores/useRoleStore'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import useDialogState from '@/hooks/use-dialog-state'
 
@@ -18,6 +19,17 @@ export function KasirLayout() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [signOutOpen, setSignOutOpen] = useDialogState()
   const { user } = useAuthStore().auth
+  const { currentRole } = useRoleStore()
+
+  // Peran kasir POS murni tidak memiliki hak ke dashboard umum
+  // Tombol kembali HANYA muncul untuk Pengelola dan Admin
+  const activeRole = currentRole || user?.currentRole
+  const isKasir =
+    activeRole === 'kasir' ||
+    user?.currentRole === 'kasir' ||
+    Boolean(user?.roles?.some((r) => r.toLowerCase().includes('petugas') || r.toLowerCase().includes('kasir')))
+
+  const canGoBack = !isKasir && (activeRole === 'pengelola' || activeRole === 'admin')
 
   // Deteksi status koneksi internet
   useEffect(() => {
@@ -89,13 +101,15 @@ export function KasirLayout() {
             {isFullscreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
           </Button>
 
-          {/* Kembali ke Dashboard */}
-          <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl border-none bg-muted/70 dark:bg-muted/30 hover:bg-muted text-foreground shadow-none' title='Kembali ke Dashboard'>
-            <Link to='/'>
-              <ArrowLeft className='h-3.5 w-3.5' />
-              <span className='hidden sm:inline'>Kembali</span>
-            </Link>
-          </Button>
+          {/* Kembali ke Dashboard (disembunyikan untuk peran kasir, tetap tampil untuk pengelola/admin) */}
+          {canGoBack && (
+            <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl border-none bg-muted/70 dark:bg-muted/30 hover:bg-muted text-foreground shadow-none' title='Kembali ke Dashboard'>
+              <Link to='/'>
+                <ArrowLeft className='h-3.5 w-3.5' />
+                <span className='hidden sm:inline'>Kembali</span>
+              </Link>
+            </Button>
+          )}
 
           {/* Logout Staf */}
           <Button
