@@ -40,17 +40,48 @@ export function KontrolSiswaPage() {
 
   useEffect(() => {
     let isMounted = true
-    const loadInitialData = async () => {
+    const syncKontrolStatus = async () => {
       try {
-        const res = await apiClient.get('/api/saldo/refund/kandidat')
-        if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          setStudents(res.data.data)
+        const synced = await Promise.all(
+          MOCK_SISWA.map(async (siswa) => {
+            try {
+              const res = await apiClient.get(
+                `/api/kontrol-kartu/SISWA/${siswa.siswa_id}`
+              )
+              if (res.data?.data) {
+                const kontrol = res.data.data
+                const hasLimit = Boolean(
+                  kontrol.adaLimit && (kontrol.limitHarian ?? 0) > 0
+                )
+                return {
+                  ...siswa,
+                  limit_harian: kontrol.limitHarian ?? 0,
+                  limit_harian_enabled: hasLimit,
+                  blocked_items: Array.isArray(kontrol.menuDiblokir)
+                    ? kontrol.menuDiblokir
+                    : [],
+                  blocked_categories: Array.isArray(kontrol.kategoriDiblokir)
+                    ? kontrol.kategoriDiblokir
+                    : [],
+                  is_blocked: Boolean(kontrol.diblokir),
+                }
+              }
+            } catch {
+              // Jika query kontrol gagal untuk siswa tertentu, gunakan data dasar
+            }
+            return siswa
+          })
+        )
+
+        if (isMounted) {
+          setStudents(synced)
         }
       } catch {
-        // Fallback
+        // Fallback tetap ke MOCK_SISWA
       }
     }
-    void loadInitialData()
+
+    void syncKontrolStatus()
     return () => {
       isMounted = false
     }

@@ -69,10 +69,63 @@ function LimitBlokirFormContent({
   const [blockedItemIds, setBlockedItemIds] = useState<number[]>(
     Array.isArray(student.blocked_items) ? student.blocked_items : []
   )
+  const [initialBlockedCategoryIds, setInitialBlockedCategoryIds] = useState<number[]>(
+    Array.isArray(student.blocked_categories) ? student.blocked_categories : []
+  )
+  const [initialBlockedItemIds, setInitialBlockedItemIds] = useState<number[]>(
+    Array.isArray(student.blocked_items) ? student.blocked_items : []
+  )
   const [catatan, setCatatan] = useState(student.catatan_kontrol || '')
   const [menuSearch, setMenuSearch] = useState('')
   const [menuCatFilter, setMenuCatFilter] = useState<number | 'ALL'>('ALL')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true)
+
+  // Ambil data kontrol riil terkini dari Backend saat modal dibuka
+  useEffect(() => {
+    let isMounted = true
+    const fetchLiveStatus = async () => {
+      setIsLoadingStatus(true)
+      try {
+        const res = await apiClient.get(
+          `/api/kontrol-kartu/SISWA/${student.siswa_id}`
+        )
+        if (isMounted && res.data?.data) {
+          const kontrol = res.data.data
+          const hasLimit = Boolean(
+            kontrol.adaLimit && (kontrol.limitHarian ?? 0) > 0
+          )
+          setLimitEnabled(hasLimit)
+          setLimitNominal(
+            kontrol.limitHarian ? kontrol.limitHarian.toString() : '0'
+          )
+
+          const liveItems: number[] = Array.isArray(kontrol.menuDiblokir)
+            ? kontrol.menuDiblokir
+            : []
+          const liveCats: number[] = Array.isArray(kontrol.kategoriDiblokir)
+            ? kontrol.kategoriDiblokir
+            : []
+
+          setBlockedItemIds(liveItems)
+          setInitialBlockedItemIds(liveItems)
+          setBlockedCategoryIds(liveCats)
+          setInitialBlockedCategoryIds(liveCats)
+        }
+      } catch {
+        // Fallback memakai data student bawaan bila query kontrol gagal
+      } finally {
+        if (isMounted) {
+          setIsLoadingStatus(false)
+        }
+      }
+    }
+
+    void fetchLiveStatus()
+    return () => {
+      isMounted = false
+    }
+  }, [student.siswa_id])
 
   const handleToggleCategory = (catId: number) => {
     setBlockedCategoryIds((prev) =>
@@ -118,29 +171,32 @@ function LimitBlokirFormContent({
     setIsSubmitting(true)
 
     try {
-      const oldBlockedItems = student.blocked_items || []
-      const oldBlockedCats = student.blocked_categories || []
+      const itemsToBlock = blockedItemIds.filter(
+        (id) => !initialBlockedItemIds.includes(id)
+      )
+      const itemsToUnblock = initialBlockedItemIds.filter(
+        (id) => !blockedItemIds.includes(id)
+      )
+      const catsToBlock = blockedCategoryIds.filter(
+        (id) => !initialBlockedCategoryIds.includes(id)
+      )
+      const catsToUnblock = initialBlockedCategoryIds.filter(
+        (id) => !blockedCategoryIds.includes(id)
+      )
 
-      const itemsToBlock = blockedItemIds.filter((id) => !oldBlockedItems.includes(id))
-      const itemsToUnblock = oldBlockedItems.filter((id) => !blockedItemIds.includes(id))
-      const catsToBlock = blockedCategoryIds.filter((id) => !oldBlockedCats.includes(id))
-      const catsToUnblock = oldBlockedCats.filter((id) => !blockedCategoryIds.includes(id))
-
-      await Promise.all([
-        apiClient
-          .put('/api/kontrol-kartu/limit-harian', {
-            subjekTipe: 'SISWA',
-            subjekId: student.siswa_id,
-            nominal: limitEnabled ? nominalLimitNum : null,
-          })
-          .catch(() => null),
+      const requests: Promise<unknown>[] = [
+        apiClient.put('/api/kontrol-kartu/limit-harian', {
+          subjekTipe: 'SISWA',
+          subjekId: student.siswa_id,
+          nominal: limitEnabled ? nominalLimitNum : null,
+        }),
         ...itemsToBlock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
             subjekId: student.siswa_id,
             menuId: id,
             diblokir: true,
-          }).catch(() => null)
+          })
         ),
         ...itemsToUnblock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
@@ -148,7 +204,7 @@ function LimitBlokirFormContent({
             subjekId: student.siswa_id,
             menuId: id,
             diblokir: false,
-          }).catch(() => null)
+          })
         ),
         ...catsToBlock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
@@ -156,7 +212,7 @@ function LimitBlokirFormContent({
             subjekId: student.siswa_id,
             kategoriId: id,
             diblokir: true,
-          }).catch(() => null)
+          })
         ),
         ...catsToUnblock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
@@ -164,9 +220,11 @@ function LimitBlokirFormContent({
             subjekId: student.siswa_id,
             kategoriId: id,
             diblokir: false,
-          }).catch(() => null)
+          })
         ),
-      ])
+      ]
+
+      await Promise.all(requests)
 
       const updatedStudent: KartuSiswaMock = {
         ...student,
@@ -184,8 +242,11 @@ function LimitBlokirFormContent({
 
       onClose()
       onSaveSuccess(updatedStudent)
-    } catch {
-      toast.error('Gagal menyimpan pengaturan kontrol siswa.')
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || 'Gagal menyimpan pengaturan kontrol siswa ke backend.'
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
@@ -194,9 +255,16 @@ function LimitBlokirFormContent({
   return (
     <>
         <DialogHeader>
-          <DialogTitle className='text-lg font-bold text-foreground'>
-            Atur Limit & Blokir Menu Siswa
-          </DialogTitle>
+          <div className='flex items-center justify-between'>
+            <DialogTitle className='text-lg font-bold text-foreground'>
+              Atur Limit & Blokir Menu Siswa
+            </DialogTitle>
+            {isLoadingStatus && (
+              <Badge variant='secondary' className='border-0 bg-primary/10 text-primary text-[10px] animate-pulse'>
+                Sinkronisasi data server...
+              </Badge>
+            )}
+          </div>
           <DialogDescription className='text-sm text-muted-foreground'>
             Perwalian Admin Sekolah atas nama orang tua yang belum memakai aplikasi mobile
           </DialogDescription>
