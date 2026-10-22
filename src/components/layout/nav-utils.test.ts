@@ -3,16 +3,40 @@ import { filterNavGroupsByRole } from './nav-utils'
 import { sidebarData } from './data/sidebar-data'
 
 describe('filterNavGroupsByRole', () => {
-  it('gives admin full access to all groups and items', () => {
+  it('restricts admin to dashboard, student control, system settings, and authorized reports (PRD §9.6)', () => {
     const result = filterNavGroupsByRole(sidebarData.navGroups, 'admin')
-    expect(result.length).toBe(5)
-
     const groupTitles = result.map((g) => g.title)
-    expect(groupTitles).toContain('Kasir & Ringkasan')
-    expect(groupTitles).toContain('Katalog & Inventaris')
-    expect(groupTitles).toContain('Layanan TU & Kartu')
-    expect(groupTitles).toContain('Saldo & Pengawasan')
-    expect(groupTitles).toContain('Laporan & Pengaturan')
+
+    // Admin hanya memiliki akses ke 3 grup ini, tidak memiliki akses ke katalog/stok dan layanan TU
+    expect(groupTitles).toEqual([
+      'Kasir & Ringkasan',
+      'Saldo & Pengawasan',
+      'Laporan & Pengaturan',
+    ])
+    expect(groupTitles).not.toContain('Katalog & Inventaris')
+    expect(groupTitles).not.toContain('Layanan TU & Kartu')
+
+    // Kasir POS tidak diakses admin
+    const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
+    expect(ringkasanGroup?.items.map((i) => i.title)).toEqual(['Dashboard Ringkasan'])
+
+    // Saldo & Pengawasan: Hanya Kontrol Siswa (Koreksi dan Refund adalah milik Bendahara)
+    const saldoGroup = result.find((g) => g.title === 'Saldo & Pengawasan')
+    expect(saldoGroup?.items.map((i) => i.title)).toEqual(['Kontrol Siswa'])
+
+    // Laporan & Pengaturan: Pengaturan Kantin dan laporan yang diizinkan (tanpa Kerugian Stok)
+    const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
+    expect(laporanGroup?.items.map((i) => i.title)).toContain('Pengaturan Kantin')
+    const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
+    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
+      (s: any) => s.title
+    )
+    expect(subReportTitles).toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).toContain('Penjualan & Laba Kotor')
+    expect(subReportTitles).toContain('Analisis Laba Kotor')
+    expect(subReportTitles).toContain('Saldo Mengendap')
+    expect(subReportTitles).toContain('Riwayat Belanja Siswa')
+    expect(subReportTitles).not.toContain('Laporan Kerugian Stok')
   })
 
   it('restricts kasir role exclusively to Kasir POS', () => {
@@ -54,11 +78,15 @@ describe('filterNavGroupsByRole', () => {
     expect(settingMenu).toBeUndefined()
   })
 
-  it('restricts tu role to dashboard and Layanan TU & Kartu', () => {
+  it('restricts tu role to dashboard, Layanan TU & Kartu, and authorized student reports', () => {
     const result = filterNavGroupsByRole(sidebarData.navGroups, 'tu')
     const groupTitles = result.map((g) => g.title)
 
-    expect(groupTitles).toEqual(['Kasir & Ringkasan', 'Layanan TU & Kartu'])
+    expect(groupTitles).toEqual([
+      'Kasir & Ringkasan',
+      'Layanan TU & Kartu',
+      'Laporan & Pengaturan',
+    ])
 
     const tuGroup = result.find((g) => g.title === 'Layanan TU & Kartu')
     const tuItems = tuGroup?.items.map((i) => i.title)
@@ -66,9 +94,20 @@ describe('filterNavGroupsByRole', () => {
     expect(tuItems).toContain('Setoran Kas TU Harian')
     expect(tuItems).toContain('Manajemen Kartu Tamu')
 
-    // TU tidak boleh melihat Kasir POS, inventaris, saldo koreksi, atau laporan keuangan
+    // TU tidak boleh melihat Kasir POS, inventaris, saldo koreksi
     const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
     expect(ringkasanGroup?.items.map((i) => i.title)).toEqual(['Dashboard Ringkasan'])
+
+    // Laporan yang boleh dilihat TU (Rekonsiliasi, Saldo Mengendap, Riwayat Belanja)
+    const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
+    const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
+    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
+      (s: any) => s.title
+    )
+    expect(subReportTitles).toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).toContain('Saldo Mengendap')
+    expect(subReportTitles).toContain('Riwayat Belanja Siswa')
+    expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
   })
 
   it('allows bendahara financial oversight without POS, menu CRUD, parent controls, or system settings', () => {

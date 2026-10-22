@@ -45,50 +45,50 @@ export const sidebarData: SidebarData = {
           title: 'Kasir POS',
           url: '/kasir',
           icon: ShoppingCart,
-          roles: ['admin', 'kasir', 'pengelola'],
+          roles: ['kasir'],
         },
       ],
     },
     {
       title: 'Katalog & Inventaris',
-      roles: ['admin', 'pengelola', 'bendahara'],
+      roles: ['pengelola', 'bendahara'],
       items: [
         {
           title: 'Katalog Menu',
           url: '/menu',
           icon: UtensilsCrossed,
-          roles: ['admin', 'pengelola'],
+          roles: ['pengelola'],
         },
         {
           title: 'Kategori Menu',
           url: '/kategori',
           icon: Tag,
-          roles: ['admin', 'pengelola'],
+          roles: ['pengelola'],
         },
         {
           title: 'Manajemen Stok',
           icon: Boxes,
-          roles: ['admin', 'pengelola', 'bendahara'],
+          roles: ['pengelola', 'bendahara'],
           items: [
             {
               title: 'Barang Masuk',
               url: '/stok/masuk',
-              roles: ['admin', 'pengelola', 'bendahara'],
+              roles: ['pengelola'],
             },
             {
               title: 'Stok Opname & Rusak',
               url: '/stok/opname',
-              roles: ['admin', 'pengelola', 'bendahara'],
+              roles: ['pengelola'],
             },
             {
               title: 'Kartu Stok Mutasi',
               url: '/stok/kartu',
-              roles: ['admin', 'pengelola', 'bendahara'],
+              roles: ['pengelola', 'bendahara'],
             },
             {
               title: 'Laporan Inventaris',
               url: '/stok/inventaris',
-              roles: ['admin', 'pengelola', 'bendahara'],
+              roles: ['pengelola', 'bendahara'],
             },
           ],
         },
@@ -96,25 +96,25 @@ export const sidebarData: SidebarData = {
     },
     {
       title: 'Layanan TU & Kartu',
-      roles: ['admin', 'tu', 'bendahara'],
+      roles: ['tu', 'bendahara'],
       items: [
         {
           title: 'Top-up Tunai Siswa',
           url: '/tu/topup',
           icon: Banknote,
-          roles: ['admin', 'tu', 'bendahara'],
+          roles: ['tu'],
         },
         {
           title: 'Setoran Kas TU Harian',
           url: '/tu/setoran',
           icon: Receipt,
-          roles: ['admin', 'tu', 'bendahara'],
+          roles: ['tu', 'bendahara'],
         },
         {
           title: 'Manajemen Kartu Tamu',
           url: '/kartu-tamu',
           icon: CreditCard,
-          roles: ['admin', 'tu', 'bendahara'],
+          roles: ['tu', 'bendahara'],
         },
       ],
     },
@@ -126,13 +126,13 @@ export const sidebarData: SidebarData = {
           title: 'Mutasi Koreksi Bendahara',
           url: '/saldo/koreksi',
           icon: ReceiptText,
-          roles: ['admin', 'bendahara', 'kepsek'],
+          roles: ['bendahara', 'kepsek'],
         },
         {
           title: 'Refund Saldo Siswa',
           url: '/saldo/refund',
           icon: ArrowLeftRight,
-          roles: ['admin', 'bendahara', 'kepsek'],
+          roles: ['bendahara', 'kepsek'],
         },
         {
           title: 'Kontrol Siswa',
@@ -144,17 +144,17 @@ export const sidebarData: SidebarData = {
     },
     {
       title: 'Laporan & Pengaturan',
-      roles: ['admin', 'bendahara', 'pengelola', 'kepsek'],
+      roles: ['admin', 'bendahara', 'pengelola', 'tu', 'kepsek'],
       items: [
         {
           title: 'Laporan Keuangan',
           icon: FileSpreadsheet,
-          roles: ['admin', 'bendahara', 'pengelola', 'kepsek'],
+          roles: ['admin', 'bendahara', 'pengelola', 'tu', 'kepsek'],
           items: [
             {
               title: 'Rekonsiliasi Harian',
               url: '/laporan/rekonsiliasi',
-              roles: ['admin', 'bendahara', 'kepsek'],
+              roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
               title: 'Penjualan & Laba Kotor',
@@ -169,17 +169,17 @@ export const sidebarData: SidebarData = {
             {
               title: 'Saldo Mengendap',
               url: '/laporan/saldo-mengendap',
-              roles: ['admin', 'bendahara', 'kepsek'],
+              roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
               title: 'Riwayat Belanja Siswa',
               url: '/laporan/riwayat-siswa',
-              roles: ['admin', 'bendahara'],
+              roles: ['admin', 'bendahara', 'tu'],
             },
             {
               title: 'Laporan Kerugian Stok',
               url: '/laporan/kerugian-stok',
-              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
+              roles: ['pengelola', 'bendahara', 'kepsek'],
             },
           ],
         },

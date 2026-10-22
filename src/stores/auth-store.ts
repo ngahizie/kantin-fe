@@ -124,7 +124,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       hasRole: (allowedRoles: UserRole[]) => {
         const user = get().auth.user || parseStoredUser()
         if (!user) return false
-        if (user.currentRole === 'admin') return true
         return allowedRoles.includes(user.currentRole)
       },
     },

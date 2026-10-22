@@ -13,7 +13,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   admin: {
     id: 'admin',
     label: 'Admin Sekolah',
-    description: 'Akses penuh ke semua modul sistem kantin',
+    description: 'Akses administrasi sistem, kontrol kartu siswa, dan pelaporan keuangan',
     badgeColor: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
   },
   kepsek: {
@@ -45,12 +45,6 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     label: 'Petugas Kasir POS',
     description: 'Operasional layar kasir POS dan transaksi RFID harian',
     badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800',
-  },
-  kepsek: {
-    id: 'kepsek',
-    label: 'Kepala Sekolah',
-    description: 'Pemantauan eksekutif rekonsiliasi kas dan laporan keuangan',
-    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
   },
 }
 

@@ -7,7 +7,7 @@ export const Route = createFileRoute(
 )({
   beforeLoad: () => {
     const { hasRole } = useAuthStore.getState().auth
-    if (!hasRole(['bendahara', 'kepsek', 'admin'])) {
+    if (!hasRole(['bendahara', 'tu', 'admin', 'kepsek'])) {
       throw redirect({
         to: '/403',
       })
