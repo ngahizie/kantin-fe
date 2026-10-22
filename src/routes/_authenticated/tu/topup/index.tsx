@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth-store'
 export const Route = createFileRoute('/_authenticated/tu/topup/')({
   beforeLoad: () => {
     const { hasRole } = useAuthStore.getState().auth
-    if (!hasRole(['tu', 'admin'])) {
+    if (!hasRole(['tu', 'bendahara', 'admin'])) {
       throw redirect({
         to: '/403',
       })

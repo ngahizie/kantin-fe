@@ -1,6 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { StokOpnamePage } from '@/features/stok'
+import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/_authenticated/stok/rusak/')({
+  beforeLoad: () => {
+    const { hasRole } = useAuthStore.getState().auth
+    if (!hasRole(['pengelola', 'bendahara', 'admin'])) {
+      throw redirect({
+        to: '/403',
+      })
+    }
+  },
   component: StokOpnamePage,
 })
