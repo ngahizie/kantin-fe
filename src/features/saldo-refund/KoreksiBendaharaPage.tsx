@@ -68,7 +68,7 @@ export function KoreksiBendaharaPage() {
     useMock ? MOCK_TRANSAKSI_SESI_TUTUP.map((item) => mapTransaksiKasirItemToSesiTutup(item, MOCK_SISWA)) : []
   )
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorKoreksi, setErrorKoreksi] = useState<string | null>(null)
   const [errorTransaksi, setErrorTransaksi] = useState<string | null>(null)
 
@@ -92,84 +92,121 @@ export function KoreksiBendaharaPage() {
     useState<MutasiKoreksiItem | null>(null)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
 
-  const loadData = useCallback(async (showSuccessToast = false) => {
-    setIsLoading(true)
-    setErrorKoreksi(null)
-    setErrorTransaksi(null)
+  const executeFetch = useCallback(async () => {
+    const [resKoreksi, resTx] = await Promise.allSettled([
+      apiClient.get('/api/saldo/koreksi'),
+      apiClient.get('/api/kasir/transaksi'),
+    ])
 
-    try {
-      const [resKoreksi, resTx] = await Promise.allSettled([
-        apiClient.get('/api/saldo/koreksi'),
-        apiClient.get('/api/kasir/transaksi/sesi-tutup'),
-      ])
-
-      // 1. Process GET /api/saldo/koreksi
-      if (resKoreksi.status === 'fulfilled') {
-        const rawData = resKoreksi.value.data
-        const items =
-          rawData?.data?.items ??
-          (Array.isArray(rawData?.data)
-            ? rawData.data
-            : Array.isArray(rawData)
-              ? rawData
-              : [])
-        setKoreksiList(items.map((it: any) => mapMutasiKoreksiItem(it, MOCK_SISWA)))
-      } else {
-        if (useMock) {
-          setKoreksiList(MOCK_KOREKSI_BENDAHARA.map((item) => mapMutasiKoreksiItem(item, MOCK_SISWA)))
-        } else {
-          const err = resKoreksi.reason as any
-          const msg =
-            err?.response?.data?.message ||
-            err?.message ||
-            'Gagal memuat log mutasi koreksi bendahara'
-          setErrorKoreksi(msg)
-          setKoreksiList([])
-        }
-      }
-
-      // 2. Process GET /api/kasir/transaksi/sesi-tutup
-      if (resTx.status === 'fulfilled') {
-        const rawData = resTx.value.data
-        const items =
-          rawData?.data?.items ??
-          (Array.isArray(rawData?.data)
-            ? rawData.data
-            : Array.isArray(rawData)
-              ? rawData
-              : [])
-        setTransaksiList(
-          items.map((it: any) => mapTransaksiKasirItemToSesiTutup(it, MOCK_SISWA))
+    // 1. Process GET /api/saldo/koreksi
+    if (resKoreksi.status === 'fulfilled') {
+      const rawData = resKoreksi.value.data
+      const items =
+        rawData?.data?.items ??
+        (Array.isArray(rawData?.data)
+          ? rawData.data
+          : Array.isArray(rawData)
+            ? rawData
+            : [])
+      setKoreksiList(
+        items.map((it: unknown) =>
+          mapMutasiKoreksiItem(it as Record<string, unknown>, MOCK_SISWA)
+        )
+      )
+      setErrorKoreksi(null)
+    } else {
+      if (useMock) {
+        setKoreksiList(
+          MOCK_KOREKSI_BENDAHARA.map((item) =>
+            mapMutasiKoreksiItem(item, MOCK_SISWA)
+          )
         )
       } else {
-        if (useMock) {
-          setTransaksiList(
-            MOCK_TRANSAKSI_SESI_TUTUP.map((item) =>
-              mapTransaksiKasirItemToSesiTutup(item, MOCK_SISWA)
-            )
-          )
-        } else {
-          const err = resTx.reason as any
-          const msg =
-            err?.response?.data?.message ||
-            err?.message ||
-            'Gagal memuat daftar transaksi sesi tutup'
-          setErrorTransaksi(msg)
-          setTransaksiList([])
-        }
+        const err = resKoreksi.reason as
+          | { response?: { data?: { message?: string } }; message?: string }
+          | undefined
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Gagal memuat log mutasi koreksi bendahara'
+        setErrorKoreksi(msg)
+        setKoreksiList([])
       }
+    }
 
-      if (showSuccessToast) {
-        toast.success('Data mutasi dan transaksi sesi tutup berhasil diperbarui')
+    // 2. Process GET /api/kasir/transaksi
+    if (resTx.status === 'fulfilled') {
+      const rawData = resTx.value.data
+      const items =
+        rawData?.data?.items ??
+        (Array.isArray(rawData?.data)
+          ? rawData.data
+          : Array.isArray(rawData)
+            ? rawData
+            : [])
+      setTransaksiList(
+        items.map((it: unknown) =>
+          mapTransaksiKasirItemToSesiTutup(
+            it as Record<string, unknown>,
+            MOCK_SISWA
+          )
+        )
+      )
+      setErrorTransaksi(null)
+    } else {
+      if (useMock) {
+        setTransaksiList(
+          MOCK_TRANSAKSI_SESI_TUTUP.map((item) =>
+            mapTransaksiKasirItemToSesiTutup(item, MOCK_SISWA)
+          )
+        )
+      } else {
+        const err = resTx.reason as
+          | { response?: { data?: { message?: string } }; message?: string }
+          | undefined
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Gagal memuat daftar transaksi sesi tutup'
+        setErrorTransaksi(msg)
+        setTransaksiList([])
       }
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
+  const loadData = useCallback(
+    async (showSuccessToast = false) => {
+      setIsLoading(true)
+      try {
+        await executeFetch()
+        if (showSuccessToast) {
+          toast.success(
+            'Data mutasi dan transaksi sesi tutup berhasil diperbarui'
+          )
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [executeFetch]
+  )
+
   useEffect(() => {
-    void loadData(false)
-  }, [loadData])
+    let isMounted = true
+    const init = async () => {
+      try {
+        await executeFetch()
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+    void init()
+    return () => {
+      isMounted = false
+    }
+  }, [executeFetch])
 
   const handleCreateSuccess = (newKoreksi: MutasiKoreksiItem) => {
     setKoreksiList((prev) => [newKoreksi, ...prev])

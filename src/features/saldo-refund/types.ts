@@ -209,24 +209,35 @@ export interface TransaksiKasirItemResponse {
 }
 
 export function mapTransaksiKasirItemToSesiTutup(
-  raw: any,
+  raw: unknown,
   siswaList?: Array<{ siswa_id: number; nama: string; kelas?: string; nis?: string }>
 ): TransaksiSesiTutupItem {
-  const id = raw?.id !== undefined ? String(raw.id) : ''
-  const sesiKasirId = Number(raw?.sesiKasirId ?? raw?.sesi_kasir_id ?? 0)
-  const titikKasir =
-    raw?.titikKasirNama ??
-    raw?.titik_kasir ??
-    (raw?.titikKasirId ? `Titik #${raw.titikKasirId}` : 'Kantin')
-  const petugasKasir =
-    raw?.petugas_kasir ??
-    (raw?.petugasId ? `Petugas #${raw.petugasId}` : 'Kasir')
-  const subjekTipe = (raw?.subjekTipe ?? raw?.subjek_tipe ?? 'SISWA') as SubjekTipe
-  const subjekId = Number(raw?.subjekId ?? raw?.subjek_id ?? 0)
-  const kartuUid = raw?.kartuUid ?? raw?.kartu_uid ?? undefined
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const id = r.id !== undefined && r.id !== null ? String(r.id) : ''
+  const sesiKasirId = Number(r.sesiKasirId ?? r.sesi_kasir_id ?? 0)
+  const titikKasir = String(
+    r.titikKasirNama ??
+    r.titik_kasir ??
+    (r.titikKasirId ? `Titik #${String(r.titikKasirId)}` : 'Kantin')
+  )
+  const petugasKasir = String(
+    r.petugas_kasir ??
+    (r.petugasId ? `Petugas #${String(r.petugasId)}` : 'Kasir')
+  )
+  const subjekTipe = (r.subjekTipe ?? r.subjek_tipe ?? 'SISWA') as SubjekTipe
+  const subjekId = Number(r.subjekId ?? r.subjek_id ?? 0)
+  const kartuUid = r.kartuUid
+    ? String(r.kartuUid)
+    : r.kartu_uid
+      ? String(r.kartu_uid)
+      : undefined
 
   const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
-  let subjekNama = raw?.subjekNama ?? raw?.subjek_nama ?? ''
+  let subjekNama = r.subjekNama
+    ? String(r.subjekNama)
+    : r.subjek_nama
+      ? String(r.subjek_nama)
+      : ''
   if (!subjekNama) {
     if (subjekTipe === 'SISWA') {
       subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
@@ -235,7 +246,11 @@ export function mapTransaksiKasirItemToSesiTutup(
     }
   }
 
-  let subjekInfo = raw?.subjekInfo ?? raw?.subjek_info ?? ''
+  let subjekInfo = r.subjekInfo
+    ? String(r.subjekInfo)
+    : r.subjek_info
+      ? String(r.subjek_info)
+      : ''
   if (!subjekInfo) {
     if (subjekTipe === 'SISWA') {
       subjekInfo = matchedSiswa
@@ -248,7 +263,7 @@ export function mapTransaksiKasirItemToSesiTutup(
     }
   }
 
-  const rawStatus = String(raw?.status || '').toUpperCase()
+  const rawStatus = String(r.status || '').toUpperCase()
   let status: 'SELESAI' | 'DIKOREKSI' | 'VOID' | 'SUKSES' = 'SELESAI'
   if (rawStatus === 'VOID') {
     status = 'VOID'
@@ -259,15 +274,31 @@ export function mapTransaksiKasirItemToSesiTutup(
   }
 
   const dapatDikoreksi =
-    raw?.dapatDikoreksi !== undefined
-      ? Boolean(raw.dapatDikoreksi)
-      : raw?.dapat_dikoreksi !== undefined
-        ? Boolean(raw.dapat_dikoreksi)
+    r.dapatDikoreksi !== undefined
+      ? Boolean(r.dapatDikoreksi)
+      : r.dapat_dikoreksi !== undefined
+        ? Boolean(r.dapat_dikoreksi)
         : status === 'SUKSES' || status === 'SELESAI'
+
+  const rawItems = Array.isArray(r.items) ? r.items : []
+  const items = rawItems.map((item) => {
+    const it = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>
+    return {
+      menu_id: Number(it.menu_id ?? it.menuId ?? 0),
+      nama: String(it.nama ?? it.menuNama ?? ''),
+      qty: Number(it.qty ?? it.jumlah ?? 0),
+      harga: Number(it.harga ?? 0),
+      subtotal: Number(it.subtotal ?? 0),
+    }
+  })
+
+  const koreksiRef = r.koreksi_referensi_id ?? r.koreksiReferensiId
+  const alasanVoidVal = r.alasanVoid ?? r.alasan_void
+  const voidAtVal = r.voidAt ?? r.void_at
 
   return {
     id,
-    waktu: raw?.waktu || new Date().toISOString(),
+    waktu: r.waktu ? String(r.waktu) : new Date().toISOString(),
     sesi_kasir_id: sesiKasirId,
     titik_kasir: titikKasir,
     petugas_kasir: petugasKasir,
@@ -276,30 +307,51 @@ export function mapTransaksiKasirItemToSesiTutup(
     subjek_nama: subjekNama,
     subjek_info: subjekInfo,
     kartu_uid: kartuUid,
-    total: Number(raw?.total) || 0,
-    items: Array.isArray(raw?.items) ? raw.items : [],
+    total: Number(r.total) || 0,
+    items,
     status,
-    koreksi_referensi_id: raw?.koreksi_referensi_id ?? raw?.koreksiReferensiId,
+    koreksi_referensi_id:
+      koreksiRef !== undefined && koreksiRef !== null
+        ? String(koreksiRef)
+        : undefined,
     dapat_dikoreksi: dapatDikoreksi,
     dapatDikoreksi,
-    alasan_void: raw?.alasanVoid ?? raw?.alasan_void ?? null,
-    alasanVoid: raw?.alasanVoid ?? raw?.alasan_void ?? null,
-    void_at: raw?.voidAt ?? raw?.void_at ?? null,
-    voidAt: raw?.voidAt ?? raw?.void_at ?? null,
+    alasan_void:
+      alasanVoidVal !== undefined && alasanVoidVal !== null
+        ? String(alasanVoidVal)
+        : null,
+    alasanVoid:
+      alasanVoidVal !== undefined && alasanVoidVal !== null
+        ? String(alasanVoidVal)
+        : null,
+    void_at:
+      voidAtVal !== undefined && voidAtVal !== null ? String(voidAtVal) : null,
+    voidAt:
+      voidAtVal !== undefined && voidAtVal !== null ? String(voidAtVal) : null,
   }
 }
 
 export function mapMutasiKoreksiItem(
-  raw: any,
+  raw: unknown,
   siswaList?: Array<{ siswa_id: number; nama: string; kelas?: string; nis?: string }>
 ): MutasiKoreksiItem {
-  const id = raw?.id !== undefined ? raw.id : ''
-  const referensiId = String(raw?.referensiId ?? raw?.referensi_id ?? '')
-  const subjekTipe = (raw?.subjekTipe ?? raw?.subjek_tipe ?? 'SISWA') as SubjekTipe
-  const subjekId = Number(raw?.subjekId ?? raw?.subjek_id ?? 0)
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const id =
+    r.id !== undefined && r.id !== null
+      ? typeof r.id === 'number'
+        ? r.id
+        : String(r.id)
+      : ''
+  const referensiId = String(r.referensiId ?? r.referensi_id ?? '')
+  const subjekTipe = (r.subjekTipe ?? r.subjek_tipe ?? 'SISWA') as SubjekTipe
+  const subjekId = Number(r.subjekId ?? r.subjek_id ?? 0)
 
   const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
-  let subjekNama = raw?.subjekNama ?? raw?.subjek_nama ?? ''
+  let subjekNama = r.subjekNama
+    ? String(r.subjekNama)
+    : r.subjek_nama
+      ? String(r.subjek_nama)
+      : ''
   if (!subjekNama) {
     if (subjekTipe === 'SISWA') {
       subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
@@ -308,7 +360,11 @@ export function mapMutasiKoreksiItem(
     }
   }
 
-  let subjekInfo = raw?.subjekInfo ?? raw?.subjek_info ?? ''
+  let subjekInfo = r.subjekInfo
+    ? String(r.subjekInfo)
+    : r.subjek_info
+      ? String(r.subjek_info)
+      : ''
   if (!subjekInfo) {
     if (subjekTipe === 'SISWA') {
       subjekInfo = matchedSiswa
@@ -319,25 +375,36 @@ export function mapMutasiKoreksiItem(
     }
   }
 
-  const arah = (raw?.arah ?? 'DEBIT') as ArahMutasi
-  const nominal = Number(raw?.nominal) || 0
-  const saldoSebelum = Number(raw?.saldoSebelum ?? raw?.saldo_sebelum ?? 0)
-  const saldoSetelah = Number(raw?.saldoSetelah ?? raw?.saldo_setelah ?? 0)
-  const alasan = raw?.keterangan ?? raw?.alasan ?? ''
-  const bendaharaId = Number(raw?.aktorId ?? raw?.bendahara_id ?? 0)
-  const bendaharaNama =
-    raw?.bendahara_nama ?? (bendaharaId ? `Bendahara #${bendaharaId}` : 'Bendahara')
-  const transaksiId = raw?.transaksiId ?? raw?.transaksi_terkait_id
+  const arah = (r.arah ?? 'DEBIT') as ArahMutasi
+  const nominal = Number(r.nominal) || 0
+  const saldoSebelum = Number(r.saldoSebelum ?? r.saldo_sebelum ?? 0)
+  const saldoSetelah = Number(r.saldoSetelah ?? r.saldo_setelah ?? 0)
+  const alasan = String(r.keterangan ?? r.alasan ?? '')
+  const bendaharaId = Number(r.aktorId ?? r.bendahara_id ?? 0)
+  const bendaharaNama = String(
+    r.bendahara_nama ??
+      (bendaharaId ? `Bendahara #${bendaharaId}` : 'Bendahara')
+  )
+  const rawTxId = r.transaksiId ?? r.transaksi_terkait_id
+  const transaksiId =
+    rawTxId !== undefined && rawTxId !== null
+      ? typeof rawTxId === 'number'
+        ? rawTxId
+        : String(rawTxId)
+      : undefined
 
-  const jenisKoreksi =
-    raw?.jenis_koreksi ??
-    raw?.jenisKoreksi ??
-    (transaksiId ? 'PEMBALIK_TRANSAKSI_KASIR' : 'PENYESUAIAN_AUDIT')
+  const rawSesiId = r.sesiKasirId ?? r.sesi_kasir_id
+  const sesiKasirId =
+    rawSesiId !== undefined && rawSesiId !== null ? Number(rawSesiId) : undefined
+
+  const jenisKoreksi = (r.jenis_koreksi ??
+    r.jenisKoreksi ??
+    (transaksiId ? 'PEMBALIK_TRANSAKSI_KASIR' : 'PENYESUAIAN_AUDIT')) as JenisKoreksi
 
   return {
     id,
     referensi_id: referensiId,
-    waktu: raw?.waktu || new Date().toISOString(),
+    waktu: r.waktu ? String(r.waktu) : new Date().toISOString(),
     subjek_tipe: subjekTipe,
     subjek_id: subjekId,
     subjek_nama: subjekNama,
@@ -351,6 +418,6 @@ export function mapMutasiKoreksiItem(
     bendahara_id: bendaharaId,
     bendahara_nama: bendaharaNama,
     transaksi_terkait_id: transaksiId,
-    sesi_kasir_id: raw?.sesiKasirId ?? raw?.sesi_kasir_id,
+    sesi_kasir_id: sesiKasirId,
   }
 }
