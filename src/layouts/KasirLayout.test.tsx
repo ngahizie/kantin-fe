@@ -4,6 +4,7 @@ import { KasirLayout } from './KasirLayout'
 
 let mockCurrentRole = 'kasir'
 let mockUserRole = 'kasir'
+let mockUserRoles = ['PETUGAS']
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({
@@ -14,7 +15,7 @@ vi.mock('@/stores/auth-store', () => ({
         email: 'kasir@skoolia.id',
         sekolahId: 1,
         sekolahNama: 'SMA 1',
-        roles: ['PETUGAS'],
+        roles: mockUserRoles,
         currentRole: mockUserRole,
       },
       reset: vi.fn(),
@@ -43,11 +44,13 @@ describe('KasirLayout Navigasi & Proteksi Peran', () => {
   beforeEach(() => {
     mockCurrentRole = 'kasir'
     mockUserRole = 'kasir'
+    mockUserRoles = ['PETUGAS']
   })
 
   it('menyembunyikan tombol Kembali ke Dashboard ketika peran adalah kasir POS', async () => {
     mockCurrentRole = 'kasir'
     mockUserRole = 'kasir'
+    mockUserRoles = ['PETUGAS']
     const { getByText } = await render(<KasirLayout />)
 
     await expect.element(getByText('SKOOLIA Kantin POS')).toBeInTheDocument()
@@ -57,6 +60,7 @@ describe('KasirLayout Navigasi & Proteksi Peran', () => {
   it('menampilkan tombol Kembali ke Dashboard ketika peran adalah pengelola kantin', async () => {
     mockCurrentRole = 'pengelola'
     mockUserRole = 'pengelola'
+    mockUserRoles = ['PENGELOLA']
     const { getByText } = await render(<KasirLayout />)
 
     await expect.element(getByText('SKOOLIA Kantin POS')).toBeInTheDocument()
@@ -66,6 +70,7 @@ describe('KasirLayout Navigasi & Proteksi Peran', () => {
   it('menampilkan tombol Kembali ke Dashboard ketika peran adalah admin sekolah', async () => {
     mockCurrentRole = 'admin'
     mockUserRole = 'admin'
+    mockUserRoles = ['ADMIN']
     const { getByText } = await render(<KasirLayout />)
 
     await expect.element(getByText('Kembali')).toBeInTheDocument()

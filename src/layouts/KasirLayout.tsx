@@ -21,9 +21,15 @@ export function KasirLayout() {
   const { user } = useAuthStore().auth
   const { currentRole } = useRoleStore()
 
-  // Peran kasir POS murni tidak memiliki hak ke dashboard umum, tombol kembali hanya muncul untuk pengelola/admin
+  // Peran kasir POS murni tidak memiliki hak ke dashboard umum
+  // Tombol kembali HANYA muncul untuk Pengelola dan Admin
   const activeRole = currentRole || user?.currentRole
-  const canGoBack = activeRole !== 'kasir'
+  const isKasir =
+    activeRole === 'kasir' ||
+    user?.currentRole === 'kasir' ||
+    Boolean(user?.roles?.some((r) => r.toLowerCase().includes('petugas') || r.toLowerCase().includes('kasir')))
+
+  const canGoBack = !isKasir && (activeRole === 'pengelola' || activeRole === 'admin')
 
   // Deteksi status koneksi internet
   useEffect(() => {
