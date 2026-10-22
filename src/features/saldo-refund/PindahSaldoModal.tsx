@@ -76,9 +76,34 @@ function PindahSaldoFormContent({
     let isMounted = true
     const loadStudents = async () => {
       try {
-        const res = await apiClient.get('/api/saldo/refund/kandidat')
+        const res = await apiClient.get('/api/saldo/refund/kandidat', {
+          params: { hanyaTidakAktif: false },
+        })
         if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          setActiveStudents(res.data.data)
+          const rawData = res.data.data as Record<string, unknown>[]
+          const isRich = rawData.some((item) => item.nama && item.nis)
+          if (isRich) {
+            setActiveStudents(rawData as unknown as KartuSiswaMock[])
+          } else {
+            // Gabungkan saldo riil BE dengan master data siswa aktif
+            const saldoMap = new Map<number, number>()
+            for (const item of rawData) {
+              const sid = Number(
+                item.subjekId ?? item.subjek_id ?? item.siswa_id
+              )
+              if (sid) {
+                saldoMap.set(sid, Number(item.saldo ?? 0))
+              }
+            }
+            setActiveStudents(
+              MOCK_SISWA.map((siswa) => ({
+                ...siswa,
+                saldo: saldoMap.has(siswa.siswa_id)
+                  ? (saldoMap.get(siswa.siswa_id) ?? siswa.saldo)
+                  : siswa.saldo,
+              }))
+            )
+          }
         }
       } catch {
         if (isMounted) {
@@ -145,25 +170,7 @@ function PindahSaldoFormContent({
     }
 
     try {
-      await apiClient.post('/api/saldo/pindah-saldo', payload).catch(async () => {
-        // Fallback: two koreksi operations if dedicated endpoint pending
-        await apiClient.post('/api/saldo/koreksi', {
-          subjekTipe: 'SISWA',
-          subjekId: siswaAsal.siswa_id,
-          arah: 'DEBIT',
-          nominal: nominalTransfer,
-          alasan: `Transfer ke saudara: ${targetSibling.nama}`,
-          referensiId: `${refNo}-OUT`,
-        })
-        await apiClient.post('/api/saldo/koreksi', {
-          subjekTipe: 'SISWA',
-          subjekId: targetSibling.siswa_id,
-          arah: 'KREDIT',
-          nominal: nominalTransfer,
-          alasan: `Terima transfer dari saudara: ${siswaAsal.nama}`,
-          referensiId: `${refNo}-IN`,
-        })
-      })
+      await apiClient.post('/api/saldo/pindah-saldo', payload)
 
       const slipData: RefundSlipData = {
         type: 'TRANSFER_SAUDARA',
@@ -200,8 +207,11 @@ function PindahSaldoFormContent({
 
       onOpenChange(false)
       onTransferSuccess(siswaAsal.siswa_id, slipData)
-    } catch {
-      toast.error('Gagal melakukan transfer saldo saudara. Silakan periksa kembali.')
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || 'Gagal melakukan transfer saldo saudara. Silakan periksa kembali.'
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }

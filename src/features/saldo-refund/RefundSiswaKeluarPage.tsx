@@ -55,10 +55,45 @@ export function RefundSiswaKeluarPage() {
           params: { hanyaTidakAktif: true },
         })
         if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          setStudents(res.data.data)
+          const rawItems = res.data.data as Record<string, unknown>[]
+          const isRichStudent = rawItems.some((item) => item.nama && item.nis)
+          if (isRichStudent) {
+            setStudents(rawItems as unknown as SiswaNonaktifMock[])
+          } else {
+            // Format BE: [{ subjekId, saldo, tidakAktif }]
+            const kandidatMap = new Map<
+              number,
+              { saldo: number; tidakAktif?: boolean }
+            >()
+            for (const item of rawItems) {
+              const sid = Number(
+                item.subjekId ?? item.subjek_id ?? item.siswa_id
+              )
+              if (sid) {
+                kandidatMap.set(sid, {
+                  saldo: Number(item.saldo ?? 0),
+                  tidakAktif: item.tidakAktif as boolean | undefined,
+                })
+              }
+            }
+
+            setStudents((prev) =>
+              prev.map((siswa) => {
+                const live = kandidatMap.get(siswa.siswa_id)
+                if (live) {
+                  return {
+                    ...siswa,
+                    saldo: live.saldo,
+                    is_refunded: live.saldo === 0,
+                  }
+                }
+                return siswa
+              })
+            )
+          }
         }
       } catch {
-        // Fallback
+        // Fallback memakai data profil lokal
       }
     }
     void loadInitialData()
