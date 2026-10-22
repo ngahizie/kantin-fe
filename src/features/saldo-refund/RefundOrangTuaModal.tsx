@@ -154,31 +154,14 @@ function RefundOrangTuaFormContent({
 
     const payload = {
       subjekId: siswa.siswa_id,
-      siswaId: siswa.siswa_id,
-      nominal: siswa.saldo,
-      metode,
-      namaPenerima: namaPenerima.trim(),
-      kontakPenerima: kontakPenerima.trim(),
-      bank: metode === 'TRANSFER_BANK' ? bank : undefined,
-      noRekening: metode === 'TRANSFER_BANK' ? noRekening.trim() : undefined,
-      namaRekening: metode === 'TRANSFER_BANK' ? namaRekening.trim() : undefined,
-      buktiUrl: buktiUrl || undefined,
-      catatan: catatan.trim() || `Refund saldo ke orang tua: ${namaPenerima.trim()} (${metode})`,
       referensiId: refNo,
+      catatan:
+        catatan.trim() ||
+        `Refund saldo ke orang tua: ${namaPenerima.trim()} (${metode})`,
     }
 
     try {
-      await apiClient.post('/api/saldo/refund', payload).catch(async () => {
-        // Fallback directly to TU mutasi or mock
-        return apiClient.post('/api/saldo/koreksi', {
-          subjekTipe: 'SISWA',
-          subjekId: siswa.siswa_id,
-          arah: 'DEBIT',
-          nominal: siswa.saldo,
-          alasan: `Refund ke orang tua: ${catatan.trim()}`,
-          referensiId: refNo,
-        })
-      })
+      await apiClient.post('/api/saldo/refund', payload)
 
       const slipData: RefundSlipData = {
         type: 'REFUND_ORTU',
@@ -198,8 +181,10 @@ function RefundOrangTuaFormContent({
         nama_penerima: namaPenerima.trim(),
         kontak_penerima: kontakPenerima.trim(),
         bank: metode === 'TRANSFER_BANK' ? bank : undefined,
-        nomor_rekening: metode === 'TRANSFER_BANK' ? noRekening.trim() : undefined,
-        nama_rekening: metode === 'TRANSFER_BANK' ? namaRekening.trim() : undefined,
+        nomor_rekening:
+          metode === 'TRANSFER_BANK' ? noRekening.trim() : undefined,
+        nama_rekening:
+          metode === 'TRANSFER_BANK' ? namaRekening.trim() : undefined,
         bukti_url: buktiUrl || undefined,
         berita_acara: catatan.trim(),
       }
@@ -210,8 +195,11 @@ function RefundOrangTuaFormContent({
 
       onOpenChange(false)
       onRefundSuccess(siswa.siswa_id, slipData)
-    } catch {
-      toast.error('Gagal memproses refund siswa. Silakan coba kembali.')
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || 'Gagal memproses refund siswa. Silakan coba kembali.'
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
