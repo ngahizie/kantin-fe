@@ -5,7 +5,7 @@ import { SetoranKasPage } from '@/features/tu'
 export const Route = createFileRoute('/_authenticated/tu/setoran/')({
   beforeLoad: () => {
     const { hasRole } = useAuthStore.getState().auth
-    if (!hasRole(['tu', 'bendahara', 'admin'])) {
+    if (!hasRole(['tu', 'bendahara'])) {
       throw redirect({
         to: '/403',
       })

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import { SearchProvider } from '@/context/search-provider'
+import { useRoleStore } from '@/stores/useRoleStore'
 
 const COMMAND_MENU_PLACEHOLDER = 'Type a command or search...'
 
@@ -53,6 +54,7 @@ async function openCommandPalette(
 describe('SearchProvider and CommandMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    useRoleStore.getState().setRole('admin')
   })
 
   it('renders the command palette when the palette is open', async () => {
@@ -109,6 +111,7 @@ describe('SearchProvider and CommandMenu', () => {
   })
 
   it('navigates for nested sidebar items (group with sub-items)', async () => {
+    useRoleStore.getState().setRole('pengelola')
     const screen = await renderWithSearchProvider()
     const { getByPlaceholder, getByRole } = screen
 

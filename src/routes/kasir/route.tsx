@@ -13,7 +13,7 @@ export const Route = createFileRoute('/kasir')({
         },
       })
     }
-    if (!hasRole(['kasir', 'admin', 'pengelola'])) {
+    if (!hasRole(['kasir'])) {
       throw redirect({
         to: '/403',
       })
