@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
+import { useRoleStore } from '@/stores/useRoleStore'
 import { TableToolbar } from '@/components/data-table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -92,10 +93,18 @@ export function KoreksiBendaharaPage() {
     useState<MutasiKoreksiItem | null>(null)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
 
+  const { currentRole } = useRoleStore()
+  const isKepsek = currentRole === 'kepsek'
+  const canAccessSesiTutup = !isKepsek
+
   const executeFetch = useCallback(async () => {
     const [resKoreksi, resTx] = await Promise.allSettled([
       apiClient.get('/api/saldo/koreksi'),
-      apiClient.get('/api/kasir/transaksi'),
+      canAccessSesiTutup
+        ? apiClient.get('/api/kasir/transaksi', {
+            silent: true,
+          } as unknown as Record<string, unknown>)
+        : Promise.resolve({ data: { data: { items: [] } } }),
     ])
 
     // 1. Process GET /api/saldo/koreksi
@@ -136,11 +145,12 @@ export function KoreksiBendaharaPage() {
 
     // 2. Process GET /api/kasir/transaksi
     if (resTx.status === 'fulfilled') {
-      const rawData = resTx.value.data
+      const rawData = resTx.value.data as Record<string, unknown> | undefined
+      const rawDataObj = rawData?.data as Record<string, unknown> | unknown[] | undefined
       const items =
-        rawData?.data?.items ??
-        (Array.isArray(rawData?.data)
-          ? rawData.data
+        (rawDataObj as { items?: unknown[] })?.items ??
+        (Array.isArray(rawDataObj)
+          ? rawDataObj
           : Array.isArray(rawData)
             ? rawData
             : [])
@@ -172,7 +182,7 @@ export function KoreksiBendaharaPage() {
         setTransaksiList([])
       }
     }
-  }, [])
+  }, [canAccessSesiTutup])
 
   const loadData = useCallback(
     async (showSuccessToast = false) => {
@@ -389,17 +399,19 @@ export function KoreksiBendaharaPage() {
               <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
               Ekspor CSV
             </Button>
-            <Button
-              size='sm'
-              onClick={() => {
-                setSelectedTxForKoreksi(null)
-                setIsCreateModalOpen(true)
-              }}
-              className='gap-1.5 text-xs'
-            >
-              <Plus className='h-4 w-4' />
-              Buat Koreksi Saldo
-            </Button>
+            {!isKepsek && (
+              <Button
+                size='sm'
+                onClick={() => {
+                  setSelectedTxForKoreksi(null)
+                  setIsCreateModalOpen(true)
+                }}
+                className='gap-1.5 text-xs'
+              >
+                <Plus className='h-4 w-4' />
+                Buat Koreksi Saldo
+              </Button>
+            )}
           </div>
         </div>
 
@@ -468,15 +480,17 @@ export function KoreksiBendaharaPage() {
           onValueChange={setActiveTab}
           className='space-y-4'
         >
-          <TabsList className='grid w-full max-w-md grid-cols-2'>
+          <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-md grid-cols-2'}`}>
             <TabsTrigger value='riwayat' className='gap-2 text-xs'>
               <History className='h-3.5 w-3.5' />
               Log Mutasi Koreksi ({filteredKoreksi.length})
             </TabsTrigger>
-            <TabsTrigger value='transaksi-lampau' className='gap-2 text-xs'>
-              <ReceiptText className='h-3.5 w-3.5' />
-              Lookup Sesi Kasir Selesai ({filteredTransaksi.length})
-            </TabsTrigger>
+            {!isKepsek && (
+              <TabsTrigger value='transaksi-lampau' className='gap-2 text-xs'>
+                <ReceiptText className='h-3.5 w-3.5' />
+                Lookup Sesi Kasir Selesai ({filteredTransaksi.length})
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* TAB 1: LOG MUTASI KOREKSI BENDAHARA */}

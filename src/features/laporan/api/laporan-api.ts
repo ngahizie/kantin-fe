@@ -123,7 +123,7 @@ export const laporanApi = {
   ): Promise<BarisPenjualanKasir[]> {
     const res = await apiClient.get<ApiResponse<BarisPenjualanKasir[]>>(
       '/api/laporan/penjualan/kasir',
-      { params }
+      { params, silent: true } as unknown as Record<string, unknown>
     )
     return res.data.data
   },
@@ -144,7 +144,7 @@ export const laporanApi = {
   async getSiswaSaldoList(search?: string): Promise<SiswaSaldoDetail[]> {
     const res = await apiClient.get<ApiResponse<SiswaSaldoDetail[]>>(
       '/api/laporan/saldo-mengendap/siswa',
-      { params: { search } }
+      { params: { search }, silent: true } as unknown as Record<string, unknown>
     )
     return res.data.data
   },
@@ -154,7 +154,8 @@ export const laporanApi = {
    */
   async getKartuTamuSaldoList(): Promise<KartuTamuSaldoDetail[]> {
     const res = await apiClient.get<ApiResponse<KartuTamuSaldoDetail[]>>(
-      '/api/laporan/saldo-mengendap/kartu-tamu'
+      '/api/laporan/saldo-mengendap/kartu-tamu',
+      { silent: true } as unknown as Record<string, unknown>
     )
     return res.data.data
   },

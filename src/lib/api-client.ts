@@ -53,6 +53,10 @@ apiClient.interceptors.response.use(
   (error: AxiosError<{ message?: string; status?: string }>) => {
     const status = error.response?.status
     const message = error.response?.data?.message || error.message || 'Terjadi kesalahan sistem'
+    const isSilent = Boolean(
+      (error.config as { silent?: boolean; skipToast?: boolean } | undefined)?.silent ||
+      (error.config as { silent?: boolean; skipToast?: boolean } | undefined)?.skipToast
+    )
 
     if (status === 401) {
       // Token expired atau unauthenticated
@@ -65,9 +69,13 @@ apiClient.interceptors.response.use(
         window.location.href = '/sign-in'
       }
     } else if (status === 403) {
-      toast.error('Anda tidak memiliki hak akses untuk aksi ini')
+      if (!isSilent) {
+        toast.error('Anda tidak memiliki hak akses untuk aksi ini')
+      }
     } else if (status && status >= 500) {
-      toast.error(`Kesalahan Server (${status}): ${message}`)
+      if (!isSilent) {
+        toast.error(`Kesalahan Server (${status}): ${message}`)
+      }
     }
 
     return Promise.reject(error)

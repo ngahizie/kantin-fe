@@ -36,6 +36,7 @@ import { BackofficeHeader } from '@/components/layout/backoffice-header'
 import { Main } from '@/components/layout/main'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import { useRoleStore } from '@/stores/useRoleStore'
 import apiClient from '@/lib/api-client'
 import type { RingkasanPenjualan, RingkasanRekonsiliasi } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
@@ -81,6 +82,7 @@ const formatRupiah = (val: number) => {
 }
 
 export function DashboardPage() {
+  const { currentRole } = useRoleStore()
   const [penjualan, setPenjualan] = useState<RingkasanPenjualan | null>(null)
   const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -92,6 +94,9 @@ export function DashboardPage() {
 
     const fetchInitialData = async () => {
       try {
+        const canViewKatalog = currentRole !== 'kepsek'
+        const canViewTransaksi = currentRole !== 'kepsek'
+
         const [
           penjualanRes,
           rekonsiliasiRes,
@@ -101,9 +106,14 @@ export function DashboardPage() {
         ] = await Promise.allSettled([
           laporanApi.getPenjualan(),
           laporanApi.getRekonsiliasi(),
-          katalogApi.getMenuList(),
-          katalogApi.getKategoriList(),
-          apiClient.get('/api/kasir/transaksi', { params: { ukuran: 5, halaman: 0 } }),
+          canViewKatalog ? katalogApi.getMenuList() : Promise.resolve([]),
+          canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
+          canViewTransaksi
+            ? apiClient.get('/api/kasir/transaksi', {
+                params: { ukuran: 5, halaman: 0 },
+                silent: true,
+              } as unknown as Record<string, unknown>)
+            : Promise.resolve({ data: { data: [] } } as any),
         ])
 
         if (!isMounted) return
@@ -173,7 +183,7 @@ export function DashboardPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [currentRole])
 
   // Normalisasi data menu dari BE
   const effectiveMenuItems: LowStockDisplayItem[] = useMemo(() => {

@@ -54,10 +54,18 @@ export function LaporanSaldoMengendapPage() {
     let isMounted = true
     const init = async () => {
       try {
-        const [resRingkasan, resSiswa, resKartuTamu] = await Promise.all([
-          laporanApi.getSaldoMengendap(),
-          laporanApi.getSiswaSaldoList(),
-          laporanApi.getKartuTamuSaldoList(),
+        const resRingkasan = await laporanApi.getSaldoMengendap()
+        const [resSiswa, resKartuTamu] = await Promise.all([
+          laporanApi.getSiswaSaldoList().catch((err) => {
+            // eslint-disable-next-line no-console
+            console.warn('Daftar saldo siswa tidak dapat dimuat (role terbatas):', err)
+            return []
+          }),
+          laporanApi.getKartuTamuSaldoList().catch((err) => {
+            // eslint-disable-next-line no-console
+            console.warn('Daftar saldo kartu tamu tidak dapat dimuat (role terbatas):', err)
+            return []
+          }),
         ])
         if (!isMounted) return
         setRingkasan(resRingkasan)
