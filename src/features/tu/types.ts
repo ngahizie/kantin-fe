@@ -35,3 +35,146 @@ export interface KonfirmasiSetoranPayload {
   catatan?: string
   bendahara_nama?: string
 }
+
+const KNOWN_PETUGAS_MAP: Record<number, { nama: string; nip?: string }> = {
+  1: { nama: 'Andika Pratama (Petugas TU 1)', nip: '198805122011011002' },
+  2: { nama: 'Sri Wahyuni (Petugas TU)', nip: '199203152018012003' },
+}
+
+export function mapRekapSetoranTuItem(
+  raw: any,
+  fallbackDate?: string
+): SetoranKasItem {
+  if (!raw) {
+    return {
+      id: `SETOR-${(fallbackDate || '').replace(/-/g, '')}-unknown`,
+      tanggal: fallbackDate || new Date().toISOString().slice(0, 10),
+      petugas_id: 0,
+      petugas_nama: 'Petugas Tidak Diketahui',
+      total_transaksi: 0,
+      total_topup_siswa: 0,
+      total_topup_kartu_tamu: 0,
+      total_sistem: 0,
+      uang_fisik: null,
+      selisih: null,
+      status: 'MENUNGGU_KONFIRMASI',
+      rincian_transaksi: [],
+    }
+  }
+
+  // Jika sudah merupakan format lengkap SetoranKasItem (misal mock data)
+  if (
+    raw.petugas_nama &&
+    raw.id &&
+    raw.total_sistem !== undefined &&
+    raw.status
+  ) {
+    return raw as SetoranKasItem
+  }
+
+  const petugasId = Number(raw.petugasId ?? raw.petugas_id ?? 1)
+  const tanggal = String(
+    raw.tanggal ||
+      fallbackDate ||
+      new Date().toLocaleDateString('en-CA')
+  )
+  const totalTopup = Number(
+    raw.totalTopup ?? raw.total_sistem ?? raw.totalSistem ?? 0
+  )
+  const jumlahDisetor =
+    raw.jumlahDisetor !== undefined && raw.jumlahDisetor !== null
+      ? Number(raw.jumlahDisetor)
+      : raw.uang_fisik !== undefined && raw.uang_fisik !== null
+        ? Number(raw.uang_fisik)
+        : null
+
+  const isConfirmed = Boolean(
+    raw.referensiId ||
+      raw.referensi_id ||
+      (jumlahDisetor !== null && jumlahDisetor > 0) ||
+      raw.status === 'TERKONFIRMASI'
+  )
+
+  let selisih: number | null = null
+  if (jumlahDisetor !== null) {
+    selisih = jumlahDisetor - totalTopup
+  } else if (raw.selisih !== undefined && raw.selisih !== null) {
+    // Di BE: selisih = totalTopup - jumlahDisetor (positif = kurang)
+    // Di FE: selisih = uang_fisik - total_sistem (negatif = kurang)
+    selisih = -Number(raw.selisih)
+  }
+
+  const id = String(
+    raw.id ||
+      raw.referensiId ||
+      raw.referensi_id ||
+      `SETOR-${tanggal.replace(/-/g, '')}-${petugasId}`
+  )
+
+  const knownPetugas = KNOWN_PETUGAS_MAP[petugasId]
+  const petugasNama = String(
+    raw.petugas_nama ||
+      raw.petugasNama ||
+      knownPetugas?.nama ||
+      `Petugas Loket TU #${petugasId}`
+  )
+
+  const petugasNip =
+    raw.petugas_nip ||
+    raw.petugasNip ||
+    knownPetugas?.nip ||
+    undefined
+
+  return {
+    id,
+    tanggal,
+    petugas_id: petugasId,
+    petugas_nama: petugasNama,
+    petugas_nip: petugasNip,
+    total_transaksi: Number(
+      raw.total_transaksi ??
+        raw.totalTransaksi ??
+        (Array.isArray(raw.rincian_transaksi)
+          ? raw.rincian_transaksi.length
+          : Array.isArray(raw.rincianTransaksi)
+            ? raw.rincianTransaksi.length
+            : 1)
+    ),
+    total_topup_siswa: Number(
+      raw.total_topup_siswa ?? raw.totalTopupSiswa ?? totalTopup
+    ),
+    total_topup_kartu_tamu: Number(
+      raw.total_topup_kartu_tamu ?? raw.totalTopupKartuTamu ?? 0
+    ),
+    total_sistem: totalTopup,
+    uang_fisik: isConfirmed ? (jumlahDisetor ?? totalTopup) : null,
+    selisih: isConfirmed ? (selisih ?? 0) : null,
+    status: isConfirmed ? 'TERKONFIRMASI' : 'MENUNGGU_KONFIRMASI',
+    catatan:
+      raw.catatan ||
+      (isConfirmed
+        ? selisih === 0
+          ? 'Uang fisik pas sesuai total sistem'
+          : `Selisih kas ${selisih !== null && selisih < 0 ? 'kurang' : 'lebih'} dicatat dalam berita acara`
+        : undefined),
+    bendahara_id:
+      raw.bendahara_id !== undefined
+        ? raw.bendahara_id
+        : raw.bendaharaId !== undefined
+          ? raw.bendaharaId
+          : isConfirmed
+            ? 10
+            : null,
+    bendahara_nama:
+      raw.bendahara_nama ||
+      raw.bendaharaNama ||
+      (isConfirmed ? 'Bendahara Sekolah' : null),
+    konfirmasi_pada:
+      raw.konfirmasi_pada || raw.konfirmasiPada || raw.waktu || null,
+    rincian_transaksi: Array.isArray(raw.rincian_transaksi)
+      ? raw.rincian_transaksi
+      : Array.isArray(raw.rincianTransaksi)
+        ? raw.rincianTransaksi
+        : [],
+  }
+}
