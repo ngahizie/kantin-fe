@@ -55,7 +55,7 @@ export function StudentSearchCard({
     if (!targetUid) return
 
     const found = students.find(
-      (s) => s.uid.toLowerCase() === targetUid.toLowerCase()
+      (s) => (s.uid || '').toLowerCase() === targetUid.toLowerCase()
     )
     if (found) {
       onSelectStudent(found)
@@ -131,7 +131,7 @@ export function StudentSearchCard({
                     {students.map((student) => (
                       <CommandItem
                         key={student.siswa_id}
-                        value={`${student.nis} ${student.nama} ${student.kelas}`}
+                        value={`${student.nis || ''} ${student.nama || ''} ${student.kelas || ''}`}
                         onSelect={() => {
                           onSelectStudent(student)
                           setOpenCombobox(false)
@@ -142,10 +142,10 @@ export function StudentSearchCard({
                           <Avatar className='h-8 w-8'>
                             <AvatarImage
                               src={student.foto_url}
-                              alt={student.nama}
+                              alt={student.nama || 'Siswa'}
                             />
                             <AvatarFallback>
-                              {student.nama.charAt(0)}
+                              {student.nama?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
@@ -217,10 +217,10 @@ export function StudentSearchCard({
               <Avatar className='h-16 w-16 border-2 border-background'>
                 <AvatarImage
                   src={selectedStudent.foto_url}
-                  alt={selectedStudent.nama}
+                  alt={selectedStudent.nama || 'Siswa'}
                 />
                 <AvatarFallback className='bg-primary/10 text-lg font-bold text-primary'>
-                  {selectedStudent.nama.charAt(0)}
+                  {selectedStudent.nama?.charAt(0) || '?'}
                 </AvatarFallback>
               </Avatar>
 

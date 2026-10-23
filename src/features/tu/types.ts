@@ -1,3 +1,5 @@
+import type { KartuSiswaMock } from '@/mocks/mock-data'
+
 export interface TransaksiTopupDetail {
   id: string | number
   waktu: string
@@ -213,5 +215,85 @@ export function mapRekapSetoranTuItem(
       : Array.isArray(raw.rincianTransaksi)
         ? raw.rincianTransaksi
         : [],
+  }
+}
+
+
+export interface RawInfoSiswa {
+  siswaId?: number | string
+  siswa_id?: number | string
+  id?: number | string
+  subjekId?: number | string
+  subjek_id?: number | string
+  nis?: string
+  nama?: string
+  kelas?: string
+  saldo?: number | string
+  tidakAktif?: boolean
+  tidak_aktif?: boolean
+  uid?: string
+  rfidUid?: string
+  rfid_uid?: string
+  fotoUrl?: string
+  foto_url?: string
+  limitHarian?: number | string
+  limit_harian?: number | string
+  belanjaHariIni?: number | string
+  belanja_hari_ini?: number | string
+  isBlocked?: boolean
+  is_blocked?: boolean
+  parentName?: string
+  parent_name?: string
+  parentPhone?: string
+  parent_phone?: string
+}
+
+/**
+ * Memetakan respons pencarian siswa backend (/api/siswa atau InfoSiswa)
+ * ke bentuk KartuSiswaMock yang digunakan oleh komponen UI StudentSearchCard dan TopupTunaiPage.
+ */
+export function mapInfoSiswaToKartuSiswa(
+  raw: RawInfoSiswa | null | undefined
+): KartuSiswaMock {
+  if (!raw) {
+    return {
+      siswa_id: 0,
+      uid: 'UID-UNKNOWN',
+      nis: '',
+      nama: 'Siswa Tidak Diketahui',
+      kelas: '-',
+      foto_url: '',
+      saldo: 0,
+      limit_harian: 50000,
+      belanja_hari_ini: 0,
+      is_blocked: false,
+    }
+  }
+
+  const siswaId = Number(
+    raw.siswaId ?? raw.siswa_id ?? raw.id ?? raw.subjekId ?? raw.subjek_id ?? 0
+  )
+  const nis = String(raw.nis ?? '')
+  const isBlocked = Boolean(
+    raw.isBlocked ?? raw.is_blocked ?? raw.tidakAktif ?? raw.tidak_aktif ?? false
+  )
+
+  return {
+    siswa_id: siswaId,
+    uid:
+      raw.uid ||
+      raw.rfidUid ||
+      raw.rfid_uid ||
+      (nis ? `UID-${nis}` : `UID-${siswaId}`),
+    nis,
+    nama: raw.nama ? String(raw.nama) : `Siswa #${siswaId}`,
+    kelas: raw.kelas ? String(raw.kelas) : '-',
+    foto_url: raw.foto_url || raw.fotoUrl || '',
+    saldo: Number(raw.saldo ?? 0),
+    limit_harian: Number(raw.limit_harian ?? raw.limitHarian ?? 50000),
+    belanja_hari_ini: Number(raw.belanja_hari_ini ?? raw.belanjaHariIni ?? 0),
+    is_blocked: isBlocked,
+    parent_name: raw.parent_name || raw.parentName,
+    parent_phone: raw.parent_phone || raw.parentPhone,
   }
 }
