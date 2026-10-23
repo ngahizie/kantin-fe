@@ -2,10 +2,8 @@ import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
-  RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  Calendar,
   Printer,
   FileSpreadsheet,
   Eye,
@@ -46,6 +44,7 @@ import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import {
   type SetoranKasItem,
   type TransaksiTopupDetail,
+  type RawRekapTu,
   mapRekapSetoranTuItem,
 } from './types'
 
@@ -92,7 +91,7 @@ export function SetoranKasPage() {
           const rawItems = res.data?.data
           if (Array.isArray(rawItems)) {
             setSetoranList(
-              rawItems.map((item: any) =>
+              rawItems.map((item: RawRekapTu) =>
                 mapRekapSetoranTuItem(item, selectedDate)
               )
             )
@@ -129,42 +128,6 @@ export function SetoranKasPage() {
       isMounted = false
     }
   }, [selectedDate])
-
-  const handleRefresh = async () => {
-    setIsLoading(true)
-    try {
-      const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
-        params: { tanggal: selectedDate },
-      })
-
-      const rawItems = res.data?.data
-      if (Array.isArray(rawItems)) {
-        setSetoranList(
-          rawItems.map((item: any) => mapRekapSetoranTuItem(item, selectedDate))
-        )
-      } else if (useMock) {
-        const filteredMock = MOCK_SETORAN_KAS.filter(
-          (s) => s.tanggal === selectedDate
-        )
-        setSetoranList(filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS)
-      } else {
-        setSetoranList([])
-      }
-      toast.success('Data rekapitulasi setoran kas TU berhasil dimuat ulang')
-    } catch {
-      if (useMock) {
-        const filteredMock = MOCK_SETORAN_KAS.filter(
-          (s) => s.tanggal === selectedDate
-        )
-        setSetoranList(filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS)
-        toast.success('Data rekapitulasi setoran kas TU berhasil dimuat ulang')
-      } else {
-        toast.error('Gagal memuat ulang rekapitulasi setoran kas TU')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Handle successful confirmation from modal
   const handleConfirmSuccess = (updatedItem: SetoranKasItem) => {
@@ -271,41 +234,11 @@ export function SetoranKasPage() {
       </Header>
 
       <Main className='space-y-6'>
-        {/* Header Description & Refresh */}
-        <div className='flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Rekapitulasi & Setoran Kas TU
-            </h1>
-            <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
-              Pencatatan penerimaan uang tunai top-up harian per petugas TU,
-              verifikasi uang fisik oleh Bendahara, dan pencatatan selisih kas
-              fisik.
-            </p>
-          </div>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className='gap-1.5 text-xs'
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              Muat Ulang
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleExportCSV}
-              className='gap-1.5 text-xs'
-            >
-              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-              Ekspor CSV
-            </Button>
-          </div>
+        {/* Title Header */}
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Rekapitulasi & Setoran Kas TU
+          </h1>
         </div>
 
         {/* Top KPI Cards */}
@@ -388,15 +321,12 @@ export function SetoranKasPage() {
         {/* Filter Bar */}
         <TableToolbar
           extraLeft={
-            <div className='flex items-center gap-1.5'>
-              <Calendar className='h-3.5 w-3.5 text-muted-foreground' />
-              <Input
-                type='date'
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className='h-8 text-xs font-medium w-[135px] bg-background'
-              />
-            </div>
+            <Input
+              type='date'
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className='h-8 w-[155px] px-2.5 text-xs font-medium bg-background'
+            />
           }
           searchPlaceholder='Cari nama petugas atau No. Setoran...'
           searchValue={searchQuery}
@@ -421,10 +351,10 @@ export function SetoranKasPage() {
           }}
         >
           <Button
-            variant='outline'
+            variant='secondary'
             size='sm'
             onClick={handleExportCSV}
-            className='h-8 gap-1.5 text-xs'
+            className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none'
           >
             <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
             Ekspor CSV
@@ -432,7 +362,7 @@ export function SetoranKasPage() {
         </TableToolbar>
 
         {/* Rekapitulasi Table */}
-        <Card className='overflow-hidden border border-border bg-card'>
+        <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden shadow-none'>
           <CardHeader className='border-b bg-muted/20 px-6 py-4'>
             <div className='flex items-center justify-between'>
               <div>
@@ -484,7 +414,21 @@ export function SetoranKasPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredList.length === 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={9}
+                          className='h-32 text-center text-muted-foreground'
+                        >
+                          <div className='flex flex-col items-center justify-center space-y-2'>
+                            <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                            <p className='text-sm text-muted-foreground'>
+                              Memuat data rekapitulasi setoran kas TU...
+                            </p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredList.length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={9}
@@ -800,7 +744,7 @@ export function SetoranKasPage() {
           {selectedSetoranForPrint && (
             <div
               id='print-area'
-              className='space-y-4 rounded-lg border bg-card p-6 font-sans text-xs'
+              className='space-y-4 rounded-lg bg-card p-6 font-sans text-xs'
             >
               <div className='space-y-1 border-b pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
@@ -851,7 +795,7 @@ export function SetoranKasPage() {
                 </div>
               </div>
 
-              <div className='space-y-1.5 rounded-md border bg-muted/40 p-3 font-mono'>
+              <div className='space-y-1.5 rounded-md bg-muted/40 p-3 font-mono'>
                 <div className='flex justify-between'>
                   <span>Total Sistem:</span>
                   <span className='font-bold'>
@@ -885,7 +829,7 @@ export function SetoranKasPage() {
               </div>
 
               {selectedSetoranForPrint.catatan && (
-                <div className='rounded border bg-muted/20 p-2'>
+                <div className='rounded bg-muted/20 p-2'>
                   <span className='block text-[10px] font-semibold text-muted-foreground'>
                     Catatan Berita Acara:
                   </span>
@@ -919,8 +863,9 @@ export function SetoranKasPage() {
 
           <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant='outline'
+              variant='secondary'
               onClick={() => setIsPrintModalOpen(false)}
+              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Tutup
             </Button>

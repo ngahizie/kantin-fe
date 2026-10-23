@@ -46,12 +46,6 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     description: 'Operasional layar kasir POS dan transaksi RFID harian',
     badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800',
   },
-  kepsek: {
-    id: 'kepsek',
-    label: 'Kepala Sekolah',
-    description: 'Pemantauan eksekutif rekonsiliasi kas dan laporan keuangan',
-    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
-  },
 }
 
 function getStoredUser() {
