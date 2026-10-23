@@ -38,7 +38,6 @@ export function TopupTunaiPage() {
   const [nominal, setNominal] = useState<string>('')
   const [namaPenyetor, setNamaPenyetor] = useState<string>('Orang Tua / Wali')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const [slipData, setSlipData] = useState<TopupSlipData | null>(null)
   const [isSlipOpen, setIsSlipOpen] = useState(false)
@@ -62,22 +61,6 @@ export function TopupTunaiPage() {
       isMounted = false
     }
   }, [])
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat')
-      if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
-      }
-      toast.success('Data siswa berhasil dimuat ulang')
-    } catch {
-      setStudents(MOCK_SISWA)
-      toast.success('Data siswa berhasil dimuat ulang')
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   // Keep selected student object updated if list changes
   const currentStudent = selectedStudent
@@ -216,29 +199,10 @@ export function TopupTunaiPage() {
 
       <Main className='space-y-6'>
         {/* Header Title Section */}
-        <div className='flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Pengisian Saldo Tunai Siswa
-            </h1>
-            <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
-              Modul layanan Kasir TU — Satu-satunya titik penerimaan uang
-              tunai kantin SKOOLIA
-            </p>
-          </div>
-
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className='gap-1.5 self-start text-xs sm:self-auto'
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-            Refresh Data
-          </Button>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Pengisian Saldo Tunai Siswa
+          </h1>
         </div>
 
         {/* Ringkasan Status Header Cards */}
@@ -268,7 +232,7 @@ export function TopupTunaiPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Batas Saldo Maksimal
+                Batas Saldo Maksimal Siswa
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                 {formatRupiah(MAX_SALDO_SEKOLAH)}
@@ -290,7 +254,7 @@ export function TopupTunaiPage() {
 
           {/* Right Column: Topup Form (7 Cols) */}
           <div className='space-y-6 lg:col-span-7'>
-            <Card className='border border-border bg-card'>
+            <Card className='border-0 bg-muted/70 shadow-none dark:bg-muted/30'>
               <CardHeader className='pb-4'>
                 <CardTitle className='text-lg font-semibold'>
                   Form Pengisian Saldo Tunai
@@ -313,12 +277,12 @@ export function TopupTunaiPage() {
                           key={preset}
                           type='button'
                           variant={
-                            nominalNum === preset ? 'default' : 'outline'
+                            nominalNum === preset ? 'default' : 'secondary'
                           }
-                          className={`h-11 text-xs font-semibold sm:text-sm ${
+                          className={`h-11 text-xs font-semibold sm:text-sm border-0 shadow-none ${
                             nominalNum === preset
                               ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                              : 'border-border bg-background hover:bg-muted text-foreground'
+                              : 'bg-background hover:bg-background/80 text-foreground'
                           }`}
                           onClick={() => handleSelectPreset(preset)}
                         >
@@ -374,7 +338,7 @@ export function TopupTunaiPage() {
                   {/* Balance Preview & Validation Warnings */}
                   {currentStudent && (
                     <div className='space-y-3 pt-2'>
-                      <div className='space-y-3 rounded-xl border border-border bg-muted/40 p-4 dark:bg-muted/20'>
+                      <div className='space-y-3 rounded-xl border-0 bg-muted/50 p-4 dark:bg-muted/20'>
                         <h4 className='text-xs font-bold tracking-wider text-muted-foreground uppercase'>
                           Kalkulasi Transaksi
                         </h4>

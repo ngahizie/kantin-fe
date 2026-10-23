@@ -67,7 +67,7 @@ export function StudentSearchCard({
   }
 
   return (
-    <Card className='border border-border bg-card'>
+    <Card className='border-0 bg-muted/70 shadow-none dark:bg-muted/30'>
       <CardHeader className='pb-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div>
@@ -175,7 +175,7 @@ export function StudentSearchCard({
         </div>
 
         {/* Input Scan RFID Reader TU */}
-        <div className='space-y-2 rounded-xl border border-border bg-muted/40 p-3.5 dark:bg-muted/20'>
+        <div className='space-y-2 rounded-xl border-0 bg-muted/50 p-3.5 dark:bg-muted/20'>
           <label className='text-xs font-medium text-foreground'>
             Scan atau Input UID Kartu RFID (Reader TU)
           </label>
@@ -196,7 +196,7 @@ export function StudentSearchCard({
               type='button'
               size='sm'
               variant='secondary'
-              className='h-9 px-3 text-xs'
+              className='h-9 border-0 px-3 text-xs shadow-none'
               onClick={() => handleFindRfid()}
             >
               Cari Kartu
@@ -212,7 +212,7 @@ export function StudentSearchCard({
 
         {/* Selected Student Detail View */}
         {selectedStudent ? (
-          <div className='space-y-4 rounded-xl border border-border bg-muted/30 p-4 dark:bg-muted/10'>
+          <div className='space-y-4 rounded-xl border-0 bg-muted/50 p-4 dark:bg-muted/20'>
             <div className='flex items-start gap-4'>
               <Avatar className='h-16 w-16 border-2 border-background'>
                 <AvatarImage
@@ -274,7 +274,7 @@ export function StudentSearchCard({
               </div>
             </div>
 
-            <div className='flex items-center justify-between rounded-lg border border-border bg-background p-3'>
+            <div className='flex items-center justify-between rounded-lg border-0 bg-background/80 p-3 shadow-none'>
               <span className='text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
                 Saldo Saat Ini
               </span>
@@ -284,7 +284,7 @@ export function StudentSearchCard({
             </div>
           </div>
         ) : (
-          <div className='rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center'>
+          <div className='rounded-xl border-0 bg-muted/40 p-6 text-center'>
             <p className='text-sm font-medium text-muted-foreground'>
               Belum ada siswa terpilih
             </p>
