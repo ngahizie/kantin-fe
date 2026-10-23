@@ -14,7 +14,6 @@ import {
   History,
   FileCheck2,
   RotateCcw,
-  RefreshCw,
   AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -373,23 +372,8 @@ export function KoreksiBendaharaPage() {
             <h1 className='text-2xl font-bold tracking-tight text-foreground'>
               Mutasi Koreksi Bendahara
             </h1>
-            <p className='text-xs text-muted-foreground'>
-              Otoritas pembetulan kesalahan transaksi dan mutasi pembalik saldo sesi kasir yang telah ditutup
-            </p>
           </div>
           <div className='flex items-center gap-2'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={() => void loadData(true)}
-              disabled={isLoading}
-              className='gap-1.5 text-xs border-0 bg-muted/80 shadow-none'
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              Muat Ulang
-            </Button>
             <Button
               variant='secondary'
               size='sm'
@@ -600,7 +584,21 @@ export function KoreksiBendaharaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredKoreksi.length === 0 ? (
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={9}
+                            className='h-32 text-center text-muted-foreground'
+                          >
+                            <div className='flex flex-col items-center justify-center space-y-2'>
+                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <p className='text-sm text-muted-foreground'>
+                                Memuat data mutasi koreksi...
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredKoreksi.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={9}
@@ -845,7 +843,21 @@ export function KoreksiBendaharaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTransaksi.length === 0 ? (
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className='h-32 text-center text-muted-foreground'
+                          >
+                            <div className='flex flex-col items-center justify-center space-y-2'>
+                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <p className='text-sm text-muted-foreground'>
+                                Memuat data transaksi sesi tutup...
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredTransaksi.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={7}
