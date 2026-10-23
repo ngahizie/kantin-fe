@@ -1014,7 +1014,7 @@ export function KoreksiBendaharaPage() {
           {selectedKoreksiForPrint && (
             <div
               id='print-koreksi-area'
-              className='space-y-4 rounded-lg border bg-card p-6 font-sans text-xs'
+              className='space-y-4 rounded-lg bg-card p-4 font-sans text-xs border-0 outline-none'
             >
               <div className='space-y-1 border-b pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
@@ -1072,7 +1072,7 @@ export function KoreksiBendaharaPage() {
                 )}
               </div>
 
-              <div className='space-y-1.5 rounded-md border bg-muted/40 p-3 font-mono'>
+              <div className='space-y-1.5 rounded-md bg-muted/40 p-3 font-mono border-0'>
                 <div className='flex justify-between'>
                   <span>Arah Mutasi:</span>
                   <span className='font-bold uppercase'>
@@ -1087,7 +1087,7 @@ export function KoreksiBendaharaPage() {
                     {formatRupiah(selectedKoreksiForPrint.nominal)}
                   </span>
                 </div>
-                <div className='flex justify-between border-t pt-1'>
+                <div className='flex justify-between border-t border-muted-foreground/10 pt-1'>
                   <span>Saldo Awal → Saldo Baru:</span>
                   <span className='font-semibold'>
                     {formatRupiah(selectedKoreksiForPrint.saldo_sebelum)}{' '}
@@ -1097,7 +1097,7 @@ export function KoreksiBendaharaPage() {
                 </div>
               </div>
 
-              <div className='space-y-1 rounded border bg-muted/20 p-2.5'>
+              <div className='space-y-1 rounded bg-muted/20 p-2.5 border-0'>
                 <span className='block text-[10px] font-semibold text-muted-foreground'>
                   Alasan Audit Koreksi Wajib:
                 </span>
