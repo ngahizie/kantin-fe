@@ -38,13 +38,50 @@ export interface KonfirmasiSetoranPayload {
   bendahara_nama?: string
 }
 
+export interface RawRekapTu {
+  id?: string | number | null
+  tanggal?: string | null
+  petugasId?: number | null
+  petugas_id?: number | null
+  petugasNama?: string | null
+  petugas_nama?: string | null
+  petugasNip?: string | null
+  petugas_nip?: string | null
+  totalTopup?: number | null
+  total_sistem?: number | null
+  totalSistem?: number | null
+  total_transaksi?: number | null
+  totalTransaksi?: number | null
+  total_topup_siswa?: number | null
+  totalTopupSiswa?: number | null
+  total_topup_kartu_tamu?: number | null
+  totalTopupKartuTamu?: number | null
+  jumlahDisetor?: number | null
+  uang_fisik?: number | null
+  selisih?: number | null
+  referensiId?: string | null
+  referensi_id?: string | null
+  status?: string | null
+  catatan?: string | null
+  bendaharaId?: number | null
+  bendahara_id?: number | null
+  bendaharaNama?: string | null
+  bendahara_nama?: string | null
+  konfirmasiPada?: string | null
+  konfirmasi_pada?: string | null
+  waktu?: string | null
+  rincianTransaksi?: TransaksiTopupDetail[] | null
+  rincian_transaksi?: TransaksiTopupDetail[] | null
+  [key: string]: unknown
+}
+
 const KNOWN_PETUGAS_MAP: Record<number, { nama: string; nip?: string }> = {
   1: { nama: 'Andika Pratama (Petugas TU 1)', nip: '198805122011011002' },
   2: { nama: 'Sri Wahyuni (Petugas TU)', nip: '199203152018012003' },
 }
 
 export function mapRekapSetoranTuItem(
-  raw: any,
+  raw: RawRekapTu | null | undefined,
   fallbackDate?: string
 ): SetoranKasItem {
   if (!raw) {
@@ -71,7 +108,7 @@ export function mapRekapSetoranTuItem(
     raw.total_sistem !== undefined &&
     raw.status
   ) {
-    return raw as SetoranKasItem
+    return raw as unknown as SetoranKasItem
   }
 
   const petugasId = Number(raw.petugasId ?? raw.petugas_id ?? 1)
@@ -122,9 +159,9 @@ export function mapRekapSetoranTuItem(
   )
 
   const petugasNip =
-    raw.petugas_nip ||
-    raw.petugasNip ||
-    knownPetugas?.nip ||
+    (raw.petugas_nip ||
+      raw.petugasNip ||
+      knownPetugas?.nip) ||
     undefined
 
   return {
@@ -132,7 +169,7 @@ export function mapRekapSetoranTuItem(
     tanggal,
     petugas_id: petugasId,
     petugas_nama: petugasNama,
-    petugas_nip: petugasNip,
+    petugas_nip: petugasNip || undefined,
     total_transaksi: Number(
       raw.total_transaksi ??
         raw.totalTransaksi ??
@@ -153,26 +190,26 @@ export function mapRekapSetoranTuItem(
     selisih: isConfirmed ? (selisih ?? 0) : null,
     status: isConfirmed ? 'TERKONFIRMASI' : 'MENUNGGU_KONFIRMASI',
     catatan:
-      raw.catatan ||
+      (raw.catatan ||
       (isConfirmed
         ? selisih === 0
           ? 'Uang fisik pas sesuai total sistem'
           : `Selisih kas ${selisih !== null && selisih < 0 ? 'kurang' : 'lebih'} dicatat dalam berita acara`
-        : undefined),
+        : undefined)) || undefined,
     bendahara_id:
-      raw.bendahara_id !== undefined
-        ? raw.bendahara_id
-        : raw.bendaharaId !== undefined
-          ? raw.bendaharaId
+      raw.bendahara_id != null
+        ? Number(raw.bendahara_id)
+        : raw.bendaharaId != null
+          ? Number(raw.bendaharaId)
           : isConfirmed
             ? 10
             : null,
     bendahara_nama:
-      raw.bendahara_nama ||
+      (raw.bendahara_nama ||
       raw.bendaharaNama ||
-      (isConfirmed ? 'Bendahara Sekolah' : null),
+      (isConfirmed ? 'Bendahara Sekolah' : null)) || null,
     konfirmasi_pada:
-      raw.konfirmasi_pada || raw.konfirmasiPada || raw.waktu || null,
+      (raw.konfirmasi_pada || raw.konfirmasiPada || raw.waktu || null) || null,
     rincian_transaksi: Array.isArray(raw.rincian_transaksi)
       ? raw.rincian_transaksi
       : Array.isArray(raw.rincianTransaksi)

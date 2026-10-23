@@ -114,7 +114,13 @@ function KonfirmasiSetoranFormContent({
 
       const res = await apiClient.post('/api/saldo/setoran-tu', payload)
 
-      const beData = (res.data?.data || {}) as Record<string, any>
+      const beData = (res.data?.data || {}) as {
+        referensiId?: string
+        jumlahDisetor?: number
+        selisih?: number
+        catatan?: string
+        waktu?: string
+      }
       const updatedData: SetoranKasItem = {
         ...setoran,
         id: beData.referensiId || setoran.id,

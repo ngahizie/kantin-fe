@@ -14,7 +14,6 @@ import {
   History,
   FileCheck2,
   RotateCcw,
-  RefreshCw,
   AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -373,23 +372,8 @@ export function KoreksiBendaharaPage() {
             <h1 className='text-2xl font-bold tracking-tight text-foreground'>
               Mutasi Koreksi Bendahara
             </h1>
-            <p className='text-xs text-muted-foreground'>
-              Otoritas pembetulan kesalahan transaksi dan mutasi pembalik saldo sesi kasir yang telah ditutup
-            </p>
           </div>
           <div className='flex items-center gap-2'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={() => void loadData(true)}
-              disabled={isLoading}
-              className='gap-1.5 text-xs border-0 bg-muted/80 shadow-none'
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              Muat Ulang
-            </Button>
             <Button
               variant='secondary'
               size='sm'
@@ -600,7 +584,21 @@ export function KoreksiBendaharaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredKoreksi.length === 0 ? (
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={9}
+                            className='h-32 text-center text-muted-foreground'
+                          >
+                            <div className='flex flex-col items-center justify-center space-y-2'>
+                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <p className='text-sm text-muted-foreground'>
+                                Memuat data mutasi koreksi...
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredKoreksi.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={9}
@@ -845,7 +843,21 @@ export function KoreksiBendaharaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTransaksi.length === 0 ? (
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className='h-32 text-center text-muted-foreground'
+                          >
+                            <div className='flex flex-col items-center justify-center space-y-2'>
+                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <p className='text-sm text-muted-foreground'>
+                                Memuat data transaksi sesi tutup...
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredTransaksi.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={7}
@@ -1002,7 +1014,7 @@ export function KoreksiBendaharaPage() {
           {selectedKoreksiForPrint && (
             <div
               id='print-koreksi-area'
-              className='space-y-4 rounded-lg border bg-card p-6 font-sans text-xs'
+              className='space-y-4 rounded-lg bg-card p-4 font-sans text-xs border-0 outline-none'
             >
               <div className='space-y-1 border-b pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
@@ -1060,7 +1072,7 @@ export function KoreksiBendaharaPage() {
                 )}
               </div>
 
-              <div className='space-y-1.5 rounded-md border bg-muted/40 p-3 font-mono'>
+              <div className='space-y-1.5 rounded-md bg-muted/40 p-3 font-mono border-0'>
                 <div className='flex justify-between'>
                   <span>Arah Mutasi:</span>
                   <span className='font-bold uppercase'>
@@ -1075,7 +1087,7 @@ export function KoreksiBendaharaPage() {
                     {formatRupiah(selectedKoreksiForPrint.nominal)}
                   </span>
                 </div>
-                <div className='flex justify-between border-t pt-1'>
+                <div className='flex justify-between border-t border-muted-foreground/10 pt-1'>
                   <span>Saldo Awal → Saldo Baru:</span>
                   <span className='font-semibold'>
                     {formatRupiah(selectedKoreksiForPrint.saldo_sebelum)}{' '}
@@ -1085,7 +1097,7 @@ export function KoreksiBendaharaPage() {
                 </div>
               </div>
 
-              <div className='space-y-1 rounded border bg-muted/20 p-2.5'>
+              <div className='space-y-1 rounded bg-muted/20 p-2.5 border-0'>
                 <span className='block text-[10px] font-semibold text-muted-foreground'>
                   Alasan Audit Koreksi Wajib:
                 </span>
@@ -1115,8 +1127,10 @@ export function KoreksiBendaharaPage() {
 
           <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant='outline'
+              type='button'
+              variant='secondary'
               onClick={() => setIsPrintModalOpen(false)}
+              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Tutup
             </Button>
