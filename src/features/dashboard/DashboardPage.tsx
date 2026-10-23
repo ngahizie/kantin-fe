@@ -88,6 +88,11 @@ export function DashboardPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
+
+  const canViewRekonsiliasi = useMemo(() => {
+    return ['admin', 'bendahara', 'tu', 'kepsek'].includes(currentRole)
+  }, [currentRole])
+
   // Fetch data awal saat komponen dibuka
   useEffect(() => {
     let isMounted = true
@@ -105,7 +110,7 @@ export function DashboardPage() {
           trxRes,
         ] = await Promise.allSettled([
           laporanApi.getPenjualan(),
-          laporanApi.getRekonsiliasi(),
+          canViewRekonsiliasi ? laporanApi.getRekonsiliasi() : Promise.resolve(null),
           canViewKatalog ? katalogApi.getMenuList() : Promise.resolve([]),
           canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
           canViewTransaksi
@@ -279,33 +284,64 @@ export function DashboardPage() {
           </Card>
 
           {/* Card 3: Status Rekonsiliasi Kas */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
-                Status Rekonsiliasi Kas
-              </CardTitle>
-              <div className={`flex size-9 items-center justify-center rounded-lg ${
-                isKasSeimbang
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-destructive/10 text-destructive'
-              }`}>
-                <Scale className='size-5' />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold tracking-tight text-foreground'>
-                {formatRupiah(selisihKas)} <span className='text-base font-normal text-muted-foreground'>Selisih</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                <span className={`inline-flex items-center font-semibold ${
-                  isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
-                }`}>
-                  {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
-                </span>
-                <span>• {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}</span>
-              </div>
-            </CardContent>
-          </Card>
+          {canViewRekonsiliasi ? (
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  Status Rekonsiliasi Kas
+                </CardTitle>
+                <div
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    isKasSeimbang
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-destructive/10 text-destructive'
+                  }`}
+                >
+                  <Scale className='size-5' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-2xl font-bold tracking-tight text-foreground'>
+                  {formatRupiah(selisihKas)}{' '}
+                  <span className='text-base font-normal text-muted-foreground'>Selisih</span>
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                  <span
+                    className={`inline-flex items-center font-semibold ${
+                      isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
+                    }`}
+                  >
+                    {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
+                  </span>
+                  <span>
+                    • {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30 opacity-80'>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  Status Rekonsiliasi Kas
+                </CardTitle>
+                <div className='flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
+                  <Scale className='size-5' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-xl font-bold tracking-tight text-muted-foreground'>
+                  Akses Terbatas
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5'>
+                  <Badge variant='outline' className='text-[10px] font-normal border-muted-foreground/30 px-1.5 py-0'>
+                    Peran Terbatas
+                  </Badge>
+                  <span>• Dikelola TU & Bendahara</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Card 4: Alert Status Stok Menipis */}
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
@@ -363,8 +399,14 @@ export function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className='ps-2 pe-6 pb-4 pt-3'>
-              <div className='h-[310px] w-full'>
-                <ResponsiveContainer width='100%' height='100%'>
+              <div className='h-[310px] w-full min-h-[310px] min-w-0'>
+                <ResponsiveContainer
+                  width='100%'
+                  height='100%'
+                  minHeight={310}
+                  minWidth={250}
+                  initialDimension={{ width: 500, height: 310 }}
+                >
                   <BarChart
                     data={chartData}
                     maxBarSize={36}
