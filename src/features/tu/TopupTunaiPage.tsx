@@ -26,6 +26,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah } from '@/lib/formatters'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
+import { mapInfoSiswaToKartuSiswa } from './types'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const MAX_SALDO_SEKOLAH = 500000
@@ -47,9 +48,9 @@ export function TopupTunaiPage() {
     let isMounted = true
     const loadStudents = async () => {
       try {
-        const res = await apiClient.get('/api/saldo/refund/kandidat')
+        const res = await apiClient.get('/api/siswa', { params: { batas: 50 } })
         if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          setStudents(res.data.data)
+          setStudents(res.data.data.map(mapInfoSiswaToKartuSiswa))
         }
       } catch {
         if (isMounted) {
@@ -66,9 +67,9 @@ export function TopupTunaiPage() {
   const handleRefresh = async () => {
     setIsRefreshing(true)
     try {
-      const res = await apiClient.get('/api/saldo/refund/kandidat')
+      const res = await apiClient.get('/api/siswa', { params: { batas: 50 } })
       if (res.data?.data && Array.isArray(res.data.data)) {
-        setStudents(res.data.data)
+        setStudents(res.data.data.map(mapInfoSiswaToKartuSiswa))
       }
       toast.success('Data siswa berhasil dimuat ulang')
     } catch {

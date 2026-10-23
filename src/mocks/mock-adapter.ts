@@ -1293,7 +1293,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
 
     // --- 6. TU: Pencarian Siswa & Kartu Tamu / Kandidat Saldo ---
     if (
-      (url.includes('/api/saldo/refund/kandidat') ||
+      (url.includes('/api/siswa') ||
+        url.includes('/api/saldo/refund/kandidat') ||
         url.includes('/api/v1/tu/siswa') ||
         url.includes('/api/tu/siswa')) &&
       method === 'get'
@@ -1322,7 +1323,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           code: 200,
           status: 'SUCCESS',
           message: 'Berhasil mengambil daftar siswa',
-          data: siswaList,
+          data: siswaList.map((s) => ({ ...s, siswaId: s.siswa_id })),
         },
       }
     }
@@ -3546,7 +3547,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           data: {
             code: 200,
             status: 'SUCCESS',
-            data: siswaList,
+            data: siswaList.map((s) => ({ ...s, siswaId: s.siswa_id })),
           },
         }
       }
