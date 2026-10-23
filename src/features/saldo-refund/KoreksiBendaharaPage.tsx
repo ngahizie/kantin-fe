@@ -1127,8 +1127,10 @@ export function KoreksiBendaharaPage() {
 
           <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant='outline'
+              type='button'
+              variant='secondary'
               onClick={() => setIsPrintModalOpen(false)}
+              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Tutup
             </Button>
