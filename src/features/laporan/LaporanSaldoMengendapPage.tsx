@@ -7,9 +7,12 @@ import {
   ArrowRight,
   UserCheck,
   Ban,
+  Info,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useRoleStore, type UserRole } from '@/stores/useRoleStore'
+import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -41,31 +44,57 @@ import type {
 } from './types'
 
 export function LaporanSaldoMengendapPage() {
+  const { currentRole } = useRoleStore()
+  const authUser = useAuthStore((s) => s.auth.user)
+  const activeRole: UserRole = currentRole || authUser?.currentRole || 'admin'
+
+  const isTuOrBendahara = activeRole === 'tu' || activeRole === 'bendahara'
+  const isAdmin = activeRole === 'admin'
+
+  // Izin akses rincian sesuai aturan BE:
+  // - Siswa: TU/Bendahara dan Admin Sekolah
+  // - Kartu Tamu: hanya TU/Bendahara
+  // - Kepala Sekolah: hanya ringkasan (tidak meminta rincian siswa maupun kartu tamu)
+  const canAccessSiswa = isTuOrBendahara || isAdmin
+  const canAccessKartuTamu = isTuOrBendahara
+
   const [ringkasan, setRingkasan] = useState<RingkasanSaldoMengendap | null>(null)
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [kartuTamuList, setKartuTamuList] = useState<KartuTamuSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const [activeTab, setActiveTab] = useState<'siswa' | 'kartu-tamu'>('siswa')
+  const defaultTab: 'siswa' | 'kartu-tamu' = canAccessSiswa ? 'siswa' : 'kartu-tamu'
+  const [selectedTab, setSelectedTab] = useState<'siswa' | 'kartu-tamu' | null>(null)
+  const activeTab =
+    selectedTab &&
+    ((selectedTab === 'siswa' && canAccessSiswa) ||
+      (selectedTab === 'kartu-tamu' && canAccessKartuTamu))
+      ? selectedTab
+      : defaultTab
   const [searchQuery, setSearchQuery] = useState('')
-
 
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
-        const resRingkasan = await laporanApi.getSaldoMengendap()
-        const [resSiswa, resKartuTamu] = await Promise.all([
-          laporanApi.getSiswaSaldoList().catch((err) => {
-            // eslint-disable-next-line no-console
-            console.warn('Daftar saldo siswa tidak dapat dimuat (role terbatas):', err)
-            return []
-          }),
-          laporanApi.getKartuTamuSaldoList().catch((err) => {
-            // eslint-disable-next-line no-console
-            console.warn('Daftar saldo kartu tamu tidak dapat dimuat (role terbatas):', err)
-            return []
-          }),
+        setIsLoading(true)
+        // 1. Ringkasan selalu dipanggil (TU/Bendahara, Admin Sekolah, Kepala Sekolah)
+        const ringkasanPromise = laporanApi.getSaldoMengendap()
+
+        // 2. Rincian siswa: hanya dipanggil untuk TU/Bendahara dan Admin Sekolah
+        const siswaPromise = canAccessSiswa
+          ? laporanApi.getSiswaSaldoList()
+          : Promise.resolve([] as SiswaSaldoDetail[])
+
+        // 3. Rincian kartu tamu: hanya dipanggil untuk TU/Bendahara
+        const kartuTamuPromise = canAccessKartuTamu
+          ? laporanApi.getKartuTamuSaldoList()
+          : Promise.resolve([] as KartuTamuSaldoDetail[])
+
+        const [resRingkasan, resSiswa, resKartuTamu] = await Promise.all([
+          ringkasanPromise,
+          siswaPromise,
+          kartuTamuPromise,
         ])
         if (!isMounted) return
         setRingkasan(resRingkasan)
@@ -83,10 +112,11 @@ export function LaporanSaldoMengendapPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [canAccessSiswa, canAccessKartuTamu])
 
   // Filter Siswa
   const filteredSiswa = useMemo(() => {
+    if (!canAccessSiswa) return []
     if (!searchQuery.trim()) return siswaList
     const q = searchQuery.toLowerCase()
     return siswaList.filter(
@@ -96,10 +126,11 @@ export function LaporanSaldoMengendapPage() {
         s.kelas.toLowerCase().includes(q) ||
         s.parentName.toLowerCase().includes(q)
     )
-  }, [siswaList, searchQuery])
+  }, [canAccessSiswa, siswaList, searchQuery])
 
   // Filter Kartu Tamu
   const filteredKartuTamu = useMemo(() => {
+    if (!canAccessKartuTamu) return []
     if (!searchQuery.trim()) return kartuTamuList
     const q = searchQuery.toLowerCase()
     return kartuTamuList.filter(
@@ -108,9 +139,9 @@ export function LaporanSaldoMengendapPage() {
         k.labelPemegang.toLowerCase().includes(q) ||
         k.uid.toLowerCase().includes(q)
     )
-  }, [kartuTamuList, searchQuery])
+  }, [canAccessKartuTamu, kartuTamuList, searchQuery])
 
-  // Ekspor Excel Multi-Sheet
+  // Ekspor Excel Multi-Sheet disesuaikan dengan role
   const handleExportExcel = () => {
     if (!ringkasan) {
       toast.error('Data belum siap untuk diekspor')
@@ -118,57 +149,100 @@ export function LaporanSaldoMengendapPage() {
     }
 
     try {
+      const sheets = []
+
+      // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
+      if (canAccessSiswa) {
+        sheets.push({
+          sheetName: 'Saldo Siswa',
+          title: 'LAPORAN SALDO MENGENDAP SISWA (DANA TITIPAN ORTU)',
+          metadata: {
+            'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+            'Total Saldo Mengendap Siswa': formatRupiah(ringkasan.saldoSiswa),
+            'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
+          },
+          columns: [
+            { header: 'NIS', key: 'nis', width: 14 },
+            { header: 'Nama Siswa', key: 'nama', width: 25 },
+            { header: 'Kelas', key: 'kelas', width: 12 },
+            { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
+            { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
+            { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
+            {
+              header: 'Status Kartu',
+              key: 'isBlocked',
+              formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
+              width: 14,
+            },
+            { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
+            { header: 'Kontak Orang Tua', key: 'parentPhone', width: 18 },
+          ],
+          data: siswaList,
+        })
+      }
+
+      // Sheet 2: Saldo Kartu Tamu (TU/Bendahara)
+      if (canAccessKartuTamu) {
+        sheets.push({
+          sheetName: 'Saldo Kartu Tamu',
+          title: 'LAPORAN SALDO MENGENDAP KARTU TAMU (GURU / STAF / TAMU)',
+          metadata: {
+            'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+            'Total Saldo Mengendap Tamu': formatRupiah(ringkasan.saldoKartuTamu),
+            'Jumlah Kartu Tamu': `${ringkasan.jumlahKartuTamu} Kartu`,
+          },
+          columns: [
+            { header: 'Nomor Kartu', key: 'nomorKartu', width: 16 },
+            { header: 'UID RFID', key: 'uid', width: 16 },
+            { header: 'Label Pemegang', key: 'labelPemegang', width: 25 },
+            { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
+            { header: 'Status', key: 'status', width: 14 },
+          ],
+          data: kartuTamuList,
+        })
+      }
+
+      // Sheet Ringkasan untuk Kepala Sekolah (jika tidak memiliki akses rincian)
+      if (sheets.length === 0) {
+        sheets.push({
+          sheetName: 'Ringkasan Eksekutif',
+          title: 'LAPORAN RINGKASAN SALDO MENGENDAP (KEWAJIBAN SEKOLAH)',
+          metadata: {
+            'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+            'Total Dana Titipan': formatRupiah(ringkasan.total),
+          },
+          columns: [
+            { header: 'Kategori', key: 'kategori', width: 28 },
+            { header: 'Jumlah', key: 'jumlah', width: 18 },
+            { header: 'Total Saldo Mengendap (Rp)', key: 'total', width: 25 },
+          ],
+          data: [
+            {
+              kategori: 'Saldo Mengendap Siswa',
+              jumlah: `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+              total: formatRupiah(ringkasan.saldoSiswa),
+            },
+            {
+              kategori: 'Saldo Mengendap Kartu Tamu',
+              jumlah: `${formatNumber(ringkasan.jumlahKartuTamu)} Kartu`,
+              total: formatRupiah(ringkasan.saldoKartuTamu),
+            },
+            {
+              kategori: 'Total Kewajiban Sekolah',
+              jumlah: `${formatNumber(ringkasan.jumlahSiswa + ringkasan.jumlahKartuTamu)} Akun`,
+              total: formatRupiah(ringkasan.total),
+            },
+          ],
+        })
+      }
+
       exportMultiSheetExcel({
         filename: `Laporan_Saldo_Mengendap_${new Date().toISOString().split('T')[0]}`,
-        sheets: [
-          {
-            sheetName: 'Saldo Siswa',
-            title: 'LAPORAN SALDO MENGENDAP SISWA (DANA TITIPAN ORTU)',
-            metadata: {
-              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-              'Total Saldo Mengendap Siswa': formatRupiah(ringkasan.saldoSiswa),
-              'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
-            },
-            columns: [
-              { header: 'NIS', key: 'nis', width: 14 },
-              { header: 'Nama Siswa', key: 'nama', width: 25 },
-              { header: 'Kelas', key: 'kelas', width: 12 },
-              { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
-              { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
-              { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
-              {
-                header: 'Status Kartu',
-                key: 'isBlocked',
-                formatter: (v) => (v ? 'DIBLOKIR' : 'AKTIF'),
-                width: 14,
-              },
-              { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
-              { header: 'Kontak Orang Tua', key: 'parentPhone', width: 18 },
-            ],
-            data: siswaList,
-          },
-          {
-            sheetName: 'Saldo Kartu Tamu',
-            title: 'LAPORAN SALDO MENGENDAP KARTU TAMU (GURU / STAF / TAMU)',
-            metadata: {
-              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-              'Total Saldo Mengendap Tamu': formatRupiah(ringkasan.saldoKartuTamu),
-              'Jumlah Kartu Tamu': `${ringkasan.jumlahKartuTamu} Kartu`,
-            },
-            columns: [
-              { header: 'Nomor Kartu', key: 'nomorKartu', width: 16 },
-              { header: 'UID RFID', key: 'uid', width: 16 },
-              { header: 'Label Pemegang', key: 'labelPemegang', width: 25 },
-              { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
-              { header: 'Status', key: 'status', width: 14 },
-            ],
-            data: kartuTamuList,
-          },
-        ],
+        sheets,
       })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: 'Laporan Saldo Mengendap (.xlsx) dengan 2 sheet berhasil diunduh.',
+        description: `Laporan Saldo Mengendap (${sheets.length} sheet) berhasil diunduh.`,
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
@@ -269,231 +343,262 @@ export function LaporanSaldoMengendapPage() {
           </div>
 
           {/* TABS VIEW: SALDO SISWA vs SALDO KARTU TAMU */}
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as 'siswa' | 'kartu-tamu')}
-            className="space-y-4"
-          >
-            <TableToolbar
-              extraLeft={
-                <TabsList className="grid w-full grid-cols-2 sm:w-auto">
-                  <TabsTrigger value="siswa" className="gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>Saldo Siswa ({siswaList.length})</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="kartu-tamu" className="gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Saldo Kartu Tamu ({kartuTamuList.length})</span>
-                  </TabsTrigger>
-                </TabsList>
-              }
-              searchPlaceholder={
-                activeTab === 'siswa'
-                  ? 'Cari nama, NIS, kelas, wali...'
-                  : 'Cari nomor kartu, pemegang, UID...'
-              }
-              searchValue={searchQuery}
-              onSearchChange={setSearchQuery}
-              isFiltered={Boolean(searchQuery)}
-              onReset={() => setSearchQuery('')}
-            />
-{/* TAB CONTENT: SALDO SISWA */}
-            <TabsContent value="siswa" className="space-y-4">
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
+          {!canAccessSiswa && !canAccessKartuTamu ? (
+            <Card className="border-0 bg-muted/70 shadow-none dark:bg-muted/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Info className="h-5 w-5 text-muted-foreground" />
                   <CardTitle className="text-base font-bold">
-                    Rincian Dana Titipan per Siswa
+                    Akses Ringkasan Eksekutif
                   </CardTitle>
-                  <CardDescription>
-                    Saldo berjalan setiap siswa yang dititipkan oleh orang tua murid dan dapat dicairkan saat lulus/keluar.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
-                          <TableHead>NIS</TableHead>
-                          <TableHead>Nama Siswa</TableHead>
-                          <TableHead>Kelas</TableHead>
-                          <TableHead className="text-right">Saldo Berjalan</TableHead>
-                          <TableHead className="text-right">Limit Harian</TableHead>
-                          <TableHead className="text-right">Belanja Hari Ini</TableHead>
-                          <TableHead className="text-center">Status Kartu</TableHead>
-                          <TableHead>Wali Murid</TableHead>
-                          <TableHead className="text-center">Aksi</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                              Memuat data saldo siswa...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredSiswa.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
-                              Tidak ada siswa yang sesuai pencarian.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredSiswa.map((siswa, idx) => (
-                            <TableRow key={siswa.siswaId}>
-                              <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell className="font-mono text-xs font-semibold">
-                                {siswa.nis}
-                              </TableCell>
-                              <TableCell className="font-semibold text-sm">
-                                {siswa.nama}
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">
-                                {siswa.kelas}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-primary">
-                                {formatRupiah(siswa.saldo)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                {formatRupiah(siswa.limitHarian)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs">
-                                {formatRupiah(siswa.belanjaHariIni)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {siswa.isBlocked ? (
-                                  <Badge
-                                    variant="secondary"
-                                    className="border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 text-xs gap-1 font-medium"
-                                  >
-                                    <Ban className="h-3 w-3" />
-                                    <span>Diblokir</span>
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="secondary"
-                                    className="border-0 bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs gap-1 font-medium"
-                                  >
-                                    <UserCheck className="h-3 w-3" />
-                                    <span>Aktif</span>
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">
-                                <div className="font-medium text-foreground">{siswa.parentName}</div>
-                                <div className="text-[11px]">{siswa.parentPhone}</div>
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                  className="h-8 text-xs text-primary gap-1"
-                                >
-                                  <Link
-                                    to="/laporan/riwayat-siswa"
-                                    search={{ siswaId: siswa.siswaId }}
-                                  >
-                                    <span>Riwayat</span>
-                                    <ArrowRight className="h-3 w-3" />
-                                  </Link>
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                </div>
+                <CardDescription className="mt-1">
+                  Sebagai Kepala Sekolah, hak akses Anda difokuskan pada ringkasan akumulasi saldo mengendap dan kewajiban sekolah di atas. Rincian data siswa dan kartu tamu dikelola secara operasional oleh Petugas TU dan Admin Sekolah.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => setSelectedTab(v as 'siswa' | 'kartu-tamu')}
+              className="space-y-4"
+            >
+              <TableToolbar
+                extraLeft={
+                  <TabsList
+                    className={`grid w-full ${
+                      canAccessSiswa && canAccessKartuTamu
+                        ? 'grid-cols-2'
+                        : 'grid-cols-1'
+                    } sm:w-auto`}
+                  >
+                    {canAccessSiswa && (
+                      <TabsTrigger value="siswa" className="gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>Saldo Siswa ({siswaList.length})</span>
+                      </TabsTrigger>
+                    )}
+                    {canAccessKartuTamu && (
+                      <TabsTrigger value="kartu-tamu" className="gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        <span>Saldo Kartu Tamu ({kartuTamuList.length})</span>
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                }
+                searchPlaceholder={
+                  activeTab === 'siswa'
+                    ? 'Cari nama, NIS, kelas, wali...'
+                    : 'Cari nomor kartu, pemegang, UID...'
+                }
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                isFiltered={Boolean(searchQuery)}
+                onReset={() => setSearchQuery('')}
+              />
 
-            {/* TAB CONTENT: SALDO KARTU TAMU */}
-            <TabsContent value="kartu-tamu" className="space-y-4">
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold">
-                    Rincian Dana Titipan per Kartu Tamu
-                  </CardTitle>
-                  <CardDescription>
-                    Saldo aktif pada kartu tamu non-siswa (guru, staf, atau pengunjung) yang dapat di-refund saat kartu dikembalikan ke TU.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
-                          <TableHead>Nomor Kartu</TableHead>
-                          <TableHead>UID RFID</TableHead>
-                          <TableHead>Label Pemegang</TableHead>
-                          <TableHead className="text-right">Saldo Berjalan</TableHead>
-                          <TableHead className="text-center">Status</TableHead>
-                          <TableHead>Tanggal Terbit</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                              Memuat data kartu tamu...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredKartuTamu.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                              Tidak ada kartu tamu yang sesuai pencarian.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredKartuTamu.map((kt, idx) => (
-                            <TableRow key={kt.id}>
-                              <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell className="font-mono text-xs font-semibold">
-                                {kt.nomorKartu}
-                              </TableCell>
-                              <TableCell className="font-mono text-xs text-muted-foreground">
-                                {kt.uid}
-                              </TableCell>
-                              <TableCell className="font-semibold text-sm">
-                                {kt.labelPemegang}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-purple-600">
-                                {formatRupiah(kt.saldo)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Badge
-                                  variant="secondary"
-                                  className={`border-0 text-xs font-medium ${
-                                    kt.status === 'ACTIVE'
-                                      ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-                                      : kt.status === 'BLOCKED'
-                                      ? 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
-                                      : 'bg-muted text-muted-foreground'
-                                  }`}
-                                >
-                                  {kt.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">
-                                {formatDateTime(kt.createdAt)}
-                              </TableCell>
+              {/* TAB CONTENT: SALDO SISWA */}
+              {canAccessSiswa && (
+                <TabsContent value="siswa" className="space-y-4">
+                  <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-base font-bold">
+                        Rincian Dana Titipan per Siswa
+                      </CardTitle>
+                      <CardDescription>
+                        Saldo berjalan setiap siswa yang dititipkan oleh orang tua murid dan dapat dicairkan saat lulus/keluar.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-hidden rounded-lg">
+                        <Table>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead className="w-12 text-center">#</TableHead>
+                              <TableHead>NIS</TableHead>
+                              <TableHead>Nama Siswa</TableHead>
+                              <TableHead>Kelas</TableHead>
+                              <TableHead className="text-right">Saldo Berjalan</TableHead>
+                              <TableHead className="text-right">Limit Harian</TableHead>
+                              <TableHead className="text-right">Belanja Hari Ini</TableHead>
+                              <TableHead className="text-center">Status Kartu</TableHead>
+                              <TableHead>Wali Murid</TableHead>
+                              <TableHead className="text-center">Aksi</TableHead>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                          </TableHeader>
+                          <TableBody>
+                            {isLoading ? (
+                              <TableRow>
+                                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                                  Memuat data saldo siswa...
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredSiswa.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                                  Tidak ada siswa yang sesuai pencarian.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              filteredSiswa.map((siswa, idx) => (
+                                <TableRow key={siswa.siswaId}>
+                                  <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                                    {idx + 1}
+                                  </TableCell>
+                                  <TableCell className="font-mono text-xs font-semibold">
+                                    {siswa.nis}
+                                  </TableCell>
+                                  <TableCell className="font-semibold text-sm">
+                                    {siswa.nama}
+                                  </TableCell>
+                                  <TableCell className="text-xs text-muted-foreground">
+                                    {siswa.kelas}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-bold text-sm text-primary">
+                                    {formatRupiah(siswa.saldo)}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                                    {formatRupiah(siswa.limitHarian)}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono text-xs">
+                                    {formatRupiah(siswa.belanjaHariIni)}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {siswa.isBlocked ? (
+                                      <Badge
+                                        variant="secondary"
+                                        className="border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 text-xs gap-1 font-medium"
+                                      >
+                                        <Ban className="h-3 w-3" />
+                                        <span>Diblokir</span>
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        variant="secondary"
+                                        className="border-0 bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs gap-1 font-medium"
+                                      >
+                                        <UserCheck className="h-3 w-3" />
+                                        <span>Aktif</span>
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-xs text-muted-foreground">
+                                    <div className="font-medium text-foreground">{siswa.parentName}</div>
+                                    <div className="text-[11px]">{siswa.parentPhone}</div>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      asChild
+                                      className="h-8 text-xs text-primary gap-1"
+                                    >
+                                      <Link
+                                        to="/laporan/riwayat-siswa"
+                                        search={{ siswaId: siswa.siswaId }}
+                                      >
+                                        <span>Riwayat</span>
+                                        <ArrowRight className="h-3 w-3" />
+                                      </Link>
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
+
+              {/* TAB CONTENT: SALDO KARTU TAMU */}
+              {canAccessKartuTamu && (
+                <TabsContent value="kartu-tamu" className="space-y-4">
+                  <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-base font-bold">
+                        Rincian Dana Titipan per Kartu Tamu
+                      </CardTitle>
+                      <CardDescription>
+                        Saldo aktif pada kartu tamu non-siswa (guru, staf, atau pengunjung) yang dapat di-refund saat kartu dikembalikan ke TU.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-hidden rounded-lg">
+                        <Table>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead className="w-12 text-center">#</TableHead>
+                              <TableHead>Nomor Kartu</TableHead>
+                              <TableHead>UID RFID</TableHead>
+                              <TableHead>Label Pemegang</TableHead>
+                              <TableHead className="text-right">Saldo Berjalan</TableHead>
+                              <TableHead className="text-center">Status</TableHead>
+                              <TableHead>Tanggal Terbit</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {isLoading ? (
+                              <TableRow>
+                                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                  Memuat data kartu tamu...
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredKartuTamu.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                  Tidak ada kartu tamu yang sesuai pencarian.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              filteredKartuTamu.map((kt, idx) => (
+                                <TableRow key={kt.id}>
+                                  <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                                    {idx + 1}
+                                  </TableCell>
+                                  <TableCell className="font-mono text-xs font-semibold">
+                                    {kt.nomorKartu}
+                                  </TableCell>
+                                  <TableCell className="font-mono text-xs text-muted-foreground">
+                                    {kt.uid}
+                                  </TableCell>
+                                  <TableCell className="font-semibold text-sm">
+                                    {kt.labelPemegang}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-bold text-sm text-purple-600">
+                                    {formatRupiah(kt.saldo)}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge
+                                      variant="secondary"
+                                      className={`border-0 text-xs font-medium ${
+                                        kt.status === 'ACTIVE'
+                                          ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                          : kt.status === 'BLOCKED'
+                                          ? 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+                                          : 'bg-muted text-muted-foreground'
+                                      }`}
+                                    >
+                                      {kt.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-xs text-muted-foreground">
+                                    {formatDateTime(kt.createdAt)}
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
+            </Tabs>
+          )}
         </div>
       </Main>
     </>
