@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   PackageOpen,
   Eye,
+  UserCheck,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -34,6 +35,7 @@ import apiClient from '@/lib/api-client'
 import { TableToolbar } from '@/components/data-table'
 import { MOCK_KARTU_TAMU, type KartuTamuMock } from '@/mocks/mock-data'
 import { RegisterKartuModal } from './RegisterKartuModal'
+import { PinjamKartuModal } from './PinjamKartuModal'
 import { TopupKartuTamuModal } from './TopupKartuTamuModal'
 import { RefundKartuModal } from './RefundKartuModal'
 import { BlokirKartuModal } from './BlokirKartuModal'
@@ -42,7 +44,15 @@ import { RiwayatKartuTamuModal } from './RiwayatKartuTamuModal'
 import { KartuTamuSlipModal, type KartuTamuSlipData } from './KartuTamuSlipModal'
 import { mapBackendToKartuTamu, type KartuTamuBackendDto } from './types'
 
-type ModalType = 'register' | 'topup' | 'refund' | 'blokir' | 'unblock' | 'riwayat' | null
+type ModalType =
+  | 'register'
+  | 'pinjam'
+  | 'topup'
+  | 'refund'
+  | 'blokir'
+  | 'unblock'
+  | 'riwayat'
+  | null
 
 const STATUS_CONFIG = {
   ACTIVE: {
@@ -136,6 +146,26 @@ export function KartuTamuPage() {
   // --- Handlers ---
   const handleRegistered = (newCard: KartuTamuMock) => {
     setCards((prev) => [...prev, newCard])
+  }
+
+  const handlePinjamSuccess = (
+    kartuId: number,
+    labelPemegang: string,
+    saldoBaru: number
+  ) => {
+    setCards((prev) =>
+      prev.map((c) =>
+        c.id === kartuId
+          ? {
+              ...c,
+              label_pemegang: labelPemegang,
+              saldo: saldoBaru,
+              status: 'ACTIVE',
+              is_active: true,
+            }
+          : c
+      )
+    )
   }
 
   const handleTopupSuccess = (kartuId: number, saldoBaru: number) => {
@@ -444,37 +474,59 @@ export function KartuTamuPage() {
                         <TableCell className='text-center'>
                           <TooltipProvider delayDuration={150}>
                             <div className='flex items-center justify-center gap-1.5'>
-                              {/* Top-up */}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size='icon'
-                                    variant='ghost'
-                                    disabled={!isActive}
-                                    onClick={() => openModal('topup', card)}
-                                    className='h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 disabled:opacity-30'
-                                  >
-                                    <Wallet className='h-4 w-4' />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Top-up Saldo</TooltipContent>
-                              </Tooltip>
+                              {/* Jika status kartu AVAILABLE (Tersedia), tampilkan tombol PINJAMKAN */}
+                              {card.status === 'AVAILABLE' ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size='sm'
+                                      variant='ghost'
+                                      onClick={() => openModal('pinjam', card)}
+                                      className='h-8 gap-1.5 px-2.5 text-xs font-semibold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 dark:text-emerald-400 border-0 shadow-none'
+                                    >
+                                      <UserCheck className='h-3.5 w-3.5' />
+                                      Pinjamkan
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Pinjamkan kartu ini kepada pengunjung / tamu
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <>
+                                  {/* Top-up */}
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size='icon'
+                                        variant='ghost'
+                                        disabled={!isActive}
+                                        onClick={() => openModal('topup', card)}
+                                        className='h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 disabled:opacity-30'
+                                      >
+                                        <Wallet className='h-4 w-4' />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Top-up Saldo</TooltipContent>
+                                  </Tooltip>
 
-                              {/* Refund / Return */}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size='icon'
-                                    variant='ghost'
-                                    disabled={!isActive}
-                                    onClick={() => openModal('refund', card)}
-                                    className='h-8 w-8 rounded-lg text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/40 disabled:opacity-30'
-                                  >
-                                    <ArrowLeftRight className='h-4 w-4' />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Kembalikan Kartu & Refund</TooltipContent>
-                              </Tooltip>
+                                  {/* Refund / Return */}
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size='icon'
+                                        variant='ghost'
+                                        disabled={!isActive}
+                                        onClick={() => openModal('refund', card)}
+                                        className='h-8 w-8 rounded-lg text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/40 disabled:opacity-30'
+                                      >
+                                        <ArrowLeftRight className='h-4 w-4' />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Kembalikan Kartu & Refund</TooltipContent>
+                                  </Tooltip>
+                                </>
+                              )}
 
                               {/* Blokir / Buka Blokir */}
                               {isBlocked ? (
@@ -564,6 +616,13 @@ export function KartuTamuPage() {
         onOpenChange={(o) => !o && closeModal()}
         existingCards={cards}
         onRegistered={handleRegistered}
+        onShowSlip={showSlip}
+      />
+      <PinjamKartuModal
+        open={activeModal === 'pinjam'}
+        onOpenChange={(o) => !o && closeModal()}
+        kartu={selectedCard}
+        onPinjamSuccess={handlePinjamSuccess}
         onShowSlip={showSlip}
       />
       <TopupKartuTamuModal

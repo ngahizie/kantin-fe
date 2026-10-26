@@ -11,6 +11,8 @@ import axios, {
 import { toast } from 'sonner'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 
+import { getCookie } from '@/lib/cookies'
+
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
@@ -38,7 +40,23 @@ if (useMock) {
 // Request Interceptor: Otomatis cantumkan Authorization Bearer token jika ada
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('kantin_token') || sessionStorage.getItem('kantin_token')
+    let token =
+      (typeof localStorage !== 'undefined'
+        ? localStorage.getItem('kantin_token')
+        : null) ||
+      (typeof sessionStorage !== 'undefined'
+        ? sessionStorage.getItem('kantin_token')
+        : null)
+    if (!token) {
+      const cookieVal = getCookie('kantin_access_token')
+      if (cookieVal) {
+        try {
+          token = JSON.parse(cookieVal)
+        } catch {
+          token = cookieVal
+        }
+      }
+    }
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }

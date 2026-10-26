@@ -1,5 +1,6 @@
 export { KartuTamuPage } from './KartuTamuPage'
 export { RegisterKartuModal } from './RegisterKartuModal'
+export { PinjamKartuModal } from './PinjamKartuModal'
 export { TopupKartuTamuModal } from './TopupKartuTamuModal'
 export { RefundKartuModal } from './RefundKartuModal'
 export { BlokirKartuModal } from './BlokirKartuModal'

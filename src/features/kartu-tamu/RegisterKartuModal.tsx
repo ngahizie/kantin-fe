@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   RefreshCw,
   CheckCircle2,
   Hash,
+  AlertCircle,
 } from 'lucide-react'
 import {
   Dialog,
@@ -31,10 +32,10 @@ interface RegisterKartuModalProps {
 }
 
 function generateNextNomorKartu(existingCards: KartuTamuMock[]): string {
-  // Find the highest KT-xxx number and increment
+  // Cari angka urutan tertinggi dari kartu yang ada (mis. KT-001, KT-DEMO-010)
   const numbers = existingCards
     .map((c) => {
-      const match = c.nomor_kartu.match(/^KT-(\d+)$/)
+      const match = c.nomor_kartu.match(/(\d+)$/)
       return match ? parseInt(match[1], 10) : 0
     })
     .filter((n) => n > 0)
@@ -51,9 +52,34 @@ export function RegisterKartuModal({
 }: RegisterKartuModalProps) {
   const [labelPemegang, setLabelPemegang] = useState('')
   const [detectedUid, setDetectedUid] = useState<string | null>(null)
+  const [backendNextNomor, setBackendNextNomor] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const nextNomor = generateNextNomorKartu(existingCards)
+  useEffect(() => {
+    if (open) {
+      apiClient
+        .get('/api/kartu-tamu/nomor-berikutnya')
+        .then((res) => {
+          if (res.data?.data) {
+            setBackendNextNomor(String(res.data.data))
+          }
+        })
+        .catch(() => {
+          // fallback to client calculation
+        })
+    } else {
+      setBackendNextNomor(null)
+    }
+  }, [open])
+
+  const nextNomor = backendNextNomor || generateNextNomorKartu(existingCards)
+
+  const cleanedUid = detectedUid?.trim().toUpperCase() || ''
+  const duplicateCard = cleanedUid
+    ? existingCards.find(
+        (c) => c.uid && c.uid.trim().toUpperCase() === cleanedUid
+      )
+    : undefined
 
   const handleReset = () => {
     setDetectedUid(null)
@@ -66,61 +92,56 @@ export function RegisterKartuModal({
   }
 
   const handleSubmit = async () => {
-    if (!detectedUid) return
+    if (!cleanedUid) return
+
+    if (duplicateCard) {
+      toast.error(
+        `RFID UID ${cleanedUid} sudah terdaftar pada kartu ${duplicateCard.nomor_kartu}!`
+      )
+      return
+    }
 
     setIsSubmitting(true)
     try {
-      let newCard: KartuTamuMock | null = null
+      const res = await apiClient.post('/api/kartu-tamu', {
+        nomorKartu: nextNomor,
+        rfidUid: cleanedUid,
+        labelPemegang: labelPemegang.trim() || undefined,
+        catatan: labelPemegang.trim() || undefined,
+        aktif: true,
+      })
 
-      try {
-        const res = await apiClient.post('/api/kartu-tamu', {
-          nomorKartu: nextNomor,
-          rfidUid: detectedUid,
-          labelPemegang: labelPemegang.trim() || undefined,
-          catatan: labelPemegang.trim() || undefined,
-          aktif: true,
-        })
+      const newCard = mapBackendToKartuTamu(res.data.data, 0)
+      const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      const seq = Math.floor(1000 + Math.random() * 9000)
 
-        if (res.data?.data) {
-          newCard = mapBackendToKartuTamu(res.data.data, 0)
-        }
-      } catch {
-        // Fallback: simulate frontend
-        const now = new Date()
-        const id = existingCards.length + 1
-        newCard = {
-          id,
-          nomor_kartu: nextNomor,
-          uid: detectedUid,
-          label_pemegang: labelPemegang.trim(),
-          saldo: 0,
-          is_active: true,
-          status: 'ACTIVE',
-          created_at: now.toISOString(),
-        }
+      onRegistered(newCard)
+      toast.success(`Kartu ${newCard.nomor_kartu} berhasil didaftarkan!`)
+
+      onShowSlip({
+        type: 'REGISTER',
+        ref_no: `KT-REG-${dateCode}-${seq}`,
+        waktu: new Date().toISOString(),
+        petugas_nama: 'Wibisana Bama (Petugas TU)',
+        nomor_kartu: newCard.nomor_kartu,
+        uid: newCard.uid,
+        label_pemegang: newCard.label_pemegang,
+      })
+
+      handleClose()
+    } catch (err: unknown) {
+      const serverMsg =
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        (err as { response?: { data?: { message?: string } } }).response?.data
+          ?.message
+
+      if (serverMsg) {
+        toast.error(serverMsg)
+      } else {
+        toast.error('Gagal mendaftarkan kartu ke server.')
       }
-
-      if (newCard) {
-        const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-        const seq = Math.floor(1000 + Math.random() * 9000)
-
-        onRegistered(newCard)
-        toast.success(`Kartu ${newCard.nomor_kartu} berhasil didaftarkan!`)
-
-        onShowSlip({
-          type: 'REGISTER',
-          ref_no: `KT-REG-${dateCode}-${seq}`,
-          waktu: new Date().toISOString(),
-          petugas_nama: 'Wibisana Bama (Petugas TU)',
-          nomor_kartu: newCard.nomor_kartu,
-          uid: newCard.uid,
-          label_pemegang: newCard.label_pemegang,
-        })
-
-        handleClose()
-      }
-    } catch {
-      toast.error('Gagal mendaftarkan kartu.')
     } finally {
       setIsSubmitting(false)
     }
@@ -163,7 +184,9 @@ export function RegisterKartuModal({
                 placeholder='Scan kartu pada reader atau ketik UID fisik...'
                 value={detectedUid || ''}
                 onChange={(e) => setDetectedUid(e.target.value.toUpperCase())}
-                className='font-mono text-sm bg-background'
+                className={`font-mono text-sm bg-background ${
+                  duplicateCard ? 'border-destructive focus-visible:ring-destructive' : ''
+                }`}
                 autoFocus
               />
               {detectedUid && (
@@ -178,9 +201,17 @@ export function RegisterKartuModal({
                 </Button>
               )}
             </div>
-            <p className='text-[11px] text-muted-foreground'>
-              Tempelkan kartu RFID ke USB reader TU atau masukkan kode UID kartu fisik.
-            </p>
+            {duplicateCard ? (
+              <p className='text-xs font-medium text-destructive flex items-center gap-1.5'>
+                <AlertCircle className='h-3.5 w-3.5 shrink-0' />
+                RFID UID {cleanedUid} sudah digunakan oleh kartu {duplicateCard.nomor_kartu}
+                {duplicateCard.label_pemegang ? ` (${duplicateCard.label_pemegang})` : ''}.
+              </p>
+            ) : (
+              <p className='text-[11px] text-muted-foreground'>
+                Tempelkan kartu RFID ke USB reader TU atau masukkan kode UID kartu fisik.
+              </p>
+            )}
           </div>
 
           {/* Label Pemegang */}
@@ -216,7 +247,7 @@ export function RegisterKartuModal({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!detectedUid || isSubmitting}
+            disabled={!cleanedUid || !!duplicateCard || isSubmitting}
             className='flex-1 sm:flex-none gap-2'
           >
             {isSubmitting ? (

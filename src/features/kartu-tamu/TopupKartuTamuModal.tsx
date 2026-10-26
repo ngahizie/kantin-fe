@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
 import type { KartuTamuMock } from '@/mocks/mock-data'
 import type { KartuTamuSlipData } from './KartuTamuSlipModal'
+import { saveTopupTransaction } from '@/features/tu/saldo-storage'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const MAX_SALDO_KARTU_TAMU = 500000
@@ -87,6 +88,21 @@ export function TopupKartuTamuModal({
       }
 
       onTopupSuccess(kartu.id, saldoFinal)
+
+      // Simpan mutasi top-up kartu tamu ke storage lokal agar muncul di rincian setoran kas TU
+      saveTopupTransaction({
+        id: refNo,
+        waktu: new Date().toISOString(),
+        subjek_tipe: 'KARTU_TAMU',
+        subjek_nama: kartu.label_pemegang || `Kartu Tamu (${kartu.nomor_kartu})`,
+        subjek_info: `Kartu: ${kartu.nomor_kartu}`,
+        nominal: nominalNum,
+        penyetor: namaPenyetor.trim(),
+        referensi_id: refNo,
+        tanggal: new Date().toISOString().slice(0, 10),
+        petugas_id: 2,
+      })
+
       toast.success(`Top-up ${formatRupiah(nominalNum)} berhasil!`, {
         description: `Saldo baru ${kartu.nomor_kartu}: ${formatRupiah(saldoFinal)}`,
       })

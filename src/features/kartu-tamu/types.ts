@@ -10,7 +10,8 @@ export interface KartuTamuBackendDto {
   aktif?: boolean
   is_active?: boolean
   catatan?: string | null
-  label_pemegang?: string
+  labelPemegang?: string | null
+  label_pemegang?: string | null
   saldo?: number
   dibuatOleh?: number
   dibuatPada?: string
@@ -30,12 +31,12 @@ export function mapBackendToKartuTamu(
   currentSaldo?: number
 ): KartuTamuMock {
   const isActive = raw.aktif ?? raw.is_active ?? true
-  const catatan = (raw.catatan ?? raw.label_pemegang ?? '').trim()
+  const label = (raw.labelPemegang ?? raw.label_pemegang ?? raw.catatan ?? '').trim()
 
   let status: 'ACTIVE' | 'BLOCKED' | 'AVAILABLE'
   if (!isActive) {
     status = 'BLOCKED'
-  } else if (catatan.length > 0) {
+  } else if (label.length > 0) {
     status = 'ACTIVE'
   } else {
     status = 'AVAILABLE'
@@ -45,7 +46,7 @@ export function mapBackendToKartuTamu(
     id: raw.id,
     nomor_kartu: raw.nomorKartu || raw.nomor_kartu || '',
     uid: raw.rfidUid || raw.uid || '',
-    label_pemegang: catatan,
+    label_pemegang: label,
     saldo: raw.saldo ?? currentSaldo ?? 0,
     is_active: isActive,
     status: raw.status || status,

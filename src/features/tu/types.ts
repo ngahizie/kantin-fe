@@ -1,4 +1,5 @@
 import type { KartuSiswaMock } from '@/mocks/mock-data'
+import { getStoredTopupTransactions } from './saldo-storage'
 
 export interface TransaksiTopupDetail {
   id: string | number
@@ -108,7 +109,17 @@ export function mapRekapSetoranTuItem(
     raw.total_sistem !== undefined &&
     raw.status
   ) {
-    return raw as unknown as SetoranKasItem
+    const item = raw as unknown as SetoranKasItem
+    if (!item.rincian_transaksi || item.rincian_transaksi.length === 0) {
+      const stored = getStoredTopupTransactions(item.tanggal, item.petugas_id)
+      if (stored.length > 0) {
+        return {
+          ...item,
+          rincian_transaksi: stored,
+        }
+      }
+    }
+    return item
   }
 
   const petugasId = Number(raw.petugasId ?? raw.petugas_id ?? 1)
@@ -164,27 +175,52 @@ export function mapRekapSetoranTuItem(
       knownPetugas?.nip) ||
     undefined
 
+  const rawRincian: TransaksiTopupDetail[] = Array.isArray(raw.rincian_transaksi)
+    ? raw.rincian_transaksi
+    : Array.isArray(raw.rincianTransaksi)
+      ? raw.rincianTransaksi
+      : []
+
+  // Ambil rincian dari storage mutasi top-up lokal jika backend tidak menyediakannya
+  const storedTransactions = getStoredTopupTransactions(tanggal, petugasId)
+  const rincianTransaksi: TransaksiTopupDetail[] =
+    rawRincian.length > 0 ? rawRincian : storedTransactions
+
+  const hitungTotalSiswa = rincianTransaksi
+    .filter((tx) => tx.subjek_tipe === 'SISWA')
+    .reduce((sum, tx) => sum + (tx.nominal || 0), 0)
+
+  const hitungTotalTamu = rincianTransaksi
+    .filter((tx) => tx.subjek_tipe === 'KARTU_TAMU')
+    .reduce((sum, tx) => sum + (tx.nominal || 0), 0)
+
+  const totalTransaksi = Number(
+    raw.total_transaksi ??
+      raw.totalTransaksi ??
+      (rincianTransaksi.length > 0 ? rincianTransaksi.length : 1)
+  )
+
+  const totalTopupSiswa = Number(
+    raw.total_topup_siswa ??
+      raw.totalTopupSiswa ??
+      (hitungTotalSiswa > 0 ? hitungTotalSiswa : totalTopup)
+  )
+
+  const totalTopupKartuTamu = Number(
+    raw.total_topup_kartu_tamu ??
+      raw.totalTopupKartuTamu ??
+      hitungTotalTamu
+  )
+
   return {
     id,
     tanggal,
     petugas_id: petugasId,
     petugas_nama: petugasNama,
     petugas_nip: petugasNip || undefined,
-    total_transaksi: Number(
-      raw.total_transaksi ??
-        raw.totalTransaksi ??
-        (Array.isArray(raw.rincian_transaksi)
-          ? raw.rincian_transaksi.length
-          : Array.isArray(raw.rincianTransaksi)
-            ? raw.rincianTransaksi.length
-            : 1)
-    ),
-    total_topup_siswa: Number(
-      raw.total_topup_siswa ?? raw.totalTopupSiswa ?? totalTopup
-    ),
-    total_topup_kartu_tamu: Number(
-      raw.total_topup_kartu_tamu ?? raw.totalTopupKartuTamu ?? 0
-    ),
+    total_transaksi: totalTransaksi,
+    total_topup_siswa: totalTopupSiswa,
+    total_topup_kartu_tamu: totalTopupKartuTamu,
     total_sistem: totalTopup,
     uang_fisik: isConfirmed ? (jumlahDisetor ?? totalTopup) : null,
     selisih: isConfirmed ? (selisih ?? 0) : null,
@@ -210,11 +246,7 @@ export function mapRekapSetoranTuItem(
       (isConfirmed ? 'Bendahara Sekolah' : null)) || null,
     konfirmasi_pada:
       (raw.konfirmasi_pada || raw.konfirmasiPada || raw.waktu || null) || null,
-    rincian_transaksi: Array.isArray(raw.rincian_transaksi)
-      ? raw.rincian_transaksi
-      : Array.isArray(raw.rincianTransaksi)
-        ? raw.rincianTransaksi
-        : [],
+    rincian_transaksi: rincianTransaksi,
   }
 }
 

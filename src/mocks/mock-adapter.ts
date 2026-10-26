@@ -32,6 +32,10 @@ import {
   type TitikKasirMock,
   type KerugianStokMock,
 } from './mock-data'
+import {
+  getStoredSaldoOverrides,
+  saveStoredSaldo,
+} from '@/features/tu/saldo-storage'
 
 export interface MockResponseData {
   code?: number
@@ -54,9 +58,13 @@ interface TransaksiPayload {
 
 export function setupMockAdapter(axiosInstance: AxiosInstance) {
   // Simulasi state mutable di memori untuk pengujian
+  const initialSaldoOverrides = getStoredSaldoOverrides()
   const menuList: MenuItemMock[] = [...MOCK_MENU]
   const kategoriList = [...MOCK_KATEGORI]
-  const siswaList: KartuSiswaMock[] = [...MOCK_SISWA]
+  const siswaList: KartuSiswaMock[] = MOCK_SISWA.map((s) => ({
+    ...s,
+    saldo: initialSaldoOverrides[s.siswa_id] ?? s.saldo,
+  }))
   const kartuTamuList: KartuTamuMock[] = [...MOCK_KARTU_TAMU]
   const siswaNonaktifList: SiswaNonaktifMock[] = [...MOCK_SISWA_NONAKTIF]
   const setoranKasList: SetoranKasTUMock[] = JSON.parse(
@@ -1330,6 +1338,81 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           status: 'SUCCESS',
           message: 'Berhasil mengambil daftar siswa',
           data: siswaList.map((s) => ({ ...s, siswaId: s.siswa_id })),
+        },
+      }
+    }
+
+    // --- 6b. Saldo: Baca Saldo Berjalan (GET /api/saldo?subjekTipe=SISWA&subjekId=...) ---
+    if (
+      url.includes('/api/saldo') &&
+      !url.includes('/api/saldo/') &&
+      method === 'get'
+    ) {
+      const urlObj = new URL(url, 'http://localhost')
+      const subjekTipe =
+        urlObj.searchParams.get('subjekTipe') ||
+        (params?.subjekTipe as string) ||
+        'SISWA'
+      const subjekIdParam =
+        urlObj.searchParams.get('subjekId') || (params?.subjekId as string)
+      const subjekId = Number(subjekIdParam)
+
+      if (subjekTipe === 'SISWA') {
+        const student = siswaList.find((s) => s.siswa_id === subjekId)
+        if (student) {
+          return {
+            status: 200,
+            data: {
+              code: 200,
+              status: 'SUCCESS',
+              message: 'Berhasil mengambil saldo siswa',
+              data: {
+                subjekTipe: 'SISWA',
+                subjekId: student.siswa_id,
+                saldo: student.saldo,
+                belanjaHariIni: student.belanja_hari_ini || 0,
+                mutasiTerbaru: [],
+              },
+            },
+          }
+        }
+      }
+    }
+
+    // --- 6c. Saldo: Top-up Tunai Siswa (POST /api/saldo/topup) ---
+    if (url.includes('/api/saldo/topup') && method === 'post') {
+      const subjekId = Number(
+        payload.subjekId || payload.siswaId || payload.siswa_id || 0
+      )
+      const nominal = Number(payload.nominal || 0)
+
+      const student = siswaList.find((s) => s.siswa_id === subjekId)
+      const saldoSebelum = student ? student.saldo : 0
+      const saldoSetelah = saldoSebelum + nominal
+
+      if (student) {
+        student.saldo = saldoSetelah
+        saveStoredSaldo(student.siswa_id, saldoSetelah)
+      }
+
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Top-up tunai berhasil diproses',
+          data: {
+            subjekTipe: (payload.subjekTipe as string) || 'SISWA',
+            subjekId,
+            saldoSebelum,
+            saldoSetelah,
+            nominal,
+            waktu: new Date().toISOString(),
+            referensiId:
+              (payload.referensiId as string) ||
+              (payload.referensi_id as string) ||
+              `TOPUP-${Date.now()}`,
+          },
         },
       }
     }

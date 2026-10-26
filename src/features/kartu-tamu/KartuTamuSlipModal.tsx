@@ -5,8 +5,6 @@ import {
   Calendar,
   UserCheck,
   CreditCard,
-  Receipt,
-  FileText,
   UserPlus,
   ArrowLeftRight,
 } from 'lucide-react'
@@ -20,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { formatRupiah } from '@/lib/formatters'
 
-export type KartuTamuSlipType = 'REGISTER' | 'TOPUP' | 'REFUND'
+export type KartuTamuSlipType = 'REGISTER' | 'TOPUP' | 'REFUND' | 'PINJAM'
 
 export interface KartuTamuSlipData {
   type: KartuTamuSlipType
@@ -30,7 +28,7 @@ export interface KartuTamuSlipData {
   nomor_kartu: string
   uid: string
   label_pemegang: string
-  // TOPUP only
+  // TOPUP / PINJAM
   nominal?: number
   saldo_awal?: number
   saldo_baru?: number
@@ -53,6 +51,13 @@ const SLIP_CONFIG = {
     headerColor: 'bg-blue-600 dark:bg-blue-700',
     icon: UserPlus,
     label: 'SLIP REGISTRASI KARTU TAMU',
+  },
+  PINJAM: {
+    title: 'Kartu Tamu Berhasil Dipinjamkan!',
+    subtitle: 'Kartu RFID telah diserahkan & diaktifkan untuk tamu',
+    headerColor: 'bg-emerald-600 dark:bg-emerald-700',
+    icon: UserPlus,
+    label: 'BUKTI PEMINJAMAN KARTU TAMU',
   },
   TOPUP: {
     title: 'Top-up Kartu Tamu Berhasil!',
@@ -127,13 +132,12 @@ export function KartuTamuSlipModal({
                 <p className='text-xs text-white/80 mt-0.5'>{config.subtitle}</p>
               </div>
             </div>
-            <Receipt className='h-8 w-8 text-white/40' />
           </div>
         </DialogHeader>
 
         {/* Receipt Wrapper */}
         <div className='p-5 bg-muted/40 flex justify-center no-print-bg'>
-          <div className='printable-slip w-full bg-white text-slate-900 border border-slate-300 rounded-xl p-5 space-y-4 font-mono text-xs'>
+          <div className='printable-slip w-full bg-white text-slate-900 border-0 shadow-none rounded-xl p-5 space-y-4 font-mono text-xs'>
 
             {/* Header Nota */}
             <div className='text-center space-y-1 pb-3 print-border-dashed border-b border-dashed border-slate-300'>
@@ -146,7 +150,7 @@ export function KartuTamuSlipModal({
               </p>
               <div className='pt-1.5'>
                 <span className='text-[9px] text-slate-500 uppercase block font-sans'>Nomor Referensi:</span>
-                <span className='inline-block font-bold text-xs bg-slate-100 text-slate-900 px-2.5 py-1 rounded border border-slate-300 font-mono tracking-wide print-dark-override mt-0.5'>
+                <span className='inline-block font-bold text-xs bg-slate-100 text-slate-900 px-2.5 py-1 rounded border-0 font-mono tracking-wide print-dark-override mt-0.5'>
                   {slipData.ref_no}
                 </span>
               </div>
@@ -173,7 +177,7 @@ export function KartuTamuSlipModal({
             <div className='border-b border-dashed border-slate-300 my-2 print-border-dashed' />
 
             {/* Info Kartu */}
-            <div className='p-2.5 bg-slate-50 rounded border border-slate-200 space-y-1 print-dark-override'>
+            <div className='p-2.5 bg-slate-50 rounded border-0 space-y-1 print-dark-override'>
               <div className='text-[9px] text-slate-500 uppercase font-sans font-semibold flex items-center gap-1'>
                 <IconComp className='h-3 w-3 no-print' /> Info Kartu Tamu:
               </div>
@@ -200,6 +204,38 @@ export function KartuTamuSlipModal({
               <div className='text-center py-2'>
                 <p className='text-xs font-bold text-slate-700 uppercase tracking-wide'>Kartu Siap Digunakan</p>
                 <p className='text-[10px] text-slate-500 mt-1'>Tempelkan stiker nomor kartu dan serahkan kepada pemegang.</p>
+              </div>
+            )}
+
+            {slipData.type === 'PINJAM' && (
+              <div className='space-y-2 pt-1'>
+                <div className='flex justify-between items-center text-slate-600 text-[11px] print-dark-override'>
+                  <span>Penerima / Tamu:</span>
+                  <span className='font-bold text-slate-900'>{slipData.label_pemegang}</span>
+                </div>
+                {(slipData.nominal ?? 0) > 0 && (
+                  <>
+                    <div className='flex justify-between items-center font-bold text-emerald-700 text-xs print-dark-override'>
+                      <span>Saldo Awal Disetor:</span>
+                      <span className='text-sm'>{formatRupiah(slipData.nominal ?? 0)}</span>
+                    </div>
+                    {slipData.nama_penyetor && (
+                      <div className='flex justify-between items-center text-slate-600 text-[11px] print-dark-override'>
+                        <span>Penyetor Tunai:</span>
+                        <span className='font-medium'>{slipData.nama_penyetor}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div className='border-t-2 border-slate-900 pt-2 flex justify-between items-center font-bold text-sm text-slate-900 print-border-double'>
+                  <span>SALDO AKTIF:</span>
+                  <span className='text-base font-mono text-emerald-700 print-dark-override'>
+                    {formatRupiah(slipData.saldo_baru ?? slipData.nominal ?? 0)}
+                  </span>
+                </div>
+                <p className='text-[10px] text-slate-500 text-center pt-1'>
+                  Kartu aktif dan dapat langsung digunakan untuk transaksi di kasir kantin.
+                </p>
               </div>
             )}
 
@@ -261,11 +297,7 @@ export function KartuTamuSlipModal({
         </div>
 
         {/* Modal Footer */}
-        <DialogFooter className='p-4 bg-background border-t border-border flex-row justify-between items-center gap-2 no-print'>
-          <div className='text-[11px] text-muted-foreground flex items-center gap-1 hidden sm:flex'>
-            <FileText className='h-3.5 w-3.5 text-muted-foreground' />
-            Format Struk Thermal 80mm / PDF
-          </div>
+        <DialogFooter className='p-4 bg-background border-0 flex-row justify-end items-center gap-2 no-print'>
           <div className='flex items-center gap-2 w-full sm:w-auto justify-end'>
             <Button
               type='button'
