@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
-import { ROLE_CONFIGS, type UserRole } from '@/stores/useRoleStore'
+import { ROLE_CONFIGS, getRoleHomePath, type UserRole } from '@/stores/useRoleStore'
 
 const formSchema = z.object({
   email: z
@@ -124,17 +124,9 @@ export function UserAuthForm({
         description: `Peran aktif: ${roleLabel} di ${authenticatedUser.sekolahNama}`,
       })
 
-      // Tentukan rute navigasi tujuan berdasarkan role staf
-      let targetPath = redirectTo || '/'
-      if (!redirectTo) {
-        if (rawRole === 'kasir') {
-          targetPath = '/kasir'
-        } else if (rawRole === 'tu') {
-          targetPath = '/tu/topup'
-        } else {
-          targetPath = '/'
-        }
-      }
+      // Tentukan rute navigasi tujuan: tiap role langsung diarahkan ke home masing-masing
+      // (kasir -> /kasir, pengelola/tu/bendahara/kepsek/admin -> /) untuk meminimalisasi error 403
+      const targetPath = getRoleHomePath(rawRole)
 
       navigate({ to: targetPath, replace: true })
     } catch (err: unknown) {
