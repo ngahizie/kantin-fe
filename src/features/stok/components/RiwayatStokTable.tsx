@@ -96,7 +96,7 @@ export function RiwayatStokTable({
         )
       case 'PENJUALAN_VOID':
         return (
-          <Badge className='border-0 bg-amber-500/15 text-[11px] font-medium text-amber-700 dark:text-amber-400'>
+          <Badge className='border-0 bg-destructive/15 text-[11px] font-medium text-destructive dark:text-red-400'>
             Penjualan Void
           </Badge>
         )
