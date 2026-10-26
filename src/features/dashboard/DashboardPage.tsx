@@ -340,7 +340,7 @@ export function DashboardPage() {
                 <CardTitle className='text-sm font-medium text-muted-foreground'>
                   Status Rekonsiliasi Kas
                 </CardTitle>
-                <div className='flex size-9 items-center justify-center rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400'>
+                <div className='flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
                   <Scale className='size-5' />
                 </div>
               </CardHeader>
@@ -348,11 +348,11 @@ export function DashboardPage() {
                 <div className='text-2xl font-bold tracking-tight text-foreground'>
                   Akses Terbatas
                 </div>
-                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                  <span className='inline-flex items-center font-semibold text-slate-600 dark:text-slate-400'>
-                    Peran Terbatas
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
+                  <span className='inline-flex items-center font-semibold text-emerald-600 dark:text-emerald-400 shrink-0'>
+                    Terbatas
                   </span>
-                  <span>• Dikelola TU & Bendahara</span>
+                  <span className='truncate'>• Dikelola TU & Bendahara</span>
                 </div>
               </CardContent>
             </Card>
