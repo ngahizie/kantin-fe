@@ -72,10 +72,15 @@ export function MenuFormModal({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
 
-  // Filter hanya kategori yang aktif untuk dropdown pilihan
+  // Filter kategori aktif, atau sertakan kategori yang sedang dipakai jika sedang mengedit menu
   const activeKategori = useMemo(
-    () => kategoriList.filter((k) => k.isActive !== false && k.aktif !== false),
-    [kategoriList]
+    () =>
+      kategoriList.filter(
+        (k) =>
+          (k.isActive !== false && k.aktif !== false) ||
+          (selectedMenu && k.id === selectedMenu.kategoriId)
+      ),
+    [kategoriList, selectedMenu]
   )
   const defaultKategoriId = activeKategori[0]?.id || 1
 
@@ -107,7 +112,7 @@ export function MenuFormModal({
           satuan: (selectedMenu.satuan?.toUpperCase() as SatuanType) || 'PCS',
           stokMinimum: selectedMenu.stokMinimum ?? 5,
           fotoUrl: selectedMenu.fotoUrl || '',
-          aktif: selectedMenu.aktif,
+          aktif: selectedMenu.aktif !== false,
         })
       } else {
         form.reset({
@@ -168,6 +173,7 @@ export function MenuFormModal({
         ...values,
         hargaJual: Math.round(Number(values.hargaJual)),
         stokMinimum: Math.round(Number(values.stokMinimum)),
+        aktif: Boolean(values.aktif),
       }
 
       if (isEditing && selectedMenu) {
