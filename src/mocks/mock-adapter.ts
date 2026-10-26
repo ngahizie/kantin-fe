@@ -1337,7 +1337,11 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           code: 200,
           status: 'SUCCESS',
           message: 'Berhasil mengambil daftar siswa',
-          data: siswaList.map((s) => ({ ...s, siswaId: s.siswa_id })),
+          data: siswaList.map((s) => {
+            const overrides = getStoredSaldoOverrides()
+            const freshSaldo = overrides[s.siswa_id] ?? s.saldo
+            return { ...s, saldo: freshSaldo, siswaId: s.siswa_id }
+          }),
         },
       }
     }
@@ -1360,6 +1364,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       if (subjekTipe === 'SISWA') {
         const student = siswaList.find((s) => s.siswa_id === subjekId)
         if (student) {
+          const overrides = getStoredSaldoOverrides()
+          const freshSaldo = overrides[student.siswa_id] ?? student.saldo
           return {
             status: 200,
             data: {
@@ -1369,7 +1375,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               data: {
                 subjekTipe: 'SISWA',
                 subjekId: student.siswa_id,
-                saldo: student.saldo,
+                saldo: freshSaldo,
                 belanjaHariIni: student.belanja_hari_ini || 0,
                 mutasiTerbaru: [],
               },

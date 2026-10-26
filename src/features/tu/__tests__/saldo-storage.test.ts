@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   applyStoredSaldoOverrides,
+  applyStoredSetoranConfirmations,
   clearStoredSaldoOverrides,
   getInitialStudents,
   getStoredSaldoOverrides,
+  getStoredSetoranConfirmations,
   getStoredTopupTransactions,
   KANTIN_SALDO_STORAGE_KEY,
   saveStoredSaldo,
+  saveStoredSetoranConfirmation,
   saveTopupTransaction,
 } from '../saldo-storage'
 import { MOCK_SISWA } from '@/mocks/mock-data'
@@ -158,4 +161,63 @@ describe('saldo-storage', () => {
     const listOtherPetugas = getStoredTopupTransactions('2026-10-26', 999)
     expect(listOtherPetugas).toEqual([])
   })
+
+  it('mendukung isolasi saldo per tenant/sekolahId', () => {
+    saveStoredSaldo(102, 75000, 2)
+    saveStoredSaldo(102, 200000, 1)
+
+    const saldoSekolah2 = getStoredSaldoOverrides(2)
+    const saldoSekolah1 = getStoredSaldoOverrides(1)
+
+    expect(saldoSekolah2[102]).toBe(75000)
+    expect(saldoSekolah1[102]).toBe(200000)
+  })
+
+  it('applyStoredSaldoOverrides mempertahankan saldo tersimpan pada siswa dengan saldo awal 0', () => {
+    saveStoredSaldo(102, 50000)
+
+    const sample = [{ siswa_id: 102, saldo: 0, nama: 'Siti Rahmawati' }]
+    const updated = applyStoredSaldoOverrides(sample)
+
+    expect(updated[0].saldo).toBe(50000)
+  })
+
+  it('saveStoredSetoranConfirmation dan applyStoredSetoranConfirmations memperbarui status setoran', () => {
+    saveStoredSetoranConfirmation({
+      id: 'SETOR-20261026-6',
+      petugas_id: 6,
+      tanggal: '2026-10-26',
+      uang_fisik: 50000,
+      selisih: 0,
+      catatan: 'Uang pas',
+      bendahara_nama: 'Bendahara Sekolah',
+    })
+
+    const confirmations = getStoredSetoranConfirmations()
+    expect(confirmations['SETOR-20261026-6']).toBeDefined()
+    expect(confirmations['2026-10-26_6']).toBeDefined()
+    expect(confirmations['SETOR-20261026-6'].status).toBe('TERKONFIRMASI')
+    expect(confirmations['SETOR-20261026-6'].uang_fisik).toBe(50000)
+
+    const rawRows = [
+      {
+        id: 'SETOR-20261026-6',
+        tanggal: '2026-10-26',
+        petugas_id: 6,
+        status: 'MENUNGGU_KONFIRMASI' as const,
+        uang_fisik: null,
+        selisih: null,
+        catatan: undefined,
+        bendahara_nama: null,
+        konfirmasi_pada: null,
+      },
+    ]
+
+    const updatedRows = applyStoredSetoranConfirmations(rawRows)
+    expect(updatedRows[0].status).toBe('TERKONFIRMASI')
+    expect(updatedRows[0].uang_fisik).toBe(50000)
+    expect(updatedRows[0].selisih).toBe(0)
+    expect(updatedRows[0].bendahara_nama).toBe('Bendahara Sekolah')
+  })
 })
+

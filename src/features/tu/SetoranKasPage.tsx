@@ -46,8 +46,13 @@ import {
   type TransaksiTopupDetail,
   type RawRekapTu,
   mapRekapSetoranTuItem,
+  KNOWN_PETUGAS_MAP,
 } from './types'
-import { getStoredTopupTransactions } from './saldo-storage'
+import {
+  getStoredTopupTransactions,
+  saveStoredSetoranConfirmation,
+  applyStoredSetoranConfirmations,
+} from './saldo-storage'
 
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
@@ -84,41 +89,112 @@ export function SetoranKasPage() {
     const load = async () => {
       setIsLoading(true)
       try {
-        const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
-          params: { tanggal: selectedDate },
-        })
+        let items: SetoranKasItem[] = []
+
+        try {
+          const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
+            params: { tanggal: selectedDate },
+          })
+          const rawItems = res.data?.data
+          if (Array.isArray(rawItems) && rawItems.length > 0) {
+            items = rawItems.map((item: RawRekapTu) =>
+              mapRekapSetoranTuItem(item, selectedDate)
+            )
+          }
+        } catch {
+          // Abaikan jika live query rekap backend mengembalikan error atau 404
+        }
+
+        // Ambil transaksi top-up lokal untuk tanggal yang dipilih agar mutasi top-up
+        // terbaru (termasuk pada akun TU sekolah 2 / multi-tenant) selalu terangkum di rekapitulasi setoran kas TU
+        const localTxs = getStoredTopupTransactions(selectedDate)
+
+        if (localTxs.length > 0) {
+          const groupedByPetugas = new Map<number, TransaksiTopupDetail[]>()
+          for (const tx of localTxs) {
+            const pId =
+              tx.petugas_id ??
+              (auth.user?.userId ? Number(auth.user.userId) : 2)
+            const currentGroup = groupedByPetugas.get(pId) || []
+            currentGroup.push(tx)
+            groupedByPetugas.set(pId, currentGroup)
+          }
+
+          for (const [pId, txs] of groupedByPetugas.entries()) {
+            const existingIdx = items.findIndex((it) => it.petugas_id === pId)
+            const totalSiswa = txs
+              .filter((t) => t.subjek_tipe === 'SISWA')
+              .reduce((sum, t) => sum + (t.nominal || 0), 0)
+            const totalTamu = txs
+              .filter((t) => t.subjek_tipe === 'KARTU_TAMU')
+              .reduce((sum, t) => sum + (t.nominal || 0), 0)
+            const totalSistem = totalSiswa + totalTamu
+
+            if (existingIdx >= 0) {
+              const existing = items[existingIdx]
+              items[existingIdx] = {
+                ...existing,
+                total_transaksi: Math.max(existing.total_transaksi, txs.length),
+                total_topup_siswa: Math.max(
+                  existing.total_topup_siswa,
+                  totalSiswa
+                ),
+                total_topup_kartu_tamu: Math.max(
+                  existing.total_topup_kartu_tamu,
+                  totalTamu
+                ),
+                total_sistem: Math.max(existing.total_sistem, totalSistem),
+                rincian_transaksi:
+                  existing.rincian_transaksi &&
+                  existing.rincian_transaksi.length > 0
+                    ? existing.rincian_transaksi
+                    : txs,
+              }
+            } else {
+              const currentUser = auth.user
+              const isCurrentPetugas =
+                currentUser?.userId && Number(currentUser.userId) === pId
+              const petugasNama = isCurrentPetugas
+                ? currentUser?.nama || 'Petugas TU'
+                : KNOWN_PETUGAS_MAP[pId]?.nama || `Petugas Loket TU #${pId}`
+              const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
+
+              items.push({
+                id: `SETOR-${selectedDate.replace(/-/g, '')}-${pId}`,
+                tanggal: selectedDate,
+                petugas_id: pId,
+                petugas_nama: petugasNama,
+                petugas_nip: petugasNip,
+                total_transaksi: txs.length,
+                total_topup_siswa: totalSiswa,
+                total_topup_kartu_tamu: totalTamu,
+                total_sistem: totalSistem,
+                uang_fisik: null,
+                selisih: null,
+                status: 'MENUNGGU_KONFIRMASI',
+                rincian_transaksi: txs,
+              })
+            }
+          }
+        }
+
+        // Terapkan data konfirmasi yang tersimpan di storage lokal jika ada
+        items = applyStoredSetoranConfirmations(items)
+
+        // Fallback jika sama sekali tidak ada data dan flag useMock aktif
+        if (items.length === 0 && useMock) {
+          const filteredMock = MOCK_SETORAN_KAS.filter(
+            (s) => s.tanggal === selectedDate
+          )
+          items = filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
+        }
 
         if (isMounted) {
-          const rawItems = res.data?.data
-          if (Array.isArray(rawItems)) {
-            setSetoranList(
-              rawItems.map((item: RawRekapTu) =>
-                mapRekapSetoranTuItem(item, selectedDate)
-              )
-            )
-          } else if (useMock) {
-            const filteredMock = MOCK_SETORAN_KAS.filter(
-              (s) => s.tanggal === selectedDate
-            )
-            setSetoranList(
-              filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-            )
-          } else {
-            setSetoranList([])
-          }
+          setSetoranList(items)
         }
       } catch {
         if (isMounted) {
-          if (useMock) {
-            const filteredMock = MOCK_SETORAN_KAS.filter(
-              (s) => s.tanggal === selectedDate
-            )
-            setSetoranList(
-              filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-            )
-          } else {
-            setSetoranList([])
-          }
+          setSetoranList([])
         }
       } finally {
         if (isMounted) setIsLoading(false)
@@ -128,10 +204,11 @@ export function SetoranKasPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedDate])
+  }, [selectedDate, auth.user])
 
   // Handle successful confirmation from modal
   const handleConfirmSuccess = (updatedItem: SetoranKasItem) => {
+    saveStoredSetoranConfirmation(updatedItem)
     setSetoranList((prev) =>
       prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
     )

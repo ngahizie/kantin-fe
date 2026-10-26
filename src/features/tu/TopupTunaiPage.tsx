@@ -26,6 +26,7 @@ import { formatRupiah } from '@/lib/formatters'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
 import { mapInfoSiswaToKartuSiswa } from './types'
+import { useAuthStore } from '@/stores/auth-store'
 import {
   applyStoredSaldoOverrides,
   getInitialStudents,
@@ -82,7 +83,10 @@ export function TopupTunaiPage() {
                 },
               })
               const liveSaldo = saldoRes.data?.data?.saldo
-              if (typeof liveSaldo === 'number') {
+              // Hanya perbarui saldo jika liveSaldo dari backend bernilai > 0.
+              // Jika liveSaldo === 0 namun siswa memiliki saldo tersimpan (> 0),
+              // pertahankan saldo lokal (agar tidak ter-reset ke 0 pada akun TU sekolah 2 / multi-tenant).
+              if (typeof liveSaldo === 'number' && liveSaldo > 0) {
                 saveStoredSaldo(student.siswa_id, liveSaldo)
                 return { ...student, saldo: liveSaldo }
               }
@@ -137,6 +141,10 @@ export function TopupTunaiPage() {
     try {
       let result: TopupSlipData | null = null
 
+      const currentUser = useAuthStore.getState().auth.user
+      const petugasNama = currentUser?.nama || 'Petugas TU'
+      const petugasId = currentUser?.userId ? Number(currentUser.userId) : 2
+
       const now = new Date()
       const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
       const randomSeq = Math.floor(1000 + Math.random() * 9000)
@@ -157,7 +165,7 @@ export function TopupTunaiPage() {
         result = {
           ref_no: refNo,
           waktu: resData?.waktu || now.toISOString(),
-          petugas_nama: 'Wibisana Bama (Petugas TU)',
+          petugas_nama: petugasNama,
           nama_penyetor: namaPenyetor.trim(),
           nominal: nominalNum,
           saldo_awal: saldoAwal,
@@ -178,7 +186,7 @@ export function TopupTunaiPage() {
         result = {
           ref_no: refNo,
           waktu: now.toISOString(),
-          petugas_nama: 'Wibisana Bama (Petugas TU)',
+          petugas_nama: petugasNama,
           nama_penyetor: namaPenyetor.trim(),
           nominal: nominalNum,
           saldo_awal: saldoAwal,
@@ -208,7 +216,7 @@ export function TopupTunaiPage() {
           penyetor: result.nama_penyetor,
           referensi_id: result.ref_no,
           tanggal: result.waktu.slice(0, 10),
-          petugas_id: 2,
+          petugas_id: petugasId,
         })
 
         toast.success(

@@ -217,7 +217,7 @@ export const laporanApi = {
               params: { subjekTipe: 'SISWA', subjekId: st.siswaId },
             })
             const liveSaldo = saldoRes.data?.data?.saldo
-            if (typeof liveSaldo === 'number') {
+            if (typeof liveSaldo === 'number' && liveSaldo > 0) {
               saveStoredSaldo(st.siswaId, liveSaldo)
               return { ...st, saldo: liveSaldo }
             }
