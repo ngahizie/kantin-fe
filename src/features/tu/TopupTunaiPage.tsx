@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
+import { type KartuSiswaMock } from '@/mocks/mock-data'
 import {
   AlertCircle,
   ArrowRight,
@@ -27,12 +27,17 @@ import { formatRupiah } from '@/lib/formatters'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
 import { mapInfoSiswaToKartuSiswa } from './types'
+import {
+  applyStoredSaldoOverrides,
+  getInitialStudents,
+  saveStoredSaldo,
+} from './saldo-storage'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const MAX_SALDO_SEKOLAH = 500000
 
 export function TopupTunaiPage() {
-  const [students, setStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
+  const [students, setStudents] = useState<KartuSiswaMock[]>(getInitialStudents)
   const [selectedStudent, setSelectedStudent] = useState<KartuSiswaMock | null>(
     null
   )
@@ -46,15 +51,53 @@ export function TopupTunaiPage() {
   useEffect(() => {
     let isMounted = true
     const loadStudents = async () => {
+      let currentList = getInitialStudents()
       try {
         const res = await apiClient.get('/api/siswa', { params: { batas: 50 } })
-        if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          setStudents(res.data.data.map(mapInfoSiswaToKartuSiswa))
+        if (
+          isMounted &&
+          res.data?.data &&
+          Array.isArray(res.data.data) &&
+          res.data.data.length > 0
+        ) {
+          const mapped = res.data.data.map(mapInfoSiswaToKartuSiswa)
+          currentList = applyStoredSaldoOverrides(mapped)
+          setStudents(currentList)
         }
       } catch {
         if (isMounted) {
-          setStudents(MOCK_SISWA)
+          setStudents(currentList)
         }
+      }
+
+      // Sinkronisasi saldo riil dari backend (/api/saldo) bila terhubung ke live BE
+      try {
+        const syncedStudents = await Promise.all(
+          currentList.map(async (student) => {
+            try {
+              const saldoRes = await apiClient.get('/api/saldo', {
+                params: {
+                  subjekTipe: 'SISWA',
+                  subjekId: student.siswa_id,
+                },
+              })
+              const liveSaldo = saldoRes.data?.data?.saldo
+              if (typeof liveSaldo === 'number') {
+                saveStoredSaldo(student.siswa_id, liveSaldo)
+                return { ...student, saldo: liveSaldo }
+              }
+            } catch {
+              // Jika query saldo belum ada di database, pertahankan saldo lokal
+            }
+            return student
+          })
+        )
+
+        if (isMounted) {
+          setStudents(syncedStudents)
+        }
+      } catch {
+        // Abaikan jika live query saldo gagal
       }
     }
     void loadStudents()
@@ -151,6 +194,9 @@ export function TopupTunaiPage() {
       }
 
       if (result) {
+        // Simpan saldo baru ke storage lokal & memori agar tidak hilang saat refresh
+        saveStoredSaldo(currentStudent.siswa_id, result.saldo_baru)
+
         toast.success(
           `Top-up ${formatRupiah(nominalNum)} berhasil!`,
           {

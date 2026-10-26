@@ -1,0 +1,107 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  applyStoredSaldoOverrides,
+  clearStoredSaldoOverrides,
+  getInitialStudents,
+  getStoredSaldoOverrides,
+  KANTIN_SALDO_STORAGE_KEY,
+  saveStoredSaldo,
+} from '../saldo-storage'
+import { MOCK_SISWA } from '@/mocks/mock-data'
+
+// Mock localStorage jika dijalankan di environment Node tanpa browser runner
+class LocalStorageMock {
+  private store: Record<string, string> = {}
+
+  clear() {
+    this.store = {}
+  }
+
+  getItem(key: string) {
+    return this.store[key] || null
+  }
+
+  setItem(key: string, value: string) {
+    this.store[key] = String(value)
+  }
+
+  removeItem(key: string) {
+    delete this.store[key]
+  }
+}
+
+if (typeof window === 'undefined') {
+  const mockStorage = new LocalStorageMock()
+  ;(globalThis as unknown as { window: { localStorage: LocalStorageMock } }).window = {
+    localStorage: mockStorage,
+  }
+}
+
+describe('saldo-storage', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    clearStoredSaldoOverrides()
+  })
+
+  it('mengembalikan objek kosong jika belum ada data di localStorage', () => {
+    const overrides = getStoredSaldoOverrides()
+    expect(overrides).toEqual({})
+  })
+
+  it('menyimpan dan membaca saldo baru siswa dari localStorage', () => {
+    saveStoredSaldo(102, 205000)
+
+    const overrides = getStoredSaldoOverrides()
+    expect(overrides[102]).toBe(205000)
+
+    const rawInStorage = window.localStorage.getItem(KANTIN_SALDO_STORAGE_KEY)
+    expect(rawInStorage).toBeTruthy()
+    expect(JSON.parse(rawInStorage!)).toEqual({ 102: 205000 })
+  })
+
+  it('memperbarui saldo siswa yang ada di MOCK_SISWA secara in-memory', () => {
+    saveStoredSaldo(102, 250000)
+
+    const siti = MOCK_SISWA.find((s) => s.siswa_id === 102)
+    expect(siti?.saldo).toBe(250000)
+  })
+
+  it('menerapkan stored overrides pada daftar siswa', () => {
+    saveStoredSaldo(101, 90000)
+    saveStoredSaldo(102, 300000)
+
+    const sample = [
+      { siswa_id: 101, saldo: 45000, nama: 'Budi' },
+      { siswa_id: 102, saldo: 5000, nama: 'Siti' },
+      { siswa_id: 103, saldo: 10000, nama: 'Rian' },
+    ]
+
+    const updated = applyStoredSaldoOverrides(sample)
+    expect(updated[0].saldo).toBe(90000)
+    expect(updated[1].saldo).toBe(300000)
+    expect(updated[2].saldo).toBe(10000) // Siswa tanpa override tetap mempertahankan saldo aslinya
+  })
+
+  it('getInitialStudents mengembalikan MOCK_SISWA dengan saldo yang telah ter-override', () => {
+    saveStoredSaldo(102, 200000)
+
+    const initial = getInitialStudents()
+    const siti = initial.find((s) => s.siswa_id === 102)
+    expect(siti?.saldo).toBe(200000)
+  })
+
+  it('menangani data JSON korup di localStorage secara defensif', () => {
+    window.localStorage.setItem(KANTIN_SALDO_STORAGE_KEY, '{ invalid_json')
+
+    const overrides = getStoredSaldoOverrides()
+    expect(overrides).toEqual({})
+  })
+
+  it('clearStoredSaldoOverrides menghapus data di localStorage', () => {
+    saveStoredSaldo(102, 500000)
+    expect(getStoredSaldoOverrides()[102]).toBe(500000)
+
+    clearStoredSaldoOverrides()
+    expect(getStoredSaldoOverrides()).toEqual({})
+  })
+})
