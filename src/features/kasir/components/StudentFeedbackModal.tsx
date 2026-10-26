@@ -130,7 +130,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
-            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-none ring-4 ring-primary/20'>
+            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-none'>
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
