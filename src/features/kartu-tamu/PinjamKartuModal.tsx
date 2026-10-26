@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
 import type { KartuTamuMock } from '@/mocks/mock-data'
 import type { KartuTamuSlipData } from './KartuTamuSlipModal'
+import { useAuthStore } from '@/stores/auth-store'
 import { saveTopupTransaction } from '@/features/tu/saldo-storage'
 
 const PRESET_NOMINALS = [0, 20000, 50000, 100000]
@@ -101,6 +102,13 @@ export function PinjamKartuModal({
         // Fallback simulasi frontend jika backend error
       }
 
+      const currentAuthUser = useAuthStore.getState().auth.user
+      const petugasNama =
+        currentAuthUser?.nama || 'Wibisana Bama (Petugas TU)'
+      const petugasId = currentAuthUser?.userId
+        ? Number(currentAuthUser.userId)
+        : 2
+
       // 2. Jika tamu menyetor saldo awal > 0, jalankan top-up
       let saldoAkhir = kartu.saldo
       if (nominalNum > 0) {
@@ -129,7 +137,7 @@ export function PinjamKartuModal({
           penyetor: penyetor,
           referensi_id: refNo,
           tanggal: new Date().toISOString().slice(0, 10),
-          petugas_id: 2,
+          petugas_id: petugasId,
         })
       }
 
@@ -148,7 +156,7 @@ export function PinjamKartuModal({
         type: 'PINJAM',
         ref_no: refNo,
         waktu: new Date().toISOString(),
-        petugas_nama: 'Wibisana Bama (Petugas TU)',
+        petugas_nama: petugasNama,
         nomor_kartu: kartu.nomor_kartu,
         uid: kartu.uid,
         label_pemegang: cleanedNama,

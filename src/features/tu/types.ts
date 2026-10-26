@@ -76,9 +76,10 @@ export interface RawRekapTu {
   [key: string]: unknown
 }
 
-const KNOWN_PETUGAS_MAP: Record<number, { nama: string; nip?: string }> = {
+export const KNOWN_PETUGAS_MAP: Record<number, { nama: string; nip?: string }> = {
   1: { nama: 'Andika Pratama (Petugas TU 1)', nip: '198805122011011002' },
   2: { nama: 'Sri Wahyuni (Petugas TU)', nip: '199203152018012003' },
+  6: { nama: 'Andika Pratama (TU Sekolah 2)', nip: '199008202015021004' },
 }
 
 export function mapRekapSetoranTuItem(

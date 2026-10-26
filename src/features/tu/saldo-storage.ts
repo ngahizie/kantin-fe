@@ -312,6 +312,16 @@ export function getStoredTopupTransactions(
   })
 }
 
+function getActiveUser(): { userId?: number | string; nama?: string } | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null
+  try {
+    const raw = window.localStorage.getItem('kantin_user')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Menyimpan transaksi top-up baru ke localStorage.
  */
@@ -322,10 +332,13 @@ export function saveTopupTransaction(
   }
 ): void {
   const tgl = tx.tanggal || new Date().toISOString().slice(0, 10)
+  const activeUser = getActiveUser()
+  const fallbackPetugasId = activeUser?.userId ? Number(activeUser.userId) : 2
+
   const fullTx: StoredTopupTransaction = {
     ...tx,
     tanggal: tgl,
-    petugas_id: tx.petugas_id ?? 2,
+    petugas_id: tx.petugas_id ?? fallbackPetugasId,
   }
 
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -346,5 +359,113 @@ export function saveTopupTransaction(
       // noop
     }
   }
+}
+
+export const KANTIN_SETORAN_CONFIRMATIONS_KEY = 'kantin_setoran_confirmations'
+
+export interface StoredSetoranConfirmation {
+  id: string
+  tanggal: string
+  petugas_id: number
+  uang_fisik: number
+  selisih: number
+  status: 'TERKONFIRMASI'
+  catatan?: string
+  bendahara_nama?: string
+  konfirmasi_pada?: string
+}
+
+/**
+ * Membaca peta konfirmasi setoran kas TU yang tersimpan di storage lokal.
+ */
+export function getStoredSetoranConfirmations(): Record<
+  string,
+  StoredSetoranConfirmation
+> {
+  if (typeof window === 'undefined' || !window.localStorage) return {}
+  try {
+    const raw = window.localStorage.getItem(KANTIN_SETORAN_CONFIRMATIONS_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return typeof parsed === 'object' && parsed !== null ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+/**
+ * Menyimpan data konfirmasi setoran kas TU ke storage lokal.
+ */
+export function saveStoredSetoranConfirmation(item: {
+  id: string
+  tanggal: string
+  petugas_id: number
+  uang_fisik?: number | null
+  selisih?: number | null
+  catatan?: string
+  bendahara_nama?: string | null
+  konfirmasi_pada?: string | null
+}): void {
+  if (typeof window === 'undefined' || !window.localStorage) return
+  try {
+    const current = getStoredSetoranConfirmations()
+    const record: StoredSetoranConfirmation = {
+      id: item.id,
+      tanggal: item.tanggal,
+      petugas_id: item.petugas_id,
+      uang_fisik: item.uang_fisik ?? 0,
+      selisih: item.selisih ?? 0,
+      status: 'TERKONFIRMASI',
+      catatan: item.catatan,
+      bendahara_nama: item.bendahara_nama || undefined,
+      konfirmasi_pada: item.konfirmasi_pada || new Date().toISOString(),
+    }
+    current[item.id] = record
+    current[`${item.tanggal}_${item.petugas_id}`] = record
+    window.localStorage.setItem(
+      KANTIN_SETORAN_CONFIRMATIONS_KEY,
+      JSON.stringify(current)
+    )
+  } catch {
+    // noop
+  }
+}
+
+/**
+ * Menerapkan data konfirmasi setoran kas yang tersimpan di storage lokal pada daftar setoran.
+ */
+export function applyStoredSetoranConfirmations<
+  T extends {
+    id: string
+    tanggal: string
+    petugas_id: number
+    uang_fisik?: number | null
+    selisih?: number | null
+    status: 'MENUNGGU_KONFIRMASI' | 'TERKONFIRMASI'
+    catatan?: string
+    bendahara_nama?: string | null
+    konfirmasi_pada?: string | null
+  },
+>(items: T[]): T[] {
+  const confirmations = getStoredSetoranConfirmations()
+  if (Object.keys(confirmations).length === 0) return items
+
+  return items.map((item) => {
+    const saved =
+      confirmations[item.id] ||
+      confirmations[`${item.tanggal}_${item.petugas_id}`]
+    if (saved) {
+      return {
+        ...item,
+        uang_fisik: saved.uang_fisik,
+        selisih: saved.selisih,
+        status: 'TERKONFIRMASI',
+        catatan: saved.catatan || item.catatan,
+        bendahara_nama: saved.bendahara_nama || item.bendahara_nama,
+        konfirmasi_pada: saved.konfirmasi_pada || item.konfirmasi_pada,
+      }
+    }
+    return item
+  })
 }
 

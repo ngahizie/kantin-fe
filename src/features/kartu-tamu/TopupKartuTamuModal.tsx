@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
 import type { KartuTamuMock } from '@/mocks/mock-data'
 import type { KartuTamuSlipData } from './KartuTamuSlipModal'
+import { useAuthStore } from '@/stores/auth-store'
 import { saveTopupTransaction } from '@/features/tu/saldo-storage'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
@@ -89,6 +90,10 @@ export function TopupKartuTamuModal({
 
       onTopupSuccess(kartu.id, saldoFinal)
 
+      const currentAuthUser = useAuthStore.getState().auth.user
+      const petugasNama = currentAuthUser?.nama || 'Wibisana Bama (Petugas TU)'
+      const petugasId = currentAuthUser?.userId ? Number(currentAuthUser.userId) : 2
+
       // Simpan mutasi top-up kartu tamu ke storage lokal agar muncul di rincian setoran kas TU
       saveTopupTransaction({
         id: refNo,
@@ -100,7 +105,7 @@ export function TopupKartuTamuModal({
         penyetor: namaPenyetor.trim(),
         referensi_id: refNo,
         tanggal: new Date().toISOString().slice(0, 10),
-        petugas_id: 2,
+        petugas_id: petugasId,
       })
 
       toast.success(`Top-up ${formatRupiah(nominalNum)} berhasil!`, {
@@ -111,7 +116,7 @@ export function TopupKartuTamuModal({
         type: 'TOPUP',
         ref_no: refNo,
         waktu: new Date().toISOString(),
-        petugas_nama: 'Wibisana Bama (Petugas TU)',
+        petugas_nama: petugasNama,
         nomor_kartu: kartu.nomor_kartu,
         uid: kartu.uid,
         label_pemegang: kartu.label_pemegang,
