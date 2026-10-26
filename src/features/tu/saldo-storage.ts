@@ -3,16 +3,56 @@ import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
 export const KANTIN_SALDO_STORAGE_KEY = 'kantin_siswa_saldo_overrides'
 
 /**
+ * Membaca ID sekolah pengguna yang sedang aktif dari storage autentikasi FE.
+ */
+export function getCurrentSekolahId(): number | null {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null
+  }
+  try {
+    const raw = window.localStorage.getItem('kantin_user')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      const id = parsed?.sekolahId ?? parsed?.sekolah_id
+      if (typeof id === 'number' && !Number.isNaN(id)) {
+        return id
+      }
+    }
+  } catch {
+    // noop
+  }
+  return null
+}
+
+/**
+ * Menghasilkan kunci storage lokal yang terisolasi per sekolah atau global sebagai fallback.
+ */
+export function getTenantSaldoStorageKey(sekolahId?: number | null): string {
+  const sId = sekolahId ?? getCurrentSekolahId()
+  if (sId) {
+    return `${KANTIN_SALDO_STORAGE_KEY}_${sId}`
+  }
+  return KANTIN_SALDO_STORAGE_KEY
+}
+
+/**
  * Membaca peta saldo siswa yang tersimpan di localStorage.
  * Mengembalikan objek Record<number, number> berisi pasangan siswa_id -> saldo.
  */
-export function getStoredSaldoOverrides(): Record<number, number> {
+export function getStoredSaldoOverrides(
+  sekolahId?: number | null
+): Record<number, number> {
   if (typeof window === 'undefined' || !window.localStorage) {
     return {}
   }
 
   try {
-    const raw = window.localStorage.getItem(KANTIN_SALDO_STORAGE_KEY)
+    const tenantKey = getTenantSaldoStorageKey(sekolahId)
+    let raw = window.localStorage.getItem(tenantKey)
+    // Jika belum ada data di tenant key khusus, coba baca dari default global key
+    if (!raw && tenantKey !== KANTIN_SALDO_STORAGE_KEY) {
+      raw = window.localStorage.getItem(KANTIN_SALDO_STORAGE_KEY)
+    }
     if (!raw) return {}
     const parsed = JSON.parse(raw)
     if (typeof parsed !== 'object' || parsed === null) return {}
@@ -34,7 +74,11 @@ export function getStoredSaldoOverrides(): Record<number, number> {
 /**
  * Menyimpan saldo terbaru siswa ke localStorage dan memperbarui data mock di memori.
  */
-export function saveStoredSaldo(siswaId: number, newSaldo: number): void {
+export function saveStoredSaldo(
+  siswaId: number,
+  newSaldo: number,
+  sekolahId?: number | null
+): void {
   if (Number.isNaN(siswaId) || Number.isNaN(newSaldo)) return
 
   // 1. Update in-memory MOCK_SISWA agar komponen lain yang membaca MOCK_SISWA langsung sinkron
@@ -46,12 +90,27 @@ export function saveStoredSaldo(siswaId: number, newSaldo: number): void {
   // 2. Simpan ke localStorage agar tidak hilang saat pengguna melakukan refresh halaman
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
-      const current = getStoredSaldoOverrides()
+      const tenantKey = getTenantSaldoStorageKey(sekolahId)
+      const current = getStoredSaldoOverrides(sekolahId)
       current[siswaId] = newSaldo
-      window.localStorage.setItem(
-        KANTIN_SALDO_STORAGE_KEY,
-        JSON.stringify(current)
-      )
+      window.localStorage.setItem(tenantKey, JSON.stringify(current))
+
+      // Sinkronkan juga ke default global key untuk kompatibilitas penuh antar-komponen
+      if (tenantKey !== KANTIN_SALDO_STORAGE_KEY) {
+        try {
+          const rawGlobal = window.localStorage.getItem(KANTIN_SALDO_STORAGE_KEY)
+          const currentGlobal: Record<number, number> = rawGlobal
+            ? JSON.parse(rawGlobal)
+            : {}
+          currentGlobal[siswaId] = newSaldo
+          window.localStorage.setItem(
+            KANTIN_SALDO_STORAGE_KEY,
+            JSON.stringify(currentGlobal)
+          )
+        } catch {
+          // ignore
+        }
+      }
     } catch {
       // Abaikan jika localStorage diblokir oleh preferensi browser pengguna
     }
@@ -63,8 +122,8 @@ export function saveStoredSaldo(siswaId: number, newSaldo: number): void {
  */
 export function applyStoredSaldoOverrides<
   T extends { siswa_id: number; saldo?: number },
->(students: T[]): T[] {
-  const overrides = getStoredSaldoOverrides()
+>(students: T[], sekolahId?: number | null): T[] {
+  const overrides = getStoredSaldoOverrides(sekolahId)
   if (Object.keys(overrides).length === 0) {
     return students
   }
@@ -81,16 +140,20 @@ export function applyStoredSaldoOverrides<
 /**
  * Mengambil daftar siswa awal dengan saldo yang telah disinkronkan dari penyimpanan lokal.
  */
-export function getInitialStudents(): KartuSiswaMock[] {
-  return applyStoredSaldoOverrides(MOCK_SISWA)
+export function getInitialStudents(
+  sekolahId?: number | null
+): KartuSiswaMock[] {
+  return applyStoredSaldoOverrides(MOCK_SISWA, sekolahId)
 }
 
 /**
  * Menghapus cache saldo di storage lokal (berguna untuk pengujian unit atau reset data).
  */
-export function clearStoredSaldoOverrides(): void {
+export function clearStoredSaldoOverrides(sekolahId?: number | null): void {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
+      const tenantKey = getTenantSaldoStorageKey(sekolahId)
+      window.localStorage.removeItem(tenantKey)
       window.localStorage.removeItem(KANTIN_SALDO_STORAGE_KEY)
     } catch {
       // noop

@@ -158,4 +158,24 @@ describe('saldo-storage', () => {
     const listOtherPetugas = getStoredTopupTransactions('2026-10-26', 999)
     expect(listOtherPetugas).toEqual([])
   })
+
+  it('mendukung isolasi saldo per tenant/sekolahId', () => {
+    saveStoredSaldo(102, 75000, 2)
+    saveStoredSaldo(102, 200000, 1)
+
+    const saldoSekolah2 = getStoredSaldoOverrides(2)
+    const saldoSekolah1 = getStoredSaldoOverrides(1)
+
+    expect(saldoSekolah2[102]).toBe(75000)
+    expect(saldoSekolah1[102]).toBe(200000)
+  })
+
+  it('applyStoredSaldoOverrides mempertahankan saldo tersimpan pada siswa dengan saldo awal 0', () => {
+    saveStoredSaldo(102, 50000)
+
+    const sample = [{ siswa_id: 102, saldo: 0, nama: 'Siti Rahmawati' }]
+    const updated = applyStoredSaldoOverrides(sample)
+
+    expect(updated[0].saldo).toBe(50000)
+  })
 })
