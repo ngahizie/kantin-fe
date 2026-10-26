@@ -31,7 +31,7 @@ export interface StudentFeedbackModalProps {
   durasiDetik?: number
 }
 
-const DEFAULT_COUNTDOWN_SECONDS = 3
+const DEFAULT_COUNTDOWN_SECONDS = 15
 
 export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
   open,
@@ -50,6 +50,8 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
   // Mulai hitung mundur saat modal terbuka, tersinkronisasi dengan durasi pengaturan operasional
   useEffect(() => {
     if (!open || !data || isVoiding) return
+
+    setCountdown(effectiveDuration)
 
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -191,7 +193,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             </div>
           </div>
 
-          {/* Indikator Countdown Otomatis 3 Detik */}
+          {/* Indikator Countdown Otomatis 15 Detik */}
           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
             <Clock className='h-3.5 w-3.5 animate-pulse text-primary' />
             <span>

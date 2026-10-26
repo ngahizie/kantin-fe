@@ -65,4 +65,64 @@ describe('StudentFeedbackModal', () => {
     await expect.element(screen.getByText('IX-A')).toBeInTheDocument()
     await expect.element(screen.getByText('NIS: 12345')).toBeInTheDocument()
   })
+
+  it('menggunakan default hitung mundur 15 detik untuk menutup otomatis', async () => {
+    const mockData = {
+      transaksi_id: 3344,
+      total: 10000,
+      waktu: new Date().toISOString(),
+      pembeli: {
+        tipe: 'SISWA' as const,
+        subjekTipe: 'SISWA' as const,
+        nama: 'Ahmad Faiz',
+        kelas: 'VII-C',
+        nis: '9876',
+        foto_url: null,
+        sisa_saldo: 40000,
+      },
+    }
+
+    const screen = await render(
+      <StudentFeedbackModal
+        open={true}
+        onOpenChange={vi.fn()}
+        data={mockData}
+        onComplete={vi.fn()}
+        onVoid={vi.fn()}
+      />
+    )
+
+    await expect.element(screen.getByText('15', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText(/Menutup otomatis dalam/i)).toBeInTheDocument()
+  })
+
+  it('dapat menerima durasiDetik kustom dalam hitungan detik', async () => {
+    const mockData = {
+      transaksi_id: 3345,
+      total: 10000,
+      waktu: new Date().toISOString(),
+      pembeli: {
+        tipe: 'SISWA' as const,
+        subjekTipe: 'SISWA' as const,
+        nama: 'Ahmad Faiz',
+        kelas: 'VII-C',
+        nis: '9876',
+        foto_url: null,
+        sisa_saldo: 40000,
+      },
+    }
+
+    const screen = await render(
+      <StudentFeedbackModal
+        open={true}
+        onOpenChange={vi.fn()}
+        data={mockData}
+        onComplete={vi.fn()}
+        onVoid={vi.fn()}
+        durasiDetik={42}
+      />
+    )
+
+    await expect.element(screen.getByText('42', { exact: true })).toBeInTheDocument()
+  })
 })
