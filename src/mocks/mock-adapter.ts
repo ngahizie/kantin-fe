@@ -30,6 +30,7 @@ import {
   type TransaksiSesiTutupMock,
   type PengaturanKantinMock,
   type TitikKasirMock,
+  type KerugianStokMock,
 } from './mock-data'
 
 export interface MockResponseData {
@@ -71,6 +72,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
   const titikKasirList: TitikKasirMock[] = JSON.parse(
     JSON.stringify(MOCK_TITIK_KASIR)
   )
+  const kerugianStokList: KerugianStokMock[] = [...MOCK_KERUGIAN_STOK]
 
   const idempotencyStore = new Map<
     string,
@@ -2625,6 +2627,36 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         }
         riwayatStokList.unshift(itemMutasi)
 
+        if (selisih < 0) {
+          const kat = kategoriList.find(
+            (k) => k.id === targetMenu?.kategori_id
+          )
+          const newKerugianId =
+            kerugianStokList.length > 0
+              ? Math.max(...kerugianStokList.map((k) => k.id)) + 1
+              : 1
+          const hpp = targetMenu
+            ? targetMenu.hpp || Math.round(targetMenu.harga_jual * 0.7)
+            : 0
+
+          const entriKerugian: KerugianStokMock = {
+            id: newKerugianId,
+            waktu: now.toISOString(),
+            menu_id: Number(it.menuId),
+            nama_menu: targetMenu ? targetMenu.nama : `Menu #${it.menuId}`,
+            kategori_nama: kat ? kat.nama : 'Umum',
+            jenis: it.rusak ? 'BARANG_RUSAK' : 'OPNAME_KELUAR',
+            qty: Math.abs(selisih),
+            hpp_snapshot: hpp,
+            total_nilai: Math.abs(selisih) * hpp,
+            alasan: it.alasan || (it.rusak ? 'Barang Rusak' : 'Selisih audit opname'),
+            berita_acara_id: referensiId,
+            petugas: 'Siti Aminah (Pengelola)',
+          }
+          kerugianStokList.unshift(entriKerugian)
+          MOCK_KERUGIAN_STOK.unshift(entriKerugian)
+        }
+
         hasilItems.push({
           menuId: Number(it.menuId),
           stokSebelum,
@@ -2712,6 +2744,36 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           waktu: now.toISOString(),
         }
         riwayatStokList.unshift(itemMutasi)
+
+        if (selisih < 0) {
+          const kat = kategoriList.find(
+            (k) => k.id === targetMenu?.kategori_id
+          )
+          const newKerugianId =
+            kerugianStokList.length > 0
+              ? Math.max(...kerugianStokList.map((k) => k.id)) + 1
+              : 1
+          const hpp = targetMenu
+            ? targetMenu.hpp || Math.round(targetMenu.harga_jual * 0.7)
+            : 0
+
+          const entriKerugian: KerugianStokMock = {
+            id: newKerugianId,
+            waktu: now.toISOString(),
+            menu_id: menuId,
+            nama_menu: targetMenu ? targetMenu.nama : `Menu #${menuId}`,
+            kategori_nama: kat ? kat.nama : 'Umum',
+            jenis: 'OPNAME_KELUAR',
+            qty: Math.abs(selisih),
+            hpp_snapshot: hpp,
+            total_nilai: Math.abs(selisih) * hpp,
+            alasan: alasan || 'Selisih audit opname',
+            berita_acara_id: referensiId,
+            petugas: 'Siti Aminah (Pengelola)',
+          }
+          kerugianStokList.unshift(entriKerugian)
+          MOCK_KERUGIAN_STOK.unshift(entriKerugian)
+        }
       }
 
       return {
@@ -3203,11 +3265,11 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     // LAPORAN KERUGIAN STOK (PRD §9.5)
     // ─────────────────────────────────────────────────────────────
     if (url.includes('/api/laporan/kerugian-stok/ringkasan') && method === 'get') {
-      const totalKerugian = MOCK_KERUGIAN_STOK.reduce((acc, k) => acc + k.total_nilai, 0)
-      const totalQtyHilang = MOCK_KERUGIAN_STOK.reduce((acc, k) => acc + k.qty, 0)
+      const totalKerugian = kerugianStokList.reduce((acc, k) => acc + k.total_nilai, 0)
+      const totalQtyHilang = kerugianStokList.reduce((acc, k) => acc + k.qty, 0)
 
-      const opnameItems = MOCK_KERUGIAN_STOK.filter((k) => k.jenis === 'OPNAME_KELUAR')
-      const rusakItems = MOCK_KERUGIAN_STOK.filter((k) => k.jenis === 'BARANG_RUSAK')
+      const opnameItems = kerugianStokList.filter((k) => k.jenis === 'OPNAME_KELUAR')
+      const rusakItems = kerugianStokList.filter((k) => k.jenis === 'BARANG_RUSAK')
 
       return {
         status: 200,
@@ -3219,7 +3281,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           data: {
             totalKerugian,
             totalQtyHilang,
-            jumlahKejadian: MOCK_KERUGIAN_STOK.length,
+            jumlahKejadian: kerugianStokList.length,
             kerugianOpname: opnameItems.reduce((acc, k) => acc + k.total_nilai, 0),
             qtyOpname: opnameItems.reduce((acc, k) => acc + k.qty, 0),
             kerugianBarangRusak: rusakItems.reduce((acc, k) => acc + k.total_nilai, 0),
@@ -3230,7 +3292,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     if (url.includes('/api/laporan/kerugian-stok') && method === 'get') {
-      const listKerugian = MOCK_KERUGIAN_STOK.map((k) => ({
+      const listKerugian = kerugianStokList.map((k) => ({
         id: k.id,
         waktu: k.waktu,
         menuId: k.menu_id,
