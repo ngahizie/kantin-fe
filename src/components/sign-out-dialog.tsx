@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
@@ -9,16 +9,14 @@ interface SignOutDialogProps {
 
 export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const navigate = useNavigate()
-  const location = useLocation()
   const { auth } = useAuthStore()
 
   const handleSignOut = () => {
     auth.reset()
-    // Preserve current location for redirect after sign-in
-    const currentPath = location.href
+    // Arahkan langsung ke halaman sign-in tanpa menyimpan redirect path
+    // untuk mencegah error 403 saat staf lain login dengan role berbeda
     navigate({
       to: '/sign-in',
-      search: { redirect: currentPath },
       replace: true,
     })
   }

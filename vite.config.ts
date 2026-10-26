@@ -35,6 +35,7 @@ export default defineConfig({
     unstubEnvs: true,
     browser: {
       enabled: true,
+      api: { port: 63350 },
       provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },
