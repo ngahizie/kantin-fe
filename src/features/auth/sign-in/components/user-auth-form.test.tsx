@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
 import { UserAuthForm } from './user-auth-form'
+import { getRoleHomePath } from '@/stores/useRoleStore'
 
 const FORM_MESSAGES = {
   emailEmpty: 'Masukkan username staf.',
@@ -111,7 +112,7 @@ describe('UserAuthForm', () => {
     })
   })
 
-  it('navigates to redirectTo when provided', async () => {
+  it('navigates directly to role home path even if redirectTo was provided to prevent 403', async () => {
     vi.clearAllMocks()
 
     const { getByRole, getByLabelText } = await render(
@@ -128,9 +129,20 @@ describe('UserAuthForm', () => {
 
     await vi.waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({
-        to: '/menu',
+        to: '/',
         replace: true,
       })
     )
+  })
+
+  describe('getRoleHomePath helper', () => {
+    it('returns /kasir for role kasir and / for other roles', () => {
+      expect(getRoleHomePath('kasir')).toBe('/kasir')
+      expect(getRoleHomePath('pengelola')).toBe('/')
+      expect(getRoleHomePath('tu')).toBe('/')
+      expect(getRoleHomePath('bendahara')).toBe('/')
+      expect(getRoleHomePath('kepsek')).toBe('/')
+      expect(getRoleHomePath('admin')).toBe('/')
+    })
   })
 })

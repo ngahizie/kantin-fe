@@ -48,6 +48,18 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   },
 }
 
+/**
+ * Mengembalikan rute beranda (home) default untuk setiap role:
+ * - kasir -> /kasir
+ * - pengelola, tu, bendahara, kepsek, admin -> / (Dashboard)
+ */
+export function getRoleHomePath(role?: UserRole | string): string {
+  if (role === 'kasir') {
+    return '/kasir'
+  }
+  return '/'
+}
+
 function getStoredUser() {
   if (typeof window === 'undefined') return null
   try {
