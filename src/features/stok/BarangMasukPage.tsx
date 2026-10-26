@@ -178,8 +178,20 @@ export function BarangMasukPage() {
               <p className='text-xs font-medium text-muted-foreground'>
                 Peringatan Stok Menipis
               </p>
-              <h3 className='mt-0.5 text-xl font-bold text-destructive'>
-                {stokMenipis.length > 0 ? (
+              <h3
+                className={`mt-0.5 text-xl font-bold ${
+                  loadingMenus
+                    ? 'text-foreground'
+                    : stokMenipis.length === 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : stokMenipis.some((item) => item.stok === 0)
+                    ? 'text-destructive'
+                    : 'text-amber-600 dark:text-amber-400'
+                }`}
+              >
+                {loadingMenus ? (
+                  '...'
+                ) : stokMenipis.length > 0 ? (
                   <span>{stokMenipis.length} Menu</span>
                 ) : (
                   'Semua Aman'

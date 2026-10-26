@@ -250,10 +250,18 @@ export function MenuPage() {
           <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Menipis / Habis</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
+              <h3
+                className={`mt-1 text-2xl font-bold tracking-tight tabular-nums ${
+                  stats.stokMenipis === 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-amber-600 dark:text-amber-400'
+                }`}
+              >
                 {stats.stokMenipis}
               </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Perlu restock segera</p>
+              <p className='mt-0.5 text-xs text-muted-foreground'>
+                {stats.stokMenipis === 0 ? 'Semua stok aman' : 'Perlu restock segera'}
+              </p>
             </CardContent>
           </Card>
 
