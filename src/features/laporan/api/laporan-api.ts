@@ -209,11 +209,31 @@ export const laporanApi = {
   async getKerugianStok(
     params?: LaporanFilterParams
   ): Promise<BarisKerugianStok[]> {
-    const res = await apiClient.get<ApiResponse<BarisKerugianStok[]>>(
+    const res = await apiClient.get<ApiResponse<any[]>>(
       '/api/laporan/kerugian-stok',
       { params }
     )
-    return res.data.data
+    const rawList = Array.isArray(res.data?.data) ? res.data.data : []
+    return rawList.map((item, idx) => ({
+      id: Number(item.id ?? idx + 1),
+      waktu: String(item.waktu || item.createdAt || new Date().toISOString()),
+      menuId: Number(item.menuId ?? item.menu_id ?? 0),
+      namaMenu: String(item.namaMenu || item.nama_menu || item.menuNama || 'Menu'),
+      kategoriNama: String(item.kategoriNama || item.kategori_nama || 'Umum'),
+      jenis: (item.jenis === 'BARANG_RUSAK' ? 'BARANG_RUSAK' : 'OPNAME_KELUAR') as 'OPNAME_KELUAR' | 'BARANG_RUSAK',
+      qty: Number(item.qty ?? item.totalQty ?? item.total_qty ?? 0),
+      hppSnapshot: Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0),
+      totalNilai: Number(
+        item.totalNilai ??
+          item.total_nilai ??
+          (Number(item.qty ?? item.totalQty ?? 0) * Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0))
+      ),
+      alasan: String(item.alasan || '-'),
+      beritaAcaraId: String(
+        item.beritaAcaraId || item.berita_acara_id || item.referensiId || item.referensi_id || '-'
+      ),
+      petugas: String(item.petugas || item.aktorNama || item.aktor_nama || 'Petugas'),
+    }))
   },
 
   /**

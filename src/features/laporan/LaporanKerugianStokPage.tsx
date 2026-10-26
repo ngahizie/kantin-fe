@@ -74,11 +74,11 @@ export function LaporanKerugianStokPage() {
       const q = searchQuery.toLowerCase()
       list = list.filter(
         (k) =>
-          k.namaMenu.toLowerCase().includes(q) ||
-          k.kategoriNama.toLowerCase().includes(q) ||
-          k.alasan.toLowerCase().includes(q) ||
-          k.beritaAcaraId.toLowerCase().includes(q) ||
-          k.petugas.toLowerCase().includes(q)
+          (k.namaMenu || '').toLowerCase().includes(q) ||
+          (k.kategoriNama || '').toLowerCase().includes(q) ||
+          (k.alasan || '').toLowerCase().includes(q) ||
+          (k.beritaAcaraId || '').toLowerCase().includes(q) ||
+          (k.petugas || '').toLowerCase().includes(q)
       )
     }
 
@@ -340,17 +340,17 @@ export function LaporanKerugianStokPage() {
                             {idx + 1}
                           </TableCell>
                           <TableCell className="text-xs font-medium whitespace-nowrap">
-                            {formatDateTime(item.waktu)}
+                            {item.waktu ? formatDateTime(item.waktu) : '-'}
                           </TableCell>
                           <TableCell className="font-mono text-xs font-semibold text-muted-foreground">
-                            {item.beritaAcaraId}
+                            {item.beritaAcaraId || '-'}
                           </TableCell>
                           <TableCell className="font-semibold text-sm">
-                            {item.namaMenu}
+                            {item.namaMenu || '-'}
                           </TableCell>
                           <TableCell>
                             <Badge variant="secondary" className="border-0 text-xs bg-background/80 dark:bg-background/40">
-                              {item.kategoriNama}
+                              {item.kategoriNama || 'Umum'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
@@ -375,10 +375,10 @@ export function LaporanKerugianStokPage() {
                             {formatRupiah(item.totalNilai)}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground max-w-xs">
-                            {item.alasan}
+                            {item.alasan || '-'}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {item.petugas}
+                            {item.petugas || '-'}
                           </TableCell>
                         </TableRow>
                       ))

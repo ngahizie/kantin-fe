@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { apiClient } from '@/lib/api-client'
 import { laporanApi } from '../api/laporan-api'
+import { stokApi } from '@/features/stok/api/stok-api'
 import {
   exportTableToExcel,
   exportMultiSheetExcel,
@@ -211,6 +212,31 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
 
       expect(ringkasan.totalKerugian).toBeGreaterThan(0)
       expect(ringkasan.totalQtyHilang).toBeGreaterThan(0)
+    })
+
+    it('menyinkronkan selisih minus hasil opname ke laporan kerugian stok dengan atribut lengkap', async () => {
+      const baId = `BA-OPN-TEST-${Date.now()}`
+      await stokApi.sesuaikanOpnameBatch({
+        referensiId: baId,
+        items: [
+          {
+            menuId: 1,
+            qtyFisik: 0,
+            alasan: 'Audit fisik: barang hilang dari etalase',
+          },
+        ],
+      })
+
+      const list = await laporanApi.getKerugianStok()
+      const found = list.find((item) => item.beritaAcaraId === baId)
+      expect(found).toBeDefined()
+      expect(found?.namaMenu).toBeTruthy()
+      expect(found?.kategoriNama).toBeTruthy()
+      expect(found?.qty).toBeGreaterThan(0)
+      expect(found?.hppSnapshot).toBeGreaterThan(0)
+      expect(found?.totalNilai).toBe((found?.qty || 0) * (found?.hppSnapshot || 0))
+      expect(found?.alasan).toContain('barang hilang dari etalase')
+      expect(found?.petugas).toBeTruthy()
     })
   })
 })
