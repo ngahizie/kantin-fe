@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   UserCheck,
-  CreditCard,
   RefreshCw,
-  Hash,
   AlertCircle,
 } from 'lucide-react'
 import {

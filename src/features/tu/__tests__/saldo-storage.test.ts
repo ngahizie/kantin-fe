@@ -6,7 +6,6 @@ import {
   getStoredSaldoOverrides,
   getStoredTopupTransactions,
   KANTIN_SALDO_STORAGE_KEY,
-  KANTIN_TOPUP_TRANSACTIONS_KEY,
   saveStoredSaldo,
   saveTopupTransaction,
 } from '../saldo-storage'
