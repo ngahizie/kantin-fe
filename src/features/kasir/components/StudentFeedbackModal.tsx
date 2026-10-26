@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { TapTransaksiData } from '../api/kasir-api'
+import type { TapTransaksiData, TapBuyerInfo } from '../types'
 
 export interface StudentFeedbackModalProps {
   open: boolean
@@ -69,11 +69,32 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
   if (!data) return null
 
-  const pembeli = data.pembeli
-  const isSiswa = pembeli.tipe === 'SISWA' || pembeli.subjekTipe === 'SISWA'
-  const fotoUrl = pembeli.foto_url || pembeli.fotoUrl
-  const sisaSaldo = pembeli.sisa_saldo ?? pembeli.saldoSisa ?? 0
-  const transaksiId = data.transaksi_id || data.transaksiId || 0
+  const pembeli: Partial<TapBuyerInfo> =
+    data.pembeli || (data as unknown as Partial<TapBuyerInfo>) || {}
+  const isSiswa =
+    pembeli?.tipe === 'SISWA' ||
+    pembeli?.subjekTipe === 'SISWA' ||
+    (data as unknown as { subjekTipe?: string }).subjekTipe === 'SISWA' ||
+    Boolean(pembeli?.kelas)
+  const fotoUrl =
+    pembeli?.foto_url ||
+    pembeli?.fotoUrl ||
+    (data as unknown as { fotoUrl?: string }).fotoUrl ||
+    null
+  const sisaSaldo =
+    pembeli?.sisa_saldo ??
+    pembeli?.saldoSisa ??
+    (data as unknown as { saldoSisa?: number }).saldoSisa ??
+    0
+  const transaksiId =
+    data.transaksi_id ||
+    data.transaksiId ||
+    (data as unknown as { id?: number }).id ||
+    0
+  const namaPembeli =
+    pembeli?.nama ||
+    (data as unknown as { nama?: string }).nama ||
+    'Pembeli'
 
   const handleVoidClick = () => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -111,7 +132,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
-                  alt={pembeli.nama}
+                  alt={namaPembeli}
                   className='object-cover'
                 />
               )}
@@ -128,7 +149,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
                 variant='secondary'
                 className='border-none bg-background/95 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
               >
-                {isSiswa ? pembeli.kelas || 'Siswa' : 'Kartu Tamu'}
+                {isSiswa ? pembeli?.kelas || 'Siswa' : 'Kartu Tamu'}
               </Badge>
             </div>
           </div>
@@ -136,16 +157,16 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
           {/* Nama & Rincian */}
           <div className='mt-1 space-y-1 text-center'>
             <h3 className='text-lg font-bold tracking-tight text-foreground'>
-              {pembeli.nama}
+              {namaPembeli}
             </h3>
-            {isSiswa && pembeli.nis && (
+            {isSiswa && pembeli?.nis && (
               <p className='text-xs text-muted-foreground'>
                 NIS: {pembeli.nis}
               </p>
             )}
-            {!isSiswa && pembeli.nomor_kartu && (
+            {!isSiswa && (pembeli?.nomor_kartu || pembeli?.nomorKartu) && (
               <p className='text-xs text-muted-foreground'>
-                No. Kartu: {pembeli.nomor_kartu}
+                No. Kartu: {pembeli.nomor_kartu || pembeli.nomorKartu}
               </p>
             )}
           </div>
