@@ -256,7 +256,7 @@ export function DashboardPage() {
                 <span className='inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold'>
                   Omset Bersih
                 </span>
-                <span>• Akumulasi penjualan hari ini</span>
+                <span>• Akumulasi hari ini</span>
               </div>
             </CardContent>
           </Card>
@@ -276,8 +276,10 @@ export function DashboardPage() {
                 {todayTransactions} <span className='text-base font-normal text-muted-foreground'>Trx</span>
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                <span className='font-semibold text-foreground'>Rata-rata: {formatRupiah(avgPerTransaction)}</span>
-                <span>/ siswa</span>
+                <span className='inline-flex items-center text-blue-600 dark:text-blue-400 font-semibold'>
+                  Rata-rata
+                </span>
+                <span>• {formatRupiah(avgPerTransaction)} / trx</span>
               </div>
             </CardContent>
           </Card>
@@ -348,8 +350,18 @@ export function DashboardPage() {
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Peringatan Stok Barang
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400'>
-                <AlertTriangle className='size-5' />
+              <div
+                className={`flex size-9 items-center justify-center rounded-lg ${
+                  lowStockItems.length === 0
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                }`}
+              >
+                {lowStockItems.length === 0 ? (
+                  <CheckCircle2 className='size-5' />
+                ) : (
+                  <AlertTriangle className='size-5' />
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -357,8 +369,14 @@ export function DashboardPage() {
                 {lowStockItems.length} <span className='text-base font-normal text-muted-foreground'>Item</span>
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                <span className='inline-flex items-center text-amber-600 dark:text-amber-400 font-semibold'>
-                  Perlu Restock
+                <span
+                  className={`inline-flex items-center font-semibold ${
+                    lowStockItems.length === 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}
+                >
+                  {lowStockItems.length === 0 ? 'Stok Aman' : 'Perlu Restock'}
                 </span>
                 <span>• {effectiveMenuItems.filter(i => i.stok === 0).length} Habis, {effectiveMenuItems.filter(i => i.stok > 0 && i.stok <= i.stok_minimum).length} Menipis</span>
               </div>
