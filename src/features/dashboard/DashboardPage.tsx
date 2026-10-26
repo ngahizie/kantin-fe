@@ -335,23 +335,23 @@ export function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30 opacity-80'>
+            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium text-muted-foreground'>
                   Status Rekonsiliasi Kas
                 </CardTitle>
-                <div className='flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
+                <div className='flex size-9 items-center justify-center rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400'>
                   <Scale className='size-5' />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className='text-xl font-bold tracking-tight text-muted-foreground'>
+                <div className='text-2xl font-bold tracking-tight text-foreground'>
                   Akses Terbatas
                 </div>
-                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5'>
-                  <Badge variant='outline' className='text-[10px] font-normal border-muted-foreground/30 px-1.5 py-0'>
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                  <span className='inline-flex items-center font-semibold text-slate-600 dark:text-slate-400'>
                     Peran Terbatas
-                  </Badge>
+                  </span>
                   <span>• Dikelola TU & Bendahara</span>
                 </div>
               </CardContent>
