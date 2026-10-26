@@ -5,7 +5,6 @@ import {
   ArrowRight,
   RefreshCw,
   CheckCircle2,
-  ShieldAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
@@ -31,6 +30,7 @@ import {
   applyStoredSaldoOverrides,
   getInitialStudents,
   saveStoredSaldo,
+  saveTopupTransaction,
 } from './saldo-storage'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
@@ -196,6 +196,20 @@ export function TopupTunaiPage() {
       if (result) {
         // Simpan saldo baru ke storage lokal & memori agar tidak hilang saat refresh
         saveStoredSaldo(currentStudent.siswa_id, result.saldo_baru)
+
+        // Simpan transaksi ke riwayat top-up lokal untuk sinkronisasi rincian setoran TU
+        saveTopupTransaction({
+          id: result.ref_no,
+          waktu: result.waktu,
+          subjek_tipe: 'SISWA',
+          subjek_nama: currentStudent.nama,
+          subjek_info: `${currentStudent.kelas} (NIS: ${currentStudent.nis})`,
+          nominal: result.nominal,
+          penyetor: result.nama_penyetor,
+          referensi_id: result.ref_no,
+          tanggal: result.waktu.slice(0, 10),
+          petugas_id: 2,
+        })
 
         toast.success(
           `Top-up ${formatRupiah(nominalNum)} berhasil!`,
@@ -448,7 +462,6 @@ export function TopupTunaiPage() {
                           variant='destructive'
                           className='border-0 bg-destructive/15 text-destructive'
                         >
-                          <ShieldAlert className='h-4 w-4 text-destructive' />
                           <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
                             Kartu Siswa Diblokir!
                           </AlertTitle>

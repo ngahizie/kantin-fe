@@ -303,7 +303,7 @@ export const MOCK_SISWA: KartuSiswaMock[] = [
     nama: 'Siti Rahmawati',
     kelas: 'XI IPS 2',
     foto_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    saldo: 5000, // Saldo sedikit untuk test validasi "Saldo kurang"
+    saldo: 200000, // Sinkron dengan saldo riil database kantin_db (hasil top-up)
     limit_harian: 25000,
     limit_harian_enabled: true,
     belanja_hari_ini: 0,

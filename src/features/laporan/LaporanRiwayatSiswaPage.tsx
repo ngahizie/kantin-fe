@@ -908,7 +908,7 @@ export function LaporanRiwayatSiswaPage() {
 
                 {/* The Authentic Thermal Receipt Card (Screen & Print) */}
                 {selectedTrxForReceipt && profil && (
-                  <div className="printable-slip w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white p-5 font-mono text-xs text-slate-900 shadow-sm">
+                  <div className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none">
                     {/* Header Nota */}
                     <div className="space-y-1 border-b border-dashed border-slate-300 pb-3 text-center">
                       <div className="flex items-center justify-center gap-1.5 text-sm font-bold tracking-tight text-slate-900 uppercase">

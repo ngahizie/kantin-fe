@@ -47,6 +47,7 @@ import {
   type RawRekapTu,
   mapRekapSetoranTuItem,
 } from './types'
+import { getStoredTopupTransactions } from './saldo-storage'
 
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
@@ -601,7 +602,14 @@ export function SetoranKasPage() {
                                 variant='outline'
                                 size='sm'
                                 onClick={() => {
-                                  setSelectedSetoranForDetail(item)
+                                  const rincian =
+                                    item.rincian_transaksi && item.rincian_transaksi.length > 0
+                                      ? item.rincian_transaksi
+                                      : getStoredTopupTransactions(item.tanggal, item.petugas_id)
+                                  setSelectedSetoranForDetail({
+                                    ...item,
+                                    rincian_transaksi: rincian,
+                                  })
                                   setIsDetailModalOpen(true)
                                 }}
                                 className='h-7 gap-1 border-border text-xs'
@@ -647,84 +655,105 @@ export function SetoranKasPage() {
       {/* Modal Dialog Rincian Transaksi Topup Petugas */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent className='max-h-[85vh] overflow-y-auto sm:max-w-[700px]'>
-          <DialogHeader>
-            <DialogTitle className='text-base font-semibold'>
-              Rincian Transaksi Top-up Petugas:{' '}
-              {selectedSetoranForDetail?.petugas_nama}
-            </DialogTitle>
-            <DialogDescription className='text-xs'>
-              Daftar seluruh top-up tunai yang dilayani pada tanggal{' '}
-              {selectedSetoranForDetail?.tanggal} (Total:{' '}
-              {formatRupiah(selectedSetoranForDetail?.total_sistem || 0)})
-            </DialogDescription>
-          </DialogHeader>
+          {(() => {
+            const displayRincian =
+              selectedSetoranForDetail?.rincian_transaksi &&
+              selectedSetoranForDetail.rincian_transaksi.length > 0
+                ? selectedSetoranForDetail.rincian_transaksi
+                : selectedSetoranForDetail
+                  ? getStoredTopupTransactions(
+                      selectedSetoranForDetail.tanggal,
+                      selectedSetoranForDetail.petugas_id
+                    )
+                  : []
 
-          <div className='space-y-4 py-2'>
-            <div className='rounded-md border'>
-              <Table>
-                <TableHeader>
-                  <TableRow className='bg-muted/30'>
-                    <TableHead className='text-xs font-semibold'>
-                      Waktu & No. Ref
-                    </TableHead>
-                    <TableHead className='text-xs font-semibold'>
-                      Subjek / Penerima
-                    </TableHead>
-                    <TableHead className='text-xs font-semibold'>
-                      Penyetor
-                    </TableHead>
-                    <TableHead className='text-right text-xs font-semibold'>
-                      Nominal
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(selectedSetoranForDetail?.rincian_transaksi || []).length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className='h-24 text-center text-xs text-muted-foreground'
-                      >
-                        Rincian detail transaksi top-up tersimpan di sistem riwayat mutasi kasir/TU.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    selectedSetoranForDetail?.rincian_transaksi.map(
-                      (tx: TransaksiTopupDetail) => (
-                        <TableRow key={tx.id}>
-                        <TableCell className='text-xs'>
-                          <div className='font-mono font-medium'>
-                            {new Date(tx.waktu).toLocaleTimeString('id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            })}
-                          </div>
-                          <div className='font-mono text-[11px] text-muted-foreground'>
-                            {tx.referensi_id}
-                          </div>
-                        </TableCell>
-                        <TableCell className='text-xs'>
-                          <div className='font-medium text-foreground'>
-                            {tx.subjek_nama}
-                          </div>
-                          <div className='text-[11px] text-muted-foreground'>
-                            {tx.subjek_info}
-                          </div>
-                        </TableCell>
-                        <TableCell className='text-xs text-muted-foreground'>
-                          {tx.penyetor}
-                        </TableCell>
-                        <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
-                          {formatRupiah(tx.nominal)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+            const totalDisplay =
+              displayRincian.reduce((acc, t) => acc + (t.nominal || 0), 0) ||
+              selectedSetoranForDetail?.total_sistem ||
+              0
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className='text-base font-semibold'>
+                    Rincian Transaksi Top-up Petugas:{' '}
+                    {selectedSetoranForDetail?.petugas_nama}
+                  </DialogTitle>
+                  <DialogDescription className='text-xs'>
+                    Daftar seluruh top-up tunai yang dilayani pada tanggal{' '}
+                    {selectedSetoranForDetail?.tanggal} (Total:{' '}
+                    {formatRupiah(totalDisplay)})
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className='space-y-4 py-2'>
+                  <div className='rounded-md border'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className='bg-muted/30'>
+                          <TableHead className='text-xs font-semibold'>
+                            Waktu & No. Ref
+                          </TableHead>
+                          <TableHead className='text-xs font-semibold'>
+                            Subjek / Penerima
+                          </TableHead>
+                          <TableHead className='text-xs font-semibold'>
+                            Penyetor
+                          </TableHead>
+                          <TableHead className='text-right text-xs font-semibold'>
+                            Nominal
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {displayRincian.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={4}
+                              className='h-24 text-center text-xs text-muted-foreground'
+                            >
+                              Rincian detail transaksi top-up tersimpan di sistem riwayat mutasi kasir/TU.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          displayRincian.map((tx: TransaksiTopupDetail) => (
+                            <TableRow key={tx.id}>
+                              <TableCell className='text-xs'>
+                                <div className='font-mono font-medium'>
+                                  {new Date(tx.waktu).toLocaleTimeString('id-ID', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                  })}
+                                </div>
+                                <div className='font-mono text-[11px] text-muted-foreground'>
+                                  {tx.referensi_id}
+                                </div>
+                              </TableCell>
+                              <TableCell className='text-xs'>
+                                <div className='font-medium text-foreground'>
+                                  {tx.subjek_nama}
+                                </div>
+                                <div className='text-[11px] text-muted-foreground'>
+                                  {tx.subjek_info}
+                                </div>
+                              </TableCell>
+                              <TableCell className='text-xs text-muted-foreground'>
+                                {tx.penyetor}
+                              </TableCell>
+                              <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
+                                {formatRupiah(tx.nominal)}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </>
+            )
+          })()}
         </DialogContent>
       </Dialog>
 

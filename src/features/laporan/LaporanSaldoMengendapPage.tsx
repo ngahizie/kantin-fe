@@ -97,9 +97,24 @@ export function LaporanSaldoMengendapPage() {
           kartuTamuPromise,
         ])
         if (!isMounted) return
-        setRingkasan(resRingkasan)
-        setSiswaList(resSiswa)
-        setKartuTamuList(resKartuTamu)
+        if (
+          resRingkasan &&
+          resRingkasan.jumlahSiswa === 0 &&
+          resSiswa &&
+          resSiswa.length > 0
+        ) {
+          const totalSiswa = resSiswa.reduce((sum, s) => sum + (s.saldo || 0), 0)
+          setRingkasan({
+            ...resRingkasan,
+            saldoSiswa: totalSiswa,
+            jumlahSiswa: resSiswa.length,
+            total: totalSiswa + (resRingkasan.saldoKartuTamu || 0),
+          })
+        } else {
+          setRingkasan(resRingkasan)
+        }
+        setSiswaList(resSiswa || [])
+        setKartuTamuList(resKartuTamu || [])
       } catch (err: unknown) {
         if (!isMounted) return
         const msg = err instanceof Error ? err.message : 'Gagal memuat saldo mengendap'
@@ -121,10 +136,10 @@ export function LaporanSaldoMengendapPage() {
     const q = searchQuery.toLowerCase()
     return siswaList.filter(
       (s) =>
-        s.nama.toLowerCase().includes(q) ||
-        s.nis.toLowerCase().includes(q) ||
-        s.kelas.toLowerCase().includes(q) ||
-        s.parentName.toLowerCase().includes(q)
+        s.nama?.toLowerCase().includes(q) ||
+        s.nis?.toLowerCase().includes(q) ||
+        s.kelas?.toLowerCase().includes(q) ||
+        (s.parentName && s.parentName.toLowerCase().includes(q))
     )
   }, [canAccessSiswa, siswaList, searchQuery])
 
@@ -135,9 +150,9 @@ export function LaporanSaldoMengendapPage() {
     const q = searchQuery.toLowerCase()
     return kartuTamuList.filter(
       (k) =>
-        k.nomorKartu.toLowerCase().includes(q) ||
-        k.labelPemegang.toLowerCase().includes(q) ||
-        k.uid.toLowerCase().includes(q)
+        k.nomorKartu?.toLowerCase().includes(q) ||
+        k.labelPemegang?.toLowerCase().includes(q) ||
+        k.uid?.toLowerCase().includes(q)
     )
   }, [canAccessKartuTamu, kartuTamuList, searchQuery])
 

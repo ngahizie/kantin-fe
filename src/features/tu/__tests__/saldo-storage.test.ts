@@ -4,8 +4,11 @@ import {
   clearStoredSaldoOverrides,
   getInitialStudents,
   getStoredSaldoOverrides,
+  getStoredTopupTransactions,
   KANTIN_SALDO_STORAGE_KEY,
+  KANTIN_TOPUP_TRANSACTIONS_KEY,
   saveStoredSaldo,
+  saveTopupTransaction,
 } from '../saldo-storage'
 import { MOCK_SISWA } from '@/mocks/mock-data'
 
@@ -103,5 +106,57 @@ describe('saldo-storage', () => {
 
     clearStoredSaldoOverrides()
     expect(getStoredSaldoOverrides()).toEqual({})
+  })
+
+  it('getStoredTopupTransactions mengembalikan seed default hari ini jika belum ada di storage', () => {
+    const list = getStoredTopupTransactions('2026-10-26', 2)
+    expect(list.length).toBe(8)
+    const total = list.reduce((sum, t) => sum + t.nominal, 0)
+    expect(total).toBe(480000)
+  })
+
+  it('saveTopupTransaction menyimpan transaksi baru ke storage dan tidak menduplikasi jika referensi_id sama', () => {
+    saveTopupTransaction({
+      id: 'TX-TEST-001',
+      waktu: '2026-10-26T10:00:00Z',
+      subjek_tipe: 'SISWA',
+      subjek_nama: 'Ahmad Fauzi',
+      subjek_info: 'XII IPA 3',
+      nominal: 25000,
+      penyetor: 'Siswa Langsung',
+      referensi_id: 'TX-TEST-001',
+      tanggal: '2026-10-26',
+      petugas_id: 2,
+    })
+
+    const list = getStoredTopupTransactions('2026-10-26', 2)
+    expect(list.length).toBe(9)
+    expect(list[0].id).toBe('TX-TEST-001')
+    expect(list[0].nominal).toBe(25000)
+
+    // Coba simpan ulang referensi_id yang sama
+    saveTopupTransaction({
+      id: 'TX-TEST-001',
+      waktu: '2026-10-26T10:00:00Z',
+      subjek_tipe: 'SISWA',
+      subjek_nama: 'Ahmad Fauzi',
+      subjek_info: 'XII IPA 3',
+      nominal: 25000,
+      penyetor: 'Siswa Langsung',
+      referensi_id: 'TX-TEST-001',
+      tanggal: '2026-10-26',
+      petugas_id: 2,
+    })
+
+    const listAfterDuplicate = getStoredTopupTransactions('2026-10-26', 2)
+    expect(listAfterDuplicate.length).toBe(9)
+  })
+
+  it('getStoredTopupTransactions menyaring transaksi berdasarkan tanggal dan petugas', () => {
+    const listOtherDate = getStoredTopupTransactions('2026-01-01', 2)
+    expect(listOtherDate).toEqual([])
+
+    const listOtherPetugas = getStoredTopupTransactions('2026-10-26', 999)
+    expect(listOtherPetugas).toEqual([])
   })
 })
