@@ -820,6 +820,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         kategoriList[idx] = {
           ...kategoriList[idx],
           nama: String(payload.nama || kategoriList[idx].nama),
+          is_active:
+            payload.aktif !== undefined
+              ? Boolean(payload.aktif)
+              : kategoriList[idx].is_active,
         }
         return {
           status: 200,

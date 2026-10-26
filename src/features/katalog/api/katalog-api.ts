@@ -35,6 +35,7 @@ export const katalogApi = {
     const res = await apiClient.put<ApiResponse<KategoriItem>>(`/api/katalog/kategori/${id}`, {
       nama: data.nama,
       urutan: data.urutan ?? 0,
+      aktif: data.aktif,
     })
     return res.data.data
   },
@@ -79,6 +80,7 @@ export const katalogApi = {
       satuan: data.satuan,
       fotoUrl: data.fotoUrl || null,
       stokMinimum: data.stokMinimum,
+      aktif: data.aktif,
     })
     return res.data.data
   },

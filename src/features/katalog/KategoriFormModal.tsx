@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Save } from 'lucide-react'
 import {
@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Form,
   FormControl,
@@ -49,6 +51,7 @@ export function KategoriFormModal({
     defaultValues: {
       nama: '',
       urutan: 0,
+      aktif: true,
     },
   })
 
@@ -58,14 +61,18 @@ export function KategoriFormModal({
   useEffect(() => {
     if (open) {
       if (selectedKategori) {
+        const isAktif =
+          selectedKategori.isActive !== false && selectedKategori.aktif !== false
         form.reset({
           nama: selectedKategori.nama,
           urutan: selectedKategori.urutan || 0,
+          aktif: isAktif,
         })
       } else {
         form.reset({
           nama: '',
           urutan: 0,
+          aktif: true,
         })
       }
     }
@@ -154,6 +161,27 @@ export function KategoriFormModal({
                 </FormItem>
               )}
             />
+
+            {/* Toggle Status Aktif */}
+            <div className='flex items-center justify-between rounded-xl border-none p-3 bg-muted/40'>
+              <div className='space-y-0.5'>
+                <Label className='text-xs font-semibold'>Status Aktif Kategori</Label>
+                <p className='text-xs text-muted-foreground'>
+                  Kategori nonaktif tidak akan tampil di kasir POS dan filter menu.
+                </p>
+              </div>
+              <Controller
+                control={form.control}
+                name='aktif'
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </div>
 
             <DialogFooter className='pt-2 sm:justify-end gap-2'>
               <Button

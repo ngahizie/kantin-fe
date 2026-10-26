@@ -9,12 +9,14 @@ describe('Katalog Kategori Zod Validation Schema', () => {
     const validData = {
       nama: 'Makanan Ringan & Snack',
       urutan: 1,
+      aktif: true,
     }
     const result = kategoriFormSchema.safeParse(validData)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.nama).toBe('Makanan Ringan & Snack')
       expect(result.data.urutan).toBe(1)
+      expect(result.data.aktif).toBe(true)
     }
   })
 
@@ -22,6 +24,7 @@ describe('Katalog Kategori Zod Validation Schema', () => {
     const invalidData = {
       nama: '   ',
       urutan: 0,
+      aktif: true,
     }
     const result = kategoriFormSchema.safeParse(invalidData)
     expect(result.success).toBe(false)
@@ -34,11 +37,36 @@ describe('Katalog Kategori Zod Validation Schema', () => {
     const invalidData = {
       nama: 'A'.repeat(101),
       urutan: 0,
+      aktif: true,
     }
     const result = kategoriFormSchema.safeParse(invalidData)
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toContain('Nama kategori maksimal 100 karakter')
+    }
+  })
+
+  it('mendukung status aktif pada form kategori untuk reaktivasi', () => {
+    const nonaktifData = {
+      nama: 'Kategori Lama',
+      urutan: 5,
+      aktif: false,
+    }
+    const parsedNonaktif = kategoriFormSchema.safeParse(nonaktifData)
+    expect(parsedNonaktif.success).toBe(true)
+    if (parsedNonaktif.success) {
+      expect(parsedNonaktif.data.aktif).toBe(false)
+    }
+
+    const reaktifData = {
+      nama: 'Kategori Lama',
+      urutan: 5,
+      aktif: true,
+    }
+    const parsedReaktif = kategoriFormSchema.safeParse(reaktifData)
+    expect(parsedReaktif.success).toBe(true)
+    if (parsedReaktif.success) {
+      expect(parsedReaktif.data.aktif).toBe(true)
     }
   })
 })
@@ -115,6 +143,32 @@ describe('Katalog Menu Zod Validation Schema', () => {
       expect(result.data.stokMinimum).toBe(0)
       expect(result.data.aktif).toBe(true)
       expect(result.data.fotoUrl).toBeUndefined()
+    }
+  })
+
+  it('mendukung status aktif boolean untuk reaktivasi menu yang nonaktif', () => {
+    const nonaktifMenu = {
+      nama: 'Menu Diarsipkan',
+      kategoriId: 1,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 2,
+      aktif: false,
+    }
+    const res1 = menuFormSchema.safeParse(nonaktifMenu)
+    expect(res1.success).toBe(true)
+    if (res1.success) {
+      expect(res1.data.aktif).toBe(false)
+    }
+
+    const reaktifMenu = {
+      ...nonaktifMenu,
+      aktif: true,
+    }
+    const res2 = menuFormSchema.safeParse(reaktifMenu)
+    expect(res2.success).toBe(true)
+    if (res2.success) {
+      expect(res2.data.aktif).toBe(true)
     }
   })
 })

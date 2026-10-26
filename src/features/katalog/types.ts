@@ -33,6 +33,7 @@ export const kategoriFormSchema = z.object({
     .min(1, 'Nama kategori wajib diisi')
     .max(100, 'Nama kategori maksimal 100 karakter'),
   urutan: z.number().int().min(0, 'Urutan minimal 0'),
+  aktif: z.boolean(),
 })
 
 export type KategoriFormValues = z.infer<typeof kategoriFormSchema>
