@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  TrendingUp,
   ShoppingCart,
   AlertTriangle,
   Scale,
@@ -255,9 +254,9 @@ export function DashboardPage() {
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
                 <span className='inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold'>
-                  <TrendingUp className='size-3.5 mr-0.5' /> Live BE
+                  Omset Bersih
                 </span>
-                <span>• Omset bersih hari ini</span>
+                <span>• Akumulasi penjualan hari ini</span>
               </div>
             </CardContent>
           </Card>
