@@ -685,7 +685,11 @@ export const KasirPosPage: React.FC = () => {
         onComplete={handleTransactionComplete}
         onVoid={handleTransactionVoid}
         isVoiding={isVoiding}
-        durasiDetik={pengaturan.durasiFotoDetik}
+        durasiDetik={
+          pengaturan.durasiFotoDetik && pengaturan.durasiFotoDetik !== 3
+            ? pengaturan.durasiFotoDetik
+            : 15
+        }
       />
 
       {/* Dialog Konfirmasi Manual Transaksi (Fitur Pengaturan Operasional) */}

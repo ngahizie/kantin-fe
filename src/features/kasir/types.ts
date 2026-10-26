@@ -87,7 +87,9 @@ export interface TapBuyerInfo {
   sisa_saldo: number
   saldoSisa?: number
   nomor_kartu?: string
+  nomorKartu?: string
   label_pemegang?: string
+  labelPemegang?: string
 }
 
 export interface TapTransaksiData {

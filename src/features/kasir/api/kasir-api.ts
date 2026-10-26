@@ -2,6 +2,7 @@ import apiClient from '@/lib/api-client'
 import type {
   TapTransaksiRequest,
   TapTransaksiData,
+  TapBuyerInfo,
   SesiKasirData,
   RekapSesiData,
   TransaksiSesiItem,
@@ -47,11 +48,72 @@ export const kasirApi = {
       titikKasirId: data.titikKasirId || 1,
     }
 
-    const res = await apiClient.post<ApiResponse<TapTransaksiData>>(
+    const res = await apiClient.post<ApiResponse<any>>(
       '/api/kasir/tap',
       payload
     )
-    return res.data?.data
+    const raw = res.data?.data
+    if (!raw) return raw as unknown as TapTransaksiData
+
+    const subjekTipe =
+      raw.pembeli?.subjekTipe ||
+      raw.pembeli?.tipe ||
+      raw.subjekTipe ||
+      (raw.kelas ? 'SISWA' : 'KARTU_TAMU')
+
+    const pembeli: TapBuyerInfo = {
+      tipe: subjekTipe === 'KARTU_TAMU' ? 'KARTU_TAMU' : 'SISWA',
+      subjekTipe: subjekTipe === 'KARTU_TAMU' ? 'KARTU_TAMU' : 'SISWA',
+      nama: raw.pembeli?.nama || raw.nama || 'Pembeli',
+      kelas: raw.pembeli?.kelas || raw.kelas || null,
+      nis: raw.pembeli?.nis || raw.nis || null,
+      foto_url:
+        raw.pembeli?.foto_url ||
+        raw.pembeli?.fotoUrl ||
+        raw.fotoUrl ||
+        raw.foto_url ||
+        null,
+      fotoUrl:
+        raw.pembeli?.fotoUrl ||
+        raw.pembeli?.foto_url ||
+        raw.fotoUrl ||
+        raw.foto_url ||
+        null,
+      sisa_saldo: Number(
+        raw.pembeli?.sisa_saldo ??
+          raw.pembeli?.saldoSisa ??
+          raw.saldoSisa ??
+          raw.sisa_saldo ??
+          0
+      ),
+      saldoSisa: Number(
+        raw.pembeli?.saldoSisa ??
+          raw.pembeli?.sisa_saldo ??
+          raw.saldoSisa ??
+          raw.sisa_saldo ??
+          0
+      ),
+      nomor_kartu:
+        raw.pembeli?.nomor_kartu ||
+        raw.pembeli?.nomorKartu ||
+        raw.nomorKartu ||
+        raw.nomor_kartu ||
+        undefined,
+      label_pemegang:
+        raw.pembeli?.label_pemegang ||
+        raw.pembeli?.labelPemegang ||
+        raw.labelPemegang ||
+        raw.label_pemegang ||
+        undefined,
+    }
+
+    return {
+      transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
+      transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
+      total: Number(raw.total || 0),
+      waktu: raw.waktu || new Date().toISOString(),
+      pembeli,
+    }
   },
 
   /**
