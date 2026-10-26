@@ -816,7 +816,7 @@ export function LaporanRiwayatSiswaPage() {
                                   : trx.jenis.startsWith('TOPUP')
                                   ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
                                   : trx.jenis === 'VOID'
-                                  ? 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
+                                  ? 'bg-destructive/15 text-destructive dark:bg-destructive/20 dark:text-red-400'
                                   : 'bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
                               }`}
                             >

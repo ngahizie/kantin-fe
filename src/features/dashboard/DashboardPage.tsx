@@ -80,6 +80,20 @@ const formatRupiah = (val: number) => {
   }).format(val)
 }
 
+export const getStatusBadgeClass = (status: string) => {
+  const normalized = status.toUpperCase()
+  if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
+    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+  }
+  if (['VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
+    return 'bg-destructive/15 text-destructive dark:text-red-400'
+  }
+  if (['PENDING', 'MENUNGGU', 'MENIPIS', 'DIKOREKSI', 'PROSES'].includes(normalized)) {
+    return 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+  }
+  return 'bg-muted text-muted-foreground'
+}
+
 export function DashboardPage() {
   const { currentRole } = useRoleStore()
   const [penjualan, setPenjualan] = useState<RingkasanPenjualan | null>(null)
@@ -537,7 +551,7 @@ export function DashboardPage() {
                             </TableCell>
                             <TableCell className='text-center pe-6 py-3'>
                               {isOut ? (
-                                <Badge variant='destructive' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 uppercase tracking-wide border-0'>
+                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-0 bg-destructive/15 text-destructive dark:text-red-400 uppercase tracking-wide'>
                                   HABIS
                                 </Badge>
                               ) : (
@@ -605,7 +619,7 @@ export function DashboardPage() {
                           {formatRupiah(trx.total)}
                         </TableCell>
                         <TableCell className='text-center pe-6 py-3'>
-                          <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 uppercase tracking-wide'>
+                          <Badge variant='outline' className={`rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-0 uppercase tracking-wide ${getStatusBadgeClass(trx.status)}`}>
                             {trx.status}
                           </Badge>
                         </TableCell>

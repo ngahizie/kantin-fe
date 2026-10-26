@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { DashboardPage } from '../DashboardPage'
+import { DashboardPage, getStatusBadgeClass } from '../DashboardPage'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 
 let mockRole = 'pengelola'
@@ -102,5 +102,24 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
 
     // Memverifikasi card rekonsiliasi menampilkan status seimbang
     await expect.element(screen.getByText('Seimbang')).toBeInTheDocument()
+  })
+})
+
+describe('getStatusBadgeClass color semantics', () => {
+  it('memberikan warna hijau untuk status positif', () => {
+    expect(getStatusBadgeClass('SUKSES')).toContain('text-emerald-600')
+    expect(getStatusBadgeClass('BERHASIL')).toContain('text-emerald-600')
+    expect(getStatusBadgeClass('SELESAI')).toContain('text-emerald-600')
+  })
+
+  it('memberikan warna merah untuk status negatif', () => {
+    expect(getStatusBadgeClass('VOID')).toContain('text-destructive')
+    expect(getStatusBadgeClass('GAGAL')).toContain('text-destructive')
+    expect(getStatusBadgeClass('DIBATALKAN')).toContain('text-destructive')
+  })
+
+  it('memberikan warna amber untuk status pending/menunggu', () => {
+    expect(getStatusBadgeClass('PENDING')).toContain('text-amber-700')
+    expect(getStatusBadgeClass('MENUNGGU')).toContain('text-amber-700')
   })
 })
