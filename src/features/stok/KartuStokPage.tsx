@@ -31,6 +31,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -302,6 +303,62 @@ export function KartuStokPage() {
     toast.success('Kartu stok berhasil diunduh dalam format CSV')
   }
 
+  const handleExportPdf = () => {
+    if (filteredRiwayat.length === 0) {
+      toast.warning('Tidak ada data mutasi untuk diekspor')
+      return
+    }
+
+    try {
+      const rows = filteredRiwayat.map((r) => ({
+        waktu: formatDateTime(r.waktu),
+        referensiId: r.referensiId,
+        jenis: r.jenis,
+        arah: r.arah,
+        qty: `${r.arah === 'MASUK' ? '+' : '-'}${r.qty}`,
+        stokSetelah: r.stokSetelah,
+        hpp: r.hppSnapshot ? formatRupiah(r.hppSnapshot) : '-',
+        totalNilai: r.totalNilai ? formatRupiah(r.totalNilai) : '-',
+        aktor: r.aktorNama || r.aktorId || 'Sistem',
+        alasan: r.alasan || '-',
+      }))
+
+      exportTableToPdf({
+        filename: `Kartu_Stok_${selectedMenu?.nama.replace(/\s+/g, '_') || 'Semua'}_${new Date().toISOString().split('T')[0]}`,
+        title: 'KARTU STOK & HISTORI MUTASI PERSEDIAAN',
+        subtitle: selectedMenu ? `Menu: ${selectedMenu.nama}` : 'Seluruh Mutasi Menu',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Menu Terpilih': selectedMenu ? selectedMenu.nama : 'Semua Menu',
+          'Stok Berjalan': stokDetail ? `${stokDetail.stok} Unit` : '-',
+          'HPP Rata-rata': stokDetail ? formatRupiah(stokDetail.hpp) : '-',
+          'Total Nilai Persediaan': stokDetail ? formatRupiah(stokDetail.nilaiPersediaan) : '-',
+          'Konsistensi Saldo': isBalanceConsistent ? 'VALID (SEIMBANG)' : 'PERIKSA ANOMALI',
+        },
+        columns: [
+          { header: 'Waktu Mutasi', key: 'waktu' },
+          { header: 'No. Referensi', key: 'referensiId' },
+          { header: 'Jenis Mutasi', key: 'jenis' },
+          { header: 'Arah', key: 'arah' },
+          { header: 'Qty', key: 'qty' },
+          { header: 'Saldo Akhir', key: 'stokSetelah' },
+          { header: 'HPP Unit', key: 'hpp' },
+          { header: 'Total Nilai', key: 'totalNilai' },
+          { header: 'Aktor', key: 'aktor' },
+          { header: 'Alasan / Keterangan', key: 'alasan' },
+        ],
+        data: rows,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Kartu Stok (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   const getJenisBadgeClass = (jenis: string, arah: string) => {
     switch (jenis) {
       case 'BARANG_MASUK':
@@ -351,7 +408,6 @@ export function KartuStokPage() {
 
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
-
             <Button
               variant='outline'
               size='sm'
@@ -361,6 +417,17 @@ export function KartuStokPage() {
             >
               <Download className='h-4 w-4' />
               <span>Ekspor CSV</span>
+            </Button>
+
+            <Button
+              variant='default'
+              size='sm'
+              onClick={handleExportPdf}
+              disabled={filteredRiwayat.length === 0}
+              className='gap-1.5 bg-rose-600 hover:bg-rose-700 text-white'
+            >
+              <Download className='h-4 w-4' />
+              <span>Ekspor PDF (.pdf)</span>
             </Button>
 
             <Button size='sm' asChild className='gap-1.5'>

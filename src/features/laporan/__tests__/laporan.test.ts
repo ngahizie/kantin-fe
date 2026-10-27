@@ -8,6 +8,10 @@ import {
   exportTableToExcel,
   exportMultiSheetExcel,
 } from '@/lib/excelExport'
+import {
+  exportTableToPdf,
+  exportMultiSectionPdf,
+} from '@/lib/pdfExport'
 import { formatRupiah } from '@/lib/formatters'
 
 describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
@@ -85,6 +89,39 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       const sheetData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][]
       expect((sheetData[0] as unknown[])[0]).toBe('LAPORAN REKONSILIASI HARIAN KANTIN')
     })
+
+    it('dapat mengekspor laporan rekonsiliasi ke format PDF (.pdf)', () => {
+      const rows = [
+        { pos: 'Top-up Online', arah: 'KREDIT', nominal: 'Rp 1.250.000' },
+        { pos: 'Top-up Tunai', arah: 'KREDIT', nominal: 'Rp 2.350.000' },
+        { pos: 'Refund Saldo', arah: 'DEBIT', nominal: 'Rp 100.000' },
+        { pos: 'Penjualan Bersih', arah: 'DEBIT', nominal: 'Rp 3.000.000' },
+      ]
+
+      const result = exportTableToPdf({
+        filename: 'Laporan_Rekonsiliasi_Harian_Test',
+        title: 'LAPORAN REKONSILIASI HARIAN KANTIN',
+        subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+        metadata: {
+          'Tanggal Cetak': '2026-10-27',
+          'Status': 'SEIMBANG (VALID)',
+          'Selisih': 'Rp 0',
+        },
+        columns: [
+          { header: 'Pos Akuntansi', key: 'pos' },
+          { header: 'Arah', key: 'arah' },
+          { header: 'Nominal', key: 'nominal' },
+        ],
+        data: rows,
+      })
+
+      expect(result).toBeDefined()
+      expect(result.filename).toBe('Laporan_Rekonsiliasi_Harian_Test.pdf')
+      expect(result.doc).toBeDefined()
+      expect(result.doc.getNumberOfPages()).toBeGreaterThanOrEqual(1)
+      expect(result.buffer).toBeDefined()
+      expect(result.buffer?.byteLength).toBeGreaterThan(0)
+    })
   })
 
   describe('Laporan Penjualan & Laba Kotor (PRD §9.5)', () => {
@@ -150,6 +187,48 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       })
 
       expect(result.workbook.SheetNames).toEqual(['Per Item', 'Per Kategori'])
+    })
+
+    it('dapat mengekspor laporan penjualan multi-section ke format PDF (.pdf)', () => {
+      const result = exportMultiSectionPdf({
+        filename: 'Laporan_Penjualan_Multi_Test',
+        title: 'LAPORAN PENJUALAN KANTIN SKOOLIA',
+        subtitle: 'Analisis Penjualan Menu dan Kategori',
+        metadata: {
+          'Tanggal Cetak': '2026-10-27',
+          'Penjualan Bersih': 'Rp 5.250.000',
+        },
+        sections: [
+          {
+            sectionTitle: '1. Rincian Penjualan per Item',
+            columns: [
+              { header: 'Nama Menu', key: 'nama' },
+              { header: 'Qty', key: 'qty' },
+              { header: 'Laba Kotor', key: 'laba' },
+            ],
+            data: [
+              { nama: 'Nasi Goreng Spesial', qty: 25, laba: 'Rp 125.000' },
+              { nama: 'Es Teh Manis', qty: 50, laba: 'Rp 100.000' },
+            ],
+          },
+          {
+            sectionTitle: '2. Ringkasan per Kategori',
+            columns: [
+              { header: 'Kategori', key: 'kategori' },
+              { header: 'Total Omset', key: 'omset' },
+            ],
+            data: [
+              { kategori: 'Makanan', omset: 'Rp 3.500.000' },
+              { kategori: 'Minuman', omset: 'Rp 1.750.000' },
+            ],
+          },
+        ],
+      })
+
+      expect(result).toBeDefined()
+      expect(result.filename).toBe('Laporan_Penjualan_Multi_Test.pdf')
+      expect(result.doc.getNumberOfPages()).toBeGreaterThanOrEqual(1)
+      expect(result.buffer?.byteLength).toBeGreaterThan(0)
     })
   })
 

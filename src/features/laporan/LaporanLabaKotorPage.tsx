@@ -26,6 +26,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type { RingkasanPenjualan, BarisPenjualanItem } from './types'
 
@@ -165,6 +166,72 @@ export function LaporanLabaKotorPage() {
     }
   }
 
+  const handleExportPdf = () => {
+    if (!ringkasan) {
+      toast.error('Data belum siap diekspor')
+      return
+    }
+
+    try {
+      exportTableToPdf({
+        filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
+        subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
+          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
+          'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
+          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+        },
+        columns: [
+          { header: 'No', key: 'menuId' },
+          { header: 'Nama Menu', key: 'nama' },
+          { header: 'Kategori', key: 'kategoriNama' },
+          { header: 'Qty Terjual', key: 'qty' },
+          {
+            header: 'Harga Satuan',
+            key: 'hargaJual',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'HPP Unit',
+            key: 'hpp',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'Penjualan Bersih',
+            key: 'penjualanBersih',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'Total HPP',
+            key: 'totalHpp',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'Laba Kotor',
+            key: 'labaKotor',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'Margin',
+            key: 'margin',
+            formatter: (v) => `${v}%`,
+          },
+        ],
+        data: filteredItems,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Laporan Laba Kotor (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -192,7 +259,7 @@ export function LaporanLabaKotorPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
                 variant="default"
                 size="sm"
@@ -202,6 +269,16 @@ export function LaporanLabaKotorPage() {
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportPdf}
+                disabled={isLoading || !ringkasan}
+                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Ekspor PDF (.pdf)</span>
               </Button>
             </div>
           </div>

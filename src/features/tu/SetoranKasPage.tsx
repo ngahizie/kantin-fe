@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Printer,
   FileSpreadsheet,
+  Download,
   Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -40,6 +41,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah } from '@/lib/formatters'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import {
   type SetoranKasItem,
@@ -303,6 +305,61 @@ export function SetoranKasPage() {
     toast.success('Laporan rekapitulasi setoran kas berhasil diekspor ke CSV')
   }
 
+  const handleExportPdf = () => {
+    if (filteredList.length === 0) {
+      toast.warning('Tidak ada data setoran untuk diekspor')
+      return
+    }
+
+    try {
+      const rows = filteredList.map((item) => ({
+        id: item.id,
+        tanggal: item.tanggal,
+        petugas: item.petugas_nama,
+        trx: item.total_transaksi,
+        topupSiswa: formatRupiah(item.total_topup_siswa),
+        topupTamu: formatRupiah(item.total_topup_kartu_tamu),
+        totalSistem: formatRupiah(item.total_sistem),
+        uangFisik: item.uang_fisik !== null ? formatRupiah(item.uang_fisik) : '-',
+        selisih: item.selisih !== null ? formatRupiah(item.selisih) : '-',
+        status: item.status,
+      }))
+
+      exportTableToPdf({
+        filename: `Rekap_Setoran_Kas_TU_${selectedDate}`,
+        title: 'REKAPITULASI & SETORAN KAS TU KANTIN SKOOLIA',
+        subtitle: `Tanggal Periode: ${selectedDate}`,
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Total Setoran Sistem': formatRupiah(totalPenerimaanSistem),
+          'Total Uang Fisik Diterima': formatRupiah(totalUangFisikDisetor),
+          'Total Selisih Kas': formatRupiah(totalSelisihFisik),
+          'Petugas Terlibat': `${filteredList.length} Petugas`,
+        },
+        columns: [
+          { header: 'ID Setoran', key: 'id' },
+          { header: 'Tanggal', key: 'tanggal' },
+          { header: 'Petugas TU', key: 'petugas' },
+          { header: 'Trx', key: 'trx' },
+          { header: 'Topup Siswa', key: 'topupSiswa' },
+          { header: 'Topup Tamu', key: 'topupTamu' },
+          { header: 'Total Sistem', key: 'totalSistem' },
+          { header: 'Uang Fisik', key: 'uangFisik' },
+          { header: 'Selisih', key: 'selisih' },
+          { header: 'Status', key: 'status' },
+        ],
+        data: rows,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Laporan Setoran Kas TU (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -428,15 +485,26 @@ export function SetoranKasPage() {
             setStatusFilter('ALL')
           }}
         >
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={handleExportCSV}
-            className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none'
-          >
-            <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-            Ekspor CSV
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='secondary'
+              size='sm'
+              onClick={handleExportCSV}
+              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none'
+            >
+              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
+              Ekspor CSV
+            </Button>
+            <Button
+              variant='secondary'
+              size='sm'
+              onClick={handleExportPdf}
+              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none text-rose-600 dark:text-rose-400'
+            >
+              <Download className='h-3.5 w-3.5 text-rose-600' />
+              Ekspor PDF
+            </Button>
+          </div>
         </TableToolbar>
 
         {/* Rekapitulasi Table */}

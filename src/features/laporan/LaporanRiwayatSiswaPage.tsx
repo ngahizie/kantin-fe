@@ -41,6 +41,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type {
   ProfilSiswaRiwayat,
@@ -293,6 +294,75 @@ export function LaporanRiwayatSiswaPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
       toast.error('Gagal Ekspor', { description: msg })
+    }
+  }
+
+  const handleExportPdf = () => {
+    if (!profil) {
+      toast.error('Data profil siswa belum siap')
+      return
+    }
+
+    if (filteredRiwayat.length === 0) {
+      toast.info('Tidak ada riwayat transaksi untuk diekspor')
+      return
+    }
+
+    try {
+      const exportRows = filteredRiwayat.map((trx) => {
+        const itemStr =
+          trx.items && trx.items.length > 0
+            ? trx.items.map((i) => `${i.qty}x ${i.nama}`).join(', ')
+            : '-'
+
+        return {
+          waktu: formatDateTime(trx.waktu),
+          referensiId: trx.referensiId,
+          jenis: trx.jenis,
+          titikKasir: trx.titikKasir,
+          petugas: trx.petugas,
+          daftarItem: itemStr,
+          keterangan: trx.keterangan,
+          arah: trx.arah,
+          nominal: trx.arah === 'DEBIT' ? `-${formatRupiah(trx.nominal)}` : `+${formatRupiah(trx.nominal)}`,
+          saldoSetelah: formatRupiah(trx.saldoSetelah),
+        }
+      })
+
+      exportTableToPdf({
+        filename: `Rekening_Koran_${profil.nis}_${profil.nama.replace(/\s+/g, '_')}`,
+        title: `REKENING KORAN & HISTORI TRANSAKSI - ${profil.nama.toUpperCase()}`,
+        subtitle: `Laporan Transaksi & Mutasi Saldo Kartu Digital SKOOLIA`,
+        metadata: {
+          'NIS': profil.nis,
+          'Kelas': profil.kelas,
+          'Nama Wali Murid': profil.parentName,
+          'Kontak Wali': profil.parentPhone,
+          'Saldo Berjalan': formatRupiah(profil.saldo),
+          'Limit Harian': formatRupiah(profil.limitHarian),
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+        },
+        columns: [
+          { header: 'Waktu Transaksi', key: 'waktu' },
+          { header: 'No. Bukti / Referensi', key: 'referensiId' },
+          { header: 'Jenis Mutasi', key: 'jenis' },
+          { header: 'Titik Kasir', key: 'titikKasir' },
+          { header: 'Petugas', key: 'petugas' },
+          { header: 'Item / Menu yang Dibeli', key: 'daftarItem' },
+          { header: 'Keterangan', key: 'keterangan' },
+          { header: 'Arah', key: 'arah' },
+          { header: 'Nominal', key: 'nominal' },
+          { header: 'Saldo Akhir', key: 'saldoSetelah' },
+        ],
+        data: exportRows,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: `Rekening koran siswa ${profil.nama} (.pdf) berhasil diunduh.`,
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
     }
   }
 
@@ -634,16 +704,28 @@ export function LaporanRiwayatSiswaPage() {
                 )}
               </div>
 
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
-                disabled={isLoading || !profil}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleExportExcel}
+                  disabled={isLoading || !profil}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Ekspor Excel (.xlsx)</span>
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleExportPdf}
+                  disabled={isLoading || !profil}
+                  className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Ekspor PDF (.pdf)</span>
+                </Button>
+              </div>
             </div>
           </div>
 

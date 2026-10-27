@@ -30,6 +30,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
+import { exportMultiSectionPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanPenjualan,
@@ -226,6 +227,133 @@ export function LaporanPenjualanPage() {
     }
   }
 
+  // Handler Ekspor PDF (Multi-Section Dokumen Resmi)
+  const handleExportPdf = () => {
+    if (!ringkasan) {
+      toast.error('Data belum siap untuk diekspor')
+      return
+    }
+
+    try {
+      exportMultiSectionPdf({
+        filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN PENJUALAN & LABA KOTOR KANTIN SKOOLIA',
+        subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
+          'Total Beban HPP': formatRupiah(ringkasan.totalHpp),
+          'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
+          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+        },
+        sections: [
+          {
+            sectionTitle: '1. Rincian Penjualan per Item Menu',
+            columns: [
+              { header: 'ID', key: 'menuId' },
+              { header: 'Nama Menu', key: 'nama' },
+              { header: 'Kategori', key: 'kategoriNama' },
+              { header: 'Qty Terjual', key: 'qty' },
+              {
+                header: 'Harga Satuan',
+                key: 'hargaJual',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'HPP Unit',
+                key: 'hpp',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Penjualan Bersih',
+                key: 'penjualanBersih',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Total HPP',
+                key: 'totalHpp',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Laba Kotor',
+                key: 'labaKotor',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Margin',
+                key: 'margin',
+                formatter: (v) => `${v}%`,
+              },
+            ],
+            data: items,
+          },
+          {
+            sectionTitle: '2. Ringkasan Penjualan per Kategori',
+            columns: [
+              { header: 'ID', key: 'kategoriId' },
+              { header: 'Nama Kategori', key: 'nama' },
+              { header: 'Jumlah Item', key: 'jumlahItem' },
+              { header: 'Total Qty', key: 'qty' },
+              {
+                header: 'Penjualan Bersih',
+                key: 'penjualanBersih',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Total HPP',
+                key: 'totalHpp',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Laba Kotor',
+                key: 'labaKotor',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Margin',
+                key: 'margin',
+                formatter: (v) => `${v}%`,
+              },
+            ],
+            data: kategoris,
+          },
+          {
+            sectionTitle: '3. Performa Titik Kasir POS',
+            columns: [
+              { header: 'ID', key: 'titikKasirId' },
+              { header: 'Titik Kasir', key: 'namaTitikKasir' },
+              { header: 'Petugas Jaga', key: 'petugas' },
+              { header: 'Jumlah Trx', key: 'jumlahTransaksi' },
+              {
+                header: 'Penjualan Bruto',
+                key: 'penjualanBruto',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Nilai Void',
+                key: 'nilaiVoid',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+              {
+                header: 'Penjualan Bersih',
+                key: 'penjualanBersih',
+                formatter: (v) => formatRupiah(Number(v)),
+              },
+            ],
+            data: kasirs,
+          },
+        ],
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Dokumen PDF laporan penjualan berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -253,7 +381,7 @@ export function LaporanPenjualanPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
                 variant="default"
                 size="sm"
@@ -263,6 +391,16 @@ export function LaporanPenjualanPage() {
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportPdf}
+                disabled={isLoading || !ringkasan}
+                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Ekspor PDF (.pdf)</span>
               </Button>
             </div>
           </div>

@@ -167,11 +167,11 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
   })
 
   it('Validasi 6: menolak transaksi bila saldo kurang dan menampilkan nominal kekurangan secara akurat', async () => {
-    // Siti Rahmawati (04B2C3D4E5) saldo 5.000
-    // Coba beli Nasi Goreng (Rp 15.000), kekurangan Rp 10.000
+    // Cantika Kirana (04D4E5F6A1) saldo 65.000 tanpa limit harian
+    // Beli Nasi Goreng (Rp 15.000 x 5 = Rp 75.000), kekurangan Rp 10.000
     const req: TapTransaksiRequest = {
-      rfidUid: '04B2C3D4E5',
-      items: [{ menuId: 2, qty: 1 }],
+      rfidUid: '04D4E5F6A1',
+      items: [{ menuId: 2, qty: 5 }],
       idempotencyKey: generateIdempotencyKey(),
     }
 

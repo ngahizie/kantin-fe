@@ -26,6 +26,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type { BarisKerugianStok, RingkasanKerugianStok } from './types'
 
@@ -146,6 +147,66 @@ export function LaporanKerugianStokPage() {
     }
   }
 
+  // Ekspor PDF
+  const handleExportPdf = () => {
+    if (kerugianList.length === 0) {
+      toast.error('Data belum siap untuk diekspor')
+      return
+    }
+
+    try {
+      exportTableToPdf({
+        filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA',
+        subtitle: 'Daftar Selisih Stok Opname dan Barang Rusak/Kadaluarsa',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
+          'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,
+          'Kerugian Opname Keluar': formatRupiah(ringkasan?.kerugianOpname || 0),
+          'Kerugian Barang Rusak': formatRupiah(ringkasan?.kerugianBarangRusak || 0),
+        },
+        columns: [
+          { header: 'No', key: 'id' },
+          {
+            header: 'Waktu Kejadian',
+            key: 'waktu',
+            formatter: (v) => formatDateTime(v as string | Date),
+          },
+          { header: 'No. Berita Acara', key: 'beritaAcaraId' },
+          { header: 'Nama Menu / Item', key: 'namaMenu' },
+          { header: 'Kategori', key: 'kategoriNama' },
+          {
+            header: 'Jenis Kerugian',
+            key: 'jenis',
+            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Opname Keluar (Audit)' : 'Barang Rusak / Basi'),
+          },
+          { header: 'Qty Hilang', key: 'qty' },
+          {
+            header: 'HPP Unit',
+            key: 'hppSnapshot',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          {
+            header: 'Total Kerugian',
+            key: 'totalNilai',
+            formatter: (v) => formatRupiah(Number(v)),
+          },
+          { header: 'Alasan / Berita Acara', key: 'alasan' },
+          { header: 'Petugas Pencatat', key: 'petugas' },
+        ],
+        data: filteredList,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Laporan Kerugian Stok (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -173,7 +234,7 @@ export function LaporanKerugianStokPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
                 variant="default"
                 size="sm"
@@ -183,6 +244,16 @@ export function LaporanKerugianStokPage() {
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportPdf}
+                disabled={isLoading || kerugianList.length === 0}
+                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Ekspor PDF (.pdf)</span>
               </Button>
             </div>
           </div>

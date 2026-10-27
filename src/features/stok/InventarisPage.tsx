@@ -22,6 +22,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { KategoriItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -226,6 +227,67 @@ export function InventarisPage() {
     toast.success('Laporan inventaris berhasil diunduh dalam format CSV')
   }
 
+  const handleExportPdf = () => {
+    if (filteredAndSortedList.length === 0) {
+      toast.warning('Tidak ada data inventaris untuk diekspor')
+      return
+    }
+
+    try {
+      const rows = filteredAndSortedList.map((item) => {
+        const stok = item.stokBerjalan ?? item.stok ?? 0
+        const min = item.stokMinimum ?? 0
+        let status = 'AMAN'
+        if (stok === 0) status = 'HABIS'
+        else if (stok <= min) status = 'MENIPIS'
+
+        const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
+        const nilai = item.nilaiPersediaan ?? (stok * item.hpp)
+
+        return {
+          menuId: item.menuId,
+          nama: item.namaMenu || item.nama,
+          kategori: kategoriNama,
+          stok,
+          min,
+          status,
+          hpp: formatRupiah(item.hpp),
+          nilai: formatRupiah(nilai),
+        }
+      })
+
+      exportTableToPdf({
+        filename: `Laporan_Inventaris_Stok_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN INVENTARIS & VALUASI PERSEDIAAN',
+        subtitle: 'Kantin Cashless SKOOLIA - Posisi dan Nilai Aset Stok',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Total Nilai Persediaan': formatRupiah(kpiData.totalNilai),
+          'Total SKU Terdaftar': `${kpiData.totalSku} SKU`,
+          'Item Stok Menipis/Habis': `${kpiData.countMenipis + kpiData.countHabis} Item`,
+        },
+        columns: [
+          { header: 'ID', key: 'menuId' },
+          { header: 'Nama Menu / Barang', key: 'nama' },
+          { header: 'Kategori', key: 'kategori' },
+          { header: 'Stok', key: 'stok' },
+          { header: 'Min', key: 'min' },
+          { header: 'Status', key: 'status' },
+          { header: 'HPP Satuan', key: 'hpp' },
+          { header: 'Total Nilai Persediaan', key: 'nilai' },
+        ],
+        data: rows,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Laporan Inventaris (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -261,6 +323,17 @@ export function InventarisPage() {
             >
               <Download className='h-4 w-4' />
               <span>Ekspor CSV</span>
+            </Button>
+
+            <Button
+              variant='default'
+              size='sm'
+              onClick={handleExportPdf}
+              disabled={filteredAndSortedList.length === 0}
+              className='gap-1.5 bg-rose-600 hover:bg-rose-700 text-white'
+            >
+              <Download className='h-4 w-4' />
+              <span>Ekspor PDF (.pdf)</span>
             </Button>
 
             <Button size='sm' asChild className='gap-1.5'>
@@ -411,16 +484,28 @@ export function InventarisPage() {
             setSortBy('NILAI_DESC')
           }}
         >
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleExportCsv}
-            disabled={filteredAndSortedList.length === 0}
-            className='h-8 gap-1.5 text-xs'
-          >
-            <Download className='h-4 w-4' />
-            <span>Ekspor CSV</span>
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExportCsv}
+              disabled={filteredAndSortedList.length === 0}
+              className='h-8 gap-1.5 text-xs'
+            >
+              <Download className='h-4 w-4' />
+              <span>Ekspor CSV</span>
+            </Button>
+            <Button
+              variant='default'
+              size='sm'
+              onClick={handleExportPdf}
+              disabled={filteredAndSortedList.length === 0}
+              className='h-8 gap-1.5 text-xs bg-rose-600 hover:bg-rose-700 text-white'
+            >
+              <Download className='h-4 w-4' />
+              <span>Ekspor PDF</span>
+            </Button>
+          </div>
         </TableToolbar>
 
         {/* Data Table */}
