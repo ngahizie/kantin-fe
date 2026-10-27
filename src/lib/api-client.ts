@@ -11,7 +11,7 @@ import axios, {
 import { toast } from 'sonner'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 
-import { getCookie } from '@/lib/cookies'
+import { getCookie, removeCookie } from '@/lib/cookies'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
@@ -40,6 +40,17 @@ if (useMock) {
 // Request Interceptor: Otomatis cantumkan Authorization Bearer token jika ada
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Jangan cantumkan header Authorization pada endpoint publik login/auth
+    const isAuthEndpoint =
+      config.url?.includes('/auth/login') ||
+      config.url?.includes('/auth/signin')
+    if (isAuthEndpoint) {
+      if (config.headers) {
+        delete config.headers.Authorization
+      }
+      return config
+    }
+
     let token =
       (typeof localStorage !== 'undefined'
         ? localStorage.getItem('kantin_token')
@@ -81,6 +92,7 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('kantin_token')
       localStorage.removeItem('kantin_user')
       sessionStorage.removeItem('kantin_token')
+      removeCookie('kantin_access_token')
       // Jika bukan di halaman login, redirect
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/sign-in')) {
         toast.error('Sesi Anda telah berakhir, silakan login kembali')
