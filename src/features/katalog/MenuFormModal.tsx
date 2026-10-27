@@ -152,8 +152,9 @@ export function MenuFormModal({
       form.setValue('fotoUrl', finalUrl, { shouldValidate: true })
       toast.success('Foto produk berhasil diunggah')
     } catch (err: unknown) {
-      const error = err as { message?: string }
-      toast.error(error.message || 'Gagal mengunggah foto produk')
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const message = error.response?.data?.message || error.message || 'Gagal mengunggah foto produk'
+      toast.error(message)
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
