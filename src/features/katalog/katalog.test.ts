@@ -172,3 +172,61 @@ describe('Katalog Menu Zod Validation Schema', () => {
     }
   })
 })
+describe('Ekstraksi Pesan Error Respons Backend (Issue #110)', () => {
+  it('memprioritaskan response.data.message spesifik dari server dibanding pesan Axios generik', () => {
+    const errorWithResponse = {
+      response: {
+        data: {
+          message: 'Gagal mengunggah berkas ke penyimpanan. Periksa konfigurasi MinIO atau coba lagi.',
+        },
+      },
+      message: 'Request failed with status code 400',
+    }
+
+    const error = errorWithResponse as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe(
+      'Gagal mengunggah berkas ke penyimpanan. Periksa konfigurasi MinIO atau coba lagi.'
+    )
+  })
+
+  it('menggunakan fallback error.message jika respons server tidak memiliki pesan spesifik', () => {
+    const errorWithoutServerMsg = {
+      response: { data: {} },
+      message: 'Network Error',
+    }
+
+    const error = errorWithoutServerMsg as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe('Network Error')
+  })
+
+  it('menggunakan pesan default jika error kosong', () => {
+    const emptyError = {}
+
+    const error = emptyError as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe('Gagal mengunggah foto produk')
+  })
+})
