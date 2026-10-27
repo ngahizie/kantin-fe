@@ -28,6 +28,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem } from './types'
 
@@ -216,6 +217,74 @@ export function LaporanRekonsiliasiPage() {
     }
   }
 
+  const handleExportPdf = () => {
+    if (!data) {
+      toast.error('Data belum siap untuk diekspor')
+      return
+    }
+
+    try {
+      const exportRows = [
+        ...rincianPos.map((item) => ({
+          pos: item.pos,
+          kategori: item.kategori,
+          arah: item.arah,
+          nominal: formatRupiah(item.nominal),
+          keterangan: item.keterangan,
+        })),
+        {
+          pos: 'TOTAL TOP-UP BERSIH (Topup - Refund)',
+          kategori: 'EVALUASI',
+          arah: 'NETTO',
+          nominal: formatRupiah(data.topupBersih),
+          keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
+        },
+        {
+          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Tamu + Penjualan)',
+          kategori: 'EVALUASI',
+          arah: 'NETTO',
+          nominal: formatRupiah(data.totalPenggunaan),
+          keterangan: 'Formula: Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih',
+        },
+        {
+          pos: 'SELISIH INVARIANT AKUNTANSI',
+          kategori: 'EVALUASI',
+          arah: 'STATUS',
+          nominal: formatRupiah(data.selisih),
+          keterangan: data.seimbang ? 'SEIMBANG (Rp 0)' : 'SELISIH - PERIKSA KAS!',
+        },
+      ]
+
+      exportTableToPdf({
+        filename: `Laporan_Rekonsiliasi_Harian_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
+        subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
+          'Total Selisih': formatRupiah(data.selisih),
+          'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
+          'Penjualan Bersih': formatRupiah(data.penjualanBersih),
+        },
+        columns: [
+          { header: 'Pos Akuntansi / Ledger', key: 'pos' },
+          { header: 'Kategori', key: 'kategori' },
+          { header: 'Arah', key: 'arah' },
+          { header: 'Nominal', key: 'nominal' },
+          { header: 'Keterangan Akuntansi', key: 'keterangan' },
+        ],
+        data: exportRows,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Berkas Laporan Rekonsiliasi (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -253,6 +322,16 @@ export function LaporanRekonsiliasiPage() {
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportPdf}
+                disabled={isLoading || !data}
+                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Ekspor PDF (.pdf)</span>
               </Button>
             </div>
           </div>

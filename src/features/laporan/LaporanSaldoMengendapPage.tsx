@@ -36,6 +36,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
+import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanSaldoMengendap,
@@ -265,6 +266,119 @@ export function LaporanSaldoMengendapPage() {
     }
   }
 
+  const handleExportPdf = () => {
+    if (!ringkasan) {
+      toast.error('Data belum siap diekspor')
+      return
+    }
+
+    try {
+      const sections: PdfTableSection[] = []
+
+      // Section 1: Saldo Siswa
+      if (canAccessSiswa) {
+        sections.push({
+          sectionTitle: '1. Rincian Saldo Mengendap Siswa (Dana Titipan Wali Murid)',
+          columns: [
+            { header: 'NIS', key: 'nis' },
+            { header: 'Nama Siswa', key: 'nama' },
+            { header: 'Kelas', key: 'kelas' },
+            {
+              header: 'Saldo Berjalan',
+              key: 'saldo',
+              formatter: (v: unknown) => formatRupiah(Number(v)),
+            },
+            {
+              header: 'Limit Harian',
+              key: 'limitHarian',
+              formatter: (v: unknown) => formatRupiah(Number(v)),
+            },
+            {
+              header: 'Belanja Hari Ini',
+              key: 'belanjaHariIni',
+              formatter: (v: unknown) => formatRupiah(Number(v)),
+            },
+            {
+              header: 'Status',
+              key: 'isBlocked',
+              formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
+            },
+            { header: 'Orang Tua', key: 'parentName' },
+          ],
+          data: siswaList,
+        })
+      }
+
+      // Section 2: Saldo Kartu Tamu
+      if (canAccessKartuTamu) {
+        sections.push({
+          sectionTitle: '2. Rincian Saldo Mengendap Kartu Tamu (Staf/Guru/Tamu)',
+          columns: [
+            { header: 'No. Kartu', key: 'nomorKartu' },
+            { header: 'UID RFID', key: 'uid' },
+            { header: 'Label Pemegang', key: 'labelPemegang' },
+            {
+              header: 'Saldo Berjalan',
+              key: 'saldo',
+              formatter: (v: unknown) => formatRupiah(Number(v)),
+            },
+            { header: 'Status', key: 'status' },
+          ],
+          data: kartuTamuList,
+        })
+      }
+
+      // Section Ringkasan jika Kepala Sekolah atau rincian kosong
+      if (sections.length === 0) {
+        sections.push({
+          sectionTitle: 'Ringkasan Eksekutif Saldo Mengendap (Kewajiban Sekolah)',
+          columns: [
+            { header: 'Kategori Akun', key: 'kategori' },
+            { header: 'Jumlah Pemegang', key: 'jumlah' },
+            { header: 'Total Saldo Mengendap', key: 'total' },
+          ],
+          data: [
+            {
+              kategori: 'Saldo Mengendap Siswa',
+              jumlah: `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+              total: formatRupiah(ringkasan.saldoSiswa),
+            },
+            {
+              kategori: 'Saldo Mengendap Kartu Tamu',
+              jumlah: `${formatNumber(ringkasan.jumlahKartuTamu)} Kartu`,
+              total: formatRupiah(ringkasan.saldoKartuTamu),
+            },
+            {
+              kategori: 'Total Kewajiban Sekolah',
+              jumlah: `${formatNumber(ringkasan.jumlahSiswa + ringkasan.jumlahKartuTamu)} Akun`,
+              total: formatRupiah(ringkasan.total),
+            },
+          ],
+        })
+      }
+
+      exportMultiSectionPdf({
+        filename: `Laporan_Saldo_Mengendap_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN SALDO MENGENDAP & KEWAJIBAN DANA TITIPAN',
+        subtitle: 'Audit Akuntabilitas Dana Siswa & Kartu Tamu Kantin SKOOLIA',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Total Kewajiban Sekolah': formatRupiah(ringkasan.total),
+          'Saldo Mengendap Siswa': formatRupiah(ringkasan.saldoSiswa),
+          'Saldo Mengendap Tamu': formatRupiah(ringkasan.saldoKartuTamu),
+        },
+        sections,
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Laporan Saldo Mengendap (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
+  }
+
   return (
     <>
       <Header fixed>
@@ -292,7 +406,7 @@ export function LaporanSaldoMengendapPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
                 variant="default"
                 size="sm"
@@ -302,6 +416,16 @@ export function LaporanSaldoMengendapPage() {
               >
                 <Download className="h-4 w-4" />
                 <span>Ekspor Excel (.xlsx)</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportPdf}
+                disabled={isLoading || !ringkasan}
+                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Ekspor PDF (.pdf)</span>
               </Button>
             </div>
           </div>
