@@ -73,6 +73,9 @@ export function UserAuthForm({
     setIsLoading(true)
 
     try {
+      // Bersihkan sisa token/sesi usang sebelum mengirim permintaan login baru
+      auth.reset()
+
       const response = await apiClient.post<{
         code: number
         status: string

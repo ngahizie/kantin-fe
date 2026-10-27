@@ -832,7 +832,7 @@ export function SetoranKasPage() {
                 </DialogHeader>
 
                 <div className='space-y-4 py-2'>
-                  <div className='rounded-md border'>
+                  <div className='overflow-x-auto'>
                     <Table>
                       <TableHeader>
                         <TableRow className='bg-muted/30'>
