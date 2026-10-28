@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Store,
@@ -64,19 +64,18 @@ export const PengaturanKantinPage: React.FC = () => {
     handleSubmit,
     control,
     reset,
-    watch,
     formState: { errors, isDirty },
   } = useForm<PengaturanKantinFormValues>({
     resolver: zodResolver(pengaturanKantinSchema),
     defaultValues: DEFAULT_FORM_VALUES,
   })
 
-  // Watch field values for dynamic previews
-  const watchedKonfirmasi = watch('konfirmasiManual', false)
-  const watchedMinTopup = watch('minTopup', 5000)
-  const watchedMaxTopup = watch('maksTopup', 500000)
-  const watchedMaxSaldoSiswa = watch('batasSaldoSiswa', 1000000)
-  const watchedMaxSaldoKartuTamu = watch('batasSaldoKartuTamu', 500000)
+  // Watch field values for dynamic previews using useWatch hook
+  const watchedKonfirmasi = useWatch({ control, name: 'konfirmasiManual', defaultValue: false })
+  const watchedMinTopup = useWatch({ control, name: 'minTopup', defaultValue: 5000 })
+  const watchedMaxTopup = useWatch({ control, name: 'maksTopup', defaultValue: 500000 })
+  const watchedMaxSaldoSiswa = useWatch({ control, name: 'batasSaldoSiswa', defaultValue: 1000000 })
+  const watchedMaxSaldoKartuTamu = useWatch({ control, name: 'batasSaldoKartuTamu', defaultValue: 500000 })
 
   // Muat data dari server saat mount
   useEffect(() => {

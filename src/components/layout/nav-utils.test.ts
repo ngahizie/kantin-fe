@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { filterNavGroupsByRole } from './nav-utils'
 import { sidebarData } from './data/sidebar-data'
+import { type NavCollapsible } from './types'
 
 describe('filterNavGroupsByRole', () => {
   it('restricts admin to dashboard, student control, system settings, and authorized reports (PRD §9.6)', () => {
@@ -28,8 +29,8 @@ describe('filterNavGroupsByRole', () => {
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     expect(laporanGroup?.items.map((i) => i.title)).toContain('Pengaturan Kantin')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
-    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
-      (s: any) => s.title
+    const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
+      (s) => s.title
     )
     expect(subReportTitles).toContain('Rekonsiliasi Harian')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
@@ -62,8 +63,8 @@ describe('filterNavGroupsByRole', () => {
     // Verifikasi laporan yang diizinkan untuk pengelola
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
-    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
-      (s: any) => s.title
+    const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
+      (s) => s.title
     )
 
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
@@ -101,8 +102,8 @@ describe('filterNavGroupsByRole', () => {
     // Laporan yang boleh dilihat TU (Rekonsiliasi, Saldo Mengendap, Riwayat Belanja)
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
-    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
-      (s: any) => s.title
+    const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
+      (s) => s.title
     )
     expect(subReportTitles).toContain('Rekonsiliasi Harian')
     expect(subReportTitles).toContain('Saldo Mengendap')
@@ -158,8 +159,8 @@ describe('filterNavGroupsByRole', () => {
 
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
-    const subReportTitles = ('items' in (laporanMenu || {}) ? (laporanMenu as any).items : []).map(
-      (s: any) => s.title
+    const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
+      (s) => s.title
     )
     expect(subReportTitles).toContain('Rekonsiliasi Harian')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')

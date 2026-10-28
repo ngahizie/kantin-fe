@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   UserCheck,
   RefreshCw,
@@ -50,14 +50,16 @@ export function PinjamKartuModal({
   const [nominal, setNominal] = useState('0')
   const [namaPenyetor, setNamaPenyetor] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [prevOpen, setPrevOpen] = useState(open)
 
-  useEffect(() => {
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (open) {
       setNamaTamu('')
       setNominal('0')
       setNamaPenyetor('')
     }
-  }, [open])
+  }
 
   if (!kartu) return null
 

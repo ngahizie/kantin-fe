@@ -13,6 +13,7 @@ import { SignOutDialog } from '@/components/sign-out-dialog'
 import { ROLE_CONFIGS, useRoleStore, type UserRole } from '@/stores/useRoleStore'
 import { useAuthStore } from '@/stores/auth-store'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getRoleLabel(
   role?: string,
   roles?: string[],

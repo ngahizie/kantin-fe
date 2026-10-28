@@ -3,6 +3,7 @@ import { render } from 'vitest-browser-react'
 import { BarangMasukPage } from '../BarangMasukPage'
 import { stokApi } from '../api/stok-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import type { MenuItem } from '@/features/katalog/types'
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({
@@ -67,7 +68,7 @@ describe('BarangMasukPage — Indikator Peringatan Stok Menipis', () => {
         satuan: 'Porsi',
         isActive: true,
       },
-    ] as any)
+    ] as unknown as MenuItem[])
 
     vi.spyOn(stokApi, 'getStokMenipis').mockResolvedValue([])
 
@@ -86,7 +87,7 @@ describe('BarangMasukPage — Indikator Peringatan Stok Menipis', () => {
     vi.spyOn(katalogApi, 'getMenuList').mockResolvedValue([
       { id: 1, nama: 'Menu 1', hargaJual: 10000, stokBerjalan: 2, satuan: 'Pcs' },
       { id: 2, nama: 'Menu 2', hargaJual: 10000, stokBerjalan: 10, satuan: 'Pcs' },
-    ] as any)
+    ] as unknown as MenuItem[])
 
     vi.spyOn(stokApi, 'getStokMenipis').mockResolvedValue([
       {

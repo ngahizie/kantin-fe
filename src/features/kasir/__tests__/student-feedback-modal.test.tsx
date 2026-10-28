@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { StudentFeedbackModal } from '../components/StudentFeedbackModal'
+import type { TapTransaksiData } from '../types'
 
 describe('StudentFeedbackModal', () => {
   it('dapat merender modal transaksi tanpa error meskipun data.pembeli bernilai undefined (flat backend response)', async () => {
@@ -13,7 +14,7 @@ describe('StudentFeedbackModal', () => {
       fotoUrl: 'https://example.com/foto.jpg',
       total: 25000,
       saldoSisa: 75000,
-    } as any
+    } as unknown as TapTransaksiData
 
     const onComplete = vi.fn()
     const onVoid = vi.fn()
