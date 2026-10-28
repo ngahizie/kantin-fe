@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 
 import { getCookie, removeCookie } from '@/lib/cookies'
+import { extractValidationMessage } from '@/lib/validation-error'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
@@ -76,11 +77,21 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response Interceptor: Tangani error umum (401, 403, 500)
+
+// Response Interceptor: Tangani error umum (401, 403, 500) dan validasi (400)
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string; status?: string }>) => {
+  (error: AxiosError<{ message?: string; status?: string; validation?: unknown; title?: string }>) => {
     const status = error.response?.status
+
+    // Normalisasi error validasi backend (HTTP 400 dengan { code, message: "ERROR MAPPING", validation })
+    if (error.response?.data) {
+      const valMsg = extractValidationMessage(error.response.data)
+      if (valMsg && (error.response.data.message === 'ERROR MAPPING' || !error.response.data.message)) {
+        error.response.data.message = valMsg
+      }
+    }
+
     const message = error.response?.data?.message || error.message || 'Terjadi kesalahan sistem'
     const isSilent = Boolean(
       (error.config as { silent?: boolean; skipToast?: boolean } | undefined)?.silent ||

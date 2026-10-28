@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
+import { extractValidationMessage } from '@/lib/validation-error'
 
 export function handleServerError(error: unknown) {
   if (import.meta.env.DEV) {
@@ -19,9 +20,14 @@ export function handleServerError(error: unknown) {
   }
 
   if (error instanceof AxiosError) {
-    const title = error.response?.data?.title
-    if (typeof title === 'string' && title.length > 0) {
-      errMsg = title
+    const valMsg = extractValidationMessage(error.response?.data)
+    if (valMsg) {
+      errMsg = valMsg
+    } else {
+      const title = error.response?.data?.title || error.response?.data?.message
+      if (typeof title === 'string' && title.length > 0 && title !== 'ERROR MAPPING') {
+        errMsg = title
+      }
     }
   }
 
