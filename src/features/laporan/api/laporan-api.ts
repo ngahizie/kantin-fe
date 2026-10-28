@@ -302,6 +302,7 @@ export const laporanApi = {
   async getKerugianStok(
     params?: LaporanFilterParams
   ): Promise<BarisKerugianStok[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await apiClient.get<ApiResponse<any[]>>(
       '/api/laporan/kerugian-stok',
       { params }

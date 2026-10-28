@@ -12,10 +12,12 @@ const FORM_MESSAGES = {
 const navigate = vi.fn()
 const setUserMock = vi.fn()
 const setAccessTokenMock = vi.fn()
+const resetMock = vi.fn()
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({
     auth: {
+      reset: resetMock,
       setUser: setUserMock,
       setAccessToken: setAccessTokenMock,
     },
@@ -96,6 +98,7 @@ describe('UserAuthForm', () => {
       await userEvent.click(signInButton)
 
       await vi.waitFor(() => expect(setUserMock).toHaveBeenCalledOnce())
+      expect(resetMock).toHaveBeenCalledOnce()
       expect(setUserMock).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'admin@skoolia.id',
@@ -125,6 +128,7 @@ describe('UserAuthForm', () => {
     await userEvent.click(getByRole('button', { name: /Masuk ke Sistem Kantin/i }))
 
     await vi.waitFor(() => expect(setUserMock).toHaveBeenCalledOnce())
+    expect(resetMock).toHaveBeenCalledOnce()
     expect(setAccessTokenMock).toHaveBeenCalledOnce()
 
     await vi.waitFor(() =>

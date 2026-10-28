@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import type { KartuSiswaMock } from '@/mocks/mock-data'
-import { MOCK_KARTU_TAMU } from '@/mocks/mock-data'
+import { type KartuSiswaMock, MOCK_KARTU_TAMU } from '@/mocks/mock-data'
 import apiClient from '@/lib/api-client'
 import {
   Search,

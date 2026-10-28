@@ -46,12 +46,18 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
     durasiDetik && durasiDetik > 0 ? durasiDetik : DEFAULT_COUNTDOWN_SECONDS
   const [countdown, setCountdown] = useState(effectiveDuration)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [prevOpen, setPrevOpen] = useState(open)
+
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      setCountdown(effectiveDuration)
+    }
+  }
 
   // Mulai hitung mundur saat modal terbuka, tersinkronisasi dengan durasi pengaturan operasional
   useEffect(() => {
     if (!open || !data || isVoiding) return
-
-    setCountdown(effectiveDuration)
 
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -67,7 +73,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [open, data, isVoiding, onComplete, effectiveDuration])
+  }, [open, data, isVoiding, onComplete])
 
   if (!data) return null
 

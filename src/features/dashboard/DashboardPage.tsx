@@ -80,6 +80,7 @@ const formatRupiah = (val: number) => {
   }).format(val)
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getStatusBadgeClass = (status: string) => {
   const normalized = status.toUpperCase()
   if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
@@ -131,7 +132,7 @@ export function DashboardPage() {
                 params: { ukuran: 5, halaman: 0 },
                 silent: true,
               } as unknown as Record<string, unknown>)
-            : Promise.resolve({ data: { data: [] } } as any),
+            : Promise.resolve({ data: { data: [] } } as unknown as { data: { data: unknown[] } }),
         ])
 
         if (!isMounted) return
@@ -201,7 +202,7 @@ export function DashboardPage() {
     return () => {
       isMounted = false
     }
-  }, [currentRole])
+  }, [currentRole, canViewRekonsiliasi])
 
   // Normalisasi data menu dari BE
   const effectiveMenuItems: LowStockDisplayItem[] = useMemo(() => {

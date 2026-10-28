@@ -54,21 +54,30 @@ export function RegisterKartuModal({
   const [detectedUid, setDetectedUid] = useState<string | null>(null)
   const [backendNextNomor, setBackendNextNomor] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [prevOpen, setPrevOpen] = useState(open)
+
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (!open) {
+      setBackendNextNomor(null)
+    }
+  }
 
   useEffect(() => {
-    if (open) {
-      apiClient
-        .get('/api/kartu-tamu/nomor-berikutnya')
-        .then((res) => {
-          if (res.data?.data) {
-            setBackendNextNomor(String(res.data.data))
-          }
-        })
-        .catch(() => {
-          // fallback to client calculation
-        })
-    } else {
-      setBackendNextNomor(null)
+    if (!open) return
+    let active = true
+    apiClient
+      .get('/api/kartu-tamu/nomor-berikutnya')
+      .then((res) => {
+        if (active && res.data?.data) {
+          setBackendNextNomor(String(res.data.data))
+        }
+      })
+      .catch(() => {
+        // fallback to client calculation
+      })
+    return () => {
+      active = false
     }
   }, [open])
 

@@ -48,6 +48,7 @@ export const kasirApi = {
       titikKasirId: data.titikKasirId || 1,
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await apiClient.post<ApiResponse<any>>(
       '/api/kasir/tap',
       payload
