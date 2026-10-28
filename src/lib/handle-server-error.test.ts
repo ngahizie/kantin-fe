@@ -39,6 +39,24 @@ describe('handleServerError', () => {
     expect(toastError).toHaveBeenCalledWith('Validation failed')
   })
 
+  it('extracts per-field validation error from backend HTTP 400 response', () => {
+    const error = new AxiosError('Bad request')
+    error.response = {
+      status: 400,
+      data: {
+        code: 100,
+        message: 'ERROR MAPPING',
+        validation: {
+          nominal: 'Nominal wajib lebih dari 0',
+        },
+      },
+    } as AxiosError['response']
+
+    handleServerError(error)
+
+    expect(toastError).toHaveBeenCalledWith('nominal: Nominal wajib lebih dari 0')
+  })
+
   it('falls back to the generic message when Axios response has no data.title', () => {
     const error = new AxiosError('Request failed')
     error.response = {
