@@ -34,6 +34,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
@@ -391,6 +392,7 @@ export function LaporanSaldoMengendapPage() {
             <span className="text-xs font-medium">Saldo Mengendap</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>

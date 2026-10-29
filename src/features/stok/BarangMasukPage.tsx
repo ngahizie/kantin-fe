@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -136,6 +137,7 @@ export function BarangMasukPage() {
             <span className='text-xs font-medium'>Barang Masuk</span>
           </div>
           <div className='flex items-center gap-2'>
+            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Header } from '@/components/layout/header'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 
 export interface BackofficeHeaderProps {
@@ -19,6 +20,9 @@ export function BackofficeHeader({ className, fixed = true }: BackofficeHeaderPr
 
       {/* Bagian Kanan: Search, Theme, Profil */}
       <div className='flex items-center gap-2 sm:gap-3 ms-auto'>
+        {/* Theme Switcher (Dark/Light/System) */}
+        <ThemeSwitch />
+
         {/* User Profile Dropdown */}
         <ProfileDropdown />
       </div>

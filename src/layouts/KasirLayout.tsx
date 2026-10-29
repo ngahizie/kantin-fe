@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth-store'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { ThemeSwitch } from '@/components/theme-switch'
 import useDialogState from '@/hooks/use-dialog-state'
 
 export function KasirLayout() {
@@ -100,6 +101,9 @@ export function KasirLayout() {
           >
             {isFullscreen ? <Minimize2 className='h-4 w-4' /> : <Maximize2 className='h-4 w-4' />}
           </Button>
+
+          {/* Pengalih Tema (Dark/Light/System) */}
+          <ThemeSwitch />
 
           {/* Kembali ke Dashboard (disembunyikan untuk peran kasir, tetap tampil untuk pengelola/admin) */}
           {canGoBack && (

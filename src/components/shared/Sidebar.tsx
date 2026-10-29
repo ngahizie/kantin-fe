@@ -3,7 +3,9 @@ import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
   SidebarHeader,
+  SidebarRail,
 } from '@/components/ui/sidebar'
+import { useLayout } from '@/context/layout-provider'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { sidebarData } from '@/components/layout/data/sidebar-data'
 import { filterNavGroupsByRole } from '@/components/layout/nav-utils'
@@ -15,6 +17,7 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
+  const { collapsible, variant } = useLayout()
   const { currentRole, schoolName, canteenName } = useRoleStore()
 
   // Filter navigasi sidebar dinamis sesuai role yang sedang aktif
@@ -31,7 +34,7 @@ export function Sidebar({ className }: SidebarProps) {
   ]
 
   return (
-    <ShadcnSidebar variant='sidebar' className={className}>
+    <ShadcnSidebar collapsible={collapsible} variant={variant} className={className}>
       <SidebarHeader className='h-[65px] justify-center border-b border-sidebar-border/50'>
         <TeamSwitcher teams={teams} />
       </SidebarHeader>
@@ -41,6 +44,8 @@ export function Sidebar({ className }: SidebarProps) {
           <NavGroup key={props.title} {...props} />
         ))}
       </SidebarContent>
+
+      <SidebarRail />
     </ShadcnSidebar>
   )
 }

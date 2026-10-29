@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -216,6 +217,7 @@ export const TitikKasirPage: React.FC = () => {
             <span className='text-xs font-medium'>Manajemen Titik Kasir</span>
           </div>
           <div className='flex items-center gap-2'>
+            <ThemeSwitch />
             <ProfileDropdown />
           </div>
         </div>
