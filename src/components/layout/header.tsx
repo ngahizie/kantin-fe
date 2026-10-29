@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Separator } from '@/components/ui/separator'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 
 type HeaderProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean
@@ -26,12 +28,14 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
       className={cn(
         'z-50 h-[65px] bg-background',
         fixed && 'header-fixed peer/header sticky top-0 w-[inherit]',
-        offset > 10 && fixed ? 'border-b' : '',
+        offset > 10 && fixed ? 'border-b shadow-xs' : '',
         className
       )}
       {...props}
     >
       <div className='relative flex h-full items-center gap-3 p-4 sm:gap-4'>
+        <SidebarTrigger variant='outline' className='size-8 max-md:scale-110' />
+        <Separator orientation='vertical' className='h-6' />
         {children}
       </div>
     </header>

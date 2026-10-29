@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { VariantProps, cva } from 'class-variance-authority'
+import { PanelLeftIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
@@ -21,9 +22,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
+const SIDEBAR_COOKIE_NAME = 'sidebar_state'
+const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
+const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
@@ -62,24 +66,59 @@ function SidebarProvider({
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
 
-  // Sidebar selalu terbuka (fitur buka tutup dihapus total)
-    const setOpen = React.useCallback(
-    (_value: boolean | ((value: boolean) => boolean)) => {},
-    []
+  // This is the internal state of the sidebar.
+  // We use openProp and setOpenProp for control from outside the component.
+  const [_open, _setOpen] = React.useState(defaultOpen)
+  const open = openProp ?? _open
+  const setOpen = React.useCallback(
+    (value: boolean | ((value: boolean) => boolean)) => {
+      const openState = typeof value === 'function' ? value(open) : value
+      if (setOpenProp) {
+        setOpenProp(openState)
+      } else {
+        _setOpen(openState)
+      }
+
+      // This sets the cookie to keep the sidebar state.
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+    },
+    [setOpenProp, open]
   )
-  const toggleSidebar = React.useCallback(() => {}, [])
+
+  // Helper to toggle the sidebar.
+  const toggleSidebar = React.useCallback(() => {
+    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
+  }, [isMobile, setOpen, setOpenMobile])
+
+  // Adds a keyboard shortcut to toggle the sidebar.
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        event.preventDefault()
+        toggleSidebar()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [toggleSidebar])
+
+  const state = open ? 'expanded' : 'collapsed'
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
-      state: 'expanded',
-      open: true,
+      state,
+      open,
       setOpen,
       isMobile,
       openMobile,
       setOpenMobile,
       toggleSidebar,
     }),
-    [isMobile, openMobile, setOpenMobile, setOpen, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
   )
 
   return (
@@ -143,7 +182,7 @@ function Sidebar({
           data-sidebar='sidebar'
           data-slot='sidebar'
           data-mobile='true'
-          className='w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden'
+          className='w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground'
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -209,12 +248,60 @@ function Sidebar({
   )
 }
 
-function SidebarTrigger(_props: React.ComponentProps<typeof Button>) {
-  return null
+function SidebarTrigger({
+  className,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { toggleSidebar } = useSidebar()
+
+  return (
+    <Button
+      data-sidebar='trigger'
+      data-slot='sidebar-trigger'
+      variant='ghost'
+      size='icon'
+      className={cn('size-7', className)}
+      onClick={(event) => {
+        onClick?.(event)
+        toggleSidebar()
+      }}
+      {...props}
+    >
+      <PanelLeftIcon />
+      <span className='sr-only'>Toggle Sidebar</span>
+    </Button>
+  )
 }
 
-function SidebarRail(_props: React.ComponentProps<'button'>) {
-  return null
+function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
+  const { toggleSidebar } = useSidebar()
+
+  return (
+    <button
+      data-sidebar='rail'
+      data-slot='sidebar-rail'
+      aria-label='Toggle Sidebar'
+      tabIndex={-1}
+      onClick={toggleSidebar}
+      title='Toggle Sidebar'
+      className={cn(
+        'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-inset-e-4 group-data-[side=right]:inset-s-0 after:absolute after:inset-y-0 after:inset-s-1/2 after:w-0.5 hover:after:bg-sidebar-border sm:flex',
+        'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
+        '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
+        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:start-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',
+        '[[data-side=left][data-collapsible=offcanvas]_&]:-inset-e-2',
+        '[[data-side=right][data-collapsible=offcanvas]_&]:-inset-s-2',
+
+        // RTL support
+        'rtl:translate-x-1/2',
+        'rtl:in-data-[side=left]:cursor-e-resize rtl:in-data-[side=right]:cursor-w-resize',
+        'rtl:[[data-side=left][data-state=collapsed]_&]:cursor-w-resize rtl:[[data-side=right][data-state=collapsed]_&]:cursor-e-resize',
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
 function SidebarInset({ className, ...props }: React.ComponentProps<'div'>) {

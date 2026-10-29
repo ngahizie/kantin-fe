@@ -3,9 +3,9 @@ import { createContext, useContext, useMemo } from 'react'
 export type Collapsible = 'icon' | 'offcanvas' | 'none'
 type Variant = 'sidebar'
 
-// Default values: variant sidebar, layout default (expanded, no collapse)
+// Default values: variant sidebar, layout default (expanded)
 const DEFAULT_VARIANT: Variant = 'sidebar'
-const DEFAULT_COLLAPSIBLE: Collapsible = 'none'
+const DEFAULT_COLLAPSIBLE: Collapsible = 'icon'
 
 type LayoutContextType = {
   resetLayout: () => void
