@@ -30,12 +30,12 @@ export const apiClient: AxiosInstance = axios.create({
 // Pasang Mock Adapter jika VITE_USE_MOCK=true
 if (useMock) {
   // eslint-disable-next-line no-console
-  console.info('⚡ [Kantin-FE] Mock API Layer AKTIF (VITE_USE_MOCK=true).')
+  console.info('[Kantin-FE] Mock API Layer AKTIF (VITE_USE_MOCK=true).')
   setupMockAdapter(apiClient)
   setupMockAdapter(axios)
 } else {
   // eslint-disable-next-line no-console
-  console.info(`🌐 [Kantin-FE] Terhubung ke server backend: ${baseURL}`)
+  console.info(`[Kantin-FE] Terhubung ke server backend: ${baseURL}`)
 }
 
 // Request Interceptor: Otomatis cantumkan Authorization Bearer token jika ada

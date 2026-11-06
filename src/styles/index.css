@@ -5,19 +5,34 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
-  * {
-    @apply border-border outline-none;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
+  /* Samakan semua font teks, angka, kode, dan elemen input agar 100% konsisten */
+  html,
+  body,
+  input,
+  button,
+  select,
+  textarea,
+  table,
+  th,
+  td,
+  code,
+  kbd,
+  samp,
+  pre,
+  .font-mono,
+  [class*='font-mono'] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   }
 
-  /* Hilangkan garis luar (outline / ring / box-shadow) saat elemen diklik atau difokuskan */
-  *,
-  *::before,
-  *::after {
+  /* Hilangkan semua garis luar (outline, ring, border) di seluruh elemen di seluruh halaman */
+  *:not(.animate-spin),
+  *:not(.animate-spin)::before,
+  *:not(.animate-spin)::after {
     outline: none !important;
+    border-color: transparent !important;
   }
 
+  /* Nonaktifkan efek ring dan focus shadow di seluruh elemen */
   *:focus,
   *:focus-visible,
   *:focus-within {
@@ -28,6 +43,17 @@
     --tw-ring-offset-color: transparent !important;
     box-shadow: none !important;
   }
+
+  /* Pengecualian spinner: biarkan animasi loading lingkaran tetap terlihat */
+  .animate-spin {
+    border-color: var(--primary) transparent transparent transparent !important;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
   html {
     @apply overflow-x-hidden;
   }

@@ -338,7 +338,7 @@ export function LaporanRekonsiliasiPage() {
             </div>
           </div>
 
-          {/* 🚨 BANNER PERINGATAN MERAH MENCOLOK BILA SELISIH != 0 */}
+          {/* BANNER PERINGATAN MERAH MENCOLOK BILA SELISIH != 0 */}
           {data && !data.seimbang && (
             <div
               data-testid="banner-peringatan-selisih"

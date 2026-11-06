@@ -494,7 +494,7 @@ export function OpnameInputTable({
             </TooltipTrigger>
             {summary.berselisihTanpaAlasan.length > 0 && (
               <TooltipContent className="bg-destructive text-destructive-foreground text-xs p-2">
-                ⚠️ Ada {summary.berselisihTanpaAlasan.length} baris
+                Ada {summary.berselisihTanpaAlasan.length} baris
                 berselisih belum diberi alasan
               </TooltipContent>
             )}
@@ -621,7 +621,7 @@ export function OpnameInputTable({
                           <Badge
                             className="border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs px-2 py-0.5 font-medium"
                           >
-                            ✓ Pas (0)
+                            Pas (0)
                           </Badge>
                         ) : row.selisih < 0 ? (
                           <Badge

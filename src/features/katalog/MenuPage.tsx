@@ -307,7 +307,7 @@ export function MenuPage() {
                   options: [
                     { label: 'Hanya Aktif', value: 'active' },
                     { label: 'Hanya Nonaktif', value: 'inactive' },
-                    { label: 'Stok Menipis (⚠️)', value: 'low_stock' },
+                    { label: 'Stok Menipis', value: 'low_stock' },
                   ],
                   selectedValues: selectedStatus !== 'all' ? [selectedStatus] : [],
                   onSelect: (vals: string[]) => {
