@@ -41,14 +41,14 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       aria-disabled={isHabis}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 shadow-none select-none ${
+      className={`relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-0 gap-0 shadow-none select-none transition-all duration-150 hover:bg-muted/90 dark:hover:bg-muted/50 ${
         isHabis
           ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer'
+          : 'cursor-pointer active:scale-[0.98]'
       }`}
     >
       {/* Gambar & Badges */}
-      <div className='relative aspect-4/3 w-full overflow-hidden bg-muted/50 dark:bg-muted/50'>
+      <div className='relative aspect-4/3 w-full shrink-0 overflow-hidden bg-muted/50 dark:bg-muted/50'>
         {menu.fotoUrl && !imageError ? (
           <img
             src={menu.fotoUrl}
@@ -102,7 +102,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       <div className='flex flex-1 flex-col justify-between p-3.5'>
         <div>
           <h4
-            className='line-clamp-2 text-sm font-semibold tracking-tight text-foreground'
+            className='h-10 text-sm font-semibold tracking-tight text-foreground line-clamp-2'
             title={menu.nama}
           >
             {menu.nama}

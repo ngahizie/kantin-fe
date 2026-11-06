@@ -25,16 +25,18 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'>
+      <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
         {Array.from({ length: 8 }).map((_, idx) => (
           <Card
             key={idx}
-            className='flex flex-col overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-0 shadow-none'
+            className='flex h-full flex-col overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-0 gap-0 shadow-none'
           >
-            <Skeleton className='aspect-4/3 w-full' />
-            <div className='flex flex-col gap-2 p-3'>
-              <Skeleton className='h-4 w-3/4' />
-              <Skeleton className='h-3 w-1/3' />
+            <Skeleton className='aspect-4/3 w-full shrink-0' />
+            <div className='flex flex-1 flex-col justify-between p-3.5'>
+              <div>
+                <Skeleton className='h-4 w-3/4' />
+                <Skeleton className='mt-2 h-3 w-1/3' />
+              </div>
               <div className='mt-3 flex flex-col border-none pt-1'>
                 <Skeleton className='h-3 w-10' />
                 <Skeleton className='mt-1 h-5 w-24' />
@@ -75,7 +77,7 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
   }
 
   return (
-    <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'>
+    <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
       {menus.map((menu) => (
         <MenuItemCard
           key={menu.id}
