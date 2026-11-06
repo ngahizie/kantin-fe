@@ -24,7 +24,7 @@ export function TeamSwitcher({ teams }: TeamSwitcherProps) {
           className='hover:bg-transparent active:bg-transparent cursor-default select-none'
         >
           <div
-            className={`flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden ${
+            className={`flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg overflow-hidden ${
               typeof activeTeam.logo === 'string'
                 ? 'bg-muted dark:bg-white p-1'
                 : 'bg-sidebar-primary text-sidebar-primary-foreground'
@@ -40,7 +40,7 @@ export function TeamSwitcher({ teams }: TeamSwitcherProps) {
               <activeTeam.logo className='size-4' />
             )}
           </div>
-          <div className='grid flex-1 text-start text-sm leading-tight'>
+          <div className='grid flex-1 text-start text-sm leading-tight group-data-[collapsible=icon]:hidden'>
             <span className='truncate font-semibold'>
               {activeTeam.name}
             </span>
