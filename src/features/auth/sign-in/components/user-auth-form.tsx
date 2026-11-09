@@ -177,10 +177,10 @@ export function UserAuthForm({
             name='password'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs'>Kata Sandi</FormLabel>
+                <FormLabel className='text-xs'>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
-                    placeholder='Masukkan kata sandi'
+                    placeholder='Masukkan password'
                     autoComplete='current-password'
                     disabled={isLoading}
                     className='!border !border-slate-300 dark:!border-slate-700 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'

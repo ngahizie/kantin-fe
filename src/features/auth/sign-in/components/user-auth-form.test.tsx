@@ -68,7 +68,7 @@ describe('UserAuthForm', () => {
       vi.clearAllMocks()
       screen = await render(<UserAuthForm />)
       emailInput = screen.getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i })
-      passwordInput = screen.getByLabelText(/Kata Sandi/i)
+      passwordInput = screen.getByLabelText(/^(Kata Sandi|Password)$/i)
       signInButton = screen.getByRole('button', { name: /Masuk ke Sistem Kantin/i })
     })
 
@@ -123,7 +123,7 @@ describe('UserAuthForm', () => {
     )
 
     await userEvent.fill(getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i }), 'admin@skoolia.id')
-    await userEvent.fill(getByLabelText(/Kata Sandi/i), 'password123')
+    await userEvent.fill(getByLabelText(/^(Kata Sandi|Password)$/i), 'password123')
 
     await userEvent.click(getByRole('button', { name: /Masuk ke Sistem Kantin/i }))
 
