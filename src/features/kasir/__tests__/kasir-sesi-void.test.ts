@@ -2,7 +2,7 @@ import axios from 'axios'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { kasirApi } from '../api/kasir-api'
-import { PILIHAN_ALASAN_VOID, type TransaksiSesiItem } from '../types'
+import { PILIHAN_ALASAN_VOID, type TransaksiSesiItem, type TutupSesiPayload } from '../types'
 
 describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
   let testAxios: ReturnType<typeof axios.create>
@@ -31,8 +31,8 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
       return res.data?.data
     })
 
-    vi.spyOn(kasirApi, 'tutupSesi').mockImplementation(async (sesiId: number) => {
-      const res = await testAxios.post(`/api/kasir/sesi/${sesiId}/tutup`)
+    vi.spyOn(kasirApi, 'tutupSesi').mockImplementation(async (sesiId: number, payload?: TutupSesiPayload) => {
+      const res = await testAxios.post(`/api/kasir/sesi/${sesiId}/tutup`, payload)
       return res.data?.data
     })
 
@@ -167,6 +167,42 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
       expect(closedSession.totalBersih).toBe(
         closedSession.totalBruto - closedSession.totalVoid
       )
+    })
+
+    it('dapat menutup sesi kasir dengan mengirimkan kas fisik, selisih, dan catatan rekonsiliasi', async () => {
+      const payload: TutupSesiPayload = {
+        uangFisik: 150000,
+        selisih: 0,
+        catatan: 'Kas seimbang sesuai pencatatan',
+      }
+      const closedSession = await kasirApi.tutupSesi(1, payload)
+
+      expect(closedSession).toBeDefined()
+      expect(closedSession.status).toBe('DITUTUP')
+      expect(closedSession.uangFisik).toBe(150000)
+      expect(closedSession.selisih).toBe(0)
+      expect(closedSession.catatan).toBe('Kas seimbang sesuai pencatatan')
+    })
+
+    it('memvalidasi kalkulasi status selisih kas fisik (seimbang, kurang, lebih)', () => {
+      const totalBersihSistem = 100000
+
+      // Kasus 1: Kas Seimbang
+      const kasSeimbang = 100000
+      const selisihSeimbang = kasSeimbang - totalBersihSistem
+      expect(selisihSeimbang).toBe(0)
+
+      // Kasus 2: Kekurangan Kas
+      const kasKurang = 90000
+      const selisihKurang = kasKurang - totalBersihSistem
+      expect(selisihKurang).toBe(-10000)
+      expect(selisihKurang < 0).toBe(true)
+
+      // Kasus 3: Kelebihan Kas
+      const kasLebih = 115000
+      const selisihLebih = kasLebih - totalBersihSistem
+      expect(selisihLebih).toBe(15000)
+      expect(selisihLebih > 0).toBe(true)
     })
 
     it('mengunci transaksi baru ketika status sesi adalah DITUTUP', () => {

@@ -7,6 +7,7 @@ import type {
   TapBuyerInfo,
   SesiKasirData,
   RekapSesiData,
+  TutupSesiPayload,
   TransaksiSesiItem,
   InfoSaldoData,
 } from '../types'
@@ -179,9 +180,13 @@ export const kasirApi = {
   /**
    * Tutup sesi kasir harian dan kunci transaksi (PRD §6.4, Issue #5)
    */
-  async tutupSesi(sesiId: number): Promise<SesiKasirData> {
+  async tutupSesi(
+    sesiId: number,
+    payload?: TutupSesiPayload
+  ): Promise<SesiKasirData> {
     const res = await apiClient.post<ApiResponse<SesiKasirData>>(
-      `/api/kasir/sesi/${sesiId}/tutup`
+      `/api/kasir/sesi/${sesiId}/tutup`,
+      payload || {}
     )
     return res.data?.data
   },

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
+import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import VoidDialog from './VoidDialog'
 import type { TransaksiSesiItem } from '../api/kasir-api'
 
@@ -81,33 +81,6 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
     })
   }, [transactions, filterStatus, searchQuery])
 
-  // Ringkasan metrik dari transaksi yang ada
-  const metrics = useMemo(() => {
-    let countSukses = 0
-    let countVoid = 0
-    let totalBruto = 0
-    let totalVoid = 0
-
-    transactions.forEach((t) => {
-      if (t.status === 'SUKSES') {
-        countSukses++
-        totalBruto += t.total
-      } else if (t.status === 'VOID') {
-        countVoid++
-        totalVoid += t.total
-      }
-    })
-
-    const totalBersih = totalBruto
-    return {
-      totalTransaksi: transactions.length,
-      countSukses,
-      countVoid,
-      totalBersih,
-      totalVoid,
-    }
-  }, [transactions])
-
   const handleOpenVoidDialog = (trx: TransaksiSesiItem) => {
     setSelectedTrxForVoid(trx)
     setVoidDialogOpen(true)
@@ -156,36 +129,6 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                 <SheetDescription className='text-xs text-muted-foreground'>
                   Daftar seluruh transaksi yang diproses pada shift aktif hari ini.
                 </SheetDescription>
-              </div>
-            </div>
-
-            {/* Quick Metrics Cards */}
-            <div className='grid grid-cols-3 gap-2 pt-2'>
-              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
-                <span className='text-[10px] text-muted-foreground block'>
-                  Total Transaksi
-                </span>
-                <span className='text-sm font-bold text-foreground tabular-nums'>
-                  {formatNumber(metrics.totalTransaksi)}
-                </span>
-              </div>
-
-              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
-                <span className='text-[10px] text-muted-foreground block'>
-                  Sukses (Net)
-                </span>
-                <span className='text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
-                  {formatRupiah(metrics.totalBersih)}
-                </span>
-              </div>
-
-              <div className='rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-2 text-center shadow-none'>
-                <span className='text-[10px] text-muted-foreground block'>
-                  Total Void
-                </span>
-                <span className='text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums'>
-                  {metrics.countVoid > 0 ? formatRupiah(metrics.totalVoid) : '0'}
-                </span>
               </div>
             </div>
           </SheetHeader>

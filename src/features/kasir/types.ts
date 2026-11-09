@@ -15,6 +15,15 @@ export interface SesiKasirData {
   ditutupAt?: string | null
   ditutupOleh?: number | null
   autoTutup?: boolean
+  uangFisik?: number | null
+  selisih?: number | null
+  catatan?: string | null
+}
+
+export interface TutupSesiPayload {
+  uangFisik?: number
+  selisih?: number
+  catatan?: string
 }
 
 export interface RekapSesiData {
