@@ -32,7 +32,7 @@ describe('filterNavGroupsByRole', () => {
     const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
       (s) => s.title
     )
-    expect(subReportTitles).toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Saldo Mengendap')
@@ -70,7 +70,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
-    expect(subReportTitles).not.toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).not.toContain('Cek Selisih Uang')
     expect(subReportTitles).not.toContain('Saldo Mengendap')
     expect(subReportTitles).not.toContain('Riwayat Belanja Siswa')
 
@@ -105,7 +105,7 @@ describe('filterNavGroupsByRole', () => {
     const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
       (s) => s.title
     )
-    expect(subReportTitles).toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Saldo Mengendap')
     expect(subReportTitles).toContain('Riwayat Belanja Siswa')
     expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
@@ -162,7 +162,7 @@ describe('filterNavGroupsByRole', () => {
     const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
       (s) => s.title
     )
-    expect(subReportTitles).toContain('Rekonsiliasi Harian')
+    expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Saldo Mengendap')

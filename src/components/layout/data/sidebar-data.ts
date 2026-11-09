@@ -152,7 +152,7 @@ export const sidebarData: SidebarData = {
           roles: ['admin', 'bendahara', 'pengelola', 'tu', 'kepsek'],
           items: [
             {
-              title: 'Rekonsiliasi Harian',
+              title: 'Cek Selisih Uang',
               url: '/laporan/rekonsiliasi',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
