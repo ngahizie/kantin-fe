@@ -188,26 +188,6 @@ export function SignIn() {
           <div className='has-border !border sm:!border-2 !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] rounded-3xl sm:rounded-4xl sm:shadow-xl sm:shadow-blue-100/40 dark:shadow-none p-6 sm:p-8'>
             <UserAuthForm />
           </div>
-
-          <p className='px-4 text-center text-sm text-muted-foreground'>
-            Dengan masuk, Anda menyetujui<br />
-            <a
-              href='#'
-              onClick={(e) => e.preventDefault()}
-              className='underline underline-offset-4 hover:text-blue-500 transition-colors cursor-pointer'
-            >
-              Syarat & Ketentuan
-            </a>{' '}
-            serta{' '}
-            <a
-              href='#'
-              onClick={(e) => e.preventDefault()}
-              className='underline underline-offset-4 hover:text-blue-500 transition-colors cursor-pointer'
-            >
-              Kebijakan Privasi
-            </a>
-            .
-          </p>
         </div>
       </div>
     </div>

@@ -177,15 +177,7 @@ export function UserAuthForm({
             name='password'
             render={({ field }) => (
               <FormItem>
-                <div className='flex items-center justify-between'>
-                  <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Password</FormLabel>
-                  <span
-                    onClick={() => toast.info('Silakan hubungi administrator untuk pemulihan kata sandi')}
-                    className='text-xs font-medium text-slate-400 hover:text-blue-500 cursor-pointer transition-colors'
-                  >
-                    Lupa Password?
-                  </span>
-                </div>
+                <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     placeholder='Masukkan password'
