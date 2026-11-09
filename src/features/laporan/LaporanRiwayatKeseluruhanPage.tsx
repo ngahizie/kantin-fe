@@ -44,7 +44,10 @@ import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { laporanApi } from './api/laporan-api'
-import type { RiwayatTransaksiKeseluruhanItem } from './types'
+import {
+  type RiwayatTransaksiKeseluruhanItem,
+  resolveTitikDanPetugas,
+} from './types'
 
 export function LaporanRiwayatKeseluruhanPage() {
   const [transaksiList, setTransaksiList] = useState<RiwayatTransaksiKeseluruhanItem[]>([])
@@ -256,6 +259,29 @@ export function LaporanRiwayatKeseluruhanPage() {
   const handlePrintReceipt = () => {
     if (!selectedTrxForReceipt) return
 
+    const { titik, petugas } = resolveTitikDanPetugas(selectedTrxForReceipt)
+    const isTopup = selectedTrxForReceipt.jenis?.startsWith('TOPUP')
+    const isRefund = selectedTrxForReceipt.jenis === 'REFUND'
+    const isKoreksi = selectedTrxForReceipt.jenis === 'KOREKSI'
+
+    const receiptTitle = isTopup
+      ? 'BUKTI ISI SALDO (TOP-UP)'
+      : isRefund
+      ? 'BUKTI PENGEMBALIAN SALDO'
+      : isKoreksi
+      ? 'BUKTI PENYESUAIAN SALDO'
+      : 'STRUK TRANSAKSI DIGITAL KASIR'
+
+    const totalLabel = isTopup
+      ? 'TOTAL SALDO MASUK:'
+      : isRefund
+      ? 'TOTAL PENGEMBALIAN:'
+      : isKoreksi
+      ? 'NOMINAL PENYESUAIAN:'
+      : 'TOTAL POTONG SALDO:'
+
+    const totalSign = selectedTrxForReceipt.arah === 'KREDIT' ? '+' : '-'
+
     const receiptHtml = `
 <!DOCTYPE html>
 <html>
@@ -297,7 +323,7 @@ export function LaporanRiwayatKeseluruhanPage() {
   <div class="header">
     <img src="/logo.png" style="height: 28px; width: auto; margin-bottom: 4px;" alt="Logo Skoolia" />
     <div class="store-name">KANTIN SKOOLIA</div>
-    <div class="sub-title">STRUK TRANSAKSI DIGITAL KASIR</div>
+    <div class="sub-title">${receiptTitle}</div>
     <div class="ref-badge">${selectedTrxForReceipt.referensiId}</div>
   </div>
 
@@ -311,12 +337,12 @@ export function LaporanRiwayatKeseluruhanPage() {
       <span>${selectedTrxForReceipt.siswaNama} (${selectedTrxForReceipt.siswaKelas})</span>
     </div>
     <div class="info-row">
-      <span>Titik Kasir:</span>
-      <span>${selectedTrxForReceipt.titikKasir}</span>
+      <span>Lokasi / Titik:</span>
+      <span>${titik}</span>
     </div>
     <div class="info-row">
       <span>Petugas:</span>
-      <span>${selectedTrxForReceipt.petugas}</span>
+      <span>${petugas}</span>
     </div>
   </div>
 
@@ -350,7 +376,7 @@ export function LaporanRiwayatKeseluruhanPage() {
   `
       : `
     <div style="padding: 8px 0; text-align: center; font-style: italic;">
-      ${selectedTrxForReceipt.keterangan}
+      ${selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}
     </div>
   `
   }
@@ -358,8 +384,8 @@ export function LaporanRiwayatKeseluruhanPage() {
   <div class="double-divider"></div>
 
   <div class="total-row">
-    <span>TOTAL:</span>
-    <span>${formatRupiah(selectedTrxForReceipt.nominal)}</span>
+    <span>${totalLabel}</span>
+    <span>${totalSign} ${formatRupiah(selectedTrxForReceipt.nominal)}</span>
   </div>
 
   <div class="info-row" style="margin-top: 4px;">
@@ -654,8 +680,8 @@ export function LaporanRiwayatKeseluruhanPage() {
                               {formatRupiah(trx.saldoSetelah)}
                             </TableCell>
                             <TableCell className="text-xs">
-                              <div>{trx.titikKasir}</div>
-                              <div className="text-[10px] text-muted-foreground">{trx.petugas}</div>
+                              <div>{resolveTitikDanPetugas(trx).titik}</div>
+                              <div className="text-[10px] text-muted-foreground">{resolveTitikDanPetugas(trx).petugas}</div>
                             </TableCell>
                             <TableCell className="text-xs max-w-xs truncate">
                               {trx.items && trx.items.length > 0 ? (
@@ -743,153 +769,178 @@ export function LaporanRiwayatKeseluruhanPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedTrxForReceipt && (
-            <div className="p-4">
-              <div
-                ref={printAreaRef}
-                className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none"
-              >
-                {/* Header Nota */}
-                <div className="space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center">
-                  <div className="flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase">
-                    <img
-                      src="/logo.png"
-                      alt="Logo Skoolia"
-                      className="h-5 w-5 object-contain"
-                    />
-                    <span>KANTIN SKOOLIA</span>
-                  </div>
-                  <p className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-                    STRUK TRANSAKSI DIGITAL KASIR
-                  </p>
+          {selectedTrxForReceipt && (() => {
+            const { titik, petugas } = resolveTitikDanPetugas(selectedTrxForReceipt)
+            const isTopup = selectedTrxForReceipt.jenis?.startsWith('TOPUP')
+            const isRefund = selectedTrxForReceipt.jenis === 'REFUND'
+            const isKoreksi = selectedTrxForReceipt.jenis === 'KOREKSI'
 
-                  <div className="pt-1.5">
-                    <span className="block font-sans text-[9px] text-slate-400 uppercase tracking-wide">
-                      No. Referensi Transaksi
-                    </span>
-                    <span className="mt-0.5 inline-block rounded border border-slate-200 bg-slate-100 px-2.5 py-0.5 font-mono text-xs font-bold tracking-wide text-slate-900">
-                      {selectedTrxForReceipt.referensiId}
-                    </span>
-                  </div>
-                </div>
+            const receiptTitle = isTopup
+              ? 'BUKTI ISI SALDO (TOP-UP)'
+              : isRefund
+              ? 'BUKTI PENGEMBALIAN SALDO'
+              : isKoreksi
+              ? 'BUKTI PENYESUAIAN SALDO'
+              : 'STRUK TRANSAKSI DIGITAL KASIR'
 
-                {/* Informasi Transaksi */}
-                <div className="space-y-1.5 pt-2.5 text-[11px]">
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span className="text-slate-400">Waktu:</span>
-                    <span className="font-semibold text-slate-800">
-                      {formatDateTime(selectedTrxForReceipt.waktu)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span className="text-slate-400">Siswa:</span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedTrxForReceipt.siswaNama} ({selectedTrxForReceipt.siswaKelas})
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span className="text-slate-400">Titik Kasir:</span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedTrxForReceipt.titikKasir}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span className="text-slate-400">Petugas:</span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedTrxForReceipt.petugas}
-                    </span>
-                  </div>
-                </div>
+            const totalLabel = isTopup
+              ? 'TOTAL SALDO MASUK:'
+              : isRefund
+              ? 'TOTAL PENGEMBALIAN:'
+              : isKoreksi
+              ? 'NOMINAL PENYESUAIAN:'
+              : 'TOTAL BAYAR:'
 
-                <div className="my-2.5 border-b border-dashed border-slate-300" />
+            const totalSign = selectedTrxForReceipt.arah === 'KREDIT' ? '+' : '-'
 
-                {/* Items Transaksi */}
-                {selectedTrxForReceipt.items && selectedTrxForReceipt.items.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold uppercase text-slate-400">
-                      <span>Menu</span>
-                      <span>Subtotal</span>
+            return (
+              <div className="p-4">
+                <div
+                  ref={printAreaRef}
+                  className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none"
+                >
+                  {/* Header Nota */}
+                  <div className="space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center">
+                    <div className="flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase">
+                      <img
+                        src="/logo.png"
+                        alt="Logo Skoolia"
+                        className="h-5 w-5 object-contain"
+                      />
+                      <span>KANTIN SKOOLIA</span>
                     </div>
-                    {selectedTrxForReceipt.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start text-xs">
-                        <div>
-                          <div className="font-bold text-slate-800">{item.nama}</div>
-                          <div className="text-[10px] text-slate-500">
-                            {item.qty} x {formatRupiah(item.harga)}
+                    <p className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
+                      {receiptTitle}
+                    </p>
+
+                    <div className="pt-1.5">
+                      <span className="block font-sans text-[9px] text-slate-400 uppercase tracking-wide">
+                        No. Referensi Transaksi
+                      </span>
+                      <span className="mt-0.5 inline-block rounded border border-slate-200 bg-slate-100 px-2.5 py-0.5 font-mono text-xs font-bold tracking-wide text-slate-900">
+                        {selectedTrxForReceipt.referensiId}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Informasi Transaksi */}
+                  <div className="space-y-1.5 pt-2.5 text-[11px]">
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="text-slate-400">Waktu:</span>
+                      <span className="font-semibold text-slate-800">
+                        {formatDateTime(selectedTrxForReceipt.waktu)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="text-slate-400">Siswa:</span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedTrxForReceipt.siswaNama} ({selectedTrxForReceipt.siswaKelas})
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="text-slate-400">Lokasi / Titik:</span>
+                      <span className="font-semibold text-slate-800">
+                        {titik}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="text-slate-400">Petugas:</span>
+                      <span className="font-semibold text-slate-800">
+                        {petugas}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="my-2.5 border-b border-dashed border-slate-300" />
+
+                  {/* Items Transaksi */}
+                  {selectedTrxForReceipt.items && selectedTrxForReceipt.items.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-bold uppercase text-slate-400">
+                        <span>Menu</span>
+                        <span>Subtotal</span>
+                      </div>
+                      {selectedTrxForReceipt.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-start text-xs">
+                          <div>
+                            <div className="font-bold text-slate-800">{item.nama}</div>
+                            <div className="text-[10px] text-slate-500">
+                              {item.qty} x {formatRupiah(item.harga)}
+                            </div>
+                          </div>
+                          <div className="font-bold text-slate-900 font-mono">
+                            {formatRupiah(item.subtotal)}
                           </div>
                         </div>
-                        <div className="font-bold text-slate-900 font-mono">
-                          {formatRupiah(item.subtotal)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-2 text-center text-xs text-slate-600 italic">
-                    {selectedTrxForReceipt.keterangan}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-xs text-slate-600 italic">
+                      {selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}
+                    </div>
+                  )}
 
-                <div className="my-2.5 border-b-2 border-slate-900" />
+                  <div className="my-2.5 border-b-2 border-slate-900" />
 
-                {/* Total & Saldo */}
-                <div className="space-y-1.5 pt-0.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                    <span>TOTAL BAYAR:</span>
-                    <span className="text-sm font-mono text-emerald-700">
-                      {formatRupiah(selectedTrxForReceipt.nominal)}
-                    </span>
+                  {/* Total & Saldo */}
+                  <div className="space-y-1.5 pt-0.5">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>{totalLabel}</span>
+                      <span className="text-sm font-mono text-emerald-700">
+                        {totalSign} {formatRupiah(selectedTrxForReceipt.nominal)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-600">
+                      <span className="flex items-center gap-1">
+                        <CreditCard className="h-3 w-3 text-slate-400" />
+                        Sisa Saldo Siswa:
+                      </span>
+                      <span className="font-bold font-mono text-slate-800">
+                        {formatRupiah(selectedTrxForReceipt.saldoSetelah)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-600">
-                    <span className="flex items-center gap-1">
-                      <CreditCard className="h-3 w-3 text-slate-400" />
-                      Sisa Saldo Siswa:
-                    </span>
-                    <span className="font-bold font-mono text-slate-800">
-                      {formatRupiah(selectedTrxForReceipt.saldoSetelah)}
-                    </span>
+
+                  {/* Footer Struk */}
+                  <div className="mt-3.5 space-y-1 border-t border-dashed border-slate-300 pt-3 text-center">
+                    <p className="font-sans text-[10px] text-slate-500 leading-tight">
+                      Simpan bukti ini sebagai bukti transaksi resmi kantin sekolah.
+                    </p>
+                    <p className="font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase pt-0.5">
+                      *** KANTIN SKOOLIA ***
+                    </p>
                   </div>
                 </div>
 
-                {/* Footer Struk */}
-                <div className="mt-3.5 space-y-1 border-t border-dashed border-slate-300 pt-3 text-center">
-                  <p className="font-sans text-[10px] text-slate-500 leading-tight">
-                    Simpan bukti ini sebagai bukti transaksi resmi kantin sekolah.
-                  </p>
-                  <p className="font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase pt-0.5">
-                    *** KANTIN SKOOLIA ***
-                  </p>
-                </div>
-              </div>
-
-              {/* Tombol Aksi */}
-              <div className="flex justify-end gap-2 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="h-8 gap-1.5 text-xs"
-                >
-                  <Link
-                    to="/laporan/riwayat-siswa"
-                    search={{ siswaId: selectedTrxForReceipt.siswaId }}
+                {/* Tombol Aksi */}
+                <div className="flex justify-end gap-2 pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-8 gap-1.5 text-xs"
                   >
-                    <User className="h-3.5 w-3.5" />
-                    <span>Lihat Profil Siswa</span>
-                  </Link>
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handlePrintReceipt}
-                  className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Cetak Struk</span>
-                </Button>
+                    <Link
+                      to="/laporan/riwayat-siswa"
+                      search={{ siswaId: selectedTrxForReceipt.siswaId }}
+                    >
+                      <User className="h-3.5 w-3.5" />
+                      <span>Lihat Profil Siswa</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handlePrintReceipt}
+                    className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Cetak Struk</span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </DialogContent>
       </Dialog>
     </>

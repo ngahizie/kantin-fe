@@ -1,19 +1,20 @@
 import apiClient from '@/lib/api-client'
-import type {
-  LaporanFilterParams,
-  RingkasanRekonsiliasi,
-  RingkasanPenjualan,
-  BarisPenjualanItem,
-  BarisPenjualanKategori,
-  BarisPenjualanKasir,
-  RingkasanSaldoMengendap,
-  SiswaSaldoDetail,
-  KartuTamuSaldoDetail,
-  ProfilSiswaRiwayat,
-  RiwayatBelanjaSiswaItem,
-  RiwayatTransaksiKeseluruhanItem,
-  BarisKerugianStok,
-  RingkasanKerugianStok,
+import {
+  type LaporanFilterParams,
+  type RingkasanRekonsiliasi,
+  type RingkasanPenjualan,
+  type BarisPenjualanItem,
+  type BarisPenjualanKategori,
+  type BarisPenjualanKasir,
+  type RingkasanSaldoMengendap,
+  type SiswaSaldoDetail,
+  type KartuTamuSaldoDetail,
+  type ProfilSiswaRiwayat,
+  type RiwayatBelanjaSiswaItem,
+  type RiwayatTransaksiKeseluruhanItem,
+  type BarisKerugianStok,
+  type RingkasanKerugianStok,
+  resolveTitikDanPetugas,
 } from '../types'
 import {
   getInitialStudents,
@@ -445,7 +446,20 @@ export const laporanApi = {
           riwayat: RiwayatBelanjaSiswaItem[]
         }>
       >(`/api/laporan/siswa/${siswaId}/riwayat`, { params })
-      if (res.data?.data) return res.data.data
+      if (res.data?.data) {
+        const raw = res.data.data
+        return {
+          ...raw,
+          riwayat: (raw.riwayat || []).map((r) => {
+            const { titik, petugas } = resolveTitikDanPetugas(r)
+            return {
+              ...r,
+              titikKasir: titik,
+              petugas,
+            }
+          }),
+        }
+      }
     } catch (err: unknown) {
       const is404 =
         (err as { response?: { status?: number } })?.response?.status === 404 ||
@@ -530,7 +544,14 @@ export const laporanApi = {
         { params, silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((r) => {
+          const { titik, petugas } = resolveTitikDanPetugas(r)
+          return {
+            ...r,
+            titikKasir: titik,
+            petugas,
+          }
+        })
       }
     } catch {
       // Fallback
