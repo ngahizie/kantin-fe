@@ -105,3 +105,18 @@ export interface ApiErrorResponse {
   kekurangan?: number
   code?: number
 }
+
+export interface InfoSaldoData {
+  tipe: 'SISWA' | 'KARTU_TAMU'
+  id?: number
+  nis?: string | null
+  nama: string
+  kelas?: string | null
+  fotoUrl?: string | null
+  saldo: number
+  nomorKartu?: string | null
+  labelPemegang?: string | null
+  status?: string | null
+  uid?: string | null
+}
+

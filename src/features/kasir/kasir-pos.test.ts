@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useCartStore } from '@/stores/useCartStore'
+import { kasirApi } from './api/kasir-api'
 import type { MenuItem } from '@/features/katalog/types'
 
 const mockMenus: MenuItem[] = [
@@ -175,3 +176,38 @@ describe('Integrasi Keranjang Kasir POS & Aturan Stok', () => {
     expect(useCartStore.getState().getItemQty(100)).toBe(2)
   })
 })
+
+describe('Fitur Cek Saldo Siswa & Kartu Tamu', () => {
+  it('berhasil menemukan data siswa dan sisa saldo berdasarkan RFID UID', async () => {
+    const res = await kasirApi.cekSaldo('04A1B2C3D4')
+    expect(res.tipe).toBe('SISWA')
+    expect(res.nama).toBe('Budi Santoso')
+    expect(res.nis).toBe('2026001')
+    expect(res.kelas).toBe('X IPA 1')
+    expect(res.saldo).toBeGreaterThanOrEqual(0)
+    expect(res.status).toBe('ACTIVE')
+  })
+
+  it('berhasil menemukan data siswa dan sisa saldo berdasarkan NIS', async () => {
+    const res = await kasirApi.cekSaldo('2026002')
+    expect(res.tipe).toBe('SISWA')
+    expect(res.nama).toBe('Siti Rahmawati')
+    expect(res.nis).toBe('2026002')
+    expect(res.kelas).toBe('XI IPS 2')
+    expect(res.saldo).toBeGreaterThanOrEqual(0)
+  })
+
+  it('berhasil menemukan data kartu tamu dan sisa saldo berdasarkan nomor kartu', async () => {
+    const res = await kasirApi.cekSaldo('KT-001')
+    expect(res.tipe).toBe('KARTU_TAMU')
+    expect(res.nomorKartu).toBe('KT-001')
+    expect(res.saldo).toBe(75000)
+  })
+
+  it('menolak pencarian dengan melempar error saat UID atau kartu tidak terdaftar', async () => {
+    await expect(kasirApi.cekSaldo('INVALID_UID_99999')).rejects.toThrow(
+      'Kartu atau siswa tidak ditemukan'
+    )
+  })
+})
+
