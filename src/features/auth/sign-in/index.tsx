@@ -1,10 +1,10 @@
-import { GraduationCap, Users, BookOpen, ShieldCheck } from 'lucide-react'
+import { UtensilsCrossed, Utensils, CreditCard, Sparkles, Store, Zap } from 'lucide-react'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn() {
   return (
     <div className='relative min-h-screen w-full flex bg-[#FDFCF8] dark:bg-[#050510] overflow-hidden'>
-      {/* SISI KIRI: CREATIVE (Mirip Landing Page Hero) */}
+      {/* SISI KIRI: CREATIVE (Hero Ilustrasi Kantin) */}
       <div className='relative hidden w-1/2 lg:flex flex-col justify-between overflow-hidden bg-[#FDFCF8] dark:bg-[#050510] has-border !border-r !border-slate-200/60 dark:!border-slate-800/60'>
         {/* Subtle Grid Background */}
         <div className='absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none' />
@@ -23,7 +23,7 @@ export function SignIn() {
         <div className='relative z-10 flex flex-col h-full w-full'>
           {/* Top Logo */}
           <div className='absolute top-8 left-8 z-50'>
-            <div className='inline-flex items-center space-x-2'>
+            <div className='inline-flex items-center space-x-2.5'>
               <img
                 src='/skoolia-gelap.png'
                 alt='Skoolia Logo'
@@ -34,6 +34,9 @@ export function SignIn() {
                 alt='Skoolia Logo'
                 className='h-8 w-auto object-contain hidden dark:block bg-black/60 backdrop-blur-md p-1.5 rounded-xl has-border !border !border-slate-800/60'
               />
+              <span className='px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 has-border !border !border-blue-600/20 dark:!border-blue-500/30'>
+                Kantin
+              </span>
             </div>
           </div>
 
@@ -49,101 +52,110 @@ export function SignIn() {
                     <div className='h-3 w-3 rounded-full bg-[#ffbd2e]' />
                     <div className='h-3 w-3 rounded-full bg-[#27c93f]' />
                   </div>
-                  <div className='ml-4 h-6 w-1/2 max-w-xs bg-white/50 dark:bg-slate-800/50 rounded-md mx-auto' />
+                  <div className='ml-4 h-7 px-3 bg-white/50 dark:bg-slate-800/50 rounded-lg mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs'>
+                    <Store className='w-3.5 h-3.5 text-blue-600 dark:text-blue-400' />
+                    <span>Kantin Sehat SKOOLIA • POS Kasir</span>
+                  </div>
                 </div>
 
                 {/* Window Body */}
                 <div className='flex-1 flex flex-col p-6 gap-5 bg-gradient-to-br from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10'>
                   {/* Title Mockup */}
                   <div className='flex items-center gap-4'>
-                    <div className='w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center'>
-                      <GraduationCap className='w-6 h-6 text-blue-600 dark:text-blue-400' />
+                    <div className='w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0'>
+                      <UtensilsCrossed className='w-6 h-6 text-amber-600 dark:text-amber-400' />
                     </div>
                     <div>
-                      <div className='h-4 w-32 bg-slate-300/80 dark:bg-slate-600/80 rounded-full mb-2' />
-                      <div className='h-3 w-20 bg-slate-200/80 dark:bg-slate-700/80 rounded-full' />
+                      <p className='text-sm font-bold text-slate-800 dark:text-white'>Operasional Kantin</p>
+                      <p className='text-xs text-slate-500 dark:text-slate-400'>Sistem POS & Kasir Digital</p>
                     </div>
                   </div>
 
                   {/* Cards Skeleton Row */}
                   <div className='flex gap-4'>
                     <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-white/50 dark:!border-slate-700/50 shadow-sm flex items-center px-4'>
-                      <div className='h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3'>
-                        <Users className='w-5 h-5 text-indigo-500' />
+                      <div className='h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3 shrink-0'>
+                        <CreditCard className='w-5 h-5 text-indigo-500' />
                       </div>
-                      <div className='flex-1'>
-                        <div className='h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full mb-2' />
-                        <div className='h-2.5 w-1/2 bg-slate-200 dark:bg-slate-700 rounded-full' />
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-xs font-bold text-slate-800 dark:text-white truncate'>1,250+ Transaksi</p>
+                        <p className='text-[10px] text-emerald-500 font-semibold truncate'>Non-Tunai / RFID Aktif</p>
                       </div>
                     </div>
                     <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-white/50 dark:!border-slate-700/50 shadow-sm flex items-center px-4'>
-                      <div className='h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mr-3'>
-                        <ShieldCheck className='w-5 h-5 text-emerald-500' />
+                      <div className='h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mr-3 shrink-0'>
+                        <Utensils className='w-5 h-5 text-emerald-500' />
                       </div>
-                      <div className='flex-1'>
-                        <div className='h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full mb-2' />
-                        <div className='h-2.5 w-1/2 bg-slate-200 dark:bg-slate-700 rounded-full' />
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-xs font-bold text-slate-800 dark:text-white truncate'>Menu Siap Saji</p>
+                        <p className='text-[10px] text-slate-500 font-medium truncate'>48 Pilihan Tersedia</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Chart Skeleton */}
-                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-white/50 dark:!border-slate-700/50 shadow-sm p-4 lg:p-6 flex items-end gap-3 xl:gap-4 overflow-hidden'>
-                    {[35, 55, 40, 80, 60, 100, 75].map((h, i) => (
-                      <div
-                        key={i}
-                        className='flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg transition-all duration-500 hover:from-blue-400 hover:to-cyan-300 hover:opacity-90'
-                        style={{ height: `${h}%` }}
-                      />
-                    ))}
+                  {/* Chart Section */}
+                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-white/50 dark:!border-slate-700/50 shadow-sm p-4 lg:p-5 flex flex-col justify-between overflow-hidden'>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-[11px] font-bold text-slate-600 dark:text-slate-400'>Aktivitas Transaksi Jam Istirahat</span>
+                      <span className='text-[10px] font-semibold text-emerald-500'>+96% Kecepatan Kasir</span>
+                    </div>
+                    <div className='flex items-end gap-3 xl:gap-4 h-20 pt-2'>
+                      {[35, 60, 45, 95, 75, 100, 80].map((h, i) => (
+                        <div
+                          key={i}
+                          className='flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg transition-all duration-500 hover:from-blue-400 hover:to-cyan-300 hover:opacity-90'
+                          style={{ height: `${h}%` }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Floating Element 1 - Notification */}
+              {/* Floating Element 1 - Transaksi Cepat RFID */}
               <div
                 className='absolute -top-[10%] p-4 -right-[15%] z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 flex items-center gap-4 animate-bounce'
                 style={{ animationDuration: '4s' }}
               >
                 <div className='w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0'>
-                  <ShieldCheck className='w-6 h-6 text-emerald-600 dark:text-emerald-400' />
+                  <Zap className='w-6 h-6 text-emerald-600 dark:text-emerald-400' />
                 </div>
                 <div>
-                  <p className='text-sm font-bold text-slate-800 dark:text-white'>Data Aman</p>
-                  <p className='text-xs text-slate-500 font-medium'>Auto-backup harian</p>
+                  <p className='text-sm font-bold text-slate-800 dark:text-white'>Transaksi Cepat</p>
+                  <p className='text-xs text-slate-500 font-medium'>Tap RFID &lt; 1 Detik</p>
                 </div>
               </div>
 
-              {/* Floating Element 2 - Users */}
+              {/* Floating Element 2 - Siswa Terlayani */}
               <div
                 className='absolute top-[45%] p-4 -left-[20%] z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 animate-bounce flex items-center gap-4'
                 style={{ animationDuration: '4.5s', animationDelay: '1s' }}
               >
                 <div className='w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-800'>
-                  <Users className='w-6 h-6 text-blue-600 dark:text-blue-400' />
+                  <UtensilsCrossed className='w-6 h-6 text-blue-600 dark:text-blue-400' />
                 </div>
                 <div>
-                  <p className='text-sm font-bold text-slate-800 dark:text-white'>1,500+ Siswa</p>
-                  <p className='text-xs text-emerald-500 font-semibold'>+85% aktif</p>
+                  <p className='text-sm font-bold text-slate-800 dark:text-white'>1,500+ Siswa Terlayani</p>
+                  <p className='text-xs text-emerald-500 font-semibold'>Layanan Bebas Antre</p>
                 </div>
               </div>
 
-              {/* Floating Element 3 - Activity */}
+              {/* Floating Element 3 - Menu Terlaris */}
               <div
                 className='absolute -bottom-[5%] p-4 -right-[10%] z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 animate-bounce'
                 style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}
               >
                 <div className='flex items-center gap-3 mb-2'>
-                  <div className='w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0'>
-                    <BookOpen className='w-4 h-4 text-indigo-600 dark:text-indigo-400' />
+                  <div className='w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0'>
+                    <Sparkles className='w-4 h-4 text-amber-600 dark:text-amber-400' />
                   </div>
                   <div>
-                    <p className='text-xs font-bold text-slate-800 dark:text-white'>Kelas Baru</p>
-                    <p className='text-[10px] text-slate-500 font-medium'>Tahun Ajaran 2026</p>
+                    <p className='text-xs font-bold text-slate-800 dark:text-white'>Menu Terlaris Hari Ini</p>
+                    <p className='text-[10px] text-slate-500 font-medium'>Stok Siap Saji Terpantau</p>
                   </div>
                 </div>
                 <div className='h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden'>
-                  <div className='h-full bg-indigo-500 w-[75%] rounded-full' />
+                  <div className='h-full bg-amber-500 w-[85%] rounded-full' />
                 </div>
               </div>
             </div>
@@ -155,7 +167,7 @@ export function SignIn() {
           {/* Bottom Footer */}
           <div className='absolute bottom-8 left-8 right-8 z-30 flex justify-center lg:justify-start'>
             <p className='text-sm text-slate-500 font-medium'>
-              &copy; {new Date().getFullYear()} Skoolia Inc. All rights reserved.
+              &copy; {new Date().getFullYear()} Kantin SKOOLIA. Sistem Manajemen & Kasir Sekolah.
             </p>
           </div>
         </div>
@@ -165,23 +177,26 @@ export function SignIn() {
       <div className='w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12'>
         <div className='mx-auto flex w-full max-w-[420px] flex-col justify-center space-y-8 animate-in fade-in slide-in-from-right-8 duration-700'>
           <div className='flex flex-col space-y-2 text-center lg:text-left'>
-            <div className='lg:hidden mx-auto mb-6 inline-flex'>
+            <div className='lg:hidden mx-auto mb-6 inline-flex items-center space-x-2.5'>
               <img
                 src='/skoolia-gelap.png'
                 alt='Skoolia Logo'
-                className='h-12 w-auto object-contain dark:hidden'
+                className='h-10 w-auto object-contain dark:hidden'
               />
               <img
                 src='/skoolia-terang.png'
                 alt='Skoolia Logo'
-                className='h-12 w-auto object-contain hidden dark:block'
+                className='h-10 w-auto object-contain hidden dark:block'
               />
+              <span className='px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-600/20 dark:border-blue-500/30'>
+                Kantin
+              </span>
             </div>
             <h1 className='text-3xl font-black tracking-tight text-slate-800 dark:text-white'>
               Selamat Datang!
             </h1>
             <p className='text-gray-500 dark:text-slate-400 font-medium text-base'>
-              Masuk ke akun Anda untuk melanjutkan.
+              Masuk ke sistem operasional & kasir kantin.
             </p>
           </div>
 
