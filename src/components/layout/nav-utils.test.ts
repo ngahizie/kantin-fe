@@ -91,7 +91,7 @@ describe('filterNavGroupsByRole', () => {
 
     const tuGroup = result.find((g) => g.title === 'Layanan TU & Kartu')
     const tuItems = tuGroup?.items.map((i) => i.title)
-    expect(tuItems).toContain('Isi Saldo Tunai Siswa')
+    expect(tuItems).toContain('Isi Saldo Siswa')
     expect(tuItems).toContain('Setoran Kas TU Harian')
     expect(tuItems).toContain('Kartu Tamu')
 

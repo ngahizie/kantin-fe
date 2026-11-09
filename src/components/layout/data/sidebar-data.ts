@@ -99,7 +99,7 @@ export const sidebarData: SidebarData = {
       roles: ['tu', 'bendahara'],
       items: [
         {
-          title: 'Isi Saldo Tunai Siswa',
+          title: 'Isi Saldo Siswa',
           url: '/tu/topup',
           icon: Banknote,
           roles: ['tu'],
