@@ -223,10 +223,10 @@ function KonfirmasiSetoranFormContent({
         <div className='flex items-center justify-between rounded-md border bg-background p-2.5'>
           <div>
             <span className='text-xs font-medium text-muted-foreground'>
-              Total Penerimaan (Sistem)
+              Total Catatan Penerimaan (Sistem)
             </span>
             <p className='text-xs text-muted-foreground'>
-              Wajib dicocokkan dengan uang fisik
+              Cocokkan dengan uang tunai yang diterima
             </p>
           </div>
           <span className='font-mono text-lg font-bold text-primary'>
@@ -239,7 +239,7 @@ function KonfirmasiSetoranFormContent({
       <div className='space-y-2'>
         <div className='flex items-center justify-between'>
           <Label htmlFor={uangFisikInputId} className='text-sm font-semibold'>
-            Total Uang Fisik Diterima{' '}
+            Jumlah Uang Tunai Diterima{' '}
             <span className='text-destructive'>*</span>
           </Label>
           <Button
@@ -251,8 +251,8 @@ function KonfirmasiSetoranFormContent({
           >
             <Calculator className='h-3.5 w-3.5' />
             {showCalculator
-              ? 'Sembunyikan Hitung Pecahan'
-              : 'Kalkulator Pecahan'}
+              ? 'Tutup Hitung Lembar'
+              : 'Hitung Lembar Uang'}
           </Button>
         </div>
 
@@ -322,35 +322,35 @@ function KonfirmasiSetoranFormContent({
       <div className='space-y-2 rounded-xl border border-border p-3.5'>
         <div className='flex items-center justify-between'>
           <span className='text-xs font-semibold text-muted-foreground'>
-            Status Selisih Kas Fisik:
+            Kesesuaian Uang Kas:
           </span>
           {selisih === 0 ? (
             <Badge
               className='gap-1 border-0 bg-emerald-500/15 text-xs font-medium text-emerald-700 dark:text-emerald-400'
             >
               <CheckCircle2 className='h-3.5 w-3.5' />
-              Kas Fisik Pas (Rp 0)
+              Jumlah Uang Pas (Cocok)
             </Badge>
           ) : selisih < 0 ? (
             <Badge
               className='gap-1 border-0 bg-destructive/15 text-xs font-medium text-destructive'
             >
               <AlertTriangle className='h-3.5 w-3.5' />
-              Defisit Kas Fisik (-{formatRupiah(Math.abs(selisih))})
+              Uang Kurang (-{formatRupiah(Math.abs(selisih))})
             </Badge>
           ) : (
             <Badge
               className='gap-1 border-0 bg-blue-500/15 text-xs font-medium text-blue-700 dark:text-blue-400'
             >
               <Info className='h-3.5 w-3.5' />
-              Surplus Kas Fisik (+{formatRupiah(selisih)})
+              Uang Lebih (+{formatRupiah(selisih)})
             </Badge>
           )}
         </div>
 
         <div className='flex items-center justify-between border-t border-border pt-1 text-xs'>
           <span className='text-muted-foreground'>
-            Total Sistem: {formatRupiah(totalSistem)}
+            Catatan Sistem: {formatRupiah(totalSistem)}
           </span>
           <span className='font-mono text-muted-foreground'>
             Selisih: {selisih >= 0 ? '+' : ''}{formatRupiah(selisih)}
@@ -366,19 +366,19 @@ function KonfirmasiSetoranFormContent({
         >
           <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
           <AlertTitle className='text-xs font-semibold'>
-            Perhatian: Terdapat Selisih Kas Fisik
+            Perhatian: Terdapat Selisih Uang
           </AlertTitle>
           <AlertDescription className='mt-1 text-xs'>
-            Selisih kas fisik <strong>wajib dicatat</strong>{' '}
+            Selisih uang kas <strong>wajib dicatat</strong>{' '}
             dan tidak boleh dihapus atau ditutupi. Mohon tuliskan alasan atau
-            Berita Acara penyebab selisih di bawah ini.
+            keterangan penyebab selisih di bawah ini.
           </AlertDescription>
         </Alert>
       ) : (
         <Alert className='border-0 bg-emerald-500/15 py-2 text-emerald-900 dark:text-emerald-300'>
           <ShieldCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
           <AlertDescription className='text-xs'>
-            Total uang fisik sesuai 100% dengan rekapitulasi sistem penerimaan
+            Jumlah uang tunai telah sesuai 100% dengan catatan penerimaan
             TU.
           </AlertDescription>
         </Alert>
@@ -387,7 +387,7 @@ function KonfirmasiSetoranFormContent({
       {/* Field Catatan / Berita Acara */}
       <div className='space-y-1.5'>
         <Label htmlFor={catatanInputId} className='text-xs font-semibold'>
-          Catatan / Berita Acara Konfirmasi{' '}
+          Catatan Penyerahan Kas{' '}
           {hasSelisih ? (
             <span className='text-destructive'>
               * (Wajib diisi karena ada selisih)
@@ -405,7 +405,7 @@ function KonfirmasiSetoranFormContent({
           onChange={(e) => setCatatan(e.target.value)}
           placeholder={
             hasSelisih
-              ? 'Contoh: Kurang Rp2.000 karena selisih kembalian koin fisik saat jam istirahat'
+              ? 'Contoh: Kurang Rp2.000 karena selisih kembalian koin saat jam istirahat'
               : 'Catatan tambahan penerimaan setoran kas (opsional)'
           }
           className='resize-none text-xs'
@@ -429,7 +429,7 @@ function KonfirmasiSetoranFormContent({
           className='gap-1.5 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
         >
           <CheckCircle2 className='h-4 w-4' />
-          {isSubmitting ? 'Menyimpan...' : 'Konfirmasi & Catat Setoran'}
+          {isSubmitting ? 'Menyimpan...' : 'Simpan & Terima Setoran'}
         </Button>
       </DialogFooter>
     </form>

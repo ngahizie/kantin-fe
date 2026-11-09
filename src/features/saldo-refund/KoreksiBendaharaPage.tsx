@@ -372,7 +372,7 @@ export function KoreksiBendaharaPage() {
         <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Mutasi Koreksi Bendahara
+              Penyesuaian Saldo Bendahara
             </h1>
           </div>
           <div className='flex items-center gap-2'>
@@ -395,7 +395,7 @@ export function KoreksiBendaharaPage() {
                 className='gap-1.5 text-xs'
               >
                 <Plus className='h-4 w-4' />
-                Buat Koreksi Saldo
+                Buat Penyesuaian Saldo
               </Button>
             )}
           </div>
@@ -406,13 +406,13 @@ export function KoreksiBendaharaPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Total Mutasi Koreksi Audit
+                Total Catatan Penyesuaian
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                 {koreksiList.length} Mutasi
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
-                Tercatat rapi di append-only ledger
+                Tercatat rapi dan aman di buku besar
               </p>
             </CardContent>
           </Card>
@@ -420,13 +420,13 @@ export function KoreksiBendaharaPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Total Pembalik Kredit (+Saldo)
+                Penambahan Saldo (+)
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
                 {formatRupiah(totalKoreksiKredit)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
-                Pengembalian dana sesi tertutup
+                Pengembalian saldo akibat salah potong kasir
               </p>
             </CardContent>
           </Card>
@@ -434,13 +434,13 @@ export function KoreksiBendaharaPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Total Pembalik Debit (-Saldo)
+                Pengurangan Saldo (-)
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-destructive'>
                 {formatRupiah(totalKoreksiDebit)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
-                Pembatalan kelebihan top-up TU
+                Koreksi kelebihan pengisian saldo TU
               </p>
             </CardContent>
           </Card>
@@ -448,13 +448,13 @@ export function KoreksiBendaharaPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Transaksi Lampau Dibalik
+                Transaksi Selesai Disesuaikan
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                 {totalTransaksiTerkoreksi} Transaksi
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
-                Dari sesi kasir yang telah ditutup
+                Dari transaksi kasir yang telah ditutup
               </p>
             </CardContent>
           </Card>
@@ -469,12 +469,12 @@ export function KoreksiBendaharaPage() {
           <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-md grid-cols-2'}`}>
             <TabsTrigger value='riwayat' className='gap-2 text-xs'>
               <History className='h-3.5 w-3.5' />
-              Log Mutasi Koreksi ({filteredKoreksi.length})
+              Riwayat Penyesuaian Saldo ({filteredKoreksi.length})
             </TabsTrigger>
             {!isKepsek && (
               <TabsTrigger value='transaksi-lampau' className='gap-2 text-xs'>
                 <ReceiptText className='h-3.5 w-3.5' />
-                Lookup Sesi Kasir Selesai ({filteredTransaksi.length})
+                Cari Transaksi Kasir Terdahulu ({filteredTransaksi.length})
               </TabsTrigger>
             )}
           </TabsList>
@@ -518,8 +518,8 @@ export function KoreksiBendaharaPage() {
                 {
                   title: 'Arah Mutasi',
                   options: [
-                    { label: 'DEBIT (-Saldo)', value: 'DEBIT' },
-                    { label: 'KREDIT (+Saldo)', value: 'KREDIT' },
+                    { label: 'Kurangi Saldo Siswa (-)', value: 'DEBIT' },
+                    { label: 'Tambah Saldo Siswa (+)', value: 'KREDIT' },
                   ],
                   selectedValues: arahFilter !== 'ALL' ? [arahFilter] : [],
                   onSelect: (vals) => setArahFilter(vals[0] || 'ALL'),
@@ -540,10 +540,10 @@ export function KoreksiBendaharaPage() {
                 <div className='flex items-center justify-between'>
                   <div>
                     <CardTitle className='text-base font-semibold'>
-                      Jejak Audit Mutasi Koreksi Saldo
+                      Riwayat Resmi Penyesuaian Saldo
                     </CardTitle>
                     <CardDescription className='mt-0.5 text-xs'>
-                      Rekaman riwayat penyesuaian saldo resmi yang diaudit oleh Bendahara Sekolah
+                      Daftar penyesuaian saldo resmi yang diperiksa dan disetujui oleh Bendahara Sekolah
                     </CardDescription>
                   </div>
                   <Badge variant='secondary' className='border-0 font-mono text-xs'>

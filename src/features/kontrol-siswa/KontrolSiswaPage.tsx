@@ -166,7 +166,7 @@ export function KontrolSiswaPage() {
         {/* Title Header */}
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Kontrol Siswa atas Nama Orang Tua
+            Batasan Jajan Siswa & Perwalian
           </h1>
         </div>
 
@@ -189,7 +189,7 @@ export function KontrolSiswaPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Ortu Belum Pakai App
+                Orang Tua Belum Pasang Aplikasi
               </CardDescription>
               <CardTitle className='text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 flex items-center gap-2'>
                 <PhoneOff className='h-5 w-5 text-amber-600 dark:text-amber-400' />
@@ -197,14 +197,14 @@ export function KontrolSiswaPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Fokus perwalian kontrol admin sekolah
+              Bantuan pengaturan dari pihak sekolah
             </CardContent>
           </Card>
 
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Limit Belanja Aktif
+                Batas Jajan Harian Aktif
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-primary flex items-center gap-2'>
                 <DollarSign className='h-5 w-5 text-primary' />
@@ -212,14 +212,14 @@ export function KontrolSiswaPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Maksimal nominal belanja harian
+              Membatasi belanja harian siswa di kantin
             </CardContent>
           </Card>
 
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Larangan Menu Aktif
+                Pantangan Makanan Aktif
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-destructive flex items-center gap-2'>
                 <UtensilsCrossed className='h-5 w-5 text-destructive' />
@@ -227,7 +227,7 @@ export function KontrolSiswaPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Blokir kategori atau menu spesifik
+              Pencegahan alergi atau pantangan jajanan
             </CardContent>
           </Card>
         </div>
@@ -241,8 +241,8 @@ export function KontrolSiswaPage() {
             {
               title: 'Akun Ortu',
               options: [
-                { label: 'Belum Pakai App', value: 'NON_APP' },
-                { label: 'Sudah Pakai App', value: 'APP' },
+                { label: 'Belum Pasang Aplikasi', value: 'NON_APP' },
+                { label: 'Sudah Pasang Aplikasi', value: 'APP' },
               ],
               selectedValues: appFilter !== 'ALL' ? [appFilter] : [],
               onSelect: (vals) => setAppFilter(vals[0] || 'ALL'),
@@ -251,9 +251,9 @@ export function KontrolSiswaPage() {
             {
               title: 'Pembatasan',
               options: [
-                { label: 'Ada Limit Harian', value: 'WITH_LIMIT' },
-                { label: 'Tanpa Limit Harian', value: 'NO_LIMIT' },
-                { label: 'Ada Blokir Menu', value: 'WITH_BLOCK' },
+                { label: 'Dibatasi Nominal Harian', value: 'WITH_LIMIT' },
+                { label: 'Tanpa Batasan Nominal', value: 'NO_LIMIT' },
+                { label: 'Ada Pantangan Makanan', value: 'WITH_BLOCK' },
               ],
               selectedValues: limitFilter !== 'ALL' ? [limitFilter] : [],
               onSelect: (vals) => setLimitFilter(vals[0] || 'ALL'),
@@ -276,11 +276,11 @@ export function KontrolSiswaPage() {
                 <TableHeader>
                   <TableRow className='bg-muted/50 text-xs'>
                     <TableHead className='w-[240px]'>Data Siswa</TableHead>
-                    <TableHead>Status Aplikasi Ortu</TableHead>
-                    <TableHead>Batas Limit Harian</TableHead>
-                    <TableHead>Larangan Menu / Kategori</TableHead>
-                    <TableHead>Saldo Digital</TableHead>
-                    <TableHead className='text-right w-[160px]'>Aksi Kontrol</TableHead>
+                    <TableHead>Aplikasi Orang Tua</TableHead>
+                    <TableHead>Batas Jajan per Hari</TableHead>
+                    <TableHead>Pantangan Makanan</TableHead>
+                    <TableHead>Saldo Kartu</TableHead>
+                    <TableHead className='text-right w-[160px]'>Pengaturan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

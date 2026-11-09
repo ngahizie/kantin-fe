@@ -87,7 +87,7 @@ export function StudentSearchCard({
         setRfidFeedback(
           `RFID UID "${targetUid}" adalah ${noKartu}${
             pemegang ? ` (${pemegang})` : ''
-          }. Halaman ini khusus untuk Siswa. Top-up kartu tamu dapat dilakukan di menu Manajemen Kartu Tamu.`
+          }. Halaman ini khusus untuk Siswa. Isi saldo kartu tamu dapat dilakukan di menu Kartu Tamu.`
         )
         return
       }
@@ -97,7 +97,7 @@ export function StudentSearchCard({
       )
       if (foundMockKt) {
         setRfidFeedback(
-          `RFID UID "${targetUid}" adalah Kartu Tamu ${foundMockKt.nomor_kartu}. Halaman ini khusus untuk Siswa. Top-up kartu tamu dapat dilakukan di menu Manajemen Kartu Tamu.`
+          `RFID UID "${targetUid}" adalah Kartu Tamu ${foundMockKt.nomor_kartu}. Halaman ini khusus untuk Siswa. Isi saldo kartu tamu dapat dilakukan di menu Kartu Tamu.`
         )
         return
       }
@@ -115,14 +115,14 @@ export function StudentSearchCard({
               Pencarian Data Siswa
             </CardTitle>
             <CardDescription className='text-xs'>
-              Cari berdasarkan NIS, Nama Siswa, atau Tap Kartu RFID reader TU
+              Cari berdasarkan NIS, Nama Siswa, atau tempelkan kartu RFID
             </CardDescription>
           </div>
           <Badge
             className='flex items-center gap-1.5 border-0 bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-400'
           >
             <Radio className='h-3 w-3 animate-pulse text-blue-600 dark:text-blue-400' />
-            RFID Reader Aktif
+            Alat Pemindai Siap
           </Badge>
         </div>
       </CardHeader>
@@ -130,7 +130,7 @@ export function StudentSearchCard({
         {/* Autocomplete Input Search */}
         <div className='space-y-2'>
           <label className='text-xs font-medium tracking-wider text-muted-foreground uppercase'>
-            Autokomplit NIS / Nama Siswa
+            Pencarian Cepat Siswa
           </label>
           <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
             <PopoverTrigger asChild>
@@ -217,11 +217,11 @@ export function StudentSearchCard({
         {/* Input Scan RFID Reader TU */}
         <div className='space-y-2 rounded-xl border-0 bg-muted/50 p-3.5 dark:bg-muted/20'>
           <label className='text-xs font-medium text-foreground'>
-            Scan atau Input UID Kartu RFID (Reader TU)
+            Tempel Kartu atau Ketik Nomor Kartu RFID
           </label>
           <div className='flex gap-2 pt-1'>
             <Input
-              placeholder='Tempelkan kartu ke reader atau ketik UID...'
+              placeholder='Tempelkan kartu ke reader atau ketik nomor kartu...'
               value={rfidInput}
               onChange={(e) => setRfidInput(e.target.value)}
               className='h-9 bg-background font-mono text-xs'
@@ -305,7 +305,7 @@ export function StudentSearchCard({
                     </span>
                   </div>
                   <div>
-                    <span className='text-muted-foreground'>Limit Harian:</span>{' '}
+                    <span className='text-muted-foreground'>Batas Jajan Harian:</span>{' '}
                     <span className='font-medium text-foreground'>
                       {formatRupiah(selectedStudent.limit_harian)}
                     </span>
@@ -329,7 +329,7 @@ export function StudentSearchCard({
               Belum ada siswa terpilih
             </p>
             <p className='mt-1 text-xs text-muted-foreground/70'>
-              Gunakan autokomplit NIS/Nama atau masukkan UID Kartu RFID di atas
+              Cari nama/NIS siswa atau tempelkan kartu RFID di atas
             </p>
           </div>
         )}

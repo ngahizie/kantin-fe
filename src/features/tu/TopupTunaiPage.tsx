@@ -221,7 +221,7 @@ export function TopupTunaiPage() {
         })
 
         toast.success(
-          `Top-up ${formatRupiah(nominalNum)} berhasil!`,
+          `Isi saldo ${formatRupiah(nominalNum)} berhasil!`,
           {
             description: `Saldo baru ${currentStudent.nama}: ${formatRupiah(result.saldo_baru)}`,
           }
@@ -252,8 +252,8 @@ export function TopupTunaiPage() {
       }
       const message =
         errorResponse?.response?.data?.message ||
-        'Gagal melakukan top-up tunai.'
-      toast.error('Top-up Gagal', { description: message })
+        'Gagal mengisi saldo tunai.'
+      toast.error('Pengisian Saldo Gagal', { description: message })
     } finally {
       setIsSubmitting(false)
     }
@@ -331,8 +331,7 @@ export function TopupTunaiPage() {
                   Form Pengisian Saldo Tunai
                 </CardTitle>
                 <CardDescription className='text-xs'>
-                  Pilih nominal preset atau masukkan jumlah tunai yang
-                  disetorkan
+                  Pilih nominal cepat atau masukkan jumlah uang yang disetorkan
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-6'>
@@ -340,7 +339,7 @@ export function TopupTunaiPage() {
                   {/* Preset Nominal Buttons */}
                   <div className='space-y-2'>
                     <Label className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
-                      Pilihan Nominal Preset
+                      Pilihan Cepat Nominal
                     </Label>
                     <div className='grid grid-cols-2 gap-2.5 sm:grid-cols-4'>
                       {PRESET_NOMINALS.map((preset) => (
@@ -369,7 +368,7 @@ export function TopupTunaiPage() {
                       htmlFor='nominal-input'
                       className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'
                     >
-                      Input Nominal Bebas (Rp)
+                      Jumlah Saldo yang Diisi (Rp)
                     </Label>
                     <div className='relative'>
                       <span className='absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-bold text-muted-foreground'>
@@ -393,7 +392,7 @@ export function TopupTunaiPage() {
                       htmlFor='penyetor-input'
                       className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'
                     >
-                      Nama Penyetor (Orang Tua / Wali / Siswa)
+                      Nama Penyerah Uang (Orang Tua / Wali / Siswa)
                     </Label>
                     <Input
                       id='penyetor-input'
@@ -411,23 +410,23 @@ export function TopupTunaiPage() {
                     <div className='space-y-3 pt-2'>
                       <div className='space-y-3 rounded-xl border-0 bg-muted/50 p-4 dark:bg-muted/20'>
                         <h4 className='text-xs font-bold tracking-wider text-muted-foreground uppercase'>
-                          Kalkulasi Transaksi
+                          Ringkasan Perubahan Saldo
                         </h4>
                         <div className='space-y-2 text-sm'>
                           <div className='flex justify-between text-muted-foreground'>
-                            <span>Saldo Siswa saat ini:</span>
+                            <span>Saldo saat ini:</span>
                             <span className='font-mono font-medium text-foreground'>
                               {formatRupiah(saldoSaatIni)}
                             </span>
                           </div>
                           <div className='flex justify-between font-medium text-emerald-600 dark:text-emerald-400'>
-                            <span>Nominal Top-up (+):</span>
+                            <span>Jumlah Isi Saldo (+):</span>
                             <span className='font-mono font-bold'>
                               {formatRupiah(nominalNum)}
                             </span>
                           </div>
                           <div className='flex justify-between border-t border-border pt-2 text-base font-bold text-foreground'>
-                            <span>Estimasi Saldo Baru:</span>
+                            <span>Total Saldo Menjadi:</span>
                             <span
                               className={`font-mono font-bold ${
                                 isExceedingLimit
@@ -461,7 +460,7 @@ export function TopupTunaiPage() {
                             <strong>
                               {formatRupiah(MAX_SALDO_SEKOLAH)}
                             </strong>
-                            . Kurangi nominal top-up.
+                            . Kurangi jumlah pengisian saldo.
                           </AlertDescription>
                         </Alert>
                       )}
@@ -493,12 +492,12 @@ export function TopupTunaiPage() {
                     {isSubmitting ? (
                       <>
                         <RefreshCw className='h-4 w-4 animate-spin' />
-                        Memproses Top-up...
+                        Menyimpan Transaksi...
                       </>
                     ) : (
                       <>
                         <CheckCircle2 className='h-4 w-4' />
-                        Proses Top-up Tunai & Terbitkan Slip
+                        Simpan & Cetak Bukti Penerimaan
                         <ArrowRight className='ml-auto h-4 w-4' />
                       </>
                     )}

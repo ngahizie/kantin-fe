@@ -57,7 +57,7 @@ type ModalType =
 
 const STATUS_CONFIG = {
   ACTIVE: {
-    label: 'Aktif',
+    label: 'Sedang Dipinjam',
     className:
       'border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20',
     icon: ShieldCheck,
@@ -69,7 +69,7 @@ const STATUS_CONFIG = {
     icon: ShieldAlert,
   },
   AVAILABLE: {
-    label: 'Tersedia',
+    label: 'Siap Dipinjam',
     className:
       'border-0 bg-muted text-muted-foreground hover:bg-muted/80',
     icon: PackageOpen,
@@ -264,13 +264,13 @@ export function KartuTamuPage() {
             <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
-                  Kartu Aktif Beredar
+                  Kartu Sedang Dipinjam
                 </p>
                 <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                   {totalAktif} Kartu
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
-                  Dapat digunakan bertransaksi di POS
+                  Dapat digunakan jajan di kantin
                 </p>
               </CardContent>
             </Card>
@@ -278,13 +278,13 @@ export function KartuTamuPage() {
             <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
-                  Total Saldo Mengendap
+                  Total Saldo Tamu
                 </p>
                 <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                   {formatRupiah(totalSaldo)}
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
-                  Akumulasi saldo tamu aktif
+                  Total saldo pada kartu yang beredar
                 </p>
               </CardContent>
             </Card>
@@ -298,7 +298,7 @@ export function KartuTamuPage() {
                   {totalDiblokir} Kartu
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
-                  Hilang / dinonaktifkan di sistem
+                  Kartu hilang atau dihentikan sementara
                 </p>
               </CardContent>
             </Card>
@@ -306,13 +306,13 @@ export function KartuTamuPage() {
             <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
               <CardContent className='p-4'>
                 <p className='text-xs font-medium text-muted-foreground'>
-                  Kartu Tersedia
+                  Kartu Siap Dipinjam
                 </p>
                 <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                   {totalTersedia} Kartu
                 </h3>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
-                  Siap diterbitkan & dipinjamkan
+                  Tersimpan rapi & siap digunakan tamu
                 </p>
               </CardContent>
             </Card>
@@ -330,8 +330,8 @@ export function KartuTamuPage() {
                   {
                     title: 'Status',
                     options: [
-                      { label: 'Aktif', value: 'ACTIVE' },
-                      { label: 'Tersedia', value: 'AVAILABLE' },
+                      { label: 'Sedang Dipinjam', value: 'ACTIVE' },
+                      { label: 'Siap Dipinjam', value: 'AVAILABLE' },
                       { label: 'Diblokir', value: 'BLOCKED' },
                     ],
                     selectedValues: statusFilter,
@@ -350,7 +350,7 @@ export function KartuTamuPage() {
                   className='h-8 gap-1.5 text-xs'
                 >
                   <Plus className='size-4' />
-                  Daftarkan Kartu Baru
+                  Pindai & Daftarkan Kartu Baru
                 </Button>
               </TableToolbar>
             </div>
@@ -509,7 +509,7 @@ export function KartuTamuPage() {
                                         <Wallet className='h-4 w-4' />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Top-up Saldo</TooltipContent>
+                                    <TooltipContent>Isi Saldo</TooltipContent>
                                   </Tooltip>
 
                                   {/* Refund / Return */}
@@ -525,7 +525,7 @@ export function KartuTamuPage() {
                                         <ArrowLeftRight className='h-4 w-4' />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Kembalikan Kartu & Refund</TooltipContent>
+                                    <TooltipContent>Pengembalian Kartu & Tarik Saldo</TooltipContent>
                                   </Tooltip>
                                 </>
                               )}
@@ -543,7 +543,7 @@ export function KartuTamuPage() {
                                       <ShieldCheck className='h-4 w-4' />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Buka Blokir Kartu (Aktifkan Kembali)</TooltipContent>
+                                  <TooltipContent>Buka Blokir Kartu</TooltipContent>
                                 </Tooltip>
                               ) : (
                                 <Tooltip>

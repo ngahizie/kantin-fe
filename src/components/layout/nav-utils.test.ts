@@ -21,9 +21,9 @@ describe('filterNavGroupsByRole', () => {
     const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
     expect(ringkasanGroup?.items.map((i) => i.title)).toEqual(['Dashboard Ringkasan'])
 
-    // Saldo & Pengawasan: Hanya Kontrol Siswa (Koreksi dan Refund adalah milik Bendahara)
+    // Saldo & Pengawasan: Hanya Batasan Jajan Siswa (Koreksi dan Refund adalah milik Bendahara)
     const saldoGroup = result.find((g) => g.title === 'Saldo & Pengawasan')
-    expect(saldoGroup?.items.map((i) => i.title)).toEqual(['Kontrol Siswa'])
+    expect(saldoGroup?.items.map((i) => i.title)).toEqual(['Batasan Jajan Siswa'])
 
     // Laporan & Pengaturan: Pengaturan Kantin dan laporan yang diizinkan (tanpa Kerugian Stok)
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
@@ -91,9 +91,9 @@ describe('filterNavGroupsByRole', () => {
 
     const tuGroup = result.find((g) => g.title === 'Layanan TU & Kartu')
     const tuItems = tuGroup?.items.map((i) => i.title)
-    expect(tuItems).toContain('Top-up Tunai Siswa')
+    expect(tuItems).toContain('Isi Saldo Tunai Siswa')
     expect(tuItems).toContain('Setoran Kas TU Harian')
-    expect(tuItems).toContain('Manajemen Kartu Tamu')
+    expect(tuItems).toContain('Kartu Tamu')
 
     // TU tidak boleh melihat Kasir POS, inventaris, saldo koreksi
     const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
@@ -128,12 +128,12 @@ describe('filterNavGroupsByRole', () => {
     expect(katalogItemTitles).not.toContain('Katalog Menu')
     expect(katalogItemTitles).not.toContain('Kategori Menu')
 
-    // Pada Saldo & Pengawasan: Koreksi & Refund tampil, Kontrol Siswa tersembunyi
+    // Pada Saldo & Pengawasan: Koreksi & Refund tampil, Batasan Jajan Siswa tersembunyi
     const saldoGroup = result.find((g) => g.title === 'Saldo & Pengawasan')
     const saldoItemTitles = saldoGroup?.items.map((i) => i.title)
-    expect(saldoItemTitles).toContain('Mutasi Koreksi Bendahara')
-    expect(saldoItemTitles).toContain('Refund Saldo Siswa')
-    expect(saldoItemTitles).not.toContain('Kontrol Siswa')
+    expect(saldoItemTitles).toContain('Penyesuaian Saldo Bendahara')
+    expect(saldoItemTitles).toContain('Pengembalian Saldo Siswa')
+    expect(saldoItemTitles).not.toContain('Batasan Jajan Siswa')
 
     // Pengaturan Kantin tersembunyi
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
@@ -150,12 +150,12 @@ describe('filterNavGroupsByRole', () => {
       'Laporan & Pengaturan',
     ])
 
-    // Kepsek tidak melihat Kasir POS, Inventaris, Layanan TU, Kontrol Siswa, atau Pengaturan
+    // Kepsek tidak melihat Kasir POS, Inventaris, Layanan TU, Batasan Jajan Siswa, atau Pengaturan
     expect(groupTitles).not.toContain('Katalog & Inventaris')
     expect(groupTitles).not.toContain('Layanan TU & Kartu')
 
     const saldoGroup = result.find((g) => g.title === 'Saldo & Pengawasan')
-    expect(saldoGroup?.items.map((i) => i.title)).not.toContain('Kontrol Siswa')
+    expect(saldoGroup?.items.map((i) => i.title)).not.toContain('Batasan Jajan Siswa')
 
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
