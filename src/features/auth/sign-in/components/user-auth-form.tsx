@@ -149,7 +149,7 @@ export function UserAuthForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className={cn('grid gap-3', className)}
+          className={cn('grid gap-4', className)}
           {...props}
         >
           <FormField
@@ -157,13 +157,13 @@ export function UserAuthForm({
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs font-medium text-slate-700 dark:text-slate-300'>Username</FormLabel>
+                <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Username</FormLabel>
                 <FormControl>
                   <Input
                     placeholder='Masukkan username'
                     autoComplete='username'
                     disabled={isLoading}
-                    className='!border !border-slate-200 dark:!border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='h-11 rounded-xl !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -177,13 +177,21 @@ export function UserAuthForm({
             name='password'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs font-medium text-slate-700 dark:text-slate-300'>Password</FormLabel>
+                <div className='flex items-center justify-between'>
+                  <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Password</FormLabel>
+                  <span
+                    onClick={() => toast.info('Silakan hubungi administrator untuk pemulihan kata sandi')}
+                    className='text-xs font-medium text-slate-400 hover:text-blue-500 cursor-pointer transition-colors'
+                  >
+                    Lupa Password?
+                  </span>
+                </div>
                 <FormControl>
                   <PasswordInput
                     placeholder='Masukkan password'
                     autoComplete='current-password'
                     disabled={isLoading}
-                    className='!border !border-slate-200 dark:!border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='h-11 rounded-xl !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -193,10 +201,10 @@ export function UserAuthForm({
           />
 
           <Button
-            className='mt-3 w-full h-11 text-sm font-bold !bg-blue-500 hover:!bg-blue-600 !text-white shadow-lg shadow-blue-500/25 dark:shadow-none rounded-xl transition-all cursor-pointer'
+            className='mt-2 w-full h-12 text-base font-bold !bg-blue-600 hover:!bg-blue-500 !text-white shadow-lg shadow-blue-500/25 dark:shadow-none rounded-[32px] transition-all hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2'
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
+            {isLoading ? <Loader2 className='animate-spin' /> : <LogIn className='size-5' />}
             Masuk
           </Button>
         </form>
