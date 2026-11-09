@@ -83,11 +83,11 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '3',
-        pos: 'Refund Saldo Siswa & Tamu',
+        pos: 'Pengembalian Saldo Siswa (Refund)',
         kategori: 'KELUAR',
         arah: 'DEBIT',
         nominal: data.refund,
-        keterangan: 'Pengembalian saldo siswa lulus/pindah & pengembalian kartu tamu',
+        keterangan: 'Pengembalian sisa saldo bagi siswa yang lulus atau pindah sekolah',
       },
       {
         id: '4',
@@ -103,15 +103,7 @@ export function LaporanRekonsiliasiPage() {
         kategori: 'SALDO',
         arah: 'STATUS',
         nominal: data.saldoSiswa,
-        keterangan: 'Total saldo aktif pada kartu seluruh siswa (kewajiban sekolah)',
-      },
-      {
-        id: '6',
-        pos: 'Saldo Mengendap Kartu Tamu',
-        kategori: 'SALDO',
-        arah: 'STATUS',
-        nominal: data.saldoKartuTamu,
-        keterangan: 'Total saldo aktif pada kartu guru, staf, & tamu',
+        keterangan: 'Total dana titipan tersimpan di kartu seluruh siswa (kewajiban sekolah)',
       },
       {
         id: '7',
@@ -168,11 +160,11 @@ export function LaporanRekonsiliasiPage() {
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Tamu + Penjualan)',
+          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
           kategori: 'EVALUASI',
           arah: 'NETTO',
           nominal: data.totalPenggunaan,
-          keterangan: 'Formula: Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih',
+          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
@@ -241,11 +233,11 @@ export function LaporanRekonsiliasiPage() {
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Tamu + Penjualan)',
+          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
           kategori: 'EVALUASI',
           arah: 'NETTO',
           nominal: formatRupiah(data.totalPenggunaan),
-          keterangan: 'Formula: Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih',
+          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
@@ -489,11 +481,10 @@ export function LaporanRekonsiliasiPage() {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold tracking-tight">
-                  {data ? formatRupiah(data.saldoMengendap) : '...'}
+                  {data ? formatRupiah(data.saldoSiswa) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
-                  <span>Siswa: {data ? formatRupiah(data.saldoSiswa) : '-'}</span>
-                  <span>Tamu: {data ? formatRupiah(data.saldoKartuTamu) : '-'}</span>
+                <div className="text-xs text-muted-foreground mt-1.5">
+                  Total saldo aktif tersimpan di kartu seluruh siswa
                 </div>
               </CardContent>
             </Card>

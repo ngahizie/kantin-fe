@@ -99,11 +99,8 @@ export const laporanApi = {
       (acc, s) => acc + (s.saldo || 0),
       0
     )
-    const totalSaldoKartuTamu = MOCK_KARTU_TAMU.reduce(
-      (acc, k) => acc + (k.saldo || 0),
-      0
-    )
-    const saldoMengendap = totalSaldoSiswa + totalSaldoKartuTamu
+    const totalSaldoKartuTamu = 0
+    const saldoMengendap = totalSaldoSiswa
 
     const penjualanBruto = 3420000
     const voidPenjualan = 45000
@@ -332,10 +329,10 @@ export const laporanApi = {
     const totalSaldoSiswa = students.reduce((acc, s) => acc + (s.saldo || 0), 0)
     return {
       saldoSiswa: totalSaldoSiswa,
-      saldoKartuTamu: 769000,
-      total: totalSaldoSiswa + 769000,
+      saldoKartuTamu: 0,
+      total: totalSaldoSiswa,
       jumlahSiswa: students.length,
-      jumlahKartuTamu: 10,
+      jumlahKartuTamu: 0,
     }
   },
 

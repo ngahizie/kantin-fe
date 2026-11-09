@@ -7,7 +7,6 @@ import {
   Banknote,
   Receipt,
   ReceiptText,
-  CreditCard,
   ArrowLeftRight,
   ShieldCheck,
   FileSpreadsheet,
@@ -95,7 +94,7 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'Layanan TU & Kartu',
+      title: 'Layanan TU',
       roles: ['tu', 'bendahara'],
       items: [
         {
@@ -108,12 +107,6 @@ export const sidebarData: SidebarData = {
           title: 'Setoran Kas TU Harian',
           url: '/tu/setoran',
           icon: Receipt,
-          roles: ['tu', 'bendahara'],
-        },
-        {
-          title: 'Kartu Tamu',
-          url: '/kartu-tamu',
-          icon: CreditCard,
           roles: ['tu', 'bendahara'],
         },
       ],
