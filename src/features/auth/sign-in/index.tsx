@@ -48,7 +48,7 @@ export function SignIn() {
                 </div>
 
                 {/* Window Body */}
-                <div className='flex-1 flex flex-col p-6 gap-5 bg-gradient-to-br from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10'>
+                <div className='flex-1 flex flex-col p-6 gap-5 bg-white/20 dark:bg-slate-900/20'>
                   {/* Title Mockup */}
                   <div className='flex items-center gap-4'>
                     <div className='w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0'>
@@ -92,7 +92,7 @@ export function SignIn() {
                       {[35, 60, 45, 95, 75, 100, 80].map((h, i) => (
                         <div
                           key={i}
-                          className='flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg'
+                          className='flex-1 bg-blue-500 dark:bg-blue-500 rounded-t-lg'
                           style={{ height: `${h}%` }}
                         />
                       ))}
