@@ -556,6 +556,9 @@ export function KoreksiBendaharaPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/40'>
+                        <TableHead className='w-12 text-center text-xs font-semibold'>
+                          No.
+                        </TableHead>
                         <TableHead className='text-xs font-semibold'>
                           No. Berita Acara & Waktu
                         </TableHead>
@@ -589,7 +592,7 @@ export function KoreksiBendaharaPage() {
                       {isLoading ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
@@ -603,7 +606,7 @@ export function KoreksiBendaharaPage() {
                       ) : filteredKoreksi.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
@@ -615,8 +618,11 @@ export function KoreksiBendaharaPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredKoreksi.map((k) => (
+                        filteredKoreksi.map((k, idx) => (
                           <TableRow key={k.id} className='hover:bg-muted/30'>
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                              {idx + 1}
+                            </TableCell>
                             <TableCell className='font-mono text-xs'>
                               <div className='font-bold text-foreground'>
                                 {k.referensi_id}
@@ -821,6 +827,9 @@ export function KoreksiBendaharaPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/40'>
+                        <TableHead className='w-12 text-center text-xs font-semibold'>
+                          No.
+                        </TableHead>
                         <TableHead className='text-xs font-semibold'>
                           ID Transaksi & Waktu
                         </TableHead>
@@ -848,7 +857,7 @@ export function KoreksiBendaharaPage() {
                       {isLoading ? (
                         <TableRow>
                           <TableCell
-                            colSpan={7}
+                            colSpan={8}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
@@ -862,7 +871,7 @@ export function KoreksiBendaharaPage() {
                       ) : filteredTransaksi.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={7}
+                            colSpan={8}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
@@ -874,8 +883,11 @@ export function KoreksiBendaharaPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredTransaksi.map((tx) => (
+                        filteredTransaksi.map((tx, idx) => (
                           <TableRow key={tx.id} className='hover:bg-muted/30'>
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                              {idx + 1}
+                            </TableCell>
                             <TableCell className='font-mono text-xs'>
                               <div className='font-bold text-foreground'>
                                 {tx.id}

@@ -592,7 +592,7 @@ export function LaporanRiwayatKeseluruhanPage() {
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-10 text-center">#</TableHead>
+                        <TableHead className="w-12 text-center">No.</TableHead>
                         <TableHead>Waktu</TableHead>
                         <TableHead>No. Referensi</TableHead>
                         <TableHead>Siswa</TableHead>

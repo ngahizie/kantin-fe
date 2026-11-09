@@ -3015,8 +3015,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         urlObj.searchParams.get('search') === 'simulasiSelisih'
 
       const totalSaldoSiswa = siswaList.reduce((acc, s) => acc + (s.saldo || 0), 0)
-      const totalSaldoKartuTamu = kartuTamuList.reduce((acc, k) => acc + (k.saldo || 0), 0)
-      const saldoMengendap = totalSaldoSiswa + totalSaldoKartuTamu
+      const totalSaldoKartuTamu = 0
+      const saldoMengendap = totalSaldoSiswa
 
       const penjualanBruto = 3420000
       const voidPenjualan = 45000
@@ -3264,7 +3264,6 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
 
     if (url.includes('/api/laporan/saldo-mengendap') && method === 'get') {
       const saldoSiswa = siswaList.reduce((acc, s) => acc + (s.saldo || 0), 0)
-      const saldoKartuTamu = kartuTamuList.reduce((acc, k) => acc + (k.saldo || 0), 0)
 
       return {
         status: 200,
@@ -3275,10 +3274,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           message: 'Ringkasan saldo mengendap berhasil dimuat',
           data: {
             saldoSiswa,
-            saldoKartuTamu,
-            total: saldoSiswa + saldoKartuTamu,
+            saldoKartuTamu: 0,
+            total: saldoSiswa,
             jumlahSiswa: siswaList.length,
-            jumlahKartuTamu: kartuTamuList.length,
+            jumlahKartuTamu: 0,
           },
         },
       }

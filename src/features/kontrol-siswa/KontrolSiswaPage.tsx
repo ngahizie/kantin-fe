@@ -275,6 +275,7 @@ export function KontrolSiswaPage() {
               <Table>
                 <TableHeader>
                   <TableRow className='bg-muted/50 text-xs'>
+                    <TableHead className='w-12 text-center'>No.</TableHead>
                     <TableHead className='w-[240px]'>Data Siswa</TableHead>
                     <TableHead>Aplikasi Orang Tua</TableHead>
                     <TableHead>Batas Jajan per Hari</TableHead>
@@ -286,12 +287,12 @@ export function KontrolSiswaPage() {
                 <TableBody>
                   {filteredStudents.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className='h-32 text-center text-muted-foreground text-xs'>
+                      <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
                         Tidak ada siswa yang sesuai dengan filter pencarian.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredStudents.map((siswa) => {
+                    filteredStudents.map((siswa, idx) => {
                       const hasLimit =
                         siswa.limit_harian_enabled !== false && siswa.limit_harian > 0
                       const blockedCatsCount = siswa.blocked_categories?.length || 0
@@ -300,6 +301,9 @@ export function KontrolSiswaPage() {
 
                       return (
                         <TableRow key={siswa.siswa_id} className='text-xs hover:bg-muted/40'>
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                            {idx + 1}
+                          </TableCell>
                           {/* Data Siswa */}
                           <TableCell>
                             <div className='flex items-center gap-3'>

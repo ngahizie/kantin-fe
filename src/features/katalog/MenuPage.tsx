@@ -336,7 +336,8 @@ export function MenuPage() {
             <Table>
               <TableHeader>
                 <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
-                  <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>Foto</TableHead>
+                  <TableHead className='w-12 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-4'>No.</TableHead>
+                  <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Foto</TableHead>
                   <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>Nama Menu</TableHead>
                   <TableHead className='w-36 border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori</TableHead>
                   <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Harga Jual</TableHead>
@@ -350,7 +351,7 @@ export function MenuPage() {
               <TableBody>
                 {loading ? (
                   <TableRow className='border-none'>
-                    <TableCell colSpan={9} className='h-40 text-center text-muted-foreground border-none px-6'>
+                    <TableCell colSpan={10} className='h-40 text-center text-muted-foreground border-none px-6'>
                       <div className='flex items-center justify-center gap-2'>
                         <RefreshCw className='size-4 animate-spin' />
                         <span>Memuat data katalog menu...</span>
@@ -359,7 +360,7 @@ export function MenuPage() {
                   </TableRow>
                 ) : filteredMenu.length === 0 ? (
                   <TableRow className='border-none'>
-                    <TableCell colSpan={9} className='h-32 text-center text-muted-foreground border-none px-6'>
+                    <TableCell colSpan={10} className='h-32 text-center text-muted-foreground border-none px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <UtensilsCrossed className='size-8 text-muted-foreground/40' />
                         <p className='font-semibold text-foreground'>Tidak ada menu ditemukan</p>
@@ -372,7 +373,7 @@ export function MenuPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedMenu.map((item) => {
+                  paginatedMenu.map((item, idx) => {
                     const kategoriNama =
                       kategoriMap.get(item.kategoriId || 0) || 'Tanpa Kategori'
                     const isStokMenipis = item.stokBerjalan <= (item.stokMinimum || 0)
@@ -380,8 +381,11 @@ export function MenuPage() {
 
                     return (
                       <TableRow key={item.id} className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'>
+                        <TableCell className='text-center font-mono text-xs text-muted-foreground border-none py-3.5 ps-4'>
+                          {(currentPage - 1) * PAGE_SIZE + idx + 1}
+                        </TableCell>
                         {/* Foto Thumbnail */}
-                        <TableCell className='text-center border-none py-3.5 ps-6'>
+                        <TableCell className='text-center border-none py-3.5'>
                           <div className='size-11 rounded-xl border-none bg-background/80 dark:bg-background/20 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
                             {item.fotoUrl ? (
                               <img

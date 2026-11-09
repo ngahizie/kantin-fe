@@ -388,13 +388,15 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kiri */}
                   <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 1: Top-up Bersih
+                      Sisi 1: Total Kredit Sistem
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary">
-                      {formatRupiah(data.topupBersih)}
+                      {formatRupiah(data.totalKreditSemua || data.topupBersih)}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Topup Tunai ({formatRupiah(data.topupTunai)}) + Online ({formatRupiah(data.topupOnline)}) − Refund ({formatRupiah(data.totalRefundSemua)})
+                      {data.totalKreditSemua > 0
+                        ? `Akumulasi Uang Masuk & Kredit (${formatRupiah(data.totalKreditSemua)})`
+                        : `Topup Tunai (${formatRupiah(data.topupTunai)}) + Online (${formatRupiah(data.topupOnline)}) − Refund (${formatRupiah(data.totalRefundSemua)})`}
                     </p>
                   </div>
 
@@ -423,13 +425,19 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kanan */}
                   <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 2: Penggunaan & Saldo
+                      Sisi 2: Penggunaan & Saldo Siswa
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary">
-                      {formatRupiah(data.totalPenggunaan)}
+                      {formatRupiah(
+                        data.totalKreditSemua > 0
+                          ? data.totalDebitSemua + (data.saldoSiswa || data.saldoMengendap)
+                          : data.totalPenggunaan
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Saldo Mengendap ({formatRupiah(data.saldoMengendap)}) + Penjualan Bersih ({formatRupiah(data.penjualanBersih)})
+                      {data.totalKreditSemua > 0
+                        ? `Debit Terpakai (${formatRupiah(data.totalDebitSemua)}) + Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)})`
+                        : `Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)}) + Penjualan (${formatRupiah(data.penjualanBersih)})`}
                     </p>
                   </div>
                 </div>
@@ -542,7 +550,7 @@ export function LaporanRekonsiliasiPage() {
                 <Table>
                   <TableHeader className="bg-muted/80 dark:bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead className="w-12 text-center">No.</TableHead>
                       <TableHead>Pos Akuntansi / Ledger</TableHead>
                       <TableHead className="text-center">Kategori</TableHead>
                       <TableHead className="text-center">Arah</TableHead>

@@ -413,7 +413,7 @@ export function LaporanSaldoMengendapPage() {
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
+                          <TableHead className="w-12 text-center">No.</TableHead>
                           <TableHead>Siswa</TableHead>
                           <TableHead>Kelas</TableHead>
                           <TableHead className="text-right">Saldo Berjalan</TableHead>

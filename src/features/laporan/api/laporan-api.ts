@@ -60,9 +60,6 @@ export const laporanApi = {
           raw.topupBersih ?? totalTopupSemua - totalRefundSemua
         const penjualanBersih =
           raw.penjualanBersih ?? (raw.penjualan ?? 0) - (raw.voidPenjualan ?? 0)
-        const totalPenggunaan =
-          raw.totalPenggunaan ?? (raw.saldoMengendap ?? 0) + penjualanBersih
-
         // Breakdown saldo siswa & kartu tamu jika BE hanya mengembalikan saldoMengendap total
         let saldoSiswa = raw.saldoSiswa
         let saldoKartuTamu = raw.saldoKartuTamu
@@ -82,6 +79,10 @@ export const laporanApi = {
           }
         }
 
+        const saldoMengendap = raw.saldoMengendap ?? (saldoSiswa ?? 0) + (saldoKartuTamu ?? 0)
+        const totalPenggunaan =
+          raw.totalPenggunaan ?? saldoMengendap + penjualanBersih
+
         return {
           ...raw,
           totalTopupSemua,
@@ -89,6 +90,7 @@ export const laporanApi = {
           topupBersih,
           penjualanBersih,
           totalPenggunaan,
+          saldoMengendap,
           saldoSiswa: saldoSiswa ?? 0,
           saldoKartuTamu: saldoKartuTamu ?? 0,
         }
@@ -97,49 +99,29 @@ export const laporanApi = {
       // Fallback data rekonsiliasi jika backend offline
     }
 
-    const totalSaldoSiswa = getInitialStudents().reduce(
-      (acc, s) => acc + (s.saldo || 0),
-      0
-    )
-    const totalSaldoKartuTamu = 0
-    const saldoMengendap = totalSaldoSiswa
-
-    const penjualanBruto = 3420000
-    const voidPenjualan = 45000
-    const penjualanBersih = penjualanBruto - voidPenjualan
-    const refund = 150000
-    const topupTarget = saldoMengendap + penjualanBersih + refund
-    const topupOnline = Math.round(topupTarget * 0.4)
-    const topupTunai = topupTarget - topupOnline
-    const topupBersih = topupOnline + topupTunai - refund
-    const totalPenggunaan = saldoMengendap + penjualanBersih
-
-    const simulasiSelisih = Boolean(params?.simulasiSelisih)
-    const selisih = simulasiSelisih ? 75000 : topupBersih - totalPenggunaan
-
     return {
       dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
       sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
-      topupOnline,
-      topupTunai,
-      penjualan: penjualanBruto,
-      voidPenjualan,
-      penjualanBersih,
-      koreksiMasuk: 15000,
+      topupOnline: 0,
+      topupTunai: 0,
+      penjualan: 0,
+      voidPenjualan: 0,
+      penjualanBersih: 0,
+      koreksiMasuk: 0,
       koreksiKeluar: 0,
-      refund,
+      refund: 0,
       transfer: 0,
-      saldoMengendap,
-      saldoSiswa: totalSaldoSiswa,
-      saldoKartuTamu: totalSaldoKartuTamu,
-      totalKreditSemua: topupOnline + topupTunai + voidPenjualan,
-      totalDebitSemua: penjualanBruto + refund,
-      selisih,
-      seimbang: selisih === 0,
-      totalTopupSemua: topupOnline + topupTunai,
-      totalRefundSemua: refund,
-      topupBersih,
-      totalPenggunaan,
+      saldoMengendap: 0,
+      saldoSiswa: 0,
+      saldoKartuTamu: 0,
+      totalKreditSemua: 0,
+      totalDebitSemua: 0,
+      selisih: 0,
+      seimbang: true,
+      totalTopupSemua: 0,
+      totalRefundSemua: 0,
+      topupBersih: 0,
+      totalPenggunaan: 0,
     }
   },
 
@@ -305,35 +287,21 @@ export const laporanApi = {
       const data = res.data?.data
       if (data) {
         // Jika backend mengembalikan 0 siswa karena data siswa berada di admin-be, sinkronkan dari data siswa
-        if ((data.jumlahSiswa === 0 || data.saldoSiswa === 0) && typeof window !== 'undefined') {
-          const students = getInitialStudents()
-          const totalSaldoSiswa = students.reduce(
-            (acc, s) => acc + (s.saldo || 0),
-            0
-          )
-          return {
-            ...data,
-            saldoSiswa: data.saldoSiswa > 0 ? data.saldoSiswa : totalSaldoSiswa,
-            jumlahSiswa:
-              data.jumlahSiswa > 0 ? data.jumlahSiswa : students.length,
-            total:
-              (data.saldoSiswa > 0 ? data.saldoSiswa : totalSaldoSiswa) +
-              (data.saldoKartuTamu || 0),
-          }
+        return {
+          ...data,
+          saldoKartuTamu: 0, // Kartu tamu dinonaktifkan sesuai kebutuhan sekolah
+          total: data.saldoSiswa ?? data.total ?? 0,
         }
-        return data
       }
     } catch {
       // fallback
     }
 
-    const students = getInitialStudents()
-    const totalSaldoSiswa = students.reduce((acc, s) => acc + (s.saldo || 0), 0)
     return {
-      saldoSiswa: totalSaldoSiswa,
+      saldoSiswa: 0,
       saldoKartuTamu: 0,
-      total: totalSaldoSiswa,
-      jumlahSiswa: students.length,
+      total: 0,
+      jumlahSiswa: 0,
       jumlahKartuTamu: 0,
     }
   },

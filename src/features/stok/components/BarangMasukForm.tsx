@@ -387,7 +387,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
             <Table>
               <TableHeader>
                 <TableRow className='bg-muted/90'>
-                  <TableHead className='w-12 text-center text-xs'>No</TableHead>
+                  <TableHead className='w-12 text-center text-xs'>No.</TableHead>
                   <TableHead className='min-w-[240px] text-xs'>
                     Pilih Menu Katalog
                   </TableHead>

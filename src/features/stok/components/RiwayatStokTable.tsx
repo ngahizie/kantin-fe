@@ -160,6 +160,7 @@ export function RiwayatStokTable({
           <Table>
             <TableHeader>
               <TableRow className='bg-muted/90'>
+                <TableHead className='w-12 text-center text-xs'>No.</TableHead>
                 <TableHead className='w-36 text-xs'>Waktu & Tanggal</TableHead>
                 <TableHead className='w-36 text-xs'>
                   No. Bukti / Faktur
@@ -185,7 +186,7 @@ export function RiwayatStokTable({
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={10}
                     className='h-32 text-center text-xs text-muted-foreground'
                   >
                     <RefreshCw className='mx-auto mb-2 h-5 w-5 animate-spin text-primary' />
@@ -195,7 +196,7 @@ export function RiwayatStokTable({
               ) : filteredItems.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={10}
                     className='h-32 text-center text-xs text-muted-foreground'
                   >
                     <Layers className='mx-auto mb-2 h-6 w-6 opacity-40' />
@@ -203,13 +204,16 @@ export function RiwayatStokTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredItems.map((item) => {
+                filteredItems.map((item, idx) => {
                   const isMasuk = item.arah === 'MASUK'
                   return (
                     <TableRow
                       key={item.id}
                       className='text-xs hover:bg-muted/20'
                     >
+                      <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                        {idx + 1}
+                      </TableCell>
                       {/* Waktu */}
                       <TableCell className='font-mono whitespace-nowrap text-muted-foreground'>
                         {formatDateTime(item.waktu)}

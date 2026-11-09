@@ -378,6 +378,7 @@ export function RefundSiswaKeluarPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/50 text-xs'>
+                        <TableHead className='w-12 text-center'>No.</TableHead>
                         <TableHead className='w-[240px]'>Data Siswa Nonaktif</TableHead>
                         <TableHead>Status Akademik</TableHead>
                         <TableHead>Orang Tua / Kontak</TableHead>
@@ -390,19 +391,22 @@ export function RefundSiswaKeluarPage() {
                     <TableBody>
                       {pendingStudents.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
+                          <TableCell colSpan={8} className='h-32 text-center text-muted-foreground text-xs'>
                             <CheckCircle2 className='h-8 w-8 text-emerald-500 mx-auto mb-2' />
                             Tidak ada sisa saldo siswa nonaktif yang tertahan. Seluruh kewajiban telah selesai!
                           </TableCell>
                         </TableRow>
                       ) : (
-                        pendingStudents.map((siswa) => {
+                        pendingStudents.map((siswa, idx) => {
                           const hasSibling =
                             siswa.saudara_kandung && siswa.saudara_kandung.length > 0
                           const firstSibling = hasSibling ? siswa.saudara_kandung![0] : null
 
                           return (
                             <TableRow key={siswa.siswa_id} className='text-xs hover:bg-muted/40'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                                {idx + 1}
+                              </TableCell>
                               {/* Siswa */}
                               <TableCell>
                                 <div className='flex items-center gap-3'>
@@ -555,6 +559,7 @@ export function RefundSiswaKeluarPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/50 text-xs'>
+                        <TableHead className='w-12 text-center'>No.</TableHead>
                         <TableHead>Siswa Nonaktif</TableHead>
                         <TableHead>Jenis Penyelesaian</TableHead>
                         <TableHead>Nominal Diselesaikan</TableHead>
@@ -566,17 +571,20 @@ export function RefundSiswaKeluarPage() {
                     <TableBody>
                       {completedStudents.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className='h-32 text-center text-muted-foreground text-xs'>
+                          <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
                             Belum ada riwayat transaksi refund atau pemindahan saldo yang diproses.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        completedStudents.map((siswa) => {
+                        completedStudents.map((siswa, idx) => {
                           const info = siswa.refund_info
                           const isTrf = info?.tipe === 'TRANSFER_SAUDARA'
 
                           return (
                             <TableRow key={siswa.siswa_id} className='text-xs hover:bg-muted/40'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                                {idx + 1}
+                              </TableCell>
                               <TableCell>
                                 <div className='flex items-center gap-2.5'>
                                   <img

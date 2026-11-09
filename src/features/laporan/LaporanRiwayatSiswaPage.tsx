@@ -932,7 +932,7 @@ export function LaporanRiwayatSiswaPage() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead className="w-12 text-center">No.</TableHead>
                       <TableHead>Waktu & Tanggal</TableHead>
                       <TableHead>No. Referensi</TableHead>
                       <TableHead className="text-center">Jenis</TableHead>
