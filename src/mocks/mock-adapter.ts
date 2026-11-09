@@ -3355,6 +3355,52 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // LAPORAN RIWAYAT TRANSAKSI KESELURUHAN (SELURUH SISWA)
+    // ─────────────────────────────────────────────────────────────
+    if (url.includes('/api/laporan/transaksi-keseluruhan') && method === 'get') {
+      const allTrx: Array<Record<string, unknown>> = []
+      Object.entries(MOCK_RIWAYAT_SISWA).forEach(([sIdStr, list]) => {
+        const sId = Number(sIdStr)
+        const st = siswaList.find((s) => s.siswa_id === sId)
+        list.forEach((r) => {
+          allTrx.push({
+            id: r.id,
+            waktu: r.waktu,
+            jenis: r.jenis,
+            arah: r.arah,
+            nominal: r.nominal,
+            saldoSetelah: r.saldo_setelah,
+            titikKasir: r.titik_kasir,
+            petugas: r.petugas,
+            referensiId: r.referensi_id,
+            keterangan: r.keterangan,
+            items: r.items,
+            siswaId: sId,
+            siswaNama: st?.nama || `Siswa #${sId}`,
+            siswaNis: st?.nis || `${sId}`,
+            siswaKelas: st?.kelas || '7A',
+          })
+        })
+      })
+
+      allTrx.sort(
+        (a, b) =>
+          new Date(String(b.waktu)).getTime() - new Date(String(a.waktu)).getTime()
+      )
+
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          message: 'Riwayat transaksi keseluruhan berhasil dimuat',
+          data: allTrx,
+        },
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // LAPORAN KERUGIAN STOK (PRD §9.5)
     // ─────────────────────────────────────────────────────────────
     if (url.includes('/api/laporan/kerugian-stok/ringkasan') && method === 'get') {
