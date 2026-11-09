@@ -1,7 +1,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -25,9 +24,6 @@ export function SignIn() {
           <CardTitle className='text-xl font-bold tracking-tight text-center'>
             Masuk
           </CardTitle>
-          <CardDescription className='text-xs leading-relaxed'>
-            Gunakan akun staf terdaftar pada portal SKOOLIA untuk mengakses terminal kasir POS atau panel backoffice pengelola.
-          </CardDescription>
         </CardHeader>
         <CardContent className='pt-1 px-0'>
           <UserAuthForm />
