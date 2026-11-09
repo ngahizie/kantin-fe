@@ -9,7 +9,7 @@ import { UserAuthForm } from './components/user-auth-form'
 export function SignIn() {
   return (
     <AuthLayout>
-      <Card className='w-full max-w-[390px] gap-5 !border-2 !border-slate-300 dark:!border-slate-700 bg-muted/70 dark:bg-muted/40 py-8 px-6 sm:px-7'>
+      <Card className='w-full max-w-[390px] gap-5 !border-2 !border-slate-200 dark:!border-slate-800/80 bg-white dark:bg-[#0a0a0a] shadow-xl shadow-blue-100/30 dark:shadow-none py-8 px-6 sm:px-7 rounded-2xl'>
         <CardHeader className='pb-1 px-0'>
           <div className='flex justify-center mb-2'>
             <img

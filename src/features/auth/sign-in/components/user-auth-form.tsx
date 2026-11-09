@@ -157,13 +157,13 @@ export function UserAuthForm({
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs'>Username</FormLabel>
+                <FormLabel className='text-xs font-medium text-slate-700 dark:text-slate-300'>Username</FormLabel>
                 <FormControl>
                   <Input
                     placeholder='Masukkan username'
                     autoComplete='username'
                     disabled={isLoading}
-                    className='!border !border-slate-300 dark:!border-slate-700 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='!border !border-slate-200 dark:!border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -177,13 +177,13 @@ export function UserAuthForm({
             name='password'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-xs'>Password</FormLabel>
+                <FormLabel className='text-xs font-medium text-slate-700 dark:text-slate-300'>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
                     placeholder='Masukkan password'
                     autoComplete='current-password'
                     disabled={isLoading}
-                    className='!border !border-slate-300 dark:!border-slate-700 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='!border !border-slate-200 dark:!border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -192,7 +192,10 @@ export function UserAuthForm({
             )}
           />
 
-          <Button className='mt-2 w-full font-medium' disabled={isLoading}>
+          <Button
+            className='mt-3 w-full h-11 text-sm font-bold !bg-blue-500 hover:!bg-blue-600 !text-white shadow-lg shadow-blue-500/25 dark:shadow-none rounded-xl transition-all cursor-pointer'
+            disabled={isLoading}
+          >
             {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
             Masuk
           </Button>
