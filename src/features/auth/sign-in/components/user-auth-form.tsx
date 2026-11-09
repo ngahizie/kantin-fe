@@ -163,7 +163,7 @@ export function UserAuthForm({
                     placeholder='Masukkan username'
                     autoComplete='username'
                     disabled={isLoading}
-                    className='border-0 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='!border !border-slate-300 dark:!border-slate-700 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -183,7 +183,7 @@ export function UserAuthForm({
                     placeholder='Masukkan kata sandi'
                     autoComplete='current-password'
                     disabled={isLoading}
-                    className='border-0 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
+                    className='!border !border-slate-300 dark:!border-slate-700 bg-card dark:bg-input/30 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
