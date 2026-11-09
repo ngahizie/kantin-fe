@@ -9,12 +9,6 @@ export function SignIn() {
         {/* Subtle Grid Background */}
         <div className='absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none' />
 
-        {/* Decorative Blur Backgrounds */}
-        <div className='absolute -top-20 -right-20 w-80 h-80 bg-blue-200/30 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none' />
-        <div className='absolute top-1/4 -left-32 w-80 h-80 bg-cyan-200/20 dark:bg-cyan-600/10 rounded-full blur-3xl pointer-events-none' />
-        <div className='absolute top-1/2 right-10 w-64 h-64 bg-indigo-200/30 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none' />
-        <div className='absolute -bottom-20 -left-10 w-96 h-96 bg-blue-200/20 dark:bg-blue-800/10 rounded-full blur-3xl pointer-events-none' />
-
         {/* Backdrop decorative circles */}
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] rounded-full border border-blue-50 dark:border-slate-800/30 z-0' />
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] rounded-full border border-blue-100 dark:border-slate-800/50 z-0 border-dashed' />
