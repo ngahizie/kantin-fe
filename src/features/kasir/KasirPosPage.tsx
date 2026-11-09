@@ -4,8 +4,7 @@ import {
   X,
   ShoppingCart,
   Layers,
-  RefreshCw,
-  Keyboard,
+  Wallet,
   AlertTriangle,
   History,
   Lock,
@@ -51,6 +50,7 @@ import type {
 } from './types'
 import CartSidebar from './components/CartSidebar'
 import ManualRfidModal from './components/ManualRfidModal'
+import CekSaldoModal from './components/CekSaldoModal'
 import MenuGrid from './components/MenuGrid'
 import StudentFeedbackModal from './components/StudentFeedbackModal'
 import TransactionErrorModal, {
@@ -86,6 +86,7 @@ export const KasirPosPage: React.FC = () => {
 
   // Modals & Transaksi state
   const [manualRfidOpen, setManualRfidOpen] = useState(false)
+  const [cekSaldoOpen, setCekSaldoOpen] = useState(false)
   const [studentModalOpen, setStudentModalOpen] = useState(false)
   const [errorModalOpen, setErrorModalOpen] = useState(false)
   const [confirmManualOpen, setConfirmManualOpen] = useState(false)
@@ -176,6 +177,38 @@ export const KasirPosPage: React.FC = () => {
       isMounted = false
     }
   }, [fetchPengaturan, fetchTitikKasir, loadSesiData])
+
+  // Auto-refresh katalog menu setiap 10 detik secara otomatis di latar belakang
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      if (
+        isProcessing ||
+        studentModalOpen ||
+        confirmManualOpen ||
+        closeSessionModalOpen ||
+        historyModalOpen ||
+        cekSaldoOpen
+      ) {
+        return
+      }
+
+      try {
+        const latestMenus = await katalogApi.getMenuList(undefined, true)
+        setMenus(latestMenus)
+      } catch {
+        // Abaikan kegagalan background polling agar tidak mengganggu antarmuka kasir
+      }
+    }, 10000)
+
+    return () => clearInterval(timer)
+  }, [
+    isProcessing,
+    studentModalOpen,
+    confirmManualOpen,
+    closeSessionModalOpen,
+    historyModalOpen,
+    cekSaldoOpen,
+  ])
 
   // Cek apakah waktu saat ini telah melewati batas jam tutup kasir otomatis
   const isPastClosingTime = useMemo(() => {
@@ -369,7 +402,8 @@ export const KasirPosPage: React.FC = () => {
       !confirmManualOpen &&
       !historyModalOpen &&
       !closeSessionModalOpen &&
-      !manualRfidOpen,
+      !manualRfidOpen &&
+      !cekSaldoOpen,
   })
 
   // Selesai transaksi (hitung mundur selesai atau tombol selesai ditekan)
@@ -468,17 +502,16 @@ export const KasirPosPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Tombol Input Manual UID */}
+              {/* Tombol Cek Saldo */}
               <Button
                 type='button'
                 variant='secondary'
-                onClick={() => setManualRfidOpen(true)}
-                disabled={!isOnline || isSessionClosed}
+                onClick={() => setCekSaldoOpen(true)}
                 className='h-10 gap-1.5 border-none bg-muted/70 dark:bg-muted/30 px-3 text-xs font-semibold text-foreground hover:bg-muted rounded-xl shadow-none'
-                title='Input manual UID atau kartu pengujian'
+                title='Cek saldo siswa atau kartu tamu'
               >
-                <Keyboard className='h-4 w-4' />
-                <span className='hidden md:inline'>Manual UID</span>
+                <Wallet className='h-4 w-4' />
+                <span className='hidden md:inline'>Cek Saldo</span>
               </Button>
 
               {/* Tombol Riwayat Sesi */}
@@ -516,22 +549,7 @@ export const KasirPosPage: React.FC = () => {
                   {isSessionClosed ? 'Sesi Ditutup' : 'Tutup Kasir'}
                 </span>
               </Button>
-
-            {/* Tombol Refresh Katalog */}
-            <Button
-              type='button'
-              variant='secondary'
-              size='icon'
-              onClick={loadKatalogData}
-              disabled={loading}
-              className='h-10 w-10 shrink-0 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-              title='Muat Ulang Menu'
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-            </Button>
-          </div>
+            </div>
 
           {/* Banner Peringatan Tutup Otomatis */}
           {isPastClosingTime && (
@@ -663,6 +681,12 @@ export const KasirPosPage: React.FC = () => {
           />
         </SheetContent>
       </Sheet>
+
+      {/* Modal Cek Saldo Siswa & Kartu Tamu */}
+      <CekSaldoModal
+        open={cekSaldoOpen}
+        onOpenChange={setCekSaldoOpen}
+      />
 
       {/* Modal Input UID Manual / Pengujian */}
       <ManualRfidModal

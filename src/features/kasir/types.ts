@@ -15,6 +15,15 @@ export interface SesiKasirData {
   ditutupAt?: string | null
   ditutupOleh?: number | null
   autoTutup?: boolean
+  uangFisik?: number | null
+  selisih?: number | null
+  catatan?: string | null
+}
+
+export interface TutupSesiPayload {
+  uangFisik?: number
+  selisih?: number
+  catatan?: string
 }
 
 export interface RekapSesiData {
@@ -105,3 +114,18 @@ export interface ApiErrorResponse {
   kekurangan?: number
   code?: number
 }
+
+export interface InfoSaldoData {
+  tipe: 'SISWA' | 'KARTU_TAMU'
+  id?: number
+  nis?: string | null
+  nama: string
+  kelas?: string | null
+  fotoUrl?: string | null
+  saldo: number
+  nomorKartu?: string | null
+  labelPemegang?: string | null
+  status?: string | null
+  uid?: string | null
+}
+
