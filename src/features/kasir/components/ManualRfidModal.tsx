@@ -79,10 +79,15 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
         inputRef.current?.select()
       }, 50)
       return () => clearTimeout(t)
-    } else {
-      setUidInput('')
     }
   }, [open])
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setUidInput('')
+    }
+    onOpenChange(isOpen)
+  }
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -90,7 +95,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='max-w-md select-none border-none shadow-none rounded-2xl bg-card'>
         <DialogHeader>
           <div className='flex items-center gap-2 text-primary'>
