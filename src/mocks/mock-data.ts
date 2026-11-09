@@ -376,6 +376,26 @@ export const MOCK_SISWA: KartuSiswaMock[] = [
     catatan_kontrol: 'Batasan jajan ketat maksimal Rp 20.000 / hari.',
     updated_at: '2026-10-05T16:45:00Z',
   },
+  {
+    uid: '1831574427',
+    siswa_id: 107,
+    nis: '2024007',
+    nama: 'Abizard',
+    kelas: '7A',
+    foto_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400',
+    saldo: 100000,
+    limit_harian: 50000,
+    limit_harian_enabled: false,
+    belanja_hari_ini: 0,
+    is_blocked: false,
+    blocked_items: [],
+    blocked_categories: [],
+    parent_name: 'Wali Abizard',
+    parent_phone: '0812-3456-7890',
+    parent_app_registered: false,
+    catatan_kontrol: '',
+    updated_at: '2026-11-09T10:00:00Z',
+  },
 ]
 
 export const MOCK_SISWA_NONAKTIF: SiswaNonaktifMock[] = [
@@ -1284,6 +1304,20 @@ export const MOCK_RIWAYAT_SISWA: Record<number, RiwayatSiswaDetailMock[]> = {
       petugas: 'Dra. Hj. Nurul (Bendahara)',
       referensi_id: 'BA-KOR-20261004-001',
       keterangan: 'Pengembalian dana pembatalan kartu tersenggol ganda TRX-20261004-8901',
+    },
+  ],
+  107: [
+    {
+      id: 'TOP-20261109-0107',
+      waktu: '2026-11-09T08:00:00Z',
+      jenis: 'TOPUP_TUNAI',
+      arah: 'KREDIT',
+      nominal: 100000,
+      saldo_setelah: 100000,
+      titik_kasir: 'Loket TU Lantai 1',
+      petugas: 'Sri Wahyuni (TU)',
+      referensi_id: 'TU-TOP-20261109-0107',
+      keterangan: 'Top up tunai siswa Abizard',
     },
   ],
 }
