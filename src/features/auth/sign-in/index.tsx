@@ -92,7 +92,7 @@ export function SignIn() {
                       {[35, 60, 45, 95, 75, 100, 80].map((h, i) => (
                         <div
                           key={i}
-                          className='flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg transition-all duration-500 hover:from-blue-400 hover:to-cyan-300 hover:opacity-90'
+                          className='flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg'
                           style={{ height: `${h}%` }}
                         />
                       ))}
