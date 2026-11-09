@@ -22,8 +22,8 @@ export function SignIn() {
               />
             </div>
           </div>
-          <CardTitle className='text-xl font-bold tracking-tight'>
-            Masuk Staf Kantin
+          <CardTitle className='text-xl font-bold tracking-tight text-center'>
+            Masuk
           </CardTitle>
           <CardDescription className='text-xs leading-relaxed'>
             Gunakan akun staf terdaftar pada portal SKOOLIA untuk mengakses terminal kasir POS atau panel backoffice pengelola.
