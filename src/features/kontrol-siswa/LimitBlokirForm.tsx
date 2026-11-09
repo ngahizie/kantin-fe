@@ -322,10 +322,10 @@ function LimitBlokirFormContent({
               <div className='space-y-0.5'>
                 <Label htmlFor='limit-switch' className='text-sm font-bold flex items-center gap-2'>
                   <DollarSign className='h-4 w-4 text-primary' />
-                  Batas Limit Belanja Harian
+                  Batas Belanja Harian
                 </Label>
                 <p className='text-xs text-muted-foreground'>
-                  Batasi jumlah maksimal rupiah yang dapat dibelanjakan siswa dalam satu hari
+                  Batasi jumlah maksimal uang yang dapat dibelanjakan siswa per hari
                 </p>
               </div>
               <Switch
@@ -338,7 +338,7 @@ function LimitBlokirFormContent({
             {limitEnabled ? (
               <div className='pt-2 space-y-3 border-t border-border/40'>
                 <div className='flex flex-wrap items-center gap-2'>
-                  <span className='text-xs text-muted-foreground font-medium'>Preset Nominal:</span>
+                  <span className='text-xs text-muted-foreground font-medium'>Pilihan Cepat:</span>
                   {PRESET_LIMITS.map((amount) => (
                     <Button
                       key={amount}
@@ -359,7 +359,7 @@ function LimitBlokirFormContent({
 
                 <div className='space-y-1.5'>
                   <Label htmlFor='customLimit' className='text-xs font-medium'>
-                    Nominal Limit Harian (Rp) *
+                    Jumlah Batas Harian (Rp) *
                   </Label>
                   <div className='relative'>
                     <span className='absolute left-3 top-2 text-xs font-bold text-muted-foreground'>
@@ -375,7 +375,7 @@ function LimitBlokirFormContent({
                   </div>
                   {!isValidNominal && (
                     <p className='text-[11px] text-destructive'>
-                      Nominal limit harian minimal Rp 5.000
+                      Batas belanja harian minimal Rp 5.000
                     </p>
                   )}
                 </div>
@@ -392,8 +392,7 @@ function LimitBlokirFormContent({
               <div className='text-xs text-muted-foreground bg-background/60 p-2.5 rounded-lg flex items-center gap-2 border-0'>
                 <Check className='h-3.5 w-3.5 text-emerald-600' />
                 <span>
-                  <strong>Tanpa Limit Harian:</strong> Siswa bebas berbelanja selama saldo digitalnya
-                  masih mencukupi.
+                  <strong>Tanpa Batasan:</strong> Siswa dapat jajan bebas selama saldo kartu masih mencukupi.
                 </span>
               </div>
             )}
@@ -402,10 +401,10 @@ function LimitBlokirFormContent({
             <div className='space-y-0.5'>
               <Label className='text-sm font-bold flex items-center gap-2'>
                 <Tag className='h-4 w-4 text-amber-500' />
-                Blokir Seluruh Kategori Menu
+                Pantangan Kategori Makanan
               </Label>
               <p className='text-xs text-muted-foreground'>
-                Menceklis kategori akan memblokir <strong>seluruh menu</strong> di bawah kategori tersebut
+                Memilih kategori akan melarang <strong>semua makanan</strong> di dalam kelompok tersebut
               </p>
             </div>
 
@@ -459,16 +458,16 @@ function LimitBlokirFormContent({
               <div className='space-y-0.5'>
                 <Label className='text-sm font-bold flex items-center gap-2'>
                   <UtensilsCrossed className='h-4 w-4 text-red-500' />
-                  Blokir Item Menu Spesifik
+                  Pantangan Menu Makanan Tertentu
                 </Label>
                 <p className='text-xs text-muted-foreground'>
-                  Pilih item spesifik yang dilarang (misal: "Kopi Botol", "Es Teh Manis")
+                  Pilih jajanan tertentu yang dilarang (misal: "Kopi Botol", "Es Teh Manis")
                 </p>
               </div>
 
               {blockedItemIds.length > 0 && (
                 <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
-                  {blockedItemIds.length} Item Diblokir
+                  {blockedItemIds.length} Menu Dilarang
                 </Badge>
               )}
             </div>

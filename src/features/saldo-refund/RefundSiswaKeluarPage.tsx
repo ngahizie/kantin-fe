@@ -264,7 +264,7 @@ export function RefundSiswaKeluarPage() {
         {/* Title Header */}
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Refund Saldo Siswa Keluar / Lulus
+            Pengembalian Saldo Siswa Lulus / Pindah
           </h1>
         </div>
 
@@ -273,56 +273,56 @@ export function RefundSiswaKeluarPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Dana Titipan Mengendap
+                Sisa Saldo Siswa Keluar
               </CardDescription>
               <CardTitle className='text-2xl font-bold font-mono text-amber-600 dark:text-amber-400'>
                 {formatRupiah(totalDanaMengendap)}
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Kewajiban sekolah kepada siswa nonaktif
+              Total uang siswa yang belum diserahkan
             </CardContent>
           </Card>
 
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Menunggu Refund / Pindah
+                Belum Diambil / Belum Diserahkan
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-foreground'>
                 {pendingRefundCount} Siswa
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Siswa nonaktif dengan sisa saldo &gt; 0
+              Siswa lulus / pindah yang masih punya sisa saldo
             </CardContent>
           </Card>
 
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Selesai Diproses
+                Sudah Selesai Diserahkan
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
                 {completedRefundCount} Siswa
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Saldo menjadi Rp 0 & RFID diblokir
+              Sisa saldo sudah diserahkan kepada orang tua
             </CardContent>
           </Card>
 
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Kartu RFID Diamankan
+                Kartu Dinonaktifkan
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-foreground'>
                 {completedRefundCount} Kartu
               </CardTitle>
             </CardHeader>
             <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Blokir instan otomatis server
+              Kartu dinonaktifkan agar tidak disalahgunakan
             </CardContent>
           </Card>
         </div>
@@ -334,7 +334,7 @@ export function RefundSiswaKeluarPage() {
               <TabsList className='grid grid-cols-2 w-full sm:w-auto'>
                 <TabsTrigger value='pending' className='text-xs gap-2'>
                   <Banknote className='h-3.5 w-3.5' />
-                  <span>Menunggu Refund</span>
+                  <span>Belum Diambil</span>
                   {pendingRefundCount > 0 && (
                     <Badge variant='secondary' className='ml-1 px-1.5 py-0 text-[10px]'>
                       {pendingRefundCount}
@@ -343,7 +343,7 @@ export function RefundSiswaKeluarPage() {
                 </TabsTrigger>
                 <TabsTrigger value='completed' className='text-xs gap-2'>
                   <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
-                  <span>Riwayat Selesai</span>
+                  <span>Sudah Selesai</span>
                 </TabsTrigger>
               </TabsList>
             }
@@ -518,7 +518,7 @@ export function RefundSiswaKeluarPage() {
                                     className='h-8 text-xs gap-1.5'
                                   >
                                     <Banknote className='h-3.5 w-3.5' />
-                                    <span>Refund Ortu</span>
+                                    <span>Kembalikan ke Ortu</span>
                                   </Button>
 
                                   {/* Opsi B: Pindah ke Saudara */}
@@ -532,7 +532,7 @@ export function RefundSiswaKeluarPage() {
                                     className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
                                   >
                                     <ArrowLeftRight className='h-3.5 w-3.5' />
-                                    <span>Pindah Saudara</span>
+                                    <span>Alihkan ke Saudara</span>
                                   </Button>
                                 </div>
                               </TableCell>

@@ -98,10 +98,10 @@ export function RefundKartuModal({
       <DialogContent className='max-w-md sm:rounded-2xl border-0 shadow-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
-            Pengembalian Kartu & Refund Tunai
+            Pengembalian Kartu & Penarikan Saldo
           </DialogTitle>
           <DialogDescription className='text-sm text-muted-foreground'>
-            Sisa saldo akan di-refund tunai kepada pemegang kartu
+            Sisa saldo kartu akan dikembalikan tunai kepada tamu
           </DialogDescription>
         </DialogHeader>
 
@@ -116,7 +116,7 @@ export function RefundKartuModal({
             </p>
           </div>
           <div className='text-right shrink-0'>
-            <p className='text-xs text-muted-foreground'>Saldo yang di-refund</p>
+            <p className='text-xs text-muted-foreground'>Sisa Saldo Dikembalikan</p>
             <p className='font-bold text-xl text-amber-600 dark:text-amber-400 font-mono'>
               {formatRupiah(kartu.saldo)}
             </p>
@@ -129,11 +129,11 @@ export function RefundKartuModal({
           <span className='text-muted-foreground'>Setelah dikonfirmasi —</span>
           <ul className='mt-1.5 space-y-1 list-disc list-inside text-muted-foreground'>
             <li>
-              Saldo <strong className='text-foreground'>{formatRupiah(kartu.saldo)}</strong> di-refund tunai
+              Saldo <strong className='text-foreground'>{formatRupiah(kartu.saldo)}</strong> diserahkan tunai
             </li>
             <li>Saldo kartu direset menjadi Rp 0</li>
             <li>Label pemegang dikosongkan (kartu siap pakai ulang)</li>
-            <li>Status kartu berubah menjadi <strong className='text-foreground'>AVAILABLE</strong></li>
+            <li>Status kartu kembali menjadi <strong className='text-foreground'>Siap Dipinjam</strong></li>
           </ul>
         </div>
 
@@ -144,7 +144,7 @@ export function RefundKartuModal({
               htmlFor='nama-penerima'
               className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'
             >
-              Nama Penerima Refund
+              Nama Penerima Uang
             </Label>
             <div className='relative'>
               <User className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
@@ -181,7 +181,7 @@ export function RefundKartuModal({
               ) : (
                 <>
                   <CheckCircle2 className='h-4 w-4' />
-                  Konfirmasi Refund & Kembalikan Kartu
+                  Serahkan Uang & Simpan Kartu
                 </>
               )}
             </Button>

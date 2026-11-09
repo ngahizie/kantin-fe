@@ -243,7 +243,7 @@ function KoreksiMutasiFormContent({
         </div>
 
         <div className='space-y-1.5'>
-          <Label className='text-xs font-semibold'>Jenis Masalah Koreksi</Label>
+          <Label className='text-xs font-semibold'>Jenis Masalah Penyesuaian</Label>
           <Select
             value={jenisKoreksi}
             onValueChange={(val) => setJenisKoreksi(val as JenisKoreksi)}
@@ -253,13 +253,13 @@ function KoreksiMutasiFormContent({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='SALAH_INPUT_TOPUP' className='text-xs'>
-                Salah Input Top-up Tunai TU
+                Koreksi Kelebihan Isi Saldo TU
               </SelectItem>
               <SelectItem value='PEMBALIK_TRANSAKSI_KASIR' className='text-xs'>
-                Pembalik Transaksi Kasir (Sesi Ditutup)
+                Pengembalian Akibat Salah Potong Kasir
               </SelectItem>
               <SelectItem value='PENYESUAIAN_AUDIT' className='text-xs'>
-                Penyesuaian Audit Saldo Ledger
+                Penyesuaian Selisih Catatan Pembukuan
               </SelectItem>
             </SelectContent>
           </Select>
@@ -365,7 +365,7 @@ function KoreksiMutasiFormContent({
       <div className='space-y-3'>
         <div className='space-y-1.5'>
           <Label className='text-xs font-semibold'>
-            Arah Mutasi Koreksi Saldo:
+            Arah Perubahan Saldo:
           </Label>
           <div className='grid grid-cols-2 gap-3'>
             <div
@@ -379,11 +379,10 @@ function KoreksiMutasiFormContent({
               <ArrowDownRight className='mt-0.5 h-4 w-4 text-destructive' />
               <div>
                 <span className='block text-xs font-bold'>
-                  DEBIT (Kurangi Saldo)
+                  Kurangi Saldo Siswa (-)
                 </span>
                 <span className='mt-0.5 block text-[11px] leading-tight text-muted-foreground'>
-                  Untuk pembatalan kelebihan top-up atau pengurangan saldo
-                  keliru.
+                  Untuk koreksi kelebihan isi saldo atau transaksi salah.
                 </span>
               </div>
             </div>
@@ -399,11 +398,10 @@ function KoreksiMutasiFormContent({
               <ArrowUpRight className='mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
               <div>
                 <span className='block text-xs font-bold'>
-                  KREDIT (Tambah Saldo)
+                  Tambah Saldo Siswa (+)
                 </span>
                 <span className='mt-0.5 block text-[11px] leading-tight text-muted-foreground'>
-                  Untuk pembalik transaksi salah potong sesi lampau atau top-up
-                  kurang catat.
+                  Untuk pengembalian saldo siswa karena kasir salah potong.
                 </span>
               </div>
             </div>
@@ -453,7 +451,7 @@ function KoreksiMutasiFormContent({
       {/* Visualisasi Proyeksi Dampak Saldo */}
       <div className='space-y-2 rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5'>
         <span className='block text-xs font-semibold text-muted-foreground'>
-          Proyeksi Dampak Saldo Ledger:
+          Perubahan Saldo:
         </span>
         <div className='flex items-center justify-between font-mono text-xs'>
           <div>
@@ -466,7 +464,7 @@ function KoreksiMutasiFormContent({
           </div>
           <div className='text-center'>
             <span className='block text-[10px] text-muted-foreground'>
-              Mutasi:
+              Perubahan:
             </span>
             <Badge
               variant='secondary'
@@ -497,8 +495,8 @@ function KoreksiMutasiFormContent({
           <Alert variant='destructive' className='py-2 text-xs'>
             <ShieldAlert className='h-3.5 w-3.5' />
             <AlertDescription className='text-xs'>
-              Koreksi debit melebihi saldo berjalan! Saldo
-              tidak boleh minus dalam kondisi apa pun.
+              Pengurangan saldo melebihi saldo saat ini! Saldo
+              tidak boleh bernilai minus.
             </AlertDescription>
           </Alert>
         )}
@@ -507,20 +505,20 @@ function KoreksiMutasiFormContent({
       {/* Alasan Audit Koreksi (Wajib) */}
       <div className='space-y-1.5'>
         <Label htmlFor={alasanInputId} className='text-xs font-semibold'>
-          Alasan Audit Koreksi{' '}
-          <span className='text-destructive'>* (Wajib Diisi Lengkap)</span>
+          Alasan Penyesuaian Saldo{' '}
+          <span className='text-destructive'>* (Wajib Diisi Jelas)</span>
         </Label>
         <Textarea
           id={alasanInputId}
           rows={2}
           value={alasan}
           onChange={(e) => setAlasan(e.target.value)}
-          placeholder='Contoh: Pembalik transaksi belanja TRX-9012 pada sesi #98 yang ditutup karena tap ganda saat kasir ramai'
+          placeholder='Contoh: Pengembalian saldo karena terpotong dua kali saat kasir ramai'
           className='resize-none text-xs'
           required
         />
         <p className='text-[10px] text-muted-foreground'>
-          Alasan audit akan terekam permanen dalam Audit Log Keuangan Sekolah.
+          Keterangan penyesuaian akan tersimpan aman di buku besar sekolah.
         </p>
       </div>
 
@@ -537,8 +535,7 @@ function KoreksiMutasiFormContent({
           htmlFor={agreementCheckboxId}
           className='cursor-pointer text-xs leading-tight text-muted-foreground'
         >
-          Saya ({bendaharaNama}) mengonfirmasi kebenaran data audit mutasi
-          pembalik ini dan bertanggung jawab atas perubahan ledger saldo.
+          Saya ({bendaharaNama}) menyatakan penyesuaian saldo ini telah diverifikasi dan disetujui sesuai aturan sekolah.
         </Label>
       </div>
 
