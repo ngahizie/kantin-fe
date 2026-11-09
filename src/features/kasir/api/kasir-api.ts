@@ -221,7 +221,10 @@ export const kasirApi = {
 
     // 1. Cek apakah cocok dengan Kartu Tamu
     try {
-      const ktRes = await apiClient.get<ApiResponse<RawKartuTamuItem[]>>('/api/kartu-tamu')
+      const ktRes = await apiClient.get<ApiResponse<RawKartuTamuItem[]>>('/api/kartu-tamu', {
+        silent: true,
+        skipToast: true,
+      })
       const ktList = ktRes.data?.data || []
       const foundKt = ktList.find(
         (k) =>
@@ -249,7 +252,7 @@ export const kasirApi = {
         }
       }
     } catch {
-      // Fallback cek mock kartu tamu jika endpoint gagal
+      // Fallback cek mock kartu tamu jika endpoint gagal / role kasir tidak berhak
       const mockKt = MOCK_KARTU_TAMU.find(
         (k) =>
           (k.uid || '').toUpperCase() === qUpper ||
@@ -276,6 +279,8 @@ export const kasirApi = {
     try {
       const siswaRes = await apiClient.get<ApiResponse<RawSiswaItem[]>>('/api/siswa', {
         params: { q, batas: 20 },
+        silent: true,
+        skipToast: true,
       })
       const siswaList = siswaRes.data?.data || []
       foundStudent = siswaList.find(
@@ -309,6 +314,8 @@ export const kasirApi = {
             subjekTipe: 'SISWA',
             subjekId: studentId,
           },
+          silent: true,
+          skipToast: true,
         })
         const liveSaldo = saldoRes.data?.data?.saldo
         if (typeof liveSaldo === 'number' && liveSaldo > 0) {

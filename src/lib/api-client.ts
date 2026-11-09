@@ -8,6 +8,13 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from 'axios'
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    silent?: boolean
+    skipToast?: boolean
+  }
+}
 import { toast } from 'sonner'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 
