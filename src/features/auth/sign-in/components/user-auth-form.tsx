@@ -193,7 +193,7 @@ export function UserAuthForm({
           />
 
           <Button
-            className='mt-2 w-full h-12 text-base font-bold !bg-blue-600 hover:!bg-blue-500 !text-white shadow-lg shadow-blue-500/25 dark:shadow-none rounded-[32px] transition-all hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2'
+            className='mt-2 w-full h-12 text-base font-bold !bg-blue-600 hover:!bg-blue-500 !text-white shadow-lg shadow-blue-500/25 dark:shadow-none rounded-[32px] transition-colors cursor-pointer flex items-center justify-center gap-2'
             disabled={isLoading}
           >
             {isLoading ? <Loader2 className='animate-spin' /> : <LogIn className='size-5' />}
