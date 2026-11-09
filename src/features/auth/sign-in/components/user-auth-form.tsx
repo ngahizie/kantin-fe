@@ -194,10 +194,11 @@ export function UserAuthForm({
 
           <Button className='mt-2 w-full font-medium' disabled={isLoading}>
             {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
-            Masuk ke Sistem Kantin
+            Masuk
           </Button>
         </form>
       </Form>
     </div>
   )
 }
+export default UserAuthForm

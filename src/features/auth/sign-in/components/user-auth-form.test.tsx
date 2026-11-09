@@ -69,7 +69,7 @@ describe('UserAuthForm', () => {
       screen = await render(<UserAuthForm />)
       emailInput = screen.getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i })
       passwordInput = screen.getByLabelText(/^(Kata Sandi|Password)$/i)
-      signInButton = screen.getByRole('button', { name: /Masuk ke Sistem Kantin/i })
+      signInButton = screen.getByRole('button', { name: /(^Masuk$|Masuk ke Sistem Kantin)/i })
     })
 
     it('renders fields and submit button', async () => {
@@ -125,7 +125,7 @@ describe('UserAuthForm', () => {
     await userEvent.fill(getByRole('textbox', { name: /(Username|Email atau Username Staf|Username \/ Email)/i }), 'admin@skoolia.id')
     await userEvent.fill(getByLabelText(/^(Kata Sandi|Password)$/i), 'password123')
 
-    await userEvent.click(getByRole('button', { name: /Masuk ke Sistem Kantin/i }))
+    await userEvent.click(getByRole('button', { name: /(^Masuk$|Masuk ke Sistem Kantin)/i }))
 
     await vi.waitFor(() => expect(setUserMock).toHaveBeenCalledOnce())
     expect(resetMock).toHaveBeenCalledOnce()
