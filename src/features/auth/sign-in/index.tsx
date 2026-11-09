@@ -33,7 +33,7 @@ export function SignIn() {
           <div className='flex-1 flex flex-col items-center justify-center relative w-full px-8 mt-12'>
             <div className='relative w-full max-w-[540px] aspect-[4/3] flex items-center justify-center'>
               {/* Main Center Dashboard Mockup */}
-              <div className='absolute inset-0 rounded-3xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl has-border !border !border-slate-200/80 dark:!border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden z-20'>
+              <div className='absolute inset-0 rounded-3xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl has-border !border !border-slate-200/80 dark:!border-slate-800 shadow-none flex flex-col overflow-hidden z-20'>
                 {/* Window Header */}
                 <div className='h-14 has-border !border-b !border-slate-200/60 dark:!border-slate-800/80 flex items-center px-6 gap-3 bg-white/40 dark:bg-slate-900/40'>
                   <div className='flex gap-2'>
@@ -41,7 +41,7 @@ export function SignIn() {
                     <div className='h-3 w-3 rounded-full bg-[#ffbd2e]' />
                     <div className='h-3 w-3 rounded-full bg-[#27c93f]' />
                   </div>
-                  <div className='ml-4 h-7 px-3 bg-white/50 dark:bg-slate-800/50 rounded-lg mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs'>
+                  <div className='ml-4 h-7 px-3 bg-white/50 dark:bg-slate-800/50 rounded-lg mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300'>
                     <Store className='w-3.5 h-3.5 text-blue-600 dark:text-blue-400' />
                     <span>Kantin Sehat Skoolia • POS Kasir</span>
                   </div>
@@ -62,7 +62,7 @@ export function SignIn() {
 
                   {/* Cards Skeleton Row */}
                   <div className='flex gap-4'>
-                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 shadow-sm flex items-center px-4'>
+                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 flex items-center px-4'>
                       <div className='h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3 shrink-0'>
                         <CreditCard className='w-5 h-5 text-indigo-500' />
                       </div>
@@ -71,7 +71,7 @@ export function SignIn() {
                         <p className='text-[10px] text-emerald-500 font-semibold truncate'>Non-Tunai / RFID Aktif</p>
                       </div>
                     </div>
-                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 shadow-sm flex items-center px-4'>
+                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 flex items-center px-4'>
                       <div className='h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mr-3 shrink-0'>
                         <Utensils className='w-5 h-5 text-emerald-500' />
                       </div>
@@ -83,7 +83,7 @@ export function SignIn() {
                   </div>
 
                   {/* Chart Section */}
-                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 shadow-sm p-4 lg:p-5 flex flex-col justify-between overflow-hidden'>
+                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 p-4 lg:p-5 flex flex-col justify-between overflow-hidden'>
                     <div className='flex items-center justify-between'>
                       <span className='text-[11px] font-bold text-slate-600 dark:text-slate-400'>Aktivitas Transaksi Jam Istirahat</span>
                       <span className='text-[10px] font-semibold text-emerald-500'>+96% Kecepatan Kasir</span>
@@ -136,7 +136,7 @@ export function SignIn() {
             </p>
           </div>
 
-          <div className='has-border !border sm:!border-2 !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] rounded-3xl sm:rounded-4xl sm:shadow-xl sm:shadow-blue-100/40 dark:sm:shadow-xl dark:sm:shadow-black/50 p-6 sm:p-8'>
+          <div className='has-border !border sm:!border-2 !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] rounded-3xl sm:rounded-4xl shadow-none p-6 sm:p-8'>
             <UserAuthForm />
           </div>
         </div>
