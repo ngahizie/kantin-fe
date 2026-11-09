@@ -268,6 +268,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     ditutupAt: null as string | null,
     ditutupOleh: null as number | null,
     autoTutup: false,
+    uangFisik: null as number | null,
+    selisih: null as number | null,
+    catatan: null as string | null,
   }
 
   const getLiveRekap = () => {
@@ -1235,6 +1238,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const liveRekap = getLiveRekap()
       currentSesiMock.status = 'DITUTUP'
       currentSesiMock.ditutupAt = new Date().toISOString()
+      const uangFisik = payload.uangFisik != null ? Number(payload.uangFisik) : liveRekap.totalBersih
+      const selisih = payload.selisih != null ? Number(payload.selisih) : uangFisik - liveRekap.totalBersih
+      const catatan = payload.catatan ? String(payload.catatan) : null
+
+      currentSesiMock.uangFisik = uangFisik
+      currentSesiMock.selisih = selisih
+      currentSesiMock.catatan = catatan
+
       return {
         status: 200,
         data: {
@@ -1247,6 +1258,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             totalVoid: liveRekap.totalVoid,
             totalBersih: liveRekap.totalBersih,
             totalTransaksi: liveRekap.jumlahTransaksi,
+            uangFisik,
+            selisih,
+            catatan,
           },
         },
       }
