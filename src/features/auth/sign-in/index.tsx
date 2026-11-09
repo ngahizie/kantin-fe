@@ -1,4 +1,4 @@
-import { UtensilsCrossed, Utensils, CreditCard, Store } from 'lucide-react'
+import { UtensilsCrossed, Utensils } from 'lucide-react'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn() {
@@ -41,10 +41,7 @@ export function SignIn() {
                     <div className='h-3 w-3 rounded-full bg-[#ffbd2e]' />
                     <div className='h-3 w-3 rounded-full bg-[#27c93f]' />
                   </div>
-                  <div className='ml-4 h-7 px-3 bg-white/50 dark:bg-slate-800/50 rounded-lg mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300'>
-                    <Store className='w-3.5 h-3.5 text-blue-600 dark:text-blue-400' />
-                    <span>Kantin Sehat Skoolia • POS Kasir</span>
-                  </div>
+                  <div className='ml-4 h-6 w-64 bg-slate-200/70 dark:bg-slate-800/80 rounded-lg mx-auto' />
                 </div>
 
                 {/* Window Body */}
@@ -54,41 +51,32 @@ export function SignIn() {
                     <div className='w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0'>
                       <UtensilsCrossed className='w-6 h-6 text-amber-600 dark:text-amber-400' />
                     </div>
-                    <div>
-                      <p className='text-sm font-bold text-slate-800 dark:text-white'>Operasional Kantin</p>
-                      <p className='text-xs text-slate-500 dark:text-slate-400'>Sistem POS & Kasir Digital</p>
+                    <div className='flex flex-col gap-2'>
+                      <div className='h-3.5 w-36 rounded-full bg-slate-300 dark:bg-slate-700/80' />
+                      <div className='h-2.5 w-24 rounded-full bg-slate-200 dark:bg-slate-800/80' />
                     </div>
                   </div>
 
                   {/* Cards Skeleton Row */}
                   <div className='flex gap-4'>
-                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 flex items-center px-4'>
-                      <div className='h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3 shrink-0'>
-                        <CreditCard className='w-5 h-5 text-indigo-500' />
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-xs font-bold text-slate-800 dark:text-white truncate'>1,250+ Transaksi</p>
-                        <p className='text-[10px] text-emerald-500 font-semibold truncate'>Non-Tunai / RFID Aktif</p>
-                      </div>
+                    <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 flex flex-col justify-center px-5 gap-2'>
+                      <div className='h-3.5 w-36 rounded-full bg-slate-300 dark:bg-slate-700/80' />
+                      <div className='h-2.5 w-20 rounded-full bg-slate-200 dark:bg-slate-800/80' />
                     </div>
                     <div className='h-20 flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 flex items-center px-4'>
                       <div className='h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mr-3 shrink-0'>
                         <Utensils className='w-5 h-5 text-emerald-500' />
                       </div>
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-xs font-bold text-slate-800 dark:text-white truncate'>Menu Siap Saji</p>
-                        <p className='text-[10px] text-slate-500 font-medium truncate'>48 Pilihan Tersedia</p>
+                      <div className='flex-1 min-w-0 flex flex-col gap-2'>
+                        <div className='h-3.5 w-28 rounded-full bg-slate-300 dark:bg-slate-700/80' />
+                        <div className='h-2.5 w-16 rounded-full bg-slate-200 dark:bg-slate-800/80' />
                       </div>
                     </div>
                   </div>
 
                   {/* Chart Section */}
-                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 p-4 lg:p-5 flex flex-col justify-between overflow-hidden'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-[11px] font-bold text-slate-600 dark:text-slate-400'>Aktivitas Transaksi Jam Istirahat</span>
-                      <span className='text-[10px] font-semibold text-emerald-500'>+96% Kecepatan Kasir</span>
-                    </div>
-                    <div className='flex items-end gap-3 xl:gap-4 h-20 pt-2'>
+                  <div className='flex-1 w-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-2xl has-border !border !border-slate-200/60 dark:!border-slate-700/60 p-4 lg:p-5 flex items-end overflow-hidden'>
+                    <div className='flex items-end gap-3 xl:gap-4 h-full w-full pt-2'>
                       {[35, 60, 45, 95, 75, 100, 80].map((h, i) => (
                         <div
                           key={i}
