@@ -23,21 +23,16 @@ export function SignIn() {
         <div className='relative z-10 flex flex-col h-full w-full'>
           {/* Top Logo */}
           <div className='absolute top-8 left-8 z-50'>
-            <div className='inline-flex items-center space-x-2.5'>
-              <img
-                src='/skoolia-gelap.png'
-                alt='Skoolia Logo'
-                className='h-8 w-auto object-contain dark:hidden bg-white/60 backdrop-blur-md p-1.5 rounded-xl has-border !border !border-slate-200/60'
-              />
-              <img
-                src='/skoolia-terang.png'
-                alt='Skoolia Logo'
-                className='h-8 w-auto object-contain hidden dark:block bg-black/60 backdrop-blur-md p-1.5 rounded-xl has-border !border !border-slate-800/60'
-              />
-              <span className='px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 has-border !border !border-blue-600/20 dark:!border-blue-500/30'>
-                Kantin
-              </span>
-            </div>
+            <img
+              src='/skoolia-gelap.png'
+              alt='Skoolia Logo'
+              className='h-8 w-auto object-contain dark:hidden'
+            />
+            <img
+              src='/skoolia-terang.png'
+              alt='Skoolia Logo'
+              className='h-8 w-auto object-contain hidden dark:block'
+            />
           </div>
 
           {/* Center Content / Hero Image - Fully Centered */}
@@ -177,7 +172,7 @@ export function SignIn() {
       <div className='w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12'>
         <div className='mx-auto flex w-full max-w-[420px] flex-col justify-center space-y-8 animate-in fade-in slide-in-from-right-8 duration-700'>
           <div className='flex flex-col space-y-2 text-center lg:text-left'>
-            <div className='lg:hidden mx-auto mb-6 inline-flex items-center space-x-2.5'>
+            <div className='lg:hidden mx-auto mb-6 inline-flex'>
               <img
                 src='/skoolia-gelap.png'
                 alt='Skoolia Logo'
@@ -188,9 +183,6 @@ export function SignIn() {
                 alt='Skoolia Logo'
                 className='h-10 w-auto object-contain hidden dark:block'
               />
-              <span className='px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-600/20 dark:border-blue-500/30'>
-                Kantin
-              </span>
             </div>
             <h1 className='text-3xl font-black tracking-tight text-slate-800 dark:text-white'>
               Selamat Datang!
