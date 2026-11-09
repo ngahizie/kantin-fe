@@ -13,13 +13,16 @@ export function SignIn() {
       <Card className='w-full max-w-[390px] gap-5 border-0 bg-muted/70 dark:bg-muted/40 py-8 px-6 sm:px-7'>
         <CardHeader className='pb-1 px-0'>
           <div className='flex justify-center mb-4'>
-            <div className='flex aspect-square size-12 items-center justify-center rounded-2xl overflow-hidden bg-muted dark:bg-white p-2'>
-              <img
-                src='/logo.png'
-                alt='Kantin SKOOLIA'
-                className='size-full object-contain'
-              />
-            </div>
+            <img
+              src='/skoolia-gelap.png'
+              alt='Kantin SKOOLIA'
+              className='h-8 sm:h-9 w-auto object-contain dark:hidden'
+            />
+            <img
+              src='/skoolia-terang.png'
+              alt='Kantin SKOOLIA'
+              className='h-8 sm:h-9 w-auto object-contain hidden dark:block'
+            />
           </div>
           <CardTitle className='text-xl font-bold tracking-tight text-center'>
             Masuk
