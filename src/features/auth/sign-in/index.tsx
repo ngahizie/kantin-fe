@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { AuthLayout } from '../auth-layout'
 import { UserAuthForm } from './components/user-auth-form'
@@ -12,7 +11,7 @@ export function SignIn() {
     <AuthLayout>
       <Card className='w-full max-w-[390px] gap-5 border-0 bg-muted/70 dark:bg-muted/40 py-8 px-6 sm:px-7'>
         <CardHeader className='pb-1 px-0'>
-          <div className='flex justify-center mb-4'>
+          <div className='flex justify-center mb-2'>
             <img
               src='/skoolia-gelap.png'
               alt='Kantin SKOOLIA'
@@ -24,9 +23,6 @@ export function SignIn() {
               className='h-8 sm:h-9 w-auto object-contain hidden dark:block'
             />
           </div>
-          <CardTitle className='text-xl font-bold tracking-tight text-center'>
-            Masuk
-          </CardTitle>
         </CardHeader>
         <CardContent className='pt-1 px-0'>
           <UserAuthForm />
