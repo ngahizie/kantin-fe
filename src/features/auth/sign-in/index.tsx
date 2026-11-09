@@ -43,7 +43,7 @@ export function SignIn() {
                   </div>
                   <div className='ml-4 h-7 px-3 bg-white/50 dark:bg-slate-800/50 rounded-lg mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs'>
                     <Store className='w-3.5 h-3.5 text-blue-600 dark:text-blue-400' />
-                    <span>Kantin Sehat SKOOLIA • POS Kasir</span>
+                    <span>Kantin Sehat Skoolia • POS Kasir</span>
                   </div>
                 </div>
 
@@ -156,7 +156,7 @@ export function SignIn() {
           {/* Bottom Footer */}
           <div className='absolute bottom-8 left-8 right-8 z-30 flex justify-center lg:justify-start'>
             <p className='text-sm text-slate-500 font-medium'>
-              &copy; {new Date().getFullYear()} Kantin SKOOLIA. Sistem Manajemen & Kasir Sekolah.
+              &copy; {new Date().getFullYear()} Kantin Skoolia.
             </p>
           </div>
         </div>
