@@ -103,22 +103,21 @@ export function LaporanRiwayatSiswaPage() {
 
         const searchParams = new URLSearchParams(window.location.search)
         const paramId = searchParams.get('siswaId')
-        const initialId = paramId
-          ? Number(paramId)
-          : list.length > 0
-          ? list[0].siswaId
-          : null
+        const initialId = paramId ? Number(paramId) : null
 
         if (initialId) {
           setSelectedSiswaId(initialId)
-          const initialStudent =
-            list.find((s) => s.siswaId === initialId) || list[0]
+          const initialStudent = list.find((s) => s.siswaId === initialId)
           if (initialStudent) {
             setSearchStudentQuery(
               `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
             )
           }
         } else {
+          setSelectedSiswaId(null)
+          setSearchStudentQuery('')
+          setProfil(null)
+          setRiwayat([])
           setIsLoading(false)
         }
       } catch (_err: unknown) {
@@ -150,6 +149,20 @@ export function LaporanRiwayatSiswaPage() {
     setSelectedSiswaId(s.siswaId)
     setSearchStudentQuery(`${s.nis} - ${s.nama} (${s.kelas})`)
     setIsDropdownOpen(false)
+    const url = new URL(window.location.href)
+    url.searchParams.set('siswaId', String(s.siswaId))
+    window.history.replaceState({}, '', url.toString())
+  }
+
+  const handleClearStudent = () => {
+    setSelectedSiswaId(null)
+    setSearchStudentQuery('')
+    setProfil(null)
+    setRiwayat([])
+    setIsDropdownOpen(false)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('siswaId')
+    window.history.replaceState({}, '', url.toString())
   }
 
   useEffect(() => {
@@ -641,7 +654,7 @@ export function LaporanRiwayatSiswaPage() {
                 >
                   <Link to="/laporan/riwayat-keseluruhan">
                     <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                    Kembali ke Riwayat Keseluruhan
+                    Kembali ke Riwayat Transaksi
                   </Link>
                 </Button>
               </div>
@@ -656,7 +669,7 @@ export function LaporanRiwayatSiswaPage() {
                 <Search className="text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder="Cari NIS, NISN, atau Nama Siswa..."
+                  placeholder="Cari & pilih siswa (NIS / Nama)..."
                   value={searchStudentQuery}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setSearchStudentQuery(e.target.value)
@@ -671,12 +684,9 @@ export function LaporanRiwayatSiswaPage() {
                 {searchStudentQuery && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearchStudentQuery('')
-                      setIsDropdownOpen(true)
-                    }}
+                    onClick={handleClearStudent}
                     className="text-muted-foreground hover:text-foreground absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5"
-                    title="Kosongkan pencarian"
+                    title="Kosongkan pilihan siswa"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -746,8 +756,38 @@ export function LaporanRiwayatSiswaPage() {
             </div>
           </div>
 
-          {/* STUDENT PROFILE CARD */}
-          {profil && (
+          {!selectedSiswaId ? (
+            <Card className="border-0 bg-muted/40 dark:bg-muted/20 py-16 text-center">
+              <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <User className="h-8 w-8" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-bold tracking-tight">
+                    Pilih Siswa Terlebih Dahulu
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Silakan cari dan pilih siswa pada kolom pencarian di atas untuk melihat ringkasan profil, sisa saldo, batasan jajan, serta riwayat transaksi lengkapnya.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsDropdownOpen(true)
+                    searchContainerRef.current?.querySelector('input')?.focus()
+                  }}
+                  className="gap-2 text-xs mt-2"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Buka Pencarian Siswa</span>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* STUDENT PROFILE CARD */}
+              {profil && (
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -977,6 +1017,8 @@ export function LaporanRiwayatSiswaPage() {
               </div>
             </CardContent>
           </Card>
+          </>
+          )}
 
           {/* DIALOG STRUK DIGITAL KASIR (UNTUK JAWAB KOMPLAIN ORTU) */}
           <Dialog

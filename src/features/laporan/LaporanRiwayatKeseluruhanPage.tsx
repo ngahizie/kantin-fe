@@ -415,7 +415,7 @@ export function LaporanRiwayatKeseluruhanPage() {
               Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Riwayat Transaksi Keseluruhan</span>
+            <span className="text-xs font-medium">Riwayat Transaksi</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitch />
@@ -430,11 +430,22 @@ export function LaporanRiwayatKeseluruhanPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Riwayat Transaksi Belanja Keseluruhan
+                Riwayat Transaksi
               </h1>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="gap-2 border-border/80 hover:bg-accent"
+              >
+                <Link to="/laporan/riwayat-siswa">
+                  <User className="h-4 w-4 text-primary" />
+                  <span>Lihat Riwayat per Siswa</span>
+                </Link>
+              </Button>
               <Button
                 variant="default"
                 size="sm"

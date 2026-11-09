@@ -36,8 +36,8 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Saldo Mengendap')
-    expect(subReportTitles).toContain('Riwayat Belanja Keseluruhan')
-    expect(subReportTitles).toContain('Detail Riwayat Siswa')
+    expect(subReportTitles).toContain('Riwayat Transaksi')
+    expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).not.toContain('Laporan Kerugian Stok')
   })
 
@@ -73,7 +73,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).not.toContain('Cek Selisih Uang')
     expect(subReportTitles).not.toContain('Saldo Mengendap')
-    expect(subReportTitles).not.toContain('Riwayat Belanja Keseluruhan')
+    expect(subReportTitles).not.toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
 
     // Pengaturan kantin harus disembunyikan dari pengelola
@@ -109,8 +109,8 @@ describe('filterNavGroupsByRole', () => {
     )
     expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Saldo Mengendap')
-    expect(subReportTitles).toContain('Riwayat Belanja Keseluruhan')
-    expect(subReportTitles).toContain('Detail Riwayat Siswa')
+    expect(subReportTitles).toContain('Riwayat Transaksi')
+    expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
   })
 
@@ -170,7 +170,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Saldo Mengendap')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
-    expect(subReportTitles).toContain('Riwayat Belanja Keseluruhan')
+    expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
   })
 })
