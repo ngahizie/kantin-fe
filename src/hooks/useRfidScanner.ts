@@ -21,6 +21,7 @@ export function useRfidScanner({
   const bufferRef = useRef<string>('')
   const lastKeyTimeRef = useRef<number>(0)
   const burstTimestampsRef = useRef<number[]>([])
+  const burstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const onScanRef = useRef(onScan)
   useEffect(() => {
@@ -28,6 +29,10 @@ export function useRfidScanner({
   }, [onScan])
 
   const clearBuffer = useCallback(() => {
+    if (burstTimeoutRef.current) {
+      clearTimeout(burstTimeoutRef.current)
+      burstTimeoutRef.current = null
+    }
     bufferRef.current = ''
     burstTimestampsRef.current = []
     lastKeyTimeRef.current = 0
@@ -45,6 +50,11 @@ export function useRfidScanner({
 
       // Jika tombol Enter ditekan
       if (e.key === 'Enter') {
+        if (burstTimeoutRef.current) {
+          clearTimeout(burstTimeoutRef.current)
+          burstTimeoutRef.current = null
+        }
+
         const buffer = bufferRef.current.trim()
         const timestamps = burstTimestampsRef.current
 
@@ -77,12 +87,21 @@ export function useRfidScanner({
 
       // Tombol Escape membatalkan buffer saat ini
       if (e.key === 'Escape') {
+        if (burstTimeoutRef.current) {
+          clearTimeout(burstTimeoutRef.current)
+          burstTimeoutRef.current = null
+        }
         clearBuffer()
         return
       }
 
       // Hanya tampung karakter tunggal (huruf, angka, dash/underscore)
       if (e.key.length === 1) {
+        if (burstTimeoutRef.current) {
+          clearTimeout(burstTimeoutRef.current)
+          burstTimeoutRef.current = null
+        }
+
         // Jika jeda terlalu lama dari ketukan sebelumnya (> 150ms), kemungkinan ketikan manusia biasa
         if (
           timeSinceLastKey > maxIntervalMs * 2.5 &&
@@ -96,11 +115,33 @@ export function useRfidScanner({
         }
 
         lastKeyTimeRef.current = now
+
+        // Fallback untuk USB RFID reader yang tidak mengirimkan tombol Enter:
+        // Jika karakter datang cepat berturut-turut (burst), trigger onScan setelah jeda 150ms
+        burstTimeoutRef.current = setTimeout(() => {
+          const buffer = bufferRef.current.trim()
+          const timestamps = burstTimestampsRef.current
+
+          if (buffer.length >= minChars && timestamps.length >= minChars) {
+            const totalDuration =
+              timestamps[timestamps.length - 1] - timestamps[0]
+            const avgInterval = totalDuration / (timestamps.length - 1 || 1)
+
+            if (avgInterval <= maxIntervalMs || totalDuration <= 600) {
+              const scannedUid = buffer
+              clearBuffer()
+              onScanRef.current(scannedUid)
+            }
+          }
+        }, 150)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown, true)
     return () => {
+      if (burstTimeoutRef.current) {
+        clearTimeout(burstTimeoutRef.current)
+      }
       window.removeEventListener('keydown', handleKeyDown, true)
     }
   }, [enabled, minChars, maxIntervalMs, clearBuffer])

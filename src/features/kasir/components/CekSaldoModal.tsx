@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Wallet, Search, User, CreditCard, AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { formatRupiah } from '@/lib/formatters'
 import { kasirApi, type InfoSaldoData } from '../api/kasir-api'
+import { useRfidScanner } from '@/hooks/useRfidScanner'
 
 export interface CekSaldoModalProps {
   open: boolean
@@ -26,12 +27,17 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<InfoSaldoData | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const lastSearchedRef = useRef<string>('')
+  const isSearchingRef = useRef<boolean>(false)
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const query = searchInput.trim()
+  const executeSearch = useCallback(async (queryToSearch: string) => {
+    const query = queryToSearch.trim()
     if (!query) return
+    if (isSearchingRef.current && lastSearchedRef.current === query) return
 
+    lastSearchedRef.current = query
+    isSearchingRef.current = true
     setLoading(true)
     setErrorMessage(null)
     setResult(null)
@@ -45,14 +51,86 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
         errObj.message || 'Gagal mengecek saldo. Kartu atau siswa tidak ditemukan.'
       )
     } finally {
+      isSearchingRef.current = false
       setLoading(false)
+      setTimeout(() => {
+        inputRef.current?.select()
+      }, 50)
     }
+  }, [])
+
+  // Integrasi listener RFID scanner global saat modal sedang terbuka
+  useRfidScanner({
+    onScan: (scannedUid) => {
+      setSearchInput(scannedUid)
+      executeSearch(scannedUid)
+    },
+    enabled: open,
+  })
+
+  // Deteksi otomatis saat kartu di-scan (misal UID 8-16 digit desimal/hex atau kartu tamu)
+  useEffect(() => {
+    const trimmed = searchInput.trim()
+    if (!trimmed) return
+
+    // Jika data hasil saat ini sudah sesuai dengan query ini, jangan cek ulang
+    if (
+      result &&
+      (result.uid?.toLowerCase() === trimmed.toLowerCase() ||
+        result.nis?.toLowerCase() === trimmed.toLowerCase() ||
+        result.nomorKartu?.toLowerCase() === trimmed.toLowerCase())
+    ) {
+      return
+    }
+
+    if (lastSearchedRef.current.toLowerCase() === trimmed.toLowerCase() && (result || errorMessage)) {
+      return
+    }
+
+    // Pola kartu RFID: 8-16 digit desimal (Mifare desimal), 8-16 hex chars, atau nomor kartu tamu KT-xx
+    const isCompletedUid =
+      /^\d{8,16}$/.test(trimmed) ||
+      /^[0-9a-fA-F]{8,16}$/.test(trimmed) ||
+      /^KT-\d+$/i.test(trimmed)
+
+    // Jika UID lengkap dari scan kartu, eksekusi hampir instan (60ms) tanpa perlu klik tombol
+    // Jika input manual (nama atau NIS), debounce 350ms
+    const delay = isCompletedUid ? 60 : 350
+
+    if (trimmed.length < 3) return
+
+    const timer = setTimeout(() => {
+      executeSearch(trimmed)
+    }, delay)
+
+    return () => clearTimeout(timer)
+  }, [searchInput, result, errorMessage, executeSearch])
+
+  // Auto focus & select input saat modal terbuka
+  useEffect(() => {
+    if (open) {
+      lastSearchedRef.current = ''
+      const t = setTimeout(() => {
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }, 50)
+      return () => clearTimeout(t)
+    }
+  }, [open])
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    executeSearch(searchInput)
   }
 
   const handleReset = () => {
     setSearchInput('')
+    lastSearchedRef.current = ''
     setResult(null)
     setErrorMessage(null)
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 50)
   }
 
   const handleClose = (isOpen: boolean) => {
@@ -84,8 +162,10 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
               <div className='relative flex-1'>
                 <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
+                  ref={inputRef}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   placeholder='Tap kartu atau ketik UID / NIS...'
                   disabled={loading}
                   autoFocus
