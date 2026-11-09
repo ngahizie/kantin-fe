@@ -111,6 +111,18 @@ export const kasirApi = {
         undefined,
     }
 
+    // Jika nama masih default 'Pembeli' atau data profil siswa belum lengkap, perkaya dari MOCK_SISWA
+    const matchedSiswa = MOCK_SISWA.find(
+      (s) => s.uid?.toUpperCase() === data.rfidUid.toUpperCase()
+    )
+    if (matchedSiswa && (pembeli.nama === 'Pembeli' || !pembeli.nama)) {
+      pembeli.nama = matchedSiswa.nama
+      pembeli.kelas = matchedSiswa.kelas || pembeli.kelas
+      pembeli.fotoUrl = matchedSiswa.foto_url || pembeli.fotoUrl
+      pembeli.foto_url = matchedSiswa.foto_url || pembeli.foto_url
+      pembeli.nis = matchedSiswa.nis || pembeli.nis
+    }
+
     return {
       transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
       transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
