@@ -6,7 +6,6 @@ import {
   User,
   Phone,
   FileText,
-  Building2,
   Printer,
   X,
 } from 'lucide-react'
@@ -515,7 +514,8 @@ export function LaporanRiwayatSiswaPage() {
 </head>
 <body>
   <div class="header">
-    <div class="store-name">SKOOLIA CANTEEN</div>
+    <img src="/logo.png" style="height: 28px; width: auto; margin-bottom: 4px;" alt="Logo Skoolia" />
+    <div class="store-name">KANTIN SKOOLIA</div>
     <div class="sub-title">STRUK TRANSAKSI DIGITAL KASIR</div>
     <div>
       <div style="font-size: 8px; color: #666; margin-top: 4px;">NO. REFERENSI TRANSAKSI:</div>
@@ -570,7 +570,7 @@ export function LaporanRiwayatSiswaPage() {
 
   <div class="footer">
     <p>Simpan bukti ini sebagai bukti transaksi resmi kantin sekolah.</p>
-    <p class="footer-brand">*** SKOOLIA CASHLESS CANTEEN ***</p>
+    <p class="footer-brand">*** KANTIN SKOOLIA ***</p>
   </div>
 </body>
 </html>`
@@ -995,9 +995,13 @@ export function LaporanRiwayatSiswaPage() {
                   <div className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none">
                     {/* Header Nota */}
                     <div className="space-y-1 border-b border-dashed border-slate-300 pb-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5 text-sm font-bold tracking-tight text-slate-900 uppercase">
-                        <Building2 className="h-4 w-4 text-emerald-600" />
-                        <span>SKOOLIA CANTEEN</span>
+                      <div className="flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase">
+                        <img
+                          src="/logo.png"
+                          alt="Logo Skoolia"
+                          className="h-5 w-5 object-contain"
+                        />
+                        <span>KANTIN SKOOLIA</span>
                       </div>
                       <p className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                         STRUK TRANSAKSI DIGITAL KASIR
@@ -1097,7 +1101,7 @@ export function LaporanRiwayatSiswaPage() {
                         Simpan bukti ini sebagai bukti transaksi resmi kantin sekolah.
                       </p>
                       <p className="font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase pt-0.5">
-                        *** SKOOLIA CASHLESS CANTEEN ***
+                        *** KANTIN SKOOLIA ***
                       </p>
                     </div>
                   </div>

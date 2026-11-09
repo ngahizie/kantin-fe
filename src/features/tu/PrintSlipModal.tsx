@@ -1,7 +1,6 @@
 import {
   Printer,
   CheckCircle2,
-  Building2,
   Calendar,
   UserCheck,
   CreditCard,
@@ -170,13 +169,17 @@ export function PrintSlipModal({
           {/* Authentic Printable Thermal Receipt Slip */}
           <div className='printable-slip w-full space-y-4 rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none'>
             {/* Header Nota */}
-            <div className='print-border-dashed space-y-1 border-b border-dashed border-slate-300 pb-3 text-center'>
-              <div className='flex items-center justify-center gap-1 text-sm font-bold tracking-tight text-slate-900 uppercase'>
-                <Building2 className='no-print h-4 w-4 text-emerald-600' />
-                SKOOLIA CANTEEN
+            <div className='print-border-dashed space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center'>
+              <div className='flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase'>
+                <img
+                  src='/logo.png'
+                  alt='Logo Skoolia'
+                  className='h-5 w-5 object-contain'
+                />
+                <span>KANTIN SKOOLIA</span>
               </div>
               <p className='text-[10px] font-semibold tracking-wider text-slate-600 uppercase'>
-                BUKTI PENERIMAAN SALDO TUNAI
+                BUKTI PENERIMAAN SALDO SISWA
               </p>
 
               {/* Nomor Referensi Unik */}
@@ -269,7 +272,7 @@ export function PrintSlipModal({
                 Simpan lembar bukti ini sebagai tanda terima sah pembayaran tunai di TU Sekolah.
               </div>
               <div className='pt-1 font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase'>
-                *** SKOOLIA CASHLESS CANTEEN ***
+                *** KANTIN SKOOLIA ***
               </div>
             </div>
           </div>

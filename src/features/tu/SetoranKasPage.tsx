@@ -923,6 +923,11 @@ export function SetoranKasPage() {
               className='space-y-4 rounded-lg bg-card p-6 font-sans text-xs'
             >
               <div className='space-y-1 border-b pb-3 text-center'>
+                <img
+                  src='/logo.png'
+                  alt='Logo Skoolia'
+                  className='mx-auto h-7 w-7 object-contain mb-1.5'
+                />
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
                   SMA NEGERI 1 SKOOLIA
                 </h3>
