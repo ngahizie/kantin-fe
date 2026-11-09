@@ -165,7 +165,12 @@ export const sidebarData: SidebarData = {
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
-              title: 'Riwayat Belanja Siswa',
+              title: 'Riwayat Belanja Keseluruhan',
+              url: '/laporan/riwayat-keseluruhan',
+              roles: ['admin', 'bendahara', 'tu', 'kepsek'],
+            },
+            {
+              title: 'Detail Riwayat Siswa',
               url: '/laporan/riwayat-siswa',
               roles: ['admin', 'bendahara', 'tu'],
             },

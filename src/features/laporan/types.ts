@@ -180,6 +180,13 @@ export interface RiwayatBelanjaSiswaItem {
   items?: RincianItemBelanja[]
 }
 
+export interface RiwayatTransaksiKeseluruhanItem extends RiwayatBelanjaSiswaItem {
+  siswaId: number
+  siswaNama: string
+  siswaNis: string
+  siswaKelas: string
+}
+
 export interface ProfilSiswaRiwayat {
   siswaId: number
   nis: string

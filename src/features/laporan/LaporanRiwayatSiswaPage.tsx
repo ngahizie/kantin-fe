@@ -7,8 +7,10 @@ import {
   Phone,
   FileText,
   Printer,
+  ArrowLeft,
   X,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -616,7 +618,7 @@ export function LaporanRiwayatSiswaPage() {
               Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Riwayat Belanja per Siswa</span>
+            <span className="text-xs font-medium">Detail Riwayat Siswa</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitch />
@@ -630,8 +632,21 @@ export function LaporanRiwayatSiswaPage() {
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Link to="/laporan/riwayat-keseluruhan">
+                    <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                    Kembali ke Riwayat Keseluruhan
+                  </Link>
+                </Button>
+              </div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Riwayat Belanja per Siswa
+                Detail Riwayat Siswa
               </h1>
             </div>
 
