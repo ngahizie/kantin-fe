@@ -374,7 +374,7 @@ export function SetoranKasPage() {
         {/* Title Header */}
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Rekapitulasi & Setoran Kas TU
+            Setoran Kas TU Harian
           </h1>
         </div>
 
@@ -383,7 +383,7 @@ export function SetoranKasPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Total Sistem (Penerimaan TU)
+                Catatan Sistem (Penerimaan TU)
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                 {formatRupiah(totalPenerimaanSistem)}
@@ -391,7 +391,7 @@ export function SetoranKasPage() {
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 Dari{' '}
                 {filteredList.reduce((acc, c) => acc + (c.total_transaksi || 0), 0)}{' '}
-                transaksi top-up tunai
+                transaksi isi saldo tunai
               </p>
             </CardContent>
           </Card>
@@ -399,13 +399,13 @@ export function SetoranKasPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Total Uang Fisik Disetor
+                Total Uang Tunai Diterima
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
                 {formatRupiah(totalUangFisikDisetor)}
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
-                Fisik diterima & dihitung Bendahara
+                Uang tunai dihitung dan diterima Bendahara
               </p>
             </CardContent>
           </Card>
@@ -413,7 +413,7 @@ export function SetoranKasPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Akumulasi Selisih Kas Fisik
+                Selisih Uang Kas
               </p>
               <h3
                 className={`mt-0.5 text-xl font-bold ${
@@ -429,10 +429,10 @@ export function SetoranKasPage() {
               </h3>
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 {totalSelisihFisik === 0
-                  ? 'Kas fisik seimbang / pas'
+                  ? 'Jumlah uang pas / cocok'
                   : totalSelisihFisik < 0
-                    ? 'Defisit kas fisik tercatat di audit'
-                    : 'Surplus kas fisik tercatat di audit'}
+                    ? 'Uang fisik kurang dari catatan'
+                    : 'Uang fisik lebih dari catatan'}
               </p>
             </CardContent>
           </Card>
@@ -440,7 +440,7 @@ export function SetoranKasPage() {
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardContent className='p-4'>
               <p className='text-xs font-medium text-muted-foreground'>
-                Status Konfirmasi Setoran
+                Status Penyerahan Kas
               </p>
               <h3 className='mt-0.5 text-xl font-bold text-foreground'>
                 {totalPetugasSelesai} / {filteredList.length} Petugas
@@ -448,8 +448,8 @@ export function SetoranKasPage() {
               <p className='mt-1 text-[11px] text-muted-foreground'>
                 {totalPetugasSelesai === filteredList.length &&
                 filteredList.length > 0
-                  ? 'Semua setoran hari ini telah terverifikasi'
-                  : `${filteredList.length - totalPetugasSelesai} setoran menunggu konfirmasi`}
+                  ? 'Semua setoran hari ini telah diverifikasi'
+                  : `${filteredList.length - totalPetugasSelesai} setoran menunggu verifikasi`}
               </p>
             </CardContent>
           </Card>
@@ -472,9 +472,9 @@ export function SetoranKasPage() {
             {
               title: 'Status',
               options: [
-                { label: 'Menunggu Konfirmasi', value: 'MENUNGGU_KONFIRMASI' },
-                { label: 'Terkonfirmasi Bendahara', value: 'TERKONFIRMASI' },
-                { label: 'Memiliki Selisih Kas', value: 'SELISIH' },
+                { label: 'Menunggu Verifikasi', value: 'MENUNGGU_KONFIRMASI' },
+                { label: 'Sudah Diverifikasi', value: 'TERKONFIRMASI' },
+                { label: 'Ada Selisih Kas', value: 'SELISIH' },
               ],
               selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
               onSelect: (vals) => setStatusFilter(vals[0] || 'ALL'),
@@ -542,13 +542,13 @@ export function SetoranKasPage() {
                         Rincian Top-up
                       </TableHead>
                       <TableHead className='text-right text-xs font-semibold'>
-                        Total Sistem
+                        Catatan Sistem
                       </TableHead>
                       <TableHead className='text-right text-xs font-semibold'>
-                        Uang Fisik
+                        Uang Tunai
                       </TableHead>
                       <TableHead className='text-center text-xs font-semibold'>
-                        Selisih Kas
+                        Selisih
                       </TableHead>
                       <TableHead className='text-center text-xs font-semibold'>
                         Status
@@ -645,7 +645,7 @@ export function SetoranKasPage() {
                               <Badge
                                 className='border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
                               >
-                                Pas (Rp 0)
+                                Cocok (Rp 0)
                               </Badge>
                             ) : item.selisih < 0 ? (
                               <Badge
@@ -668,14 +668,14 @@ export function SetoranKasPage() {
                                 className='gap-1 border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
                               >
                                 <CheckCircle2 className='h-3 w-3' />
-                                Terkonfirmasi
+                                Selesai
                               </Badge>
                             ) : (
                               <Badge
                                 className='gap-1 border-0 bg-amber-500/15 text-[11px] font-medium text-amber-700 dark:text-amber-400'
                               >
                                 <AlertTriangle className='h-3 w-3' />
-                                Menunggu Setor
+                                Menunggu Setoran
                               </Badge>
                             )}
                           </TableCell>
@@ -723,7 +723,7 @@ export function SetoranKasPage() {
                                     className='h-7 gap-1 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
                                   >
                                     <CheckCircle2 className='h-3.5 w-3.5' />
-                                    Konfirmasi
+                                    Terima Kas
                                   </Button>
                                 )}
 
@@ -740,7 +740,7 @@ export function SetoranKasPage() {
                                     className='h-7 border-0 bg-muted/60 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
                                     title='Koreksi / Update Konfirmasi Setoran'
                                   >
-                                    Edit Kas
+                                    Ubah Kas
                                   </Button>
                                 )}
 

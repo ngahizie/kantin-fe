@@ -99,7 +99,7 @@ export const sidebarData: SidebarData = {
       roles: ['tu', 'bendahara'],
       items: [
         {
-          title: 'Top-up Tunai Siswa',
+          title: 'Isi Saldo Tunai Siswa',
           url: '/tu/topup',
           icon: Banknote,
           roles: ['tu'],
@@ -111,7 +111,7 @@ export const sidebarData: SidebarData = {
           roles: ['tu', 'bendahara'],
         },
         {
-          title: 'Manajemen Kartu Tamu',
+          title: 'Kartu Tamu',
           url: '/kartu-tamu',
           icon: CreditCard,
           roles: ['tu', 'bendahara'],
@@ -123,19 +123,19 @@ export const sidebarData: SidebarData = {
       roles: ['admin', 'bendahara', 'kepsek'],
       items: [
         {
-          title: 'Mutasi Koreksi Bendahara',
+          title: 'Penyesuaian Saldo Bendahara',
           url: '/saldo/koreksi',
           icon: ReceiptText,
           roles: ['bendahara', 'kepsek'],
         },
         {
-          title: 'Refund Saldo Siswa',
+          title: 'Pengembalian Saldo Siswa',
           url: '/saldo/refund',
           icon: ArrowLeftRight,
           roles: ['bendahara', 'kepsek'],
         },
         {
-          title: 'Kontrol Siswa',
+          title: 'Batasan Jajan Siswa',
           url: '/kontrol-siswa',
           icon: ShieldCheck,
           roles: ['admin'],

@@ -155,7 +155,7 @@ export function PrintSlipModal({
               </div>
               <div>
                 <DialogTitle className='flex items-center gap-1.5 text-lg font-bold text-white'>
-                  Top-up Tunai Berhasil!
+                  Pengisian Saldo Berhasil!
                 </DialogTitle>
                 <p className='mt-0.5 text-xs text-emerald-100'>
                   Saldo siswa telah ditambahkan ke sistem
@@ -176,13 +176,13 @@ export function PrintSlipModal({
                 SKOOLIA CANTEEN
               </div>
               <p className='text-[10px] font-semibold tracking-wider text-slate-600 uppercase'>
-                SLIP BUKTI SETOR TUNAI TU
+                BUKTI PENERIMAAN SALDO TUNAI
               </p>
 
               {/* Nomor Referensi Unik */}
               <div className='pt-1.5'>
                 <span className='block font-sans text-[9px] text-slate-500 uppercase'>
-                  Nomor Referensi Unik:
+                  Nomor Bukti Transaksi:
                 </span>
                 <span className='print-dark-override mt-0.5 inline-block rounded border-0 bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold tracking-wide text-slate-900'>
                   {slipData.ref_no}
@@ -266,8 +266,7 @@ export function PrintSlipModal({
             {/* Footer Slip & Barcode Simulation */}
             <div className='print-border-dashed space-y-2 border-t border-dashed border-slate-300 pt-3 text-center'>
               <div className='print-dark-override font-sans text-[10px] leading-tight text-slate-600'>
-                Simpan slip ini sebagai bukti pembayaran tunai sah di layanan
-                Kasir TU Sekolah.
+                Simpan lembar bukti ini sebagai tanda terima sah pembayaran tunai di TU Sekolah.
               </div>
               <div className='pt-1 font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase'>
                 *** SKOOLIA CASHLESS CANTEEN ***
@@ -292,7 +291,7 @@ export function PrintSlipModal({
             className='h-9 gap-2 border-0 bg-emerald-600 text-xs font-semibold text-white shadow-none hover:bg-emerald-700'
           >
             <Printer className='h-4 w-4' />
-            Cetak Slip Nota
+            Cetak Bukti Pembayaran
           </Button>
         </DialogFooter>
       </DialogContent>
