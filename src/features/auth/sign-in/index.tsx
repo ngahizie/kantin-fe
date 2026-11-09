@@ -1,4 +1,4 @@
-import { UtensilsCrossed, Utensils, CreditCard, Sparkles, Store, Zap } from 'lucide-react'
+import { UtensilsCrossed, Utensils, CreditCard, Store } from 'lucide-react'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn() {
@@ -98,53 +98,6 @@ export function SignIn() {
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Floating Element 1 - Transaksi Cepat RFID */}
-              <div
-                className='absolute -top-[6%] p-4 -right-4 sm:-right-6 z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 flex items-center gap-4 animate-bounce'
-                style={{ animationDuration: '4s' }}
-              >
-                <div className='w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0'>
-                  <Zap className='w-6 h-6 text-emerald-600 dark:text-emerald-400' />
-                </div>
-                <div>
-                  <p className='text-sm font-bold text-slate-800 dark:text-white'>Transaksi Cepat</p>
-                  <p className='text-xs text-slate-500 font-medium'>Tap RFID &lt; 1 Detik</p>
-                </div>
-              </div>
-
-              {/* Floating Element 2 - Siswa Terlayani */}
-              <div
-                className='absolute top-[42%] p-4 -left-4 sm:-left-6 z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 animate-bounce flex items-center gap-4'
-                style={{ animationDuration: '4.5s', animationDelay: '1s' }}
-              >
-                <div className='w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-800'>
-                  <UtensilsCrossed className='w-6 h-6 text-blue-600 dark:text-blue-400' />
-                </div>
-                <div>
-                  <p className='text-sm font-bold text-slate-800 dark:text-white'>1,500+ Siswa Terlayani</p>
-                  <p className='text-xs text-emerald-500 font-semibold'>Layanan Bebas Antre</p>
-                </div>
-              </div>
-
-              {/* Floating Element 3 - Menu Terlaris */}
-              <div
-                className='absolute -bottom-[4%] p-4 -right-4 sm:-right-6 z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] has-border !border !border-slate-100 dark:!border-slate-700 animate-bounce'
-                style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}
-              >
-                <div className='flex items-center gap-3 mb-2'>
-                  <div className='w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0'>
-                    <Sparkles className='w-4 h-4 text-amber-600 dark:text-amber-400' />
-                  </div>
-                  <div>
-                    <p className='text-xs font-bold text-slate-800 dark:text-white'>Menu Terlaris Hari Ini</p>
-                    <p className='text-[10px] text-slate-500 font-medium'>Stok Siap Saji Terpantau</p>
-                  </div>
-                </div>
-                <div className='h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden'>
-                  <div className='h-full bg-amber-500 w-[85%] rounded-full' />
                 </div>
               </div>
             </div>
