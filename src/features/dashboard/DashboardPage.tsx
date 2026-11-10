@@ -227,12 +227,27 @@ export function DashboardPage() {
               const timeStr = formatTimeWithZone(trx.waktu as string | Date)
               const isSiswa = trx.subjekTipe === 'SISWA'
               const isTamu = trx.subjekTipe === 'KARTU_TAMU'
+
+              // Ambil nama item menu riil dari backend (ringkasanItem atau items[])
+              let itemSummary: string
+              if (trx.ringkasanItem && typeof trx.ringkasanItem === 'string') {
+                itemSummary = trx.ringkasanItem
+              } else if (Array.isArray(trx.items) && trx.items.length > 0) {
+                itemSummary = (trx.items as Array<{ namaMenu?: string; qty?: number }>)
+                  .map((it) => (it.qty && it.qty > 1 ? `${it.qty}x ` : '') + (it.namaMenu || 'Item'))
+                  .join(', ')
+              } else if (trx.item && typeof trx.item === 'string') {
+                itemSummary = trx.item
+              } else {
+                itemSummary = trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Kantin'
+              }
+
               return {
                 id: `TRX-${trx.id}`,
                 waktu: timeStr,
                 nama: String(trx.subjekNama || (isSiswa ? 'Siswa' : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
                 tipe: isTamu ? 'Tamu/Guru' : 'Siswa',
-                item: trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Tap RFID',
+                item: itemSummary,
                 total: Number(trx.total ?? 0),
                 metode: 'RFID Tap',
                 status: String(trx.status || 'SUKSES'),

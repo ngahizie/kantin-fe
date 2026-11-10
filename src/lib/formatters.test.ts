@@ -48,3 +48,4 @@ describe('formatters', () => {
     expect(formatted).not.toContain('31') // tidak ada detik
   })
 })
+
