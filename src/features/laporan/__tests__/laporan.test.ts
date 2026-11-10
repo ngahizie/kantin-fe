@@ -156,6 +156,14 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(kasirs[0]).toHaveProperty('penjualanBersih')
     })
 
+    it('memastikan margin bernilai 0 bila data kosong atau undefined agar tidak menampilkan undefined%', () => {
+      const formatMargin = (val?: number | null) => (val ? `${val}%` : '0')
+      expect(formatMargin(undefined)).toBe('0')
+      expect(formatMargin(null)).toBe('0')
+      expect(formatMargin(0)).toBe('0')
+      expect(formatMargin(25.5)).toBe('25.5%')
+    })
+
     it('dapat mengekspor laporan penjualan multi-sheet ke format Excel (.xlsx)', () => {
       const result = exportMultiSheetExcel({
         filename: 'Laporan_Penjualan_Test',

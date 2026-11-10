@@ -136,7 +136,7 @@ export function LaporanLabaKotorPage() {
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
           'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
           'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
         columns: [
           { header: 'No', key: 'menuId', width: 8 },
@@ -151,7 +151,7 @@ export function LaporanLabaKotorPage() {
           {
             header: 'Margin (%)',
             key: 'margin',
-            formatter: (v) => `${v}%`,
+            formatter: (v) => (v ? `${v}%` : '0'),
             width: 12,
           },
         ],
@@ -183,7 +183,7 @@ export function LaporanLabaKotorPage() {
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
           'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
           'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
         columns: [
           { header: 'No', key: 'menuId' },
@@ -218,7 +218,7 @@ export function LaporanLabaKotorPage() {
           {
             header: 'Margin',
             key: 'margin',
-            formatter: (v) => `${v}%`,
+            formatter: (v) => (v ? `${v}%` : '0'),
           },
         ],
         data: filteredItems,
@@ -311,7 +311,7 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
-                  {ringkasan ? `${ringkasan.marginLabaPersen}%` : '...'}
+                  {ringkasan ? (ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0') : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Rasio laba kotor terhadap penjualan bersih
@@ -470,14 +470,14 @@ export function LaporanLabaKotorPage() {
                             <Badge
                               variant="secondary"
                               className={`font-mono text-xs ${
-                                item.margin >= 35
+                                (item.margin || 0) >= 35
                                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : item.margin >= 20
+                                  : (item.margin || 0) >= 20
                                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                   : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                               }`}
                             >
-                              {item.margin}%
+                              {item.margin ? `${item.margin}%` : '0'}
                             </Badge>
                           </TableCell>
                         </TableRow>

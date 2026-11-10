@@ -161,7 +161,7 @@ export function LaporanPenjualanPage() {
               'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
               'Total HPP': formatRupiah(ringkasan.totalHpp),
               'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
-              'Rata-rata Margin': `${ringkasan.marginLabaPersen}%`,
+              'Rata-rata Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
             },
             columns: [
               { header: 'ID Menu', key: 'menuId', width: 10 },
@@ -176,7 +176,7 @@ export function LaporanPenjualanPage() {
               {
                 header: 'Margin (%)',
                 key: 'margin',
-                formatter: (v) => `${v}%`,
+                formatter: (v) => (v ? `${v}%` : '0'),
                 width: 12,
               },
             ],
@@ -196,7 +196,7 @@ export function LaporanPenjualanPage() {
               {
                 header: 'Margin (%)',
                 key: 'margin',
-                formatter: (v) => `${v}%`,
+                formatter: (v) => (v ? `${v}%` : '0'),
                 width: 12,
               },
             ],
@@ -245,7 +245,7 @@ export function LaporanPenjualanPage() {
           'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
           'Total Beban HPP': formatRupiah(ringkasan.totalHpp),
           'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
         sections: [
           {
@@ -283,7 +283,7 @@ export function LaporanPenjualanPage() {
               {
                 header: 'Margin',
                 key: 'margin',
-                formatter: (v) => `${v}%`,
+                formatter: (v) => (v ? `${v}%` : '0'),
               },
             ],
             data: items,
@@ -313,7 +313,7 @@ export function LaporanPenjualanPage() {
               {
                 header: 'Margin',
                 key: 'margin',
-                formatter: (v) => `${v}%`,
+                formatter: (v) => (v ? `${v}%` : '0'),
               },
             ],
             data: kategoris,
@@ -454,7 +454,7 @@ export function LaporanPenjualanPage() {
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
                   <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
-                    Margin: {ringkasan?.marginLabaPersen || 0}%
+                    Margin: {ringkasan?.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0'}
                   </Badge>
                   <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
                 </div>
@@ -606,14 +606,14 @@ export function LaporanPenjualanPage() {
                                 <Badge
                                   variant="secondary"
                                   className={`font-mono text-xs ${
-                                    item.margin >= 35
+                                    (item.margin || 0) >= 35
                                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                      : item.margin >= 20
+                                      : (item.margin || 0) >= 20
                                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                       : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                   }`}
                                 >
-                                  {item.margin}%
+                                  {item.margin ? `${item.margin}%` : '0'}
                                 </Badge>
                               </TableCell>
                             </TableRow>
@@ -691,7 +691,7 @@ export function LaporanPenjualanPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <Badge variant="secondary" className="font-mono text-xs">
-                                  {kat.margin}%
+                                  {kat.margin ? `${kat.margin}%` : '0'}
                                 </Badge>
                               </TableCell>
                             </TableRow>

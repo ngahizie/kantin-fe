@@ -130,11 +130,36 @@ export const laporanApi = {
    */
   async getPenjualan(params?: LaporanFilterParams): Promise<RingkasanPenjualan> {
     try {
-      const res = await apiClient.get<ApiResponse<RingkasanPenjualan>>(
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>>>(
         '/api/laporan/penjualan',
         { params }
       )
-      if (res.data?.data) return res.data.data
+      if (res.data?.data) {
+        const d = res.data.data
+        const penjualanBruto = Number(d.penjualanBruto) || 0
+        const jumlahVoid = Number(d.jumlahVoid ?? d.jumlahRefund) || 0
+        const nilaiVoid = Number(d.nilaiVoid ?? d.nilaiRefund) || 0
+        const penjualanBersih = Number(d.penjualanBersih ?? Math.max(0, penjualanBruto - nilaiVoid)) || 0
+        const totalHpp = Number(d.totalHpp ?? d.totalModal) || 0
+        const labaKotor = Number(d.labaKotor ?? d.laba ?? (penjualanBersih - totalHpp)) || 0
+        const rawMargin = d.marginLabaPersen ?? d.marginPersen
+        const marginLabaPersen = rawMargin !== undefined && rawMargin !== null
+          ? Number(rawMargin) || 0
+          : (penjualanBersih > 0 ? Math.round((labaKotor / penjualanBersih) * 1000) / 10 : 0)
+
+        return {
+          dari: String(d.dari || new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00'),
+          sampai: String(d.sampai || new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00'),
+          jumlahTransaksi: Number(d.jumlahTransaksi) || 0,
+          penjualanBruto,
+          jumlahVoid,
+          nilaiVoid,
+          penjualanBersih,
+          totalHpp,
+          labaKotor,
+          marginLabaPersen: marginLabaPersen || 0,
+        }
+      }
     } catch {
       // Fallback
     }
@@ -169,12 +194,39 @@ export const laporanApi = {
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanItem[]> {
     try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanItem[]>>(
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
         '/api/laporan/penjualan/item',
         { params }
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((item, idx) => {
+          const menuId = Number(item.menuId ?? item.kunciId) || idx + 1
+          const nama = String(item.nama || 'Menu')
+          const qty = Number(item.qty) || 0
+          const penjualanBersih = Number(item.penjualanBersih ?? item.total) || 0
+          const hargaJual = Number(item.hargaJual ?? item.hargaSatuan) || (qty > 0 ? Math.round(penjualanBersih / qty) : 0)
+          const totalHpp = Number(item.totalHpp ?? item.modal) || 0
+          const hpp = Number(item.hpp) || (qty > 0 ? Math.round(totalHpp / qty) : 0)
+          const labaKotor = Number(item.labaKotor) || (penjualanBersih - totalHpp)
+          const rawMargin = item.margin ?? item.marginPersen
+          const margin = rawMargin !== undefined && rawMargin !== null
+            ? Number(rawMargin) || 0
+            : (penjualanBersih > 0 ? Math.round((labaKotor / penjualanBersih) * 100) : 0)
+
+          return {
+            menuId,
+            nama,
+            kategoriId: Number(item.kategoriId) || 0,
+            kategoriNama: String(item.kategoriNama || 'Umum'),
+            qty,
+            hargaJual,
+            hpp,
+            penjualanBersih,
+            totalHpp,
+            labaKotor,
+            margin: margin || 0,
+          }
+        })
       }
     } catch {
       // Fallback
@@ -211,12 +263,34 @@ export const laporanApi = {
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKategori[]> {
     try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanKategori[]>>(
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
         '/api/laporan/penjualan/kategori',
         { params }
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((kat, idx) => {
+          const kategoriId = Number(kat.kategoriId ?? kat.kunciId) || idx + 1
+          const nama = String(kat.nama || 'Umum')
+          const qty = Number(kat.qty) || 0
+          const penjualanBersih = Number(kat.penjualanBersih ?? kat.total) || 0
+          const totalHpp = Number(kat.totalHpp ?? kat.modal) || 0
+          const labaKotor = Number(kat.labaKotor) || (penjualanBersih - totalHpp)
+          const rawMargin = kat.margin ?? kat.marginPersen
+          const margin = rawMargin !== undefined && rawMargin !== null
+            ? Number(rawMargin) || 0
+            : (penjualanBersih > 0 ? Math.round((labaKotor / penjualanBersih) * 100) : 0)
+
+          return {
+            kategoriId,
+            nama,
+            jumlahItem: Number(kat.jumlahItem) || 0,
+            qty,
+            penjualanBersih,
+            totalHpp,
+            labaKotor,
+            margin: margin || 0,
+          }
+        })
       }
     } catch {
       // Fallback
