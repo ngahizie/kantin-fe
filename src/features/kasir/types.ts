@@ -110,8 +110,6 @@ export interface TapTransaksiData {
   total: number
   waktu: string
   pembeli: TapBuyerInfo
-  /** Nomor struk dari BE (format TRX-yyyyMMdd-<id>) — wajib saat refund. */
-  nomorStruk?: string
 }
 
 export interface ReceiptLineItem {
