@@ -294,11 +294,11 @@ export function LaporanLabaKotorPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-emerald-600">
+                <div className="text-2xl font-bold tracking-tight">
                   {ringkasan ? formatRupiah(ringkasan.labaKotor) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Keuntungan murni setelah dipotong beban HPP
+                  Keuntungan murni setelah dipotong beban pokok
                 </p>
               </CardContent>
             </Card>
@@ -306,11 +306,11 @@ export function LaporanLabaKotorPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Rata-rata Gross Margin
+                  Rata-rata Margin Laba
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-blue-600">
+                <div className="text-2xl font-bold tracking-tight">
                   {ringkasan ? (ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0') : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">

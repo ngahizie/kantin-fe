@@ -445,19 +445,16 @@ export function LaporanPenjualanPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Laba Kotor (Gross Profit)
+                  Total Laba Kotor
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-blue-600">
+                <div className="text-2xl font-bold tracking-tight">
                   {ringkasan ? formatRupiah(ringkasan.labaKotor) : '...'}
                 </div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
-                    Margin: {ringkasan?.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0'}
-                  </Badge>
-                  <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Margin {ringkasan?.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0'} dari penjualan bersih
+                </p>
               </CardContent>
             </Card>
 
