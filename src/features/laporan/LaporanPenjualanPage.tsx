@@ -1,4 +1,4 @@
-import { TableToolbar } from '@/components/data-table'
+import { TableToolbar, type TableToolbarFilter } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Download,
@@ -66,7 +66,10 @@ export function LaporanPenjualanPage() {
 
   const [activeTab, setActiveTab] = useState<'item' | 'kategori' | 'kasir'>('item')
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'terlaris' | 'laba' | 'margin'>('terlaris')
+  const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('ALL')
+  const [sortByItem, setSortByItem] = useState<'terlaris' | 'laba' | 'margin' | 'omset'>('terlaris')
+  const [sortByKategori, setSortByKategori] = useState<'omset' | 'qty' | 'laba' | 'margin'>('omset')
+  const [sortByKasir, setSortByKasir] = useState<'penjualan' | 'trx' | 'void'>('penjualan')
 
 
   useEffect(() => {
@@ -114,33 +117,181 @@ export function LaporanPenjualanPage() {
       )
     }
 
-    if (sortBy === 'terlaris') {
+    if (itemCategoryFilter && itemCategoryFilter !== 'ALL') {
+      list = list.filter((i) => i.kategoriNama === itemCategoryFilter)
+    }
+
+    if (sortByItem === 'terlaris') {
       list.sort((a, b) => b.qty - a.qty)
-    } else if (sortBy === 'laba') {
+    } else if (sortByItem === 'laba') {
       list.sort((a, b) => b.labaKotor - a.labaKotor)
-    } else if (sortBy === 'margin') {
+    } else if (sortByItem === 'margin') {
+      list.sort((a, b) => b.margin - a.margin)
+    } else if (sortByItem === 'omset') {
+      list.sort((a, b) => b.penjualanBersih - a.penjualanBersih)
+    }
+    return list
+  }, [items, searchQuery, itemCategoryFilter, sortByItem])
+
+  // Filter & Sort Kategoris
+  const filteredKategoris = useMemo(() => {
+    let list = [...kategoris]
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      list = list.filter((k) => k.nama.toLowerCase().includes(q))
+    }
+
+    if (sortByKategori === 'omset') {
+      list.sort((a, b) => b.penjualanBersih - a.penjualanBersih)
+    } else if (sortByKategori === 'qty') {
+      list.sort((a, b) => b.qty - a.qty)
+    } else if (sortByKategori === 'laba') {
+      list.sort((a, b) => b.labaKotor - a.labaKotor)
+    } else if (sortByKategori === 'margin') {
       list.sort((a, b) => b.margin - a.margin)
     }
     return list
-  }, [items, searchQuery, sortBy])
+  }, [kategoris, searchQuery, sortByKategori])
 
-  // Filter Kategoris
-  const filteredKategoris = useMemo(() => {
-    if (!searchQuery.trim()) return kategoris
-    const q = searchQuery.toLowerCase()
-    return kategoris.filter((k) => k.nama.toLowerCase().includes(q))
-  }, [kategoris, searchQuery])
-
-  // Filter Kasirs
+  // Filter & Sort Kasirs
   const filteredKasirs = useMemo(() => {
-    if (!searchQuery.trim()) return kasirs
-    const q = searchQuery.toLowerCase()
-    return kasirs.filter(
-      (k) =>
-        k.namaTitikKasir.toLowerCase().includes(q) ||
-        k.petugas.toLowerCase().includes(q)
-    )
-  }, [kasirs, searchQuery])
+    let list = [...kasirs]
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      list = list.filter(
+        (k) =>
+          k.namaTitikKasir.toLowerCase().includes(q) ||
+          k.petugas.toLowerCase().includes(q)
+      )
+    }
+
+    if (sortByKasir === 'penjualan') {
+      list.sort((a, b) => b.penjualanBersih - a.penjualanBersih)
+    } else if (sortByKasir === 'trx') {
+      list.sort((a, b) => b.jumlahTransaksi - a.jumlahTransaksi)
+    } else if (sortByKasir === 'void') {
+      list.sort((a, b) => b.nilaiVoid - a.nilaiVoid)
+    }
+    return list
+  }, [kasirs, searchQuery, sortByKasir])
+
+  // Daftar opsi kategori untuk tab Item
+  const kategoriOptions = useMemo(() => {
+    const uniqueKategori = Array.from(
+      new Set(items.map((i) => i.kategoriNama).filter(Boolean))
+    ).sort()
+    return uniqueKategori.map((kat) => ({
+      label: kat,
+      value: kat,
+    }))
+  }, [items])
+
+  // Filter dinamis sesuai activeTab
+  const currentFilters = useMemo<TableToolbarFilter[]>(() => {
+    if (activeTab === 'item') {
+      const list: TableToolbarFilter[] = []
+      if (kategoriOptions.length > 0) {
+        list.push({
+          title: 'Kategori',
+          options: kategoriOptions,
+          selectedValues: itemCategoryFilter !== 'ALL' ? [itemCategoryFilter] : [],
+          onSelect: (vals) => setItemCategoryFilter(vals[0] || 'ALL'),
+          isSingleSelect: true,
+        })
+      }
+      list.push({
+        title: 'Urutkan',
+        options: [
+          { label: 'Terlaris', value: 'terlaris' },
+          { label: 'Laba Terbesar', value: 'laba' },
+          { label: 'Margin Tertinggi', value: 'margin' },
+          { label: 'Omset Bersih', value: 'omset' },
+        ],
+        selectedValues: sortByItem !== 'terlaris' ? [sortByItem] : [],
+        onSelect: (vals) =>
+          setSortByItem((vals[0] as 'terlaris' | 'laba' | 'margin' | 'omset') || 'terlaris'),
+        isSingleSelect: true,
+      })
+      return list
+    }
+
+    if (activeTab === 'kategori') {
+      return [
+        {
+          title: 'Urutkan',
+          options: [
+            { label: 'Penjualan Tertinggi', value: 'omset' },
+            { label: 'Qty Terbanyak', value: 'qty' },
+            { label: 'Laba Terbesar', value: 'laba' },
+            { label: 'Margin Tertinggi', value: 'margin' },
+          ],
+          selectedValues: sortByKategori !== 'omset' ? [sortByKategori] : [],
+          onSelect: (vals) =>
+            setSortByKategori((vals[0] as 'omset' | 'qty' | 'laba' | 'margin') || 'omset'),
+          isSingleSelect: true,
+        },
+      ]
+    }
+
+    if (activeTab === 'kasir') {
+      return [
+        {
+          title: 'Urutkan',
+          options: [
+            { label: 'Penjualan Tertinggi', value: 'penjualan' },
+            { label: 'Transaksi Terbanyak', value: 'trx' },
+            { label: 'Pembatalan Terbanyak', value: 'void' },
+          ],
+          selectedValues: sortByKasir !== 'penjualan' ? [sortByKasir] : [],
+          onSelect: (vals) =>
+            setSortByKasir((vals[0] as 'penjualan' | 'trx' | 'void') || 'penjualan'),
+          isSingleSelect: true,
+        },
+      ]
+    }
+
+    return []
+  }, [
+    activeTab,
+    kategoriOptions,
+    itemCategoryFilter,
+    sortByItem,
+    sortByKategori,
+    sortByKasir,
+  ])
+
+  const isFiltered = useMemo(() => {
+    if (searchQuery.trim()) return true
+    if (activeTab === 'item') {
+      return itemCategoryFilter !== 'ALL' || sortByItem !== 'terlaris'
+    }
+    if (activeTab === 'kategori') {
+      return sortByKategori !== 'omset'
+    }
+    if (activeTab === 'kasir') {
+      return sortByKasir !== 'penjualan'
+    }
+    return false
+  }, [
+    searchQuery,
+    activeTab,
+    itemCategoryFilter,
+    sortByItem,
+    sortByKategori,
+    sortByKasir,
+  ])
+
+  const handleReset = () => {
+    setSearchQuery('')
+    if (activeTab === 'item') {
+      setItemCategoryFilter('ALL')
+      setSortByItem('terlaris')
+    } else if (activeTab === 'kategori') {
+      setSortByKategori('omset')
+    } else if (activeTab === 'kasir') {
+      setSortByKasir('penjualan')
+    }
+  }
 
   // Handler Ekspor Excel (Multi-Sheet Lengkap)
   const handleExportExcel = () => {
@@ -498,30 +649,18 @@ export function LaporanPenjualanPage() {
                   </TabsTrigger>
                 </TabsList>
               }
-              searchPlaceholder="Cari data laporan..."
+              searchPlaceholder={
+                activeTab === 'item'
+                  ? 'Cari nama menu / kategori...'
+                  : activeTab === 'kategori'
+                  ? 'Cari kategori...'
+                  : 'Cari titik kasir / petugas...'
+              }
               searchValue={searchQuery}
               onSearchChange={setSearchQuery}
-              filters={
-                activeTab === 'item'
-                  ? [
-                      {
-                        title: 'Urutkan',
-                        options: [
-                          { label: 'Terlaris', value: 'terlaris' },
-                          { label: 'Laba Terbesar', value: 'laba' },
-                        ],
-                        selectedValues: [sortBy],
-                        onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba') || 'terlaris'),
-                        isSingleSelect: true,
-                      },
-                    ]
-                  : []
-              }
-              isFiltered={Boolean(searchQuery || (activeTab === 'item' && sortBy !== 'terlaris'))}
-              onReset={() => {
-                setSearchQuery('')
-                setSortBy('terlaris')
-              }}
+              filters={currentFilters}
+              isFiltered={isFiltered}
+              onReset={handleReset}
             />
 {/* TAB CONTENT 1: PENJUALAN PER ITEM */}
             <TabsContent value="item" className="space-y-4">

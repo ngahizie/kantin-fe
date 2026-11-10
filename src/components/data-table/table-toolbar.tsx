@@ -14,6 +14,7 @@ export type TableToolbarFilterOption = {
 
 export type TableToolbarFilter = {
   title: string
+  icon?: React.ComponentType<{ className?: string }>
   options: TableToolbarFilterOption[]
   selectedValues?: Set<string> | string[]
   onSelect?: (values: string[]) => void
@@ -67,6 +68,7 @@ export function TableToolbar({
           <DataTableFacetedFilter
             key={filter.title}
             title={filter.title}
+            icon={filter.icon}
             options={filter.options}
             selectedValues={filter.selectedValues}
             onSelect={filter.onSelect}
