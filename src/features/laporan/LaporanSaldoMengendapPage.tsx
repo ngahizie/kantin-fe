@@ -35,12 +35,10 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanSaldoMengendap,
   SiswaSaldoDetail,
-  LaporanFilterParams,
 } from './types'
 
 export function LaporanSaldoMengendapPage() {
@@ -56,10 +54,6 @@ export function LaporanSaldoMengendapPage() {
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-
-  // Filter Tanggal & Saldo
-  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
-  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
 
   useEffect(() => {
@@ -130,27 +124,6 @@ export function LaporanSaldoMengendapPage() {
       list = list.filter((s) => (s.saldo || 0) === 0)
     }
 
-    // Filter tanggal berdasarkan transaksi terakhir bila filter tanggal spesifik aktif
-    if (dateFilterParams.tanggal) {
-      const targetDate = dateFilterParams.tanggal
-      list = list.filter((s) => {
-        if (!s.terakhirTransaksi) return false
-        return s.terakhirTransaksi.startsWith(targetDate)
-      })
-    } else if (
-      dateFilterParams.dari &&
-      dateFilterParams.sampai &&
-      dateFilterParams.dari !== ALL_TIME_PARAMS.dari
-    ) {
-      const dariTime = new Date(dateFilterParams.dari).getTime()
-      const sampaiTime = new Date(dateFilterParams.sampai).getTime()
-      list = list.filter((s) => {
-        if (!s.terakhirTransaksi) return false
-        const tTime = new Date(s.terakhirTransaksi).getTime()
-        return tTime >= dariTime && tTime <= sampaiTime
-      })
-    }
-
     if (!searchQuery.trim()) return list
     const q = searchQuery.toLowerCase()
     return list.filter(
@@ -160,7 +133,7 @@ export function LaporanSaldoMengendapPage() {
         s.kelas.toLowerCase().includes(q) ||
         (s.parentName && s.parentName.toLowerCase().includes(q))
     )
-  }, [canAccessSiswa, siswaList, searchQuery, statusFilter, dateFilterParams])
+  }, [canAccessSiswa, siswaList, searchQuery, statusFilter])
 
   // Ekspor Excel Multi-Sheet disesuaikan dengan role
   const handleExportExcel = () => {
@@ -350,19 +323,9 @@ export function LaporanSaldoMengendapPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Laporan Saldo Mengendap Siswa
               </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <LaporanDateFilter
-                initialPreset="ALL"
-                onChange={(params, label) => {
-                  setDateFilterParams(params)
-                  setDateFilterLabel(label)
-                }}
-              />
               <Button
                 variant="default"
                 size="sm"
