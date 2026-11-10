@@ -45,6 +45,7 @@ vi.mock('@/features/laporan/api/laporan-api', () => ({
       penjualanBersih: 1500000,
     }),
     getPenjualanPerKategori: vi.fn().mockResolvedValue([]),
+    getRiwayatTransaksiKeseluruhan: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -52,12 +53,6 @@ vi.mock('@/features/katalog/api/katalog-api', () => ({
   katalogApi: {
     getMenuList: vi.fn().mockResolvedValue([]),
     getKategoriList: vi.fn().mockResolvedValue([]),
-  },
-}))
-
-vi.mock('@/lib/api-client', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: { data: [] } }),
   },
 }))
 
@@ -113,6 +108,37 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
 
     await expect.element(screen.getByText('Belum dimuat')).toBeInTheDocument()
     await expect.element(screen.getByText('Seimbang')).not.toBeInTheDocument()
+  })
+
+  it('menampilkan item menu riil dan pembeda siswa dari transaksi-keseluruhan tanpa kategori dummy untuk kepsek', async () => {
+    mockRole = 'kepsek'
+    const screen = await render(<DashboardPage />)
+
+    await expect.element(screen.getByText('Makanan')).not.toBeInTheDocument()
+
+    mockRole = 'pengelola'
+    vi.mocked(laporanApi.getRiwayatTransaksiKeseluruhan).mockResolvedValueOnce([
+      {
+        id: '990008',
+        waktu: '2026-11-10T13:44:00+07:00',
+        jenis: 'BELANJA',
+        arah: 'DEBIT',
+        nominal: 28000,
+        saldoSetelah: 464000,
+        titikKasir: 'Kasir Kantin Utama',
+        petugas: '-',
+        referensiId: '960008',
+        keterangan: '',
+        items: [{ nama: 'Nasi Goreng', qty: 2, harga: 12000, subtotal: 24000 }],
+        siswaId: 204,
+        siswaNama: 'Siswa #204',
+        siswaNis: '204',
+        siswaKelas: '-',
+      },
+    ])
+    const pengelolaScreen = await render(<DashboardPage />)
+    await expect.element(pengelolaScreen.getByText('2x Nasi Goreng')).toBeInTheDocument()
+    await expect.element(pengelolaScreen.getByText('Siswa #204')).toBeInTheDocument()
   })
 })
 

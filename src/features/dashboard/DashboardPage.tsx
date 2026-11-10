@@ -37,7 +37,6 @@ import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { formatTimeWithZone } from '@/lib/formatters'
-import apiClient from '@/lib/api-client'
 import type { RingkasanPenjualan, RingkasanRekonsiliasi, BarisPenjualanKategori } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
 
@@ -64,12 +63,6 @@ const CATEGORY_COLORS = [
   '#0ea5e9', // sky
   '#ec4899', // pink
   '#64748b', // slate
-]
-
-const DEFAULT_CATEGORIES: DynamicCategory[] = [
-  { id: 1, key: 'cat_1', nama: 'Makanan', color: '#3b82f6' },
-  { id: 2, key: 'cat_2', nama: 'Minuman', color: '#22c55e' },
-  { id: 3, key: 'cat_3', nama: 'Snack', color: '#f59e0b' },
 ]
 
 const getLast7Days = () => {
@@ -198,15 +191,15 @@ const renderStackedBar = (
 export const getStatusBadgeClass = (status: string) => {
   const normalized = status.toUpperCase()
   if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
-    return 'border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+    return 'has-border border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
   }
   if (['VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
-    return 'border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+    return 'has-border border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
   }
   if (['PENDING', 'MENUNGGU', 'MENIPIS', 'DIKOREKSI', 'PROSES'].includes(normalized)) {
-    return 'border border-amber-200 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+    return 'has-border border border-amber-200 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
   }
-  return 'border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300'
+  return 'has-border border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300'
 }
 
 export function DashboardPage() {
@@ -217,7 +210,7 @@ export function DashboardPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
-  const [chartCategories, setChartCategories] = useState<DynamicCategory[]>(DEFAULT_CATEGORIES)
+  const [chartCategories, setChartCategories] = useState<DynamicCategory[]>([])
   const [rawWeeklyData, setRawWeeklyData] = useState<ChartDayItem[]>(() => {
     return getLast7Days().map((d) => ({
       hari: d.label,
@@ -237,7 +230,7 @@ export function DashboardPage() {
     const fetchInitialData = async () => {
       try {
         const canViewKatalog = currentRole !== 'kepsek'
-        const canViewTransaksi = currentRole !== 'kepsek'
+        const canViewTransaksi = ['admin', 'tu', 'bendahara', 'pengelola'].includes(currentRole)
 
         const [
           penjualanRes,
@@ -251,11 +244,8 @@ export function DashboardPage() {
           canViewKatalog ? katalogApi.getMenuList(undefined, true) : Promise.resolve([]),
           canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
           canViewTransaksi
-            ? apiClient.get('/api/kasir/transaksi', {
-                params: { ukuran: 5, halaman: 0 },
-                silent: true,
-              } as unknown as Record<string, unknown>)
-            : Promise.resolve({ data: { data: [] } } as unknown as { data: { data: unknown[] } }),
+            ? laporanApi.getRiwayatTransaksiKeseluruhan({ batas: 25 })
+            : Promise.resolve([]),
         ])
 
         if (!isMounted) return
@@ -291,52 +281,49 @@ export function DashboardPage() {
           setMenuItems(menuRes.value)
         }
 
-        // 5. Transaksi Kasir Terakhir
-        if (trxRes.status === 'fulfilled' && trxRes.value?.data?.data) {
-          const rawItems = trxRes.value.data.data.items || trxRes.value.data.data
-          if (Array.isArray(rawItems) && rawItems.length > 0) {
-            const mapped: RecentTransactionDisplayItem[] = rawItems.slice(0, 5).map((trx: Record<string, unknown>) => {
-              const timeStr = formatTimeWithZone(trx.waktu as string | Date)
-              const isSiswa = trx.subjekTipe === 'SISWA'
-              const isTamu = trx.subjekTipe === 'KARTU_TAMU'
+        // 5. Transaksi Kasir Terakhir (dari /api/laporan/transaksi-keseluruhan dengan rincian item & nama siswa)
+        if (trxRes.status === 'fulfilled' && Array.isArray(trxRes.value)) {
+          const kasirRows = trxRes.value
+            .filter((trx) => trx.jenis === 'BELANJA' || trx.jenis === 'VOID')
+            .slice(0, 5)
 
-              // Ambil nama item menu riil dari backend (ringkasanItem atau items[])
-              let itemSummary: string
-              if (trx.ringkasanItem && typeof trx.ringkasanItem === 'string') {
-                itemSummary = trx.ringkasanItem
-              } else if (Array.isArray(trx.items) && trx.items.length > 0) {
-                itemSummary = (trx.items as Array<{ namaMenu?: string; qty?: number }>)
-                  .map((it) => (it.qty && it.qty > 1 ? `${it.qty}x ` : '') + (it.namaMenu || 'Item'))
+          const mapped: RecentTransactionDisplayItem[] = kasirRows.map((trx) => {
+            const timeStr = formatTimeWithZone(trx.waktu)
+            const hasRealItems = Array.isArray(trx.items) && trx.items.length > 0
+            const itemSummary = hasRealItems
+              ? trx.items!
+                  .map((it) => {
+                    const menuName =
+                      (it as { namaMenu?: string; nama?: string }).namaMenu ||
+                      it.nama ||
+                      'Item'
+                    return (it.qty && it.qty > 1 ? `${it.qty}x ` : '') + menuName
+                  })
                   .join(', ')
-              } else if (trx.item && typeof trx.item === 'string') {
-                itemSummary = trx.item
-              } else {
-                itemSummary = trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Kantin'
-              }
+              : trx.titikKasir && trx.titikKasir !== '-'
+                ? `POS ${trx.titikKasir}`
+                : 'Transaksi Kantin'
 
-              return {
-                id: `TRX-${trx.id}`,
-                waktu: timeStr,
-                nama: String(trx.subjekNama || (isSiswa ? 'Siswa' : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
-                tipe: isTamu ? 'Tamu/Guru' : 'Siswa',
-                item: itemSummary,
-                total: Number(trx.total ?? 0),
-                metode: 'RFID Tap',
-                status: String(trx.status || 'SUKSES'),
-              }
-            })
-            setRecentTransactions(mapped)
-          } else {
-            setRecentTransactions([])
-          }
-        } else if (trxRes.status === 'fulfilled') {
+            return {
+              id: `TRX-${trx.id}`,
+              waktu: timeStr,
+              nama: trx.siswaNama || (trx.siswaId ? `Siswa #${trx.siswaId}` : 'Pelanggan'),
+              tipe: 'Siswa',
+              item: itemSummary,
+              total: Number(trx.nominal ?? 0),
+              metode: 'RFID Tap',
+              status: trx.jenis === 'VOID' ? 'VOID' : 'SUKSES',
+            }
+          })
+          setRecentTransactions(mapped)
+        } else {
           setRecentTransactions([])
         }
 
         // 6. Data Tren Penjualan 7 Hari Terakhir per Kategori dari Database
         const sevenDays = getLast7Days()
 
-        // Ambil kategori dari database katalog_menu
+        // Ambil kategori dari database katalog_menu (hanya jika role memiliki akses katalog)
         const categoriesFromDb: DynamicCategory[] = []
         if (kategoriRes.status === 'fulfilled' && Array.isArray(kategoriRes.value) && kategoriRes.value.length > 0) {
           kategoriRes.value.forEach((k, idx) => {
@@ -347,8 +334,6 @@ export function DashboardPage() {
               color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
             })
           })
-        } else {
-          categoriesFromDb.push(...DEFAULT_CATEGORIES)
         }
 
         // Panggil laporan penjualan per kategori untuk 7 hari terakhir secara paralel dari BE
@@ -359,8 +344,9 @@ export function DashboardPage() {
         )
         const weeklyResults = await Promise.allSettled(weeklyPromises)
 
-        // Cek jika ada kategori lain yang muncul di data transaksi
+        // Tambahkan kategori dari data transaksi penjualan per kategori jika belum ada di katalog
         const resolvedCategories = [...categoriesFromDb]
+        let extraCategorySeq = 1
         weeklyResults.forEach((res) => {
           if (res.status === 'fulfilled' && Array.isArray(res.value)) {
             res.value.forEach((row: BarisPenjualanKategori) => {
@@ -369,12 +355,19 @@ export function DashboardPage() {
               if (
                 catName &&
                 !resolvedCategories.some(
-                  (c) => c.nama.toLowerCase() === catName.toLowerCase()
+                  (c) =>
+                    (catId > 0 && c.id === catId) ||
+                    c.nama.toLowerCase() === catName.toLowerCase()
                 )
               ) {
+                const resolvedId = catId > 0 ? catId : -(extraCategorySeq++)
+                const resolvedKey =
+                  catId > 0
+                    ? `cat_${catId}`
+                    : `cat_extra_${Math.abs(resolvedId)}`
                 resolvedCategories.push({
-                  id: catId || 1000 + resolvedCategories.length,
-                  key: `cat_${catId || resolvedCategories.length}`,
+                  id: resolvedId,
+                  key: resolvedKey,
                   nama: catName,
                   color:
                     CATEGORY_COLORS[
@@ -469,23 +462,8 @@ export function DashboardPage() {
   const selisihKas = rekonsiliasi?.selisih ?? 0
   const isKasSeimbang = Boolean(rekonsiliasi?.seimbang)
 
-  // Pastikan bar 'Hari Ini' selalu sinkron jika total penjualan hari ini bertambah
-  const chartData = useMemo(() => {
-    if (todaySales <= 0 || rawWeeklyData.length === 0) return rawWeeklyData
-    const lastIdx = rawWeeklyData.length - 1
-    const lastItem = rawWeeklyData[lastIdx]
-    if (lastItem.total >= todaySales) return rawWeeklyData
-
-    const updated = [...rawWeeklyData]
-    const diff = todaySales - lastItem.total
-    const primaryKey = chartCategories[0]?.key || 'cat_1'
-    updated[lastIdx] = {
-      ...lastItem,
-      [primaryKey]: ((lastItem[primaryKey] as number) || 0) + diff,
-      total: todaySales,
-    }
-    return updated
-  }, [rawWeeklyData, todaySales, chartCategories])
+  // Gunakan data penjualan per kategori per hari langsung dari BE tanpa memodifikasi kategori pertama
+  const chartData = rawWeeklyData
 
   return (
     <>
@@ -505,7 +483,7 @@ export function DashboardPage() {
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Penjualan Hari Ini
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300'>
+              <div className='has-border flex size-9 items-center justify-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300'>
                 <Banknote className='size-5' />
               </div>
             </CardHeader>
@@ -528,7 +506,7 @@ export function DashboardPage() {
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Transaksi Hari Ini
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg border border-violet-100 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300'>
+              <div className='has-border flex size-9 items-center justify-center rounded-lg border border-violet-100 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300'>
                 <ShoppingCart className='size-5' />
               </div>
             </CardHeader>
@@ -554,7 +532,7 @@ export function DashboardPage() {
                     Status Rekonsiliasi Kas
                   </CardTitle>
                   <div
-                    className={`flex size-9 items-center justify-center rounded-lg ${
+                    className={`has-border flex size-9 items-center justify-center rounded-lg ${
                       !rekonsiliasi
                         ? rekonsiliasiStatus === 'error'
                           ? 'border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
@@ -616,7 +594,7 @@ export function DashboardPage() {
                   <CardTitle className='text-sm font-medium text-muted-foreground'>
                     Status Rekonsiliasi Kas
                   </CardTitle>
-                  <div className='flex size-9 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                  <div className='has-border flex size-9 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'>
                     <Scale className='size-5' />
                   </div>
                 </CardHeader>
@@ -642,7 +620,7 @@ export function DashboardPage() {
                 Peringatan Stok Barang
               </CardTitle>
               <div
-                className={`flex size-9 items-center justify-center rounded-lg ${
+                className={`has-border flex size-9 items-center justify-center rounded-lg ${
                   lowStockItems.length === 0
                     ? 'border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
                     : 'border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
@@ -693,7 +671,7 @@ export function DashboardPage() {
 
               {/* Legend Kategori Dinamis: Grid Presisi 4 Kolom x 2 Baris yang Rapi */}
               {chartCategories.length > 3 ? (
-                <div className='grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
+                <div className='has-border grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
                   {chartCategories.map((cat) => (
                     <div
                       key={cat.key}
@@ -710,8 +688,8 @@ export function DashboardPage() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className='flex flex-wrap items-center gap-4 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
+              ) : chartCategories.length > 0 ? (
+                <div className='has-border flex flex-wrap items-center gap-4 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
                   {chartCategories.map((cat) => (
                     <div
                       key={cat.key}
@@ -728,7 +706,7 @@ export function DashboardPage() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </CardHeader>
             <CardContent className='ps-1 pe-4 pb-4 pt-3'>
               <div className='h-[310px] w-full min-h-[310px] min-w-0'>
@@ -773,7 +751,7 @@ export function DashboardPage() {
                         if (active && payload && payload.length) {
                           const total = payload.reduce((sum, entry) => sum + (Number(entry.value) || 0), 0)
                           return (
-                            <div className='rounded-xl border border-border bg-popover/95 p-3 text-xs shadow-xl shadow-slate-950/10 backdrop-blur-sm min-w-[200px]'>
+                            <div className='has-border rounded-xl border border-slate-200 dark:border-slate-800 bg-popover/95 p-3 text-xs shadow-xl shadow-slate-950/10 backdrop-blur-sm min-w-[200px]'>
                               <p className='font-semibold text-foreground mb-2'>{label}</p>
                               {payload.map((entry) => (
                                 <div key={entry.name} className='flex items-center justify-between gap-6 py-1'>
@@ -786,7 +764,7 @@ export function DashboardPage() {
                                   </span>
                                 </div>
                               ))}
-                              <div className='mt-2 pt-2 border-t border-border/50 flex items-center justify-between gap-6 font-semibold text-foreground'>
+                              <div className='has-border mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-6 font-semibold text-foreground'>
                                 <span>Total Omset</span>
                                 <span className='font-bold tabular-nums text-foreground'>{formatRupiah(total)}</span>
                               </div>
@@ -876,15 +854,9 @@ export function DashboardPage() {
                               <span className='text-muted-foreground'> / {item.stok_minimum} {item.satuan}</span>
                             </TableCell>
                             <TableCell className='text-center pe-6 py-3'>
-                              {isOut ? (
-                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border border-rose-200 dark:border-rose-900 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 uppercase tracking-wide shadow-none'>
-                                  HABIS
-                                </Badge>
-                              ) : (
-                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border border-amber-200 dark:border-amber-900 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 uppercase tracking-wide shadow-none'>
-                                  MENIPIS
-                                </Badge>
-                              )}
+                              <Badge variant='outline' className={`rounded-full text-[10px] font-semibold px-2.5 py-0.5 uppercase tracking-wide shadow-none ${getStatusBadgeClass(isOut ? 'HABIS' : 'MENIPIS')}`}>
+                                {isOut ? 'HABIS' : 'MENIPIS'}
+                              </Badge>
                             </TableCell>
                           </TableRow>
                         )

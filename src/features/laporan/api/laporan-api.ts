@@ -215,11 +215,17 @@ export const laporanApi = {
         '/api/laporan/penjualan/kategori',
         { params }
       )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
+      if (Array.isArray(res.data?.data)) {
         return res.data.data
       }
     } catch {
-      // Fallback
+      if (import.meta.env.VITE_USE_MOCK !== 'true') {
+        return []
+      }
+    }
+
+    if (import.meta.env.VITE_USE_MOCK !== 'true') {
+      return []
     }
 
     return MOCK_KATEGORI.map((k) => {
@@ -509,7 +515,7 @@ export const laporanApi = {
     try {
       const res = await apiClient.get<ApiResponse<RiwayatTransaksiKeseluruhanItem[]>>(
         '/api/laporan/transaksi-keseluruhan',
-        { params }
+        { params, silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data)) {
         const students = getInitialStudents()
@@ -520,8 +526,11 @@ export const laporanApi = {
             ...r,
             titikKasir: titik,
             petugas,
-            siswaNama: r.siswaNama || st?.nama || `Siswa #${r.siswaId}`,
-            siswaNis: r.siswaNis || st?.nis || `${r.siswaId}`,
+            siswaNama:
+              r.siswaNama ||
+              st?.nama ||
+              (r.siswaId ? `Siswa #${r.siswaId}` : 'Pelanggan'),
+            siswaNis: r.siswaNis || st?.nis || (r.siswaId ? `${r.siswaId}` : '-'),
             siswaKelas: r.siswaKelas || st?.kelas || '-',
           }
         })
