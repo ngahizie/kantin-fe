@@ -575,7 +575,7 @@ export function DashboardPage() {
           <Card className='col-span-1 lg:col-span-4 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
             <CardHeader className='pb-2'>
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-                <div>
+                <div className='shrink-0'>
                   <CardTitle className='text-base font-semibold'>
                     Tren Penjualan 7 Hari Terakhir
                   </CardTitle>
@@ -583,18 +583,67 @@ export function DashboardPage() {
                     Grafik omset harian kasir kantin dalam Rupiah (Rp) per kategori
                   </CardDescription>
                 </div>
-                {/* Legend Kategori Dinamis */}
-                <div className='flex flex-wrap items-center gap-3.5 text-xs shrink-0'>
-                  {chartCategories.map((cat) => (
-                    <div key={cat.key} className='flex items-center gap-1.5'>
-                      <span
-                        className='size-2.5 rounded-full shrink-0'
-                        style={{ backgroundColor: cat.color }}
-                      />
-                      <span className='font-medium text-muted-foreground'>{cat.nama}</span>
+                {/* Legend Kategori Dinamis (tampil 2 baris jika kategori banyak > 3) */}
+                {chartCategories.length > 3 ? (
+                  <div className='flex flex-col gap-1.5 sm:items-end text-xs'>
+                    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:justify-end'>
+                      {chartCategories
+                        .slice(0, Math.ceil(chartCategories.length / 2))
+                        .map((cat) => (
+                          <div
+                            key={cat.key}
+                            className='flex items-center gap-1.5'
+                            title={cat.nama}
+                          >
+                            <span
+                              className='size-2.5 rounded-full shrink-0'
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
+                              {cat.nama}
+                            </span>
+                          </div>
+                        ))}
                     </div>
-                  ))}
-                </div>
+                    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:justify-end'>
+                      {chartCategories
+                        .slice(Math.ceil(chartCategories.length / 2))
+                        .map((cat) => (
+                          <div
+                            key={cat.key}
+                            className='flex items-center gap-1.5'
+                            title={cat.nama}
+                          >
+                            <span
+                              className='size-2.5 rounded-full shrink-0'
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
+                              {cat.nama}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className='flex flex-wrap items-center gap-3.5 text-xs sm:justify-end'>
+                    {chartCategories.map((cat) => (
+                      <div
+                        key={cat.key}
+                        className='flex items-center gap-1.5'
+                        title={cat.nama}
+                      >
+                        <span
+                          className='size-2.5 rounded-full shrink-0'
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
+                          {cat.nama}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className='ps-2 pe-6 pb-4 pt-3'>
