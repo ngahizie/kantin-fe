@@ -7,7 +7,6 @@ import {
   Banknote,
   Receipt,
   ReceiptText,
-  CreditCard,
   ArrowLeftRight,
   ShieldCheck,
   FileSpreadsheet,
@@ -95,7 +94,7 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'Layanan TU & Kartu',
+      title: 'Layanan TU',
       roles: ['tu', 'bendahara'],
       items: [
         {
@@ -108,12 +107,6 @@ export const sidebarData: SidebarData = {
           title: 'Setoran Kas TU Harian',
           url: '/tu/setoran',
           icon: Receipt,
-          roles: ['tu', 'bendahara'],
-        },
-        {
-          title: 'Kartu Tamu',
-          url: '/kartu-tamu',
-          icon: CreditCard,
           roles: ['tu', 'bendahara'],
         },
       ],
@@ -152,7 +145,7 @@ export const sidebarData: SidebarData = {
           roles: ['admin', 'bendahara', 'pengelola', 'tu', 'kepsek'],
           items: [
             {
-              title: 'Rekonsiliasi Harian',
+              title: 'Cek Selisih Uang',
               url: '/laporan/rekonsiliasi',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
@@ -172,9 +165,9 @@ export const sidebarData: SidebarData = {
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
-              title: 'Riwayat Belanja Siswa',
-              url: '/laporan/riwayat-siswa',
-              roles: ['admin', 'bendahara', 'tu'],
+              title: 'Riwayat Transaksi',
+              url: '/laporan/riwayat-keseluruhan',
+              roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
               title: 'Laporan Kerugian Stok',

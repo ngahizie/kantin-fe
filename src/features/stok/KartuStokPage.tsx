@@ -765,6 +765,7 @@ export function KartuStokPage() {
                   <Table>
                     <TableHeader className='bg-muted/50'>
                       <TableRow>
+                        <TableHead className='w-12 text-center text-xs'>No.</TableHead>
                         <TableHead className='w-40'>Waktu</TableHead>
                         <TableHead className='w-36'>No. Referensi</TableHead>
                         <TableHead>Jenis Mutasi</TableHead>
@@ -788,7 +789,7 @@ export function KartuStokPage() {
                       {isLoadingRiwayat ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center gap-2'>
@@ -800,14 +801,14 @@ export function KartuStokPage() {
                       ) : filteredRiwayat.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className='h-32 text-center text-muted-foreground'
                           >
                             Tidak ada pergerakan stok pada filter yang dipilih.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredRiwayat.map((item) => {
+                        filteredRiwayat.map((item, idx) => {
                           const isMasuk = item.arah === 'MASUK'
                           const aktorDisplay =
                             item.aktorNama ||
@@ -815,6 +816,9 @@ export function KartuStokPage() {
 
                           return (
                             <TableRow key={item.id} className='hover:bg-muted/40'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                                {idx + 1}
+                              </TableCell>
                               <TableCell className='text-xs whitespace-nowrap text-muted-foreground'>
                                 {formatDateTime(item.waktu)}
                               </TableCell>

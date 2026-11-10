@@ -841,7 +841,8 @@ export function DashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className='text-xs bg-muted/40'>
-                      <TableHead className='ps-6'>Menu</TableHead>
+                      <TableHead className='w-12 text-center ps-4'>No.</TableHead>
+                      <TableHead className='ps-2'>Menu</TableHead>
                       <TableHead className='text-center'>Sisa / Min</TableHead>
                       <TableHead className='text-center pe-6'>Status</TableHead>
                     </TableRow>
@@ -849,17 +850,20 @@ export function DashboardPage() {
                   <TableBody>
                     {lowStockItems.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                        <TableCell colSpan={4} className='h-28 text-center text-xs text-muted-foreground px-6'>
                           <CheckCircle2 className='size-6 text-emerald-500 mx-auto mb-1 opacity-70' />
                           Semua stok menu dalam kondisi aman di atas batas minimum.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      lowStockItems.map((item) => {
+                      lowStockItems.map((item, idx) => {
                         const isOut = item.stok === 0
                         return (
                           <TableRow key={item.id} className='text-xs hover:bg-muted/30'>
-                            <TableCell className='ps-6 py-3 font-medium'>
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground ps-4 py-3'>
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className='ps-2 py-3 font-medium'>
                               <div className='flex flex-col'>
                                 <span className='text-foreground font-semibold'>{item.nama}</span>
                                 <span className='text-[10px] text-muted-foreground'>{item.kategori_nama}</span>
@@ -908,7 +912,8 @@ export function DashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className='text-xs bg-muted/40'>
-                    <TableHead className='w-[140px] ps-6'>Waktu</TableHead>
+                    <TableHead className='w-12 text-center ps-4'>No.</TableHead>
+                    <TableHead className='w-[140px] ps-2'>Waktu</TableHead>
                     <TableHead className='w-[200px]'>Pelanggan</TableHead>
                     <TableHead>Item Menu</TableHead>
                     <TableHead className='text-right w-[140px]'>Total Belanja</TableHead>
@@ -918,15 +923,18 @@ export function DashboardPage() {
                 <TableBody>
                   {recentTransactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                      <TableCell colSpan={6} className='h-28 text-center text-xs text-muted-foreground px-6'>
                         <ShoppingCart className='size-6 text-muted-foreground/50 mx-auto mb-1 opacity-70' />
                         Belum ada aktivitas transaksi kasir hari ini.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    recentTransactions.map((trx) => (
+                    recentTransactions.map((trx, idx) => (
                       <TableRow key={trx.id} className='text-xs hover:bg-muted/30'>
-                        <TableCell className='ps-6 py-3'>
+                        <TableCell className='text-center font-mono text-xs text-muted-foreground ps-4 py-3'>
+                          {idx + 1}
+                        </TableCell>
+                        <TableCell className='ps-2 py-3'>
                           <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
                         </TableCell>
                         <TableCell className='py-3'>

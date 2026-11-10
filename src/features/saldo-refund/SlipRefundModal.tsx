@@ -3,7 +3,6 @@ import {
   Printer,
   Lock,
   ArrowRight,
-  Building,
   CreditCard,
   User,
 } from 'lucide-react'
@@ -60,9 +59,13 @@ export function SlipRefundModal({
         >
           {/* Header Slip */}
           <div className='text-center pb-3 border-0 space-y-1'>
-            <div className='flex items-center justify-center gap-1.5 font-bold text-sm tracking-wide text-foreground'>
-              <Building className='h-4 w-4 text-primary' />
-              KANTIN CASHLESS SKOOLIA
+            <div className='flex items-center justify-center gap-2 font-bold text-sm tracking-wide text-foreground'>
+              <img
+                src='/logo.png'
+                alt='Logo Skoolia'
+                className='h-5 w-5 object-contain'
+              />
+              KANTIN SKOOLIA
             </div>
             <p className='text-muted-foreground text-[11px]'>
               SMA NEGERI 1 SKOOLIA — TATA USAHA & BENDAHARA

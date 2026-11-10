@@ -532,6 +532,9 @@ export function SetoranKasPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className='bg-muted/40'>
+                      <TableHead className='w-12 text-center text-xs font-semibold'>
+                        No.
+                      </TableHead>
                       <TableHead className='text-xs font-semibold'>
                         ID & Tanggal
                       </TableHead>
@@ -565,7 +568,7 @@ export function SetoranKasPage() {
                     {isLoading ? (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={10}
                           className='h-32 text-center text-muted-foreground'
                         >
                           <div className='flex flex-col items-center justify-center space-y-2'>
@@ -579,7 +582,7 @@ export function SetoranKasPage() {
                     ) : filteredList.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={10}
                           className='h-32 text-center text-muted-foreground'
                         >
                           <p className='text-sm'>
@@ -589,8 +592,11 @@ export function SetoranKasPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredList.map((item) => (
+                      filteredList.map((item, idx) => (
                         <TableRow key={item.id} className='hover:bg-muted/30'>
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                            {idx + 1}
+                          </TableCell>
                           <TableCell className='font-mono text-xs'>
                             <div className='font-semibold text-foreground'>
                               {item.id}
@@ -838,6 +844,9 @@ export function SetoranKasPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className='bg-muted/30'>
+                          <TableHead className='w-12 text-center text-xs font-semibold'>
+                            No.
+                          </TableHead>
                           <TableHead className='text-xs font-semibold'>
                             Waktu & No. Ref
                           </TableHead>
@@ -856,15 +865,18 @@ export function SetoranKasPage() {
                         {displayRincian.length === 0 ? (
                           <TableRow>
                             <TableCell
-                              colSpan={4}
+                              colSpan={5}
                               className='h-24 text-center text-xs text-muted-foreground'
                             >
                               Rincian detail transaksi top-up tersimpan di sistem riwayat mutasi kasir/TU.
                             </TableCell>
                           </TableRow>
                         ) : (
-                          displayRincian.map((tx: TransaksiTopupDetail) => (
+                          displayRincian.map((tx: TransaksiTopupDetail, idx: number) => (
                             <TableRow key={tx.id}>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                                {idx + 1}
+                              </TableCell>
                               <TableCell className='text-xs'>
                                 <div className='font-mono font-medium'>
                                   {new Date(tx.waktu).toLocaleTimeString('id-ID', {
@@ -923,6 +935,11 @@ export function SetoranKasPage() {
               className='space-y-4 rounded-lg bg-card p-6 font-sans text-xs'
             >
               <div className='space-y-1 border-b pb-3 text-center'>
+                <img
+                  src='/logo.png'
+                  alt='Logo Skoolia'
+                  className='mx-auto h-7 w-7 object-contain mb-1.5'
+                />
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
                   SMA NEGERI 1 SKOOLIA
                 </h3>

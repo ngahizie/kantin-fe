@@ -380,7 +380,7 @@ export function LaporanKerugianStokPage() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead className="w-12 text-center">No.</TableHead>
                       <TableHead>Waktu & Tanggal</TableHead>
                       <TableHead>No. Berita Acara</TableHead>
                       <TableHead>Nama Menu</TableHead>

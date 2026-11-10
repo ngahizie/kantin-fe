@@ -542,7 +542,7 @@ export function LaporanPenjualanPage() {
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
+                          <TableHead className="w-12 text-center">No.</TableHead>
                           <TableHead>Nama Menu</TableHead>
                           <TableHead>Kategori</TableHead>
                           <TableHead className="text-right">Qty</TableHead>
@@ -642,7 +642,7 @@ export function LaporanPenjualanPage() {
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
+                          <TableHead className="w-12 text-center">No.</TableHead>
                           <TableHead>Kategori Menu</TableHead>
                           <TableHead className="text-center">Variasi Menu</TableHead>
                           <TableHead className="text-right">Total Terjual (Qty)</TableHead>
@@ -720,7 +720,7 @@ export function LaporanPenjualanPage() {
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-12 text-center">#</TableHead>
+                          <TableHead className="w-12 text-center">No.</TableHead>
                           <TableHead>Titik Kasir</TableHead>
                           <TableHead>Petugas Jaga</TableHead>
                           <TableHead className="text-right">Jumlah Transaksi</TableHead>

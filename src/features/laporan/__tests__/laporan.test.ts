@@ -266,6 +266,16 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(belanjaTrx?.petugas).toBeDefined()
     })
 
+    it('mengambil riwayat transaksi keseluruhan seluruh siswa secara terurut', async () => {
+      const list = await laporanApi.getRiwayatTransaksiKeseluruhan()
+
+      expect(list.length).toBeGreaterThan(0)
+      expect(list[0].siswaNama).toBeDefined()
+      expect(list[0].siswaNis).toBeDefined()
+      expect(list[0].referensiId).toBeDefined()
+      expect(list[0].nominal).toBeGreaterThan(0)
+    })
+
     it('menangani secara aman siswa tanpa catatan saldo/transaksi di backend (404) menjadi profil fallback dan riwayat kosong', async () => {
       const { profil, riwayat } = await laporanApi.getRiwayatBelanjaSiswa(999999)
 
