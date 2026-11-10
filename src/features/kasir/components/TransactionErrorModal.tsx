@@ -59,15 +59,15 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md border-none p-6 select-none shadow-none rounded-2xl bg-card'>
+      <DialogContent className='max-w-md p-6 select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
         <DialogHeader className='pb-2 text-center'>
-          <div className='mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-2xl bg-destructive/10 text-destructive duration-200 zoom-in-75'>
+          <div className='mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-2xl has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 duration-200 zoom-in-75'>
             {getErrorIcon()}
           </div>
-          <DialogTitle className='text-xl font-bold tracking-tight text-destructive'>
+          <DialogTitle className='text-xl font-bold tracking-tight text-rose-700 dark:text-rose-400'>
             Transaksi Kasir Ditolak
           </DialogTitle>
-          <DialogDescription className='text-xs text-muted-foreground'>
+          <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
             Server mendeteksi kegagalan pada tahap validasi transaksi tap RFID.
           </DialogDescription>
         </DialogHeader>
@@ -75,33 +75,33 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
         <div className='space-y-4 py-2'>
           {/* Banner Saldo Kurang Menonjol */}
           {isSaldoKurang ? (
-            <div className='space-y-1.5 rounded-2xl border-none bg-destructive/10 p-4 text-center shadow-none'>
-              <span className='text-xs font-semibold tracking-wide text-destructive uppercase'>
+            <div className='space-y-1.5 rounded-2xl has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-4 text-center shadow-none'>
+              <span className='text-xs font-semibold tracking-wide text-rose-700 dark:text-rose-300 uppercase'>
                 Kekurangan Nominal Saldo:
               </span>
-              <p className='text-2xl font-bold tracking-tight text-destructive tabular-nums sm:text-3xl'>
+              <p className='text-2xl font-bold tracking-tight text-rose-700 dark:text-rose-400 tabular-nums sm:text-3xl'>
                 {errorInfo.kekurangan
                   ? formatRupiah(errorInfo.kekurangan)
                   : errorInfo.message}
               </p>
-              <p className='pt-1 text-xs text-muted-foreground'>
+              <p className='pt-1 text-xs text-slate-600 dark:text-slate-300'>
                 Siswa perlu melakukan top up tunai di loket TU sebelum
                 menyelesaikan transaksi.
               </p>
             </div>
           ) : (
             /* Pesan Error Standar yang Jelas */
-            <div className='rounded-2xl border-none bg-destructive/10 p-4 text-center shadow-none'>
-              <p className='text-sm font-bold text-destructive sm:text-base'>
+            <div className='rounded-2xl has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-4 text-center shadow-none'>
+              <p className='text-sm font-bold text-rose-700 dark:text-rose-300 sm:text-base'>
                 {errorInfo.message}
               </p>
             </div>
           )}
 
           {errorInfo.uid && (
-            <div className='flex items-center justify-center gap-2 text-xs text-muted-foreground'>
+            <div className='flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400'>
               <span>UID Terbaca:</span>
-              <span className='rounded-full bg-muted/70 px-2.5 py-0.5 font-bold tracking-wider text-foreground'>
+              <span className='rounded-full has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-2.5 py-0.5 font-bold tracking-wider text-slate-800 dark:text-white'>
                 {errorInfo.uid}
               </span>
             </div>
@@ -113,7 +113,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
             type='button'
             variant='destructive'
             onClick={() => onOpenChange(false)}
-            className='w-full gap-1.5 px-6 font-semibold sm:w-auto border-none rounded-xl shadow-none'
+            className='w-full gap-1.5 px-6 font-semibold sm:w-auto !bg-rose-600 hover:!bg-rose-500 !text-white rounded-xl shadow-none'
           >
             <X className='h-4 w-4' />
             <span>Tutup &amp; Sesuaikan Pesanan</span>

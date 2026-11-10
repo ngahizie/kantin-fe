@@ -1,4 +1,4 @@
-import { TableToolbar, type TableToolbarFilter } from '@/components/data-table'
+import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Download,

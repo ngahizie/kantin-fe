@@ -136,6 +136,17 @@ export const kasirApi = {
     return {
       transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
       transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
+      nomorStruk:
+        raw.nomorStruk ||
+        raw.nomor_struk ||
+        raw.kodeStruk ||
+        raw.kode_struk ||
+        raw.nomorReferensi ||
+        null,
+      titikKasir: raw.titikKasir || raw.titik_kasir || null,
+      namaItem: Array.isArray(raw.namaItem)
+        ? raw.namaItem.map(String)
+        : undefined,
       total: Number(raw.total || 0),
       waktu: raw.waktu || new Date().toISOString(),
       pembeli,
@@ -143,15 +154,28 @@ export const kasirApi = {
   },
 
   /**
-   * Batalkan (void) transaksi kasir dengan alasan wajib (PRD §6.3, Issue #5)
+   * Refund (pembatalan) transaksi kasir dengan alasan dan kode struk wajib (PRD §6.3, BE #292)
+   */
+  async refundTransaksi(
+    transaksiId: number,
+    alasan: string,
+    kodeStruk: string
+  ): Promise<void> {
+    await apiClient.post(`/api/kasir/transaksi/${transaksiId}/refund`, {
+      alasan: alasan.trim(),
+      kodeStruk: kodeStruk.trim(),
+    })
+  },
+
+  /**
+   * @deprecated Gunakan refundTransaksi; endpoint /refund mewajibkan alasan dan kodeStruk (BE #292)
    */
   async voidTransaksi(
     transaksiId: number,
-    alasan = 'Wajah pembeli tidak cocok dengan foto kartu'
+    alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
+    kodeStruk = ''
   ): Promise<void> {
-    await apiClient.post(`/api/kasir/transaksi/${transaksiId}/void`, {
-      alasan,
-    })
+    await this.refundTransaksi(transaksiId, alasan, kodeStruk)
   },
 
   /**

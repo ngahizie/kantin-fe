@@ -62,6 +62,22 @@ export function ThemeProvider({
     const applyTheme = (currentResolvedTheme: ResolvedTheme) => {
       root.classList.remove('light', 'dark')
       root.classList.add(currentResolvedTheme)
+
+      const metaColorScheme = document.querySelector("meta[name='color-scheme']")
+      if (metaColorScheme) {
+        metaColorScheme.setAttribute(
+          'content',
+          theme === 'system' ? 'light dark' : currentResolvedTheme
+        )
+      }
+
+      const metaThemeColor = document.querySelector("meta[name='theme-color']")
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute(
+          'content',
+          currentResolvedTheme === 'dark' ? '#050510' : '#FDFCF8'
+        )
+      }
     }
 
     const handleChange = () => {
