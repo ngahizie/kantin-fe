@@ -30,7 +30,6 @@ import { LimitBlokirForm } from './LimitBlokirForm'
 
 export function KontrolSiswaPage() {
   const [students, setStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
-  const [isLoading, setIsLoading] = useState(true)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [appFilter, setAppFilter] = useState<string>('ALL')
@@ -43,71 +42,12 @@ export function KontrolSiswaPage() {
   useEffect(() => {
     let isMounted = true
     const syncKontrolStatus = async () => {
-      setIsLoading(true)
-      let baseStudents: KartuSiswaMock[] = MOCK_SISWA
-
-      try {
-        // 1. Ambil data siswa nyata dari backend
-        const resSiswa = await apiClient.get<{
-          data?: Array<{
-            siswaId?: number
-            id?: number
-            nis?: string
-            nama?: string
-            kelas?: string
-            saldo?: number
-            rfidUid?: string
-            uid?: string
-          }>
-        }>('/api/siswa', { params: { batas: 50 }, silent: true } as unknown as Record<string, unknown>)
-
-        if (
-          resSiswa.data?.data &&
-          Array.isArray(resSiswa.data.data) &&
-          resSiswa.data.data.length > 0
-        ) {
-          baseStudents = resSiswa.data.data.map((item) => {
-            const sid = Number(item.siswaId ?? item.id)
-            const mockMatch = MOCK_SISWA.find((m) => m.siswa_id === sid)
-            return {
-              uid: item.rfidUid || item.uid || mockMatch?.uid || `RFID-${sid}`,
-              siswa_id: sid,
-              nis: item.nis || mockMatch?.nis || '-',
-              nama: item.nama || mockMatch?.nama || 'Siswa',
-              kelas: item.kelas || mockMatch?.kelas || '-',
-              foto_url:
-                mockMatch?.foto_url ||
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-              saldo:
-                typeof item.saldo === 'number'
-                  ? item.saldo
-                  : mockMatch?.saldo || 0,
-              limit_harian: mockMatch?.limit_harian || 0,
-              limit_harian_enabled: mockMatch?.limit_harian_enabled ?? false,
-              belanja_hari_ini: mockMatch?.belanja_hari_ini || 0,
-              is_blocked: mockMatch?.is_blocked ?? false,
-              blocked_items: mockMatch?.blocked_items || [],
-              blocked_categories: mockMatch?.blocked_categories || [],
-              parent_name: mockMatch?.parent_name || 'Orang Tua Murid',
-              parent_phone: mockMatch?.parent_phone || '0812-3456-7890',
-              parent_app_registered: mockMatch?.parent_app_registered ?? false,
-              catatan_kontrol: mockMatch?.catatan_kontrol,
-              updated_at: mockMatch?.updated_at || new Date().toISOString(),
-            }
-          })
-        }
-      } catch {
-        // Fallback tetap ke MOCK_SISWA jika backend offline
-      }
-
-      // 2. Sinkronkan status limit dan blokir kartu per siswa dari backend
       try {
         const synced = await Promise.all(
-          baseStudents.map(async (siswa) => {
+          MOCK_SISWA.map(async (siswa) => {
             try {
               const res = await apiClient.get(
-                `/api/kontrol-kartu/SISWA/${siswa.siswa_id}`,
-                { silent: true } as unknown as Record<string, unknown>
+                `/api/kontrol-kartu/SISWA/${siswa.siswa_id}`
               )
               if (res.data?.data) {
                 const kontrol = res.data.data
@@ -138,13 +78,7 @@ export function KontrolSiswaPage() {
           setStudents(synced)
         }
       } catch {
-        if (isMounted) {
-          setStudents(baseStudents)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
+        // Fallback tetap ke MOCK_SISWA
       }
     }
 
@@ -351,13 +285,7 @@ export function KontrolSiswaPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
-                        Memuat data kontrol siswa dari sistem...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredStudents.length === 0 ? (
+                  {filteredStudents.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
                         Tidak ada siswa yang sesuai dengan filter pencarian.
