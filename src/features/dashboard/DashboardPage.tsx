@@ -177,7 +177,7 @@ const renderStackedBar = (
   if (isTop) {
     return (
       <path
-        d={getRoundedTopBarPath(x, y, width, height, 6)}
+        d={getRoundedTopBarPath(x, y, width, height, 8)}
         fill={fill}
       />
     )
@@ -690,7 +690,7 @@ export function DashboardPage() {
                 </div>
               )}
             </CardHeader>
-            <CardContent className='ps-2 pe-6 pb-4 pt-3'>
+            <CardContent className='ps-1 pe-4 pb-4 pt-3'>
               <div className='h-[310px] w-full min-h-[310px] min-w-0'>
                 <ResponsiveContainer
                   width='100%'
@@ -701,8 +701,9 @@ export function DashboardPage() {
                 >
                   <BarChart
                     data={chartData}
-                    maxBarSize={36}
-                    margin={{ top: 10, right: 10, left: 10, bottom: 4 }}
+                    maxBarSize={56}
+                    barCategoryGap='16%'
+                    margin={{ top: 10, right: 8, left: 4, bottom: 4 }}
                   >
                     <CartesianGrid strokeDasharray='3 3' className='stroke-slate-200/80 dark:stroke-slate-800' vertical={false} />
                     <XAxis
