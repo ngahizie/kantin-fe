@@ -37,6 +37,259 @@ interface ApiResponse<T> {
   data: T
 }
 
+interface RawRingkasanPenjualan {
+  dari?: string
+  sampai?: string
+  jumlahTransaksi?: number
+  penjualanBruto?: number
+  jumlahRefund?: number
+  jumlahVoid?: number
+  nilaiRefund?: number
+  nilaiVoid?: number
+  penjualanBersih?: number
+  totalModal?: number
+  totalHpp?: number
+  laba?: number
+  labaKotor?: number
+  marginPersen?: number
+  marginLabaPersen?: number
+}
+
+interface RawBarisPenjualan {
+  kunciId?: number
+  menuId?: number
+  kategoriId?: number
+  nama?: string | null
+  kategoriNama?: string | null
+  jumlahItem?: number | null
+  qty?: number
+  hargaSatuan?: number | null
+  hargaJual?: number | null
+  hpp?: number | null
+  total?: number
+  penjualanBersih?: number
+  modal?: number
+  totalHpp?: number
+  laba?: number
+  labaKotor?: number
+  marginPersen?: number
+  margin?: number
+}
+
+interface RawMenuLookup {
+  id?: number
+  kategoriId?: number | null
+}
+
+interface RawKategoriLookup {
+  id?: number
+  nama?: string
+  jumlahItem?: number
+}
+
+function toFiniteNumber(val: unknown, fallback = 0): number {
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? val : fallback
+  }
+  if (val !== undefined && val !== null && val !== '') {
+    const num = Number(val)
+    return Number.isFinite(num) ? num : fallback
+  }
+  return fallback
+}
+
+function normalizeRingkasanPenjualan(
+  raw: RawRingkasanPenjualan
+): RingkasanPenjualan {
+  const jumlahTransaksi = toFiniteNumber(raw.jumlahTransaksi, 0)
+  const penjualanBruto = toFiniteNumber(raw.penjualanBruto, 0)
+  const jumlahRefund = toFiniteNumber(raw.jumlahRefund ?? raw.jumlahVoid, 0)
+  const nilaiRefund = toFiniteNumber(raw.nilaiRefund ?? raw.nilaiVoid, 0)
+  const penjualanBersih = toFiniteNumber(raw.penjualanBersih, penjualanBruto)
+  const totalModal = toFiniteNumber(raw.totalModal ?? raw.totalHpp, 0)
+  const laba = toFiniteNumber(
+    raw.laba ?? raw.labaKotor,
+    penjualanBersih - totalModal
+  )
+  const computedMargin =
+    penjualanBersih > 0
+      ? Math.round((laba * 10000) / penjualanBersih) / 100
+      : 0
+  const marginPersen = toFiniteNumber(
+    raw.marginPersen ?? raw.marginLabaPersen,
+    computedMargin
+  )
+
+  return {
+    dari: String(
+      raw.dari || new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00'
+    ),
+    sampai: String(
+      raw.sampai || new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00'
+    ),
+    jumlahTransaksi,
+    penjualanBruto,
+    jumlahRefund,
+    nilaiRefund,
+    penjualanBersih,
+    totalModal,
+    laba,
+    marginPersen,
+  }
+}
+
+async function fetchKatalogLookup(): Promise<{
+  menuKategoriMap: Map<number, { kategoriId: number; kategoriNama: string }>
+  kategoriJumlahMap: Map<number, number>
+}> {
+  const menuKategoriMap = new Map<
+    number,
+    { kategoriId: number; kategoriNama: string }
+  >()
+  const kategoriJumlahMap = new Map<number, number>()
+  const silentConfig = { silent: true, skipToast: true } as Record<
+    string,
+    unknown
+  >
+
+  const [menuRes, kategoriRes] = await Promise.allSettled([
+    apiClient.get<ApiResponse<RawMenuLookup[]>>(
+      '/api/katalog/menu',
+      silentConfig
+    ),
+    apiClient.get<ApiResponse<RawKategoriLookup[]>>(
+      '/api/katalog/kategori',
+      silentConfig
+    ),
+  ])
+
+  const katNameMap = new Map<number, string>()
+  if (
+    kategoriRes.status === 'fulfilled' &&
+    Array.isArray(kategoriRes.value.data?.data)
+  ) {
+    for (const kat of kategoriRes.value.data.data) {
+      if (typeof kat.id === 'number') {
+        katNameMap.set(kat.id, kat.nama || 'Umum')
+        if (typeof kat.jumlahItem === 'number') {
+          kategoriJumlahMap.set(kat.id, kat.jumlahItem)
+        }
+      }
+    }
+  }
+
+  if (
+    menuRes.status === 'fulfilled' &&
+    Array.isArray(menuRes.value.data?.data)
+  ) {
+    const countPerKat = new Map<number, number>()
+    for (const m of menuRes.value.data.data) {
+      if (typeof m.id === 'number' && typeof m.kategoriId === 'number') {
+        menuKategoriMap.set(m.id, {
+          kategoriId: m.kategoriId,
+          kategoriNama: katNameMap.get(m.kategoriId) || 'Umum',
+        })
+        countPerKat.set(m.kategoriId, (countPerKat.get(m.kategoriId) ?? 0) + 1)
+      }
+    }
+    for (const [katId, count] of countPerKat.entries()) {
+      if (!kategoriJumlahMap.has(katId)) {
+        kategoriJumlahMap.set(katId, count)
+      }
+    }
+  }
+
+  return { menuKategoriMap, kategoriJumlahMap }
+}
+
+function normalizeBarisPenjualanItem(
+  raw: RawBarisPenjualan,
+  menuKategoriMap?: Map<number, { kategoriId: number; kategoriNama: string }>
+): BarisPenjualanItem {
+  const kunciId = toFiniteNumber(raw.kunciId ?? raw.menuId, 0)
+  const qty = toFiniteNumber(raw.qty, 0)
+  const total = toFiniteNumber(raw.total ?? raw.penjualanBersih, 0)
+  const hargaSatuan = toFiniteNumber(
+    raw.hargaSatuan ?? raw.hargaJual,
+    qty > 0 ? Math.round(total / qty) : 0
+  )
+  const modal = toFiniteNumber(raw.modal ?? raw.totalHpp, 0)
+  const hpp = toFiniteNumber(raw.hpp, qty > 0 ? Math.round(modal / qty) : 0)
+  const laba = toFiniteNumber(raw.laba ?? raw.labaKotor, total - modal)
+  const computedMargin =
+    total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
+  const marginPersen = toFiniteNumber(
+    raw.marginPersen ?? raw.margin,
+    computedMargin
+  )
+  const katInfo = menuKategoriMap?.get(kunciId)
+  const kategoriId = toFiniteNumber(raw.kategoriId, katInfo?.kategoriId ?? 0)
+  const kategoriNama = String(
+    raw.kategoriNama || katInfo?.kategoriNama || 'Umum'
+  )
+
+  return {
+    kunciId,
+    menuId: kunciId,
+    nama: String(raw.nama || `Menu #${kunciId}`),
+    kategoriId,
+    kategoriNama,
+    qty,
+    hargaSatuan,
+    hargaJual: hargaSatuan,
+    hpp,
+    total,
+    penjualanBersih: total,
+    modal,
+    totalHpp: modal,
+    laba,
+    labaKotor: laba,
+    marginPersen,
+    margin: marginPersen,
+  }
+}
+
+function normalizeBarisPenjualanKategori(
+  raw: RawBarisPenjualan,
+  kategoriJumlahMap?: Map<number, number>
+): BarisPenjualanKategori {
+  const kunciId = toFiniteNumber(raw.kunciId ?? raw.kategoriId, 0)
+  const qty = toFiniteNumber(raw.qty, 0)
+  const total = toFiniteNumber(raw.total ?? raw.penjualanBersih, 0)
+  const modal = toFiniteNumber(raw.modal ?? raw.totalHpp, 0)
+  const laba = toFiniteNumber(raw.laba ?? raw.labaKotor, total - modal)
+  const computedMargin =
+    total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
+  const marginPersen = toFiniteNumber(
+    raw.marginPersen ?? raw.margin,
+    computedMargin
+  )
+  const jumlahItem =
+    raw.jumlahItem !== undefined && raw.jumlahItem !== null
+      ? toFiniteNumber(raw.jumlahItem, 0)
+      : kategoriJumlahMap?.get(kunciId) ?? null
+
+  return {
+    kunciId,
+    kategoriId: kunciId,
+    nama: String(raw.nama || `Kategori #${kunciId}`),
+    jumlahItem,
+    qty,
+    hargaSatuan:
+      raw.hargaSatuan !== undefined && raw.hargaSatuan !== null
+        ? toFiniteNumber(raw.hargaSatuan, 0)
+        : null,
+    total,
+    penjualanBersih: total,
+    modal,
+    totalHpp: modal,
+    laba,
+    labaKotor: laba,
+    marginPersen,
+    margin: marginPersen,
+  }
+}
+
 export const laporanApi = {
   /**
    * Mengambil data Rekonsiliasi Harian & Invariant Saldo (PRD §9.5, §5)
@@ -130,35 +383,37 @@ export const laporanApi = {
    */
   async getPenjualan(params?: LaporanFilterParams): Promise<RingkasanPenjualan> {
     try {
-      const res = await apiClient.get<ApiResponse<RingkasanPenjualan>>(
+      const res = await apiClient.get<ApiResponse<RawRingkasanPenjualan>>(
         '/api/laporan/penjualan',
         { params }
       )
-      if (res.data?.data) return res.data.data
+      if (res.data?.data) {
+        return normalizeRingkasanPenjualan(res.data.data)
+      }
     } catch {
       // Fallback
     }
 
-    const penjualanBruto = 3420000
-    const jumlahVoid = 3
-    const nilaiVoid = 45000
+    const penjualanBruto = 3375000
+    const jumlahRefund = 3
+    const nilaiRefund = 45000
     const penjualanBersih = 3375000
-    const totalHpp = 2180000
-    const labaKotor = penjualanBersih - totalHpp
-    const marginLabaPersen =
-      Math.round((labaKotor / penjualanBersih) * 1000) / 10
+    const totalModal = 2180000
+    const laba = penjualanBersih - totalModal
+    const marginPersen =
+      Math.round((laba / penjualanBersih) * 10000) / 100
 
     return {
       dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
       sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
       jumlahTransaksi: 185,
       penjualanBruto,
-      jumlahVoid,
-      nilaiVoid,
+      jumlahRefund,
+      nilaiRefund,
       penjualanBersih,
-      totalHpp,
-      labaKotor,
-      marginLabaPersen,
+      totalModal,
+      laba,
+      marginPersen,
     }
   },
 
@@ -169,12 +424,23 @@ export const laporanApi = {
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanItem[]> {
     try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanItem[]>>(
+      const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
         '/api/laporan/penjualan/item',
         { params }
       )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+      if (Array.isArray(res.data?.data)) {
+        const rawList = res.data.data
+        if (rawList.length === 0) return []
+        const needsCategoryEnrich = rawList.some(
+          (item) =>
+            item.kategoriNama === undefined || item.kategoriId === undefined
+        )
+        const menuKategoriMap = needsCategoryEnrich
+          ? (await fetchKatalogLookup()).menuKategoriMap
+          : undefined
+        return rawList.map((row) =>
+          normalizeBarisPenjualanItem(row, menuKategoriMap)
+        )
       }
     } catch {
       // Fallback
@@ -183,23 +449,30 @@ export const laporanApi = {
     return MOCK_MENU.map((m, idx) => {
       const qty = [42, 38, 25, 20, 18, 15, 12, 10, 8, 6][idx % 10] || 5
       const hpp = m.hpp || Math.round(m.harga_jual * 0.7)
-      const penjualanBersih = qty * m.harga_jual
-      const totalHpp = qty * hpp
-      const labaKotor = penjualanBersih - totalHpp
-      const margin = Math.round((labaKotor / penjualanBersih) * 100)
+      const total = qty * m.harga_jual
+      const modal = qty * hpp
+      const laba = total - modal
+      const marginPersen =
+        total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
 
       return {
+        kunciId: m.id,
         menuId: m.id,
         nama: m.nama,
         kategoriId: m.kategori_id,
         kategoriNama: m.kategori_nama || 'Umum',
         qty,
+        hargaSatuan: m.harga_jual,
         hargaJual: m.harga_jual,
         hpp,
-        penjualanBersih,
-        totalHpp,
-        labaKotor,
-        margin,
+        total,
+        penjualanBersih: total,
+        modal,
+        totalHpp: modal,
+        laba,
+        labaKotor: laba,
+        marginPersen,
+        margin: marginPersen,
       }
     })
   },
@@ -211,12 +484,22 @@ export const laporanApi = {
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKategori[]> {
     try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanKategori[]>>(
+      const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
         '/api/laporan/penjualan/kategori',
         { params }
       )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+      if (Array.isArray(res.data?.data)) {
+        const rawList = res.data.data
+        if (rawList.length === 0) return []
+        const needsCountEnrich = rawList.some(
+          (item) => item.jumlahItem === undefined || item.jumlahItem === null
+        )
+        const kategoriJumlahMap = needsCountEnrich
+          ? (await fetchKatalogLookup()).kategoriJumlahMap
+          : undefined
+        return rawList.map((row) =>
+          normalizeBarisPenjualanKategori(row, kategoriJumlahMap)
+        )
       }
     } catch {
       // Fallback
@@ -225,21 +508,28 @@ export const laporanApi = {
     return MOCK_KATEGORI.map((k) => {
       const menusInKat = MOCK_MENU.filter((m) => m.kategori_id === k.id)
       const qty = menusInKat.length * 30 || 20
-      const totalJual =
+      const total =
         menusInKat.reduce((acc, m) => acc + m.harga_jual * 30, 0) || 350000
-      const totalHpp = Math.round(totalJual * 0.68)
-      const labaKotor = totalJual - totalHpp
-      const margin = Math.round((labaKotor / totalJual) * 100)
+      const modal = Math.round(total * 0.68)
+      const laba = total - modal
+      const marginPersen =
+        total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
 
       return {
+        kunciId: k.id,
         kategoriId: k.id,
         nama: k.nama,
         jumlahItem: menusInKat.length,
         qty,
-        penjualanBersih: totalJual,
-        totalHpp,
-        labaKotor,
-        margin,
+        hargaSatuan: null,
+        total,
+        penjualanBersih: total,
+        modal,
+        totalHpp: modal,
+        laba,
+        labaKotor: laba,
+        marginPersen,
+        margin: marginPersen,
       }
     })
   },

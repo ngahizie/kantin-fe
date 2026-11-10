@@ -29,18 +29,15 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
         {Array.from({ length: 8 }).map((_, idx) => (
           <Card
             key={idx}
-            className='flex h-full flex-col overflow-hidden rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-0 gap-0 shadow-none'
+            className='flex h-full flex-col overflow-hidden rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-0 gap-0 shadow-none'
           >
-            <Skeleton className='aspect-4/3 w-full shrink-0' />
-            <div className='flex flex-1 flex-col justify-between p-3.5'>
-              <div>
-                <Skeleton className='h-4 w-3/4' />
-                <Skeleton className='mt-2 h-3 w-1/3' />
-              </div>
-              <div className='mt-3 flex flex-col border-none pt-1'>
-                <Skeleton className='h-3 w-10' />
-                <Skeleton className='mt-1 h-5 w-24' />
-              </div>
+            <Skeleton className='aspect-4/3 w-full shrink-0 rounded-none bg-slate-200/70 dark:bg-slate-800/80' />
+            <div className='px-3.5 pt-3'>
+              <Skeleton className='h-5 w-3/4 bg-slate-200/70 dark:bg-slate-800/80' />
+            </div>
+            <div className='mt-auto flex items-baseline justify-between gap-2 px-3.5 pt-2.5 pb-3.5'>
+              <Skeleton className='h-5 w-20 bg-slate-200/70 dark:bg-slate-800/80' />
+              <Skeleton className='h-3.5 w-12 bg-slate-200/70 dark:bg-slate-800/80' />
             </div>
           </Card>
         ))}
@@ -51,13 +48,13 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
   if (menus.length === 0) {
     return (
       <div className='flex h-full min-h-[300px] flex-col items-center justify-center p-8 text-center'>
-        <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground'>
+        <div className='flex h-16 w-16 items-center justify-center rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-400 dark:text-slate-500'>
           <UtensilsCrossed className='h-8 w-8 stroke-[1.5]' />
         </div>
-        <h3 className='mt-4 text-base font-semibold text-foreground'>
+        <h3 className='mt-4 text-base font-semibold text-slate-800 dark:text-white'>
           Menu Tidak Ditemukan
         </h3>
-        <p className='mt-1 max-w-sm text-xs text-muted-foreground sm:text-sm'>
+        <p className='mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400 sm:text-sm'>
           Tidak ada menu yang sesuai dengan kata kunci pencarian atau kategori
           yang dipilih.
         </p>
@@ -66,7 +63,7 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
             variant='secondary'
             size='sm'
             onClick={onResetFilters}
-            className='mt-4 gap-2 text-xs border-none bg-muted/80 hover:bg-muted text-foreground'
+            className='mt-4 gap-2 text-xs has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl shadow-none'
           >
             <RotateCcw className='h-3.5 w-3.5' />
             Reset Filter &amp; Pencarian
