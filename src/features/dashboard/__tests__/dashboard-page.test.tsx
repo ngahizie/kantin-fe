@@ -79,7 +79,7 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     vi.clearAllMocks()
   })
 
-  it('tidak memanggil getRekonsiliasi dan menampilkan Akses Terbatas untuk peran pengelola', async () => {
+  it('tidak memanggil getRekonsiliasi dan tidak menampilkan card rekonsiliasi kas untuk peran pengelola', async () => {
     mockRole = 'pengelola'
     const screen = await render(<DashboardPage />)
 
@@ -88,9 +88,9 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     // Pastikan getRekonsiliasi TIDAK terpanggil untuk peran pengelola
     expect(laporanApi.getRekonsiliasi).not.toHaveBeenCalled()
 
-    // Memverifikasi card rekonsiliasi menampilkan status akses terbatas
-    await expect.element(screen.getByText('Akses Terbatas')).toBeInTheDocument()
-    await expect.element(screen.getByText('• Dikelola TU & Bendahara')).toBeInTheDocument()
+    // Memverifikasi card rekonsiliasi kas tidak ditampilkan untuk pengelola
+    await expect.element(screen.getByText('Status Rekonsiliasi Kas')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Akses Terbatas')).not.toBeInTheDocument()
   })
 
   it('memanggil getRekonsiliasi dan menampilkan status rekonsiliasi untuk peran bendahara', async () => {

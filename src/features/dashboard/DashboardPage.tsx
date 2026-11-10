@@ -251,8 +251,12 @@ export function DashboardPage() {
       <BackofficeHeader />
 
       <Main className='space-y-6 pb-12'>
-        {/* ===== 4 Kartu Metrik Utama ===== */}
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+        {/* ===== Kartu Metrik Utama ===== */}
+        <div
+          className={`grid gap-4 sm:grid-cols-2 ${
+            currentRole === 'pengelola' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'
+          }`}
+        >
           {/* Card 1: Penjualan Hari Ini */}
           <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -299,64 +303,66 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Card 3: Status Rekonsiliasi Kas */}
-          {canViewRekonsiliasi ? (
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium text-muted-foreground'>
-                  Status Rekonsiliasi Kas
-                </CardTitle>
-                <div
-                  className={`flex size-9 items-center justify-center rounded-lg ${
-                    isKasSeimbang
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-destructive/10 text-destructive'
-                  }`}
-                >
-                  <Scale className='size-5' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-2xl font-bold tracking-tight text-foreground'>
-                  {formatRupiah(selisihKas)}{' '}
-                  <span className='text-base font-normal text-muted-foreground'>Selisih</span>
-                </div>
-                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                  <span
-                    className={`inline-flex items-center font-semibold ${
-                      isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
+          {/* Card 3: Status Rekonsiliasi Kas (Hanya ditampilkan untuk peran selain pengelola) */}
+          {currentRole !== 'pengelola' && (
+            canViewRekonsiliasi ? (
+              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                    Status Rekonsiliasi Kas
+                  </CardTitle>
+                  <div
+                    className={`flex size-9 items-center justify-center rounded-lg ${
+                      isKasSeimbang
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-destructive/10 text-destructive'
                     }`}
                   >
-                    {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
-                  </span>
-                  <span>
-                    • {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium text-muted-foreground'>
-                  Status Rekonsiliasi Kas
-                </CardTitle>
-                <div className='flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
-                  <Scale className='size-5' />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='text-2xl font-bold tracking-tight text-foreground'>
-                  Akses Terbatas
-                </div>
-                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
-                  <span className='inline-flex items-center font-semibold text-emerald-600 dark:text-emerald-400 shrink-0'>
-                    Terbatas
-                  </span>
-                  <span className='truncate'>• Dikelola TU & Bendahara</span>
-                </div>
-              </CardContent>
-            </Card>
+                    <Scale className='size-5' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-2xl font-bold tracking-tight text-foreground'>
+                    {formatRupiah(selisihKas)}{' '}
+                    <span className='text-base font-normal text-muted-foreground'>Selisih</span>
+                  </div>
+                  <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                    <span
+                      className={`inline-flex items-center font-semibold ${
+                        isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
+                      }`}
+                    >
+                      {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
+                    </span>
+                    <span>
+                      • {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                    Status Rekonsiliasi Kas
+                  </CardTitle>
+                  <div className='flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
+                    <Scale className='size-5' />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-2xl font-bold tracking-tight text-foreground'>
+                    Akses Terbatas
+                  </div>
+                  <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
+                    <span className='inline-flex items-center font-semibold text-emerald-600 dark:text-emerald-400 shrink-0'>
+                      Terbatas
+                    </span>
+                    <span className='truncate'>• Dikelola TU & Bendahara</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )
           )}
 
           {/* Card 4: Alert Status Stok Menipis */}
