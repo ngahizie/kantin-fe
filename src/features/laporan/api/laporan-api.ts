@@ -21,9 +21,6 @@ import {
   saveStoredSaldo,
 } from '@/features/tu/saldo-storage'
 import {
-  MOCK_MENU,
-  MOCK_KATEGORI,
-  MOCK_TITIK_KASIR,
   MOCK_KARTU_TAMU,
   MOCK_KERUGIAN_STOK,
   MOCK_RIWAYAT_SISWA,
@@ -36,6 +33,49 @@ interface ApiResponse<T> {
   message?: string
   data: T
 }
+
+/** Bentuk baris laporan dari BE (laporan penjualan per item & per kategori). */
+interface BarisPenjualanBe {
+  kunciId: number
+  nama: string
+  qty: number
+  total: number
+  hargaSatuan: number | null
+  modal: number
+  marginPersen: number
+}
+
+/**
+ * BE mengirim satu bentuk baris untuk per item & per kategori
+ * (`kunciId, nama, qty, total, hargaSatuan, modal, marginPersen`), sedangkan
+ * tampilan memakai bentuk lama. Pemetaan ini menjaga halaman tidak perlu diubah
+ * dan memastikan angka yang tampil berasal dari server, bukan hitungan lokal.
+ */
+const petaBarisItem = (r: BarisPenjualanBe): BarisPenjualanItem => ({
+  menuId: r.kunciId,
+  nama: r.nama,
+  kategoriId: 0,
+  // BE laporan per item tidak mengirim kategori; kolom kategori tampil "-".
+  kategoriNama: '-',
+  qty: r.qty,
+  hargaJual: r.hargaSatuan ?? (r.qty > 0 ? Math.round(r.total / r.qty) : 0),
+  hpp: r.qty > 0 ? Math.round(r.modal / r.qty) : 0,
+  penjualanBersih: r.total,
+  totalHpp: r.modal,
+  labaKotor: r.total - r.modal,
+  margin: r.marginPersen,
+})
+
+const petaBarisKategori = (r: BarisPenjualanBe): BarisPenjualanKategori => ({
+  kategoriId: r.kunciId,
+  nama: r.nama,
+  jumlahItem: 0,
+  qty: r.qty,
+  penjualanBersih: r.total,
+  totalHpp: r.modal,
+  labaKotor: r.total - r.modal,
+  margin: r.marginPersen,
+})
 
 export const laporanApi = {
   /**
@@ -129,37 +169,15 @@ export const laporanApi = {
    * Mengambil Ringkasan Penjualan & Laba Kotor
    */
   async getPenjualan(params?: LaporanFilterParams): Promise<RingkasanPenjualan> {
-    try {
-      const res = await apiClient.get<ApiResponse<RingkasanPenjualan>>(
-        '/api/laporan/penjualan',
-        { params }
-      )
-      if (res.data?.data) return res.data.data
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<RingkasanPenjualan>>(
+      '/api/laporan/penjualan',
+      { params }
+    )
+    const data = res.data?.data
+    if (!data) {
+      throw new Error('Laporan penjualan tidak mengembalikan data')
     }
-
-    const penjualanBruto = 3420000
-    const jumlahVoid = 3
-    const nilaiVoid = 45000
-    const penjualanBersih = 3375000
-    const totalHpp = 2180000
-    const labaKotor = penjualanBersih - totalHpp
-    const marginLabaPersen =
-      Math.round((labaKotor / penjualanBersih) * 1000) / 10
-
-    return {
-      dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
-      sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
-      jumlahTransaksi: 185,
-      penjualanBruto,
-      jumlahVoid,
-      nilaiVoid,
-      penjualanBersih,
-      totalHpp,
-      labaKotor,
-      marginLabaPersen,
-    }
+    return data
   },
 
   /**
@@ -168,40 +186,15 @@ export const laporanApi = {
   async getPenjualanPerItem(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanItem[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanItem[]>>(
-        '/api/laporan/penjualan/item',
-        { params }
-      )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<BarisPenjualanBe[]>>(
+      '/api/laporan/penjualan/item',
+      { params }
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per item tidak mengembalikan data')
     }
-
-    return MOCK_MENU.map((m, idx) => {
-      const qty = [42, 38, 25, 20, 18, 15, 12, 10, 8, 6][idx % 10] || 5
-      const hpp = m.hpp || Math.round(m.harga_jual * 0.7)
-      const penjualanBersih = qty * m.harga_jual
-      const totalHpp = qty * hpp
-      const labaKotor = penjualanBersih - totalHpp
-      const margin = Math.round((labaKotor / penjualanBersih) * 100)
-
-      return {
-        menuId: m.id,
-        nama: m.nama,
-        kategoriId: m.kategori_id,
-        kategoriNama: m.kategori_nama || 'Umum',
-        qty,
-        hargaJual: m.harga_jual,
-        hpp,
-        penjualanBersih,
-        totalHpp,
-        labaKotor,
-        margin,
-      }
-    })
+    return rows.map(petaBarisItem)
   },
 
   /**
@@ -210,38 +203,15 @@ export const laporanApi = {
   async getPenjualanPerKategori(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKategori[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanKategori[]>>(
-        '/api/laporan/penjualan/kategori',
-        { params }
-      )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<BarisPenjualanBe[]>>(
+      '/api/laporan/penjualan/kategori',
+      { params }
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per kategori tidak mengembalikan data')
     }
-
-    return MOCK_KATEGORI.map((k) => {
-      const menusInKat = MOCK_MENU.filter((m) => m.kategori_id === k.id)
-      const qty = menusInKat.length * 30 || 20
-      const totalJual =
-        menusInKat.reduce((acc, m) => acc + m.harga_jual * 30, 0) || 350000
-      const totalHpp = Math.round(totalJual * 0.68)
-      const labaKotor = totalJual - totalHpp
-      const margin = Math.round((labaKotor / totalJual) * 100)
-
-      return {
-        kategoriId: k.id,
-        nama: k.nama,
-        jumlahItem: menusInKat.length,
-        qty,
-        penjualanBersih: totalJual,
-        totalHpp,
-        labaKotor,
-        margin,
-      }
-    })
+    return rows.map(petaBarisKategori)
   },
 
   /**
@@ -250,30 +220,15 @@ export const laporanApi = {
   async getPenjualanPerKasir(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKasir[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanKasir[]>>(
-        '/api/laporan/penjualan/kasir',
-        { params, silent: true } as unknown as Record<string, unknown>
-      )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<BarisPenjualanKasir[]>>(
+      '/api/laporan/penjualan/kasir',
+      { params }
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per kasir tidak mengembalikan data')
     }
-
-    return MOCK_TITIK_KASIR.map((tk, idx) => {
-      const base = idx === 0 ? 2100000 : 1275000
-      return {
-        titikKasirId: tk.id,
-        namaTitikKasir: tk.nama,
-        petugas: idx === 0 ? 'Ahmad Kasir' : 'Nurul Hidayah',
-        jumlahTransaksi: idx === 0 ? 115 : 70,
-        penjualanBruto: base + (idx === 0 ? 30000 : 15000),
-        nilaiVoid: idx === 0 ? 30000 : 15000,
-        penjualanBersih: base,
-      }
-    })
+    return rows
   },
 
   /**

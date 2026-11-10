@@ -54,7 +54,7 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
       }
     )
 
-    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
+    vi.spyOn(kasirApi, 'refundTransaksi').mockImplementation(
       async (transaksiId: number, alasan?: string) => {
         await testAxios.post(`/api/kasir/transaksi/${transaksiId}/void`, {
           alasan: alasan || 'Void darurat unit test',
@@ -225,7 +225,7 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
     expect(res2.pembeli.sisa_saldo).toBe(saldoSetelahTap1) // Saldo TIDAK terpotong dua kali
   })
 
-  it('dapat membatalkan transaksi seketika lewat voidTransaksi (mengembalikan saldo & stok)', async () => {
+  it('dapat membatalkan transaksi seketika lewat refundTransaksi (mengembalikan saldo & stok)', async () => {
     const req: TapTransaksiRequest = {
       rfidUid: '04D4E5F6A1',
       items: [{ menuId: 9, qty: 1 }], // Rp 4.000
@@ -237,7 +237,7 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
 
     // Eksekusi void
     await expect(
-      kasirApi.voidTransaksi(res.transaksi_id, 'Wajah tidak cocok')
+      kasirApi.refundTransaksi(res.transaksi_id, 'Wajah tidak cocok', 'TRX-20261110-1')
     ).resolves.not.toThrow()
   })
 })

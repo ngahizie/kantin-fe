@@ -134,9 +134,9 @@ export function LaporanLabaKotorPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
-          'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Total Modal': formatRupiah(ringkasan.totalModal),
+          'Total Laba': formatRupiah(ringkasan.laba),
+          'Margin Rata-rata': `${ringkasan.marginPersen}%`,
         },
         columns: [
           { header: 'No', key: 'menuId', width: 8 },
@@ -181,9 +181,9 @@ export function LaporanLabaKotorPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
-          'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Total Modal': formatRupiah(ringkasan.totalModal),
+          'Total Laba': formatRupiah(ringkasan.laba),
+          'Margin Rata-rata': `${ringkasan.marginPersen}%`,
         },
         columns: [
           { header: 'No', key: 'menuId' },
@@ -206,7 +206,7 @@ export function LaporanLabaKotorPage() {
             formatter: (v) => formatRupiah(Number(v)),
           },
           {
-            header: 'Total HPP',
+            header: 'Total Modal',
             key: 'totalHpp',
             formatter: (v) => formatRupiah(Number(v)),
           },
@@ -295,7 +295,7 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-emerald-600">
-                  {ringkasan ? formatRupiah(ringkasan.labaKotor) : '...'}
+                  {ringkasan ? formatRupiah(ringkasan.laba) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Keuntungan murni setelah dipotong beban HPP
@@ -311,7 +311,7 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
-                  {ringkasan ? `${ringkasan.marginLabaPersen}%` : '...'}
+                  {ringkasan ? `${ringkasan.marginPersen}%` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Rasio laba kotor terhadap penjualan bersih
@@ -327,7 +327,7 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
-                  {ringkasan ? formatRupiah(ringkasan.totalHpp) : '...'}
+                  {ringkasan ? formatRupiah(ringkasan.totalModal) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total modal kulakan menu terjual

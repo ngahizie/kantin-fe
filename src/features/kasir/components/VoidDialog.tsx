@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { formatRupiah, formatDateTime } from '@/lib/formatters'
@@ -48,8 +49,19 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
     PILIHAN_ALASAN_VOID[0]
   )
   const [keteranganLainnya, setKeteranganLainnya] = useState('')
+  const [kodeStruk, setKodeStruk] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { playVoid, playError } = useBeepAudio()
+
+  // Kode struk diisi otomatis dari nomor referensi transaksi yang dipilih,
+  // supaya kasir hanya perlu mencocokkan dengan struk di tangannya.
+  // Pola "sesuaikan state saat props berubah" (bukan efek) agar tidak memicu
+  // render berantai — lihat react.dev "You Might Not Need an Effect".
+  const [kodeUntukTransaksi, setKodeUntukTransaksi] = useState<number | null>(null)
+  if (transaction && kodeUntukTransaksi !== transaction.id) {
+    setKodeUntukTransaksi(transaction.id)
+    setKodeStruk(transaction.nomorReferensi || '')
+  }
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -73,12 +85,20 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
       alasanFinal = trimmed
     }
 
+    const kode = kodeStruk.trim()
+    if (!kode) {
+      toast.error('Kode struk wajib diisi', {
+        description: 'Salin kode yang tertera pada struk pembayaran (TRX-...).',
+      })
+      return
+    }
+
     try {
       setIsSubmitting(true)
-      await kasirApi.voidTransaksi(transaction.id, alasanFinal)
+      await kasirApi.refundTransaksi(transaction.id, alasanFinal, kode)
       playVoid()
       toast.success(
-        `Transaksi #${transaction.nomorReferensi || transaction.id} berhasil dibatalkan (void)`,
+        `Transaksi #${transaction.nomorReferensi || transaction.id} berhasil di-refund`,
         {
           description: 'Saldo pembeli dan stok menu telah dikembalikan.',
         }
@@ -88,8 +108,8 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
     } catch (err: unknown) {
       playError()
       const msg =
-        err instanceof Error ? err.message : 'Gagal memproses void transaksi'
-      toast.error('Gagal Membatalkan Transaksi', { description: msg })
+        err instanceof Error ? err.message : 'Gagal memproses refund transaksi'
+      toast.error('Gagal Refund Transaksi', { description: msg })
     } finally {
       setIsSubmitting(false)
     }
@@ -105,7 +125,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
             </div>
             <div>
               <DialogTitle className='text-lg font-bold'>
-                Void Transaksi Kasir
+                Refund Transaksi Kasir
               </DialogTitle>
               <DialogDescription className='text-xs text-muted-foreground'>
                 Batalkan transaksi yang salah atau tidak sesuai pada sesi berjalan.
@@ -118,7 +138,7 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
         <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
           <span>
-            <strong>Perhatian:</strong> Pembatalan (void) akan mengembalikan
+            <strong>Perhatian:</strong> Refund (pembatalan) akan mengembalikan
             saldo ke akun pembeli dan mengembalikan stok barang ke sistem secara
             otomatis. Tindakan ini tidak dapat dibatalkan kembali.
           </span>
@@ -168,10 +188,28 @@ export const VoidDialog: React.FC<VoidDialogProps> = ({
           </div>
         </div>
 
-        {/* Pilihan Alasan Void Wajib */}
+        {/* Kode struk — wajib, mencegah salah pilih transaksi (PRD §6.3) */}
+        <div className='space-y-1.5 pt-1'>
+          <Label htmlFor='kode-struk' className='text-xs font-semibold'>
+            Kode Struk (Wajib)
+          </Label>
+          <Input
+            id='kode-struk'
+            value={kodeStruk}
+            onChange={(e) => setKodeStruk(e.target.value)}
+            placeholder='TRX-20261110-1794281191055835'
+            className='font-mono text-xs tracking-wide'
+            autoComplete='off'
+          />
+          <p className='text-[11px] text-muted-foreground'>
+            Tertera pada struk pembayaran. Kode harus cocok dengan transaksi ini.
+          </p>
+        </div>
+
+        {/* Pilihan Alasan Refund Wajib */}
         <div className='space-y-2.5 pt-1'>
           <Label className='text-xs font-semibold'>
-            Alasan Pembatalan (Wajib Dipilih)
+            Alasan Refund (Wajib Dipilih)
           </Label>
           <RadioGroup
             value={selectedAlasan}

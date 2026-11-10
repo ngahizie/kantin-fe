@@ -125,13 +125,19 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   })
 
   describe('Laporan Penjualan & Laba Kotor (PRD §9.5)', () => {
-    it('mengambil ringkasan penjualan, HPP, laba kotor, dan margin dengan tepat', async () => {
+    it('mengambil ringkasan penjualan, modal, laba, dan margin dari server', async () => {
       const data = await laporanApi.getPenjualan()
 
       expect(data).toBeDefined()
-      expect(data.penjualanBersih).toBe(data.penjualanBruto - data.nilaiVoid)
-      expect(data.labaKotor).toBe(data.penjualanBersih - data.totalHpp)
-      expect(data.marginLabaPersen).toBeGreaterThan(0)
+      // Refund tidak pernah masuk bruto (lihat RingkasanPenjualan.java).
+      expect(data.jumlahRefund).toBeGreaterThanOrEqual(0)
+      expect(data.laba).toBe(data.penjualanBersih - data.totalModal)
+      expect(data.marginPersen).toBeGreaterThan(0)
+      // Margin dihitung server, bukan FE.
+      expect(data.marginPersen).toBeCloseTo(
+        (data.laba / data.penjualanBersih) * 100,
+        1
+      )
     })
 
     it('mengambil penjualan per item menu, kategori, dan titik kasir', async () => {

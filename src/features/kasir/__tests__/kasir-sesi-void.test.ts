@@ -41,7 +41,7 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
       return res.data?.data || []
     })
 
-    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
+    vi.spyOn(kasirApi, 'refundTransaksi').mockImplementation(
       async (transaksiId: number, alasan?: string) => {
         await testAxios.post(`/api/kasir/transaksi/${transaksiId}/void`, {
           alasan,
@@ -146,7 +146,7 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
       const targetTrxId = targetTrx!.id
 
       const alasan = 'Pembeli membatalkan'
-      await kasirApi.voidTransaksi(targetTrxId, alasan)
+      await kasirApi.refundTransaksi(targetTrxId, alasan, 'TRX-20261110-1')
 
       // Verifikasi riwayat transaksi terupdate statusnya menjadi VOID
       const updatedList = await kasirApi.getRiwayatTransaksiSesi(1)

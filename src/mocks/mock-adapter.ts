@@ -3102,17 +3102,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         const margin = Math.round((labaKotor / penjualanBersih) * 100)
 
         return {
-          menuId: m.id,
+          kunciId: m.id,
           nama: m.nama,
-          kategoriId: m.kategori_id,
-          kategoriNama: m.kategori_nama || 'Umum',
           qty,
-          hargaJual: m.harga_jual,
-          hpp,
-          penjualanBersih,
-          totalHpp,
-          labaKotor,
-          margin,
+          total: penjualanBersih,
+          hargaSatuan: m.harga_jual,
+          modal: totalHpp,
+          marginPersen: margin,
         }
       })
 
@@ -3141,14 +3137,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         const margin = Math.round((labaKotor / totalJual) * 100)
 
         return {
-          kategoriId: k.id,
+          kunciId: k.id,
           nama: k.nama,
-          jumlahItem: menusInKat.length,
           qty,
-          penjualanBersih: totalJual,
-          totalHpp,
-          labaKotor,
-          margin,
+          total: totalJual,
+          hargaSatuan: null,
+          modal: totalHpp,
+          marginPersen: margin,
         }
       })
 
@@ -3191,13 +3186,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     if (url.includes('/api/laporan/penjualan') && method === 'get') {
+      // Bentuk respons mengikuti BE pasca #291: refund/modal/laba + margin.
       const penjualanBruto = 3420000
-      const jumlahVoid = 3
-      const nilaiVoid = 45000
+      const jumlahRefund = 3
+      const nilaiRefund = 45000
       const penjualanBersih = 3375000
-      const totalHpp = 2180000
-      const labaKotor = penjualanBersih - totalHpp
-      const marginLabaPersen = Math.round((labaKotor / penjualanBersih) * 1000) / 10
+      const totalModal = 2180000
+      const laba = penjualanBersih - totalModal
+      const marginPersen = Math.round((laba / penjualanBersih) * 1000) / 10
 
       return {
         status: 200,
@@ -3211,12 +3207,12 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             sampai: '2026-10-08T23:59:59+07:00',
             jumlahTransaksi: 185,
             penjualanBruto,
-            jumlahVoid,
-            nilaiVoid,
+            jumlahRefund,
+            nilaiRefund,
             penjualanBersih,
-            totalHpp,
-            labaKotor,
-            marginLabaPersen,
+            totalModal,
+            laba,
+            marginPersen,
           },
         },
       }

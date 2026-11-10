@@ -159,9 +159,9 @@ export function LaporanPenjualanPage() {
             metadata: {
               'Tanggal Cetak': new Date().toLocaleString('id-ID'),
               'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
-              'Total HPP': formatRupiah(ringkasan.totalHpp),
-              'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
-              'Rata-rata Margin': `${ringkasan.marginLabaPersen}%`,
+              'Total Modal': formatRupiah(ringkasan.totalModal),
+              'Total Laba': formatRupiah(ringkasan.laba),
+              'Margin Rata-rata': `${ringkasan.marginPersen}%`,
             },
             columns: [
               { header: 'ID Menu', key: 'menuId', width: 10 },
@@ -243,9 +243,9 @@ export function LaporanPenjualanPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
-          'Total Beban HPP': formatRupiah(ringkasan.totalHpp),
-          'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Total Modal': formatRupiah(ringkasan.totalModal),
+          'Total Laba': formatRupiah(ringkasan.laba),
+          'Margin Rata-rata': `${ringkasan.marginPersen}%`,
         },
         sections: [
           {
@@ -271,7 +271,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'Total HPP',
+                header: 'Total Modal',
                 key: 'totalHpp',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -301,7 +301,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'Total HPP',
+                header: 'Total Modal',
                 key: 'totalHpp',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -421,7 +421,7 @@ export function LaporanPenjualanPage() {
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex justify-between">
                   <span>Bruto: {ringkasan ? formatRupiah(ringkasan.penjualanBruto) : '-'}</span>
-                  <span className="text-amber-600">Void: {ringkasan ? formatRupiah(ringkasan.nilaiVoid) : '-'}</span>
+                  <span className="text-amber-600">Refund: {ringkasan ? formatRupiah(ringkasan.nilaiRefund) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
@@ -434,7 +434,7 @@ export function LaporanPenjualanPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
-                  {ringkasan ? formatRupiah(ringkasan.totalHpp) : '...'}
+                  {ringkasan ? formatRupiah(ringkasan.totalModal) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Biaya bahan pokok menu terjual
@@ -450,11 +450,11 @@ export function LaporanPenjualanPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
-                  {ringkasan ? formatRupiah(ringkasan.labaKotor) : '...'}
+                  {ringkasan ? formatRupiah(ringkasan.laba) : '...'}
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
                   <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
-                    Margin: {ringkasan?.marginLabaPersen || 0}%
+                    Margin: {ringkasan?.marginPersen || 0}%
                   </Badge>
                   <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
                 </div>
@@ -472,7 +472,7 @@ export function LaporanPenjualanPage() {
                   {ringkasan ? `${formatNumber(ringkasan.jumlahTransaksi)} Trx` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {ringkasan?.jumlahVoid || 0} transaksi dibatalkan (void)
+                  {ringkasan?.jumlahRefund || 0} transaksi di-refund
                 </p>
               </CardContent>
             </Card>

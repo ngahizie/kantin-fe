@@ -415,18 +415,27 @@ export const KasirPosPage: React.FC = () => {
     loadSesiData()
   }, [clearCart, loadKatalogData, loadSesiData])
 
-  // Void transaksi darurat jika wajah tidak cocok
+  // Refund transaksi darurat jika wajah tidak cocok (PRD §6.3 revisi)
   const handleTransactionVoid = useCallback(
     async (transaksiId: number) => {
+      const kodeStruk = successData?.nomorStruk
+      if (!kodeStruk) {
+        toast.error('Kode struk tidak tersedia', {
+          description:
+            'Transaksi ini tidak membawa nomor struk. Refund lewat riwayat sesi kasir.',
+        })
+        return
+      }
       try {
         setIsVoiding(true)
-        await kasirApi.voidTransaksi(
+        await kasirApi.refundTransaksi(
           transaksiId,
-          'Wajah pembeli tidak cocok dengan foto kartu'
+          'Wajah pembeli tidak cocok dengan foto kartu',
+          kodeStruk
         )
         playVoid()
         toast.warning(
-          'Transaksi berhasil dibatalkan (void). Saldo dan stok telah dikembalikan.'
+          'Transaksi berhasil di-refund. Saldo dan stok telah dikembalikan.'
         )
         setStudentModalOpen(false)
         setSuccessData(null)
@@ -438,7 +447,7 @@ export const KasirPosPage: React.FC = () => {
         setIsVoiding(false)
       }
     },
-    [playVoid, loadKatalogData, loadSesiData]
+    [playVoid, loadKatalogData, loadSesiData, successData]
   )
 
   const hasActiveFilters = Boolean(
