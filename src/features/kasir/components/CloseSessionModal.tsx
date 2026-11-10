@@ -311,11 +311,11 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Total Bruto */}
+              {/* Total Penjualan Kotor */}
               <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none col-span-2 sm:col-span-1'>
                 <CardContent className='p-2.5'>
                   <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5'>
-                    <Coins className='h-3 w-3 text-muted-foreground' /> Total Bruto
+                    <Coins className='h-3 w-3 text-muted-foreground' /> Total Kotor
                   </span>
                   <span className='text-xs font-semibold text-foreground tabular-nums block'>
                     {formatRupiah(totalBruto)}
@@ -351,7 +351,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <div className='rounded-xl border border-primary/20 bg-primary/5 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
                   <span className='text-[11px] font-semibold text-primary'>
-                    Pendapatan Bersih (Net):
+                    Pendapatan Bersih:
                   </span>
                 </div>
                 <span className='text-lg font-bold text-primary tabular-nums block'>
@@ -359,7 +359,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 </span>
                 {totalVoid > 0 && (
                   <span className='text-[10px] text-muted-foreground mt-0.5 block'>
-                    (Bruto {formatRupiah(totalBruto)} - Void {formatRupiah(totalVoid)})
+                    (Kotor {formatRupiah(totalBruto)} - Batal {formatRupiah(totalVoid)})
                   </span>
                 )}
               </div>

@@ -95,7 +95,7 @@ export function LaporanRekonsiliasiPage() {
         kategori: 'SALDO',
         arah: 'DEBIT',
         nominal: data.penjualanBersih,
-        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi void ${formatRupiah(data.voidPenjualan)}`,
+        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi pembatalan ${formatRupiah(data.voidPenjualan)}`,
       },
       {
         id: '5',
@@ -115,7 +115,7 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '8',
-        pos: 'Void Penjualan Kasir',
+        pos: 'Pembatalan Transaksi Kasir',
         kategori: 'MASUK',
         arah: 'KREDIT',
         nominal: data.voidPenjualan,
@@ -475,8 +475,8 @@ export function LaporanRekonsiliasiPage() {
                   {data ? formatRupiah(data.penjualanBersih) : '...'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
-                  <span>Bruto: {data ? formatRupiah(data.penjualan) : '-'}</span>
-                  <span className="text-amber-600 font-medium">Void: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
+                  <span>Kotor: {data ? formatRupiah(data.penjualan) : '-'}</span>
+                  <span className="text-amber-600 font-medium">Batal: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
                 </div>
               </CardContent>
             </Card>

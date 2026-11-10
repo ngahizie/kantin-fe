@@ -114,10 +114,10 @@ export function LaporanLabaKotorPage() {
     return list
   }, [items, searchQuery, marginFilter, sortBy])
 
-  // Hitung menu kontributor laba terbesar
-  const topProfitItem = useMemo(() => {
+  // Hitung menu terlaris berdasarkan kuantitas terjual
+  const topSellingItem = useMemo(() => {
     if (items.length === 0) return null
-    return [...items].sort((a, b) => b.labaKotor - a.labaKotor)[0]
+    return [...items].sort((a, b) => b.qty - a.qty || b.penjualanBersih - a.penjualanBersih)[0]
   }, [items])
 
   const handleExportExcel = () => {
@@ -134,7 +134,7 @@ export function LaporanLabaKotorPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
+          'Beban Pokok Penjualan': formatRupiah(ringkasan.totalHpp),
           'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
           'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
@@ -181,7 +181,7 @@ export function LaporanLabaKotorPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
+          'Beban Pokok Penjualan': formatRupiah(ringkasan.totalHpp),
           'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
           'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
@@ -322,7 +322,7 @@ export function LaporanLabaKotorPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Beban Pokok Penjualan (HPP)
+                  Beban Pokok Penjualan
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -338,15 +338,15 @@ export function LaporanLabaKotorPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Menu Juara Laba
+                  Menu Terlaris
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-base font-bold tracking-tight truncate">
-                  {topProfitItem ? topProfitItem.nama : '-'}
+                  {topSellingItem ? topSellingItem.nama : '-'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 font-mono">
-                  {topProfitItem ? `Laba: ${formatRupiah(topProfitItem.labaKotor)}` : '-'}
+                  {topSellingItem ? `${topSellingItem.qty} porsi terjual` : '-'}
                 </p>
               </CardContent>
             </Card>
@@ -406,14 +406,14 @@ export function LaporanLabaKotorPage() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead className="w-12 text-center">No.</TableHead>
                       <TableHead>Nama Menu</TableHead>
                       <TableHead>Kategori</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Harga Jual</TableHead>
-                      <TableHead className="text-right">HPP Unit</TableHead>
+                      <TableHead className="text-right">Harga Pokok</TableHead>
                       <TableHead className="text-right">Penjualan Bersih</TableHead>
-                      <TableHead className="text-right">Total HPP</TableHead>
+                      <TableHead className="text-right">Total Beban Pokok</TableHead>
                       <TableHead className="text-right font-bold text-emerald-600">Laba Kotor</TableHead>
                       <TableHead className="text-center">Margin</TableHead>
                     </TableRow>

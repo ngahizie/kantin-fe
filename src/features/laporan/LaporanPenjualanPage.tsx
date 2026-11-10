@@ -159,7 +159,7 @@ export function LaporanPenjualanPage() {
             metadata: {
               'Tanggal Cetak': new Date().toLocaleString('id-ID'),
               'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
-              'Total HPP': formatRupiah(ringkasan.totalHpp),
+              'Beban Pokok Penjualan': formatRupiah(ringkasan.totalHpp),
               'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
               'Rata-rata Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
             },
@@ -169,9 +169,9 @@ export function LaporanPenjualanPage() {
               { header: 'Kategori', key: 'kategoriNama', width: 18 },
               { header: 'Qty Terjual', key: 'qty', width: 12 },
               { header: 'Harga Satuan (Rp)', key: 'hargaJual', width: 16 },
-              { header: 'HPP Unit (Rp)', key: 'hpp', width: 14 },
+              { header: 'Harga Pokok (Rp)', key: 'hpp', width: 14 },
               { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
-              { header: 'Total HPP (Rp)', key: 'totalHpp', width: 18 },
+              { header: 'Total Beban Pokok (Rp)', key: 'totalHpp', width: 18 },
               { header: 'Laba Kotor (Rp)', key: 'labaKotor', width: 18 },
               {
                 header: 'Margin (%)',
@@ -191,7 +191,7 @@ export function LaporanPenjualanPage() {
               { header: 'Jumlah Variasi Menu', key: 'jumlahItem', width: 18 },
               { header: 'Total Qty Terjual', key: 'qty', width: 16 },
               { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
-              { header: 'Total HPP (Rp)', key: 'totalHpp', width: 18 },
+              { header: 'Total Beban Pokok (Rp)', key: 'totalHpp', width: 18 },
               { header: 'Laba Kotor (Rp)', key: 'labaKotor', width: 18 },
               {
                 header: 'Margin (%)',
@@ -210,8 +210,8 @@ export function LaporanPenjualanPage() {
               { header: 'Titik Kasir', key: 'namaTitikKasir', width: 25 },
               { header: 'Petugas Jaga', key: 'petugas', width: 20 },
               { header: 'Jumlah Transaksi', key: 'jumlahTransaksi', width: 16 },
-              { header: 'Penjualan Bruto (Rp)', key: 'penjualanBruto', width: 20 },
-              { header: 'Nilai Void (Rp)', key: 'nilaiVoid', width: 16 },
+              { header: 'Penjualan Kotor (Rp)', key: 'penjualanBruto', width: 20 },
+              { header: 'Pembatalan (Rp)', key: 'nilaiVoid', width: 16 },
               { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
             ],
             data: kasirs,
@@ -243,7 +243,7 @@ export function LaporanPenjualanPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
-          'Total Beban HPP': formatRupiah(ringkasan.totalHpp),
+          'Beban Pokok Penjualan': formatRupiah(ringkasan.totalHpp),
           'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
           'Rata-rata Gross Margin': ringkasan.marginLabaPersen ? `${ringkasan.marginLabaPersen}%` : '0',
         },
@@ -261,7 +261,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'HPP Unit',
+                header: 'Harga Pokok',
                 key: 'hpp',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -271,7 +271,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'Total HPP',
+                header: 'Total Beban Pokok',
                 key: 'totalHpp',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -301,7 +301,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'Total HPP',
+                header: 'Total Beban Pokok',
                 key: 'totalHpp',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -326,12 +326,12 @@ export function LaporanPenjualanPage() {
               { header: 'Petugas Jaga', key: 'petugas' },
               { header: 'Jumlah Trx', key: 'jumlahTransaksi' },
               {
-                header: 'Penjualan Bruto',
+                header: 'Penjualan Kotor',
                 key: 'penjualanBruto',
                 formatter: (v) => formatRupiah(Number(v)),
               },
               {
-                header: 'Nilai Void',
+                header: 'Pembatalan',
                 key: 'nilaiVoid',
                 formatter: (v) => formatRupiah(Number(v)),
               },
@@ -420,8 +420,8 @@ export function LaporanPenjualanPage() {
                   {ringkasan ? formatRupiah(ringkasan.penjualanBersih) : '...'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex justify-between">
-                  <span>Bruto: {ringkasan ? formatRupiah(ringkasan.penjualanBruto) : '-'}</span>
-                  <span className="text-amber-600">Void: {ringkasan ? formatRupiah(ringkasan.nilaiVoid) : '-'}</span>
+                  <span>Kotor: {ringkasan ? formatRupiah(ringkasan.penjualanBruto) : '-'}</span>
+                  <span className="text-amber-600 font-medium">Batal: {ringkasan ? formatRupiah(ringkasan.nilaiVoid) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
@@ -429,7 +429,7 @@ export function LaporanPenjualanPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Beban HPP
+                  Beban Pokok Penjualan
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -472,7 +472,7 @@ export function LaporanPenjualanPage() {
                   {ringkasan ? `${formatNumber(ringkasan.jumlahTransaksi)} Trx` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {ringkasan?.jumlahVoid || 0} transaksi dibatalkan (void)
+                  {ringkasan?.jumlahVoid || 0} transaksi dibatalkan
                 </p>
               </CardContent>
             </Card>
@@ -534,7 +534,7 @@ export function LaporanPenjualanPage() {
                     Penjualan & Laba Kotor per Item Menu
                   </CardTitle>
                   <CardDescription>
-                    Peringkat menu berdasarkan volume terjual, harga pokok (HPP), dan kontribusi laba kotor.
+                    Peringkat menu berdasarkan volume terjual, harga pokok, dan kontribusi laba kotor.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -547,9 +547,9 @@ export function LaporanPenjualanPage() {
                           <TableHead>Kategori</TableHead>
                           <TableHead className="text-right">Qty</TableHead>
                           <TableHead className="text-right">Harga Jual</TableHead>
-                          <TableHead className="text-right">HPP Unit</TableHead>
+                          <TableHead className="text-right">Harga Pokok</TableHead>
                           <TableHead className="text-right">Penjualan Bersih</TableHead>
-                          <TableHead className="text-right">Total HPP</TableHead>
+                          <TableHead className="text-right">Total Beban Pokok</TableHead>
                           <TableHead className="text-right font-bold text-primary">Laba Kotor</TableHead>
                           <TableHead className="text-center">Margin</TableHead>
                         </TableRow>
@@ -647,7 +647,7 @@ export function LaporanPenjualanPage() {
                           <TableHead className="text-center">Variasi Menu</TableHead>
                           <TableHead className="text-right">Total Terjual (Qty)</TableHead>
                           <TableHead className="text-right">Penjualan Bersih</TableHead>
-                          <TableHead className="text-right">Total HPP</TableHead>
+                          <TableHead className="text-right">Total Beban Pokok</TableHead>
                           <TableHead className="text-right font-bold text-primary">Laba Kotor</TableHead>
                           <TableHead className="text-center">Margin Rata-rata</TableHead>
                         </TableRow>
@@ -712,7 +712,7 @@ export function LaporanPenjualanPage() {
                     Penjualan per Titik Kasir & Petugas
                   </CardTitle>
                   <CardDescription>
-                    Rekap penerimaan transaksi, pembatalan void, dan omset bersih per loket POS.
+                    Rekap penerimaan transaksi, pembatalan, dan omset bersih per loket POS.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -724,8 +724,8 @@ export function LaporanPenjualanPage() {
                           <TableHead>Titik Kasir</TableHead>
                           <TableHead>Petugas Jaga</TableHead>
                           <TableHead className="text-right">Jumlah Transaksi</TableHead>
-                          <TableHead className="text-right">Penjualan Bruto</TableHead>
-                          <TableHead className="text-right text-amber-600">Nilai Void</TableHead>
+                          <TableHead className="text-right">Penjualan Kotor</TableHead>
+                          <TableHead className="text-right text-amber-600">Pembatalan</TableHead>
                           <TableHead className="text-right font-bold text-primary">Penjualan Bersih</TableHead>
                         </TableRow>
                       </TableHeader>
