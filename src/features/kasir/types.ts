@@ -104,9 +104,42 @@ export interface TapBuyerInfo {
 export interface TapTransaksiData {
   transaksi_id: number
   transaksiId?: number
+  nomorStruk?: string | null
+  titikKasir?: string | null
+  namaItem?: string[]
   total: number
   waktu: string
   pembeli: TapBuyerInfo
+}
+
+export interface ReceiptLineItem {
+  menuId?: number
+  namaMenu: string
+  qty: number
+  hargaSatuan: number
+  subtotal: number
+}
+
+export interface ReceiptData {
+  transaksiId: number
+  nomorStruk: string | null
+  waktu: string
+  namaKantin: string
+  titikKasir?: string | null
+  pembeliTipe: 'SISWA' | 'KARTU_TAMU'
+  pembeliNama: string
+  pembeliKelas?: string | null
+  pembeliNis?: string | null
+  pembeliNomorKartu?: string | null
+  items: ReceiptLineItem[]
+  namaItemFallback?: string[]
+  total: number
+  saldoSisa: number
+}
+
+export interface RefundTransaksiPayload {
+  alasan: string
+  kodeStruk: string
 }
 
 export interface ApiErrorResponse {

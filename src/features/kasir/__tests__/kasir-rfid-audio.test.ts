@@ -54,11 +54,22 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
       }
     )
 
-    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
-      async (transaksiId: number, alasan?: string) => {
-        await testAxios.post(`/api/kasir/transaksi/${transaksiId}/void`, {
-          alasan: alasan || 'Void darurat unit test',
+    vi.spyOn(kasirApi, 'refundTransaksi').mockImplementation(
+      async (transaksiId: number, alasan: string, kodeStruk: string) => {
+        await testAxios.post(`/api/kasir/transaksi/${transaksiId}/refund`, {
+          alasan: alasan.trim(),
+          kodeStruk: kodeStruk.trim(),
         })
+      }
+    )
+
+    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
+      async (
+        transaksiId: number,
+        alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
+        kodeStruk = ''
+      ) => {
+        await kasirApi.refundTransaksi(transaksiId, alasan, kodeStruk)
       }
     )
   })
@@ -191,7 +202,7 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
     }
   })
 
-  it('berhasil memproses transaksi tap untuk kartu valid dan saldo mencukupi', async () => {
+  it('berhasil memproses transaksi tap untuk kartu valid dan mengembalikan nomorStruk & titikKasir', async () => {
     // Cantika Kirana (04D4E5F6A1) saldo 65.000
     // Beli Es Teh Manis (menu 9, Rp 4.000)
     const req: TapTransaksiRequest = {
@@ -205,6 +216,8 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
     expect(res.total).toBe(4000)
     expect(res.pembeli.nama).toBe('Cantika Kirana')
     expect(res.pembeli.sisa_saldo).toBe(61000)
+    expect(res.nomorStruk).toMatch(new RegExp(`^TRX-\\d{8}-${res.transaksi_id}$`))
+    expect(res.titikKasir).toBeTruthy()
   })
 
   it('mencegah transaksi ganda dengan mengembalikan respons tersimpan jika idempotency key sama', async () => {
@@ -225,7 +238,7 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
     expect(res2.pembeli.sisa_saldo).toBe(saldoSetelahTap1) // Saldo TIDAK terpotong dua kali
   })
 
-  it('dapat membatalkan transaksi seketika lewat voidTransaksi (mengembalikan saldo & stok)', async () => {
+  it('dapat membatalkan transaksi lewat refundTransaksi dengan kodeStruk valid dan menolak jika kodeStruk kosong/salah (BE #292)', async () => {
     const req: TapTransaksiRequest = {
       rfidUid: '04D4E5F6A1',
       items: [{ menuId: 9, qty: 1 }], // Rp 4.000
@@ -234,10 +247,29 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
 
     const res = await kasirApi.prosesTap(req)
     expect(res.transaksi_id).toBeDefined()
+    expect(res.nomorStruk).toBeTruthy()
 
-    // Eksekusi void
+    // Tanpa kodeStruk harus ditolak HTTP 400
     await expect(
-      kasirApi.voidTransaksi(res.transaksi_id, 'Wajah tidak cocok')
+      kasirApi.refundTransaksi(res.transaksi_id, 'Wajah tidak cocok', '')
+    ).rejects.toMatchObject({ response: { status: 400 } })
+
+    // Kode struk salah harus ditolak HTTP 400
+    await expect(
+      kasirApi.refundTransaksi(
+        res.transaksi_id,
+        'Wajah tidak cocok',
+        'TRX-SALAH-000'
+      )
+    ).rejects.toMatchObject({ response: { status: 400 } })
+
+    // Eksekusi refund dengan kodeStruk cocok (case-insensitive)
+    await expect(
+      kasirApi.refundTransaksi(
+        res.transaksi_id,
+        'Wajah tidak cocok',
+        res.nomorStruk!.toLowerCase()
+      )
     ).resolves.not.toThrow()
   })
 })
