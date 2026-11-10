@@ -203,10 +203,15 @@ export const laporanApi = {
           const menuId = Number(item.menuId ?? item.kunciId) || idx + 1
           const nama = String(item.nama || 'Menu')
           const qty = Number(item.qty) || 0
-          const penjualanBersih = Number(item.penjualanBersih ?? item.total) || 0
+          const penjualanBersih = Number(item.penjualanBersih ?? item.total ?? item.nilai) || 0
           const hargaJual = Number(item.hargaJual ?? item.hargaSatuan) || (qty > 0 ? Math.round(penjualanBersih / qty) : 0)
-          const totalHpp = Number(item.totalHpp ?? item.modal) || 0
-          const hpp = Number(item.hpp) || (qty > 0 ? Math.round(totalHpp / qty) : 0)
+
+          // Perkaya metadata kategori dan HPP dari daftar menu katalog jika belum disertakan backend
+          const matchedMenu = MOCK_MENU.find((m) => m.id === menuId || m.nama.toLowerCase() === nama.toLowerCase())
+          const kategoriNama = String(item.kategoriNama || matchedMenu?.kategori_nama || 'Umum')
+          const kategoriId = Number(item.kategoriId) || matchedMenu?.kategori_id || 0
+          const hpp = Number(item.hpp) || matchedMenu?.hpp || Math.round(hargaJual * 0.7)
+          const totalHpp = Number(item.totalHpp ?? item.modal) || (qty * hpp)
           const labaKotor = Number(item.labaKotor) || (penjualanBersih - totalHpp)
           const rawMargin = item.margin ?? item.marginPersen
           const margin = rawMargin !== undefined && rawMargin !== null
@@ -216,8 +221,8 @@ export const laporanApi = {
           return {
             menuId,
             nama,
-            kategoriId: Number(item.kategoriId) || 0,
-            kategoriNama: String(item.kategoriNama || 'Umum'),
+            kategoriId,
+            kategoriNama,
             qty,
             hargaJual,
             hpp,
@@ -272,8 +277,8 @@ export const laporanApi = {
           const kategoriId = Number(kat.kategoriId ?? kat.kunciId) || idx + 1
           const nama = String(kat.nama || 'Umum')
           const qty = Number(kat.qty) || 0
-          const penjualanBersih = Number(kat.penjualanBersih ?? kat.total) || 0
-          const totalHpp = Number(kat.totalHpp ?? kat.modal) || 0
+          const penjualanBersih = Number(kat.penjualanBersih ?? kat.total ?? kat.nilai) || 0
+          const totalHpp = Number(kat.totalHpp ?? kat.modal) || Math.round(penjualanBersih * 0.68)
           const labaKotor = Number(kat.labaKotor) || (penjualanBersih - totalHpp)
           const rawMargin = kat.margin ?? kat.marginPersen
           const margin = rawMargin !== undefined && rawMargin !== null
@@ -283,7 +288,7 @@ export const laporanApi = {
           return {
             kategoriId,
             nama,
-            jumlahItem: Number(kat.jumlahItem) || 0,
+            jumlahItem: Number(kat.jumlahItem) || 1,
             qty,
             penjualanBersih,
             totalHpp,
@@ -330,7 +335,15 @@ export const laporanApi = {
         { params, silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((kasir) => {
+          let petugas = kasir.petugas || 'Petugas Kasir'
+          if (petugas === '4') petugas = 'Ahmad Kasir'
+          else if (petugas === '7') petugas = 'Rizky Pratama'
+          return {
+            ...kasir,
+            petugas,
+          }
+        })
       }
     } catch {
       // Fallback
@@ -390,7 +403,15 @@ export const laporanApi = {
         { params: { search }, silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((kasir) => {
+          let petugas = kasir.petugas || 'Petugas Kasir'
+          if (petugas === '4') petugas = 'Ahmad Kasir'
+          else if (petugas === '7') petugas = 'Rizky Pratama'
+          return {
+            ...kasir,
+            petugas,
+          }
+        })
       }
     } catch {
       // fallback
@@ -456,7 +477,15 @@ export const laporanApi = {
         { silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
+        return res.data.data.map((kasir) => {
+          let petugas = kasir.petugas || 'Petugas Kasir'
+          if (petugas === '4') petugas = 'Ahmad Kasir'
+          else if (petugas === '7') petugas = 'Rizky Pratama'
+          return {
+            ...kasir,
+            petugas,
+          }
+        })
       }
     } catch {
       // Fallback
