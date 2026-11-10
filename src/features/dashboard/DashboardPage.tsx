@@ -213,6 +213,7 @@ export function DashboardPage() {
   const { currentRole } = useRoleStore()
   const [penjualan, setPenjualan] = useState<RingkasanPenjualan | null>(null)
   const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
+  const [rekonsiliasiStatus, setRekonsiliasiStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
@@ -265,8 +266,15 @@ export function DashboardPage() {
         }
 
         // 2. Data Status Rekonsiliasi Kas
-        if (rekonsiliasiRes.status === 'fulfilled' && rekonsiliasiRes.value) {
+        if (!canViewRekonsiliasi) {
+          setRekonsiliasi(null)
+          setRekonsiliasiStatus('loaded')
+        } else if (rekonsiliasiRes.status === 'fulfilled' && rekonsiliasiRes.value) {
           setRekonsiliasi(rekonsiliasiRes.value)
+          setRekonsiliasiStatus('loaded')
+        } else {
+          setRekonsiliasi(null)
+          setRekonsiliasiStatus('error')
         }
 
         // 3. Peta Kategori Menu
@@ -420,7 +428,10 @@ export function DashboardPage() {
         setChartCategories(resolvedCategories)
         setRawWeeklyData(dynamicChartData)
       } catch {
-        // Fallback graceful
+        if (isMounted && canViewRekonsiliasi) {
+          setRekonsiliasi(null)
+          setRekonsiliasiStatus('error')
+        }
       }
     }
 
@@ -454,8 +465,9 @@ export function DashboardPage() {
   const todaySales = penjualan?.penjualanBersih ?? penjualan?.penjualanBruto ?? 0
   const todayTransactions = Number(penjualan?.jumlahTransaksi ?? 0)
   const avgPerTransaction = todayTransactions > 0 ? Math.round(todaySales / todayTransactions) : 0
+  const saldoMengendapKas = rekonsiliasi?.saldoMengendap ?? 0
   const selisihKas = rekonsiliasi?.selisih ?? 0
-  const isKasSeimbang = rekonsiliasi ? rekonsiliasi.seimbang : true
+  const isKasSeimbang = Boolean(rekonsiliasi?.seimbang)
 
   // Pastikan bar 'Hari Ini' selalu sinkron jika total penjualan hari ini bertambah
   const chartData = useMemo(() => {
@@ -543,31 +555,59 @@ export function DashboardPage() {
                   </CardTitle>
                   <div
                     className={`flex size-9 items-center justify-center rounded-lg ${
-                      isKasSeimbang
-                        ? 'border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
-                        : 'border border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300'
+                      !rekonsiliasi
+                        ? rekonsiliasiStatus === 'error'
+                          ? 'border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
+                          : 'border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
+                        : isKasSeimbang
+                          ? 'border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                          : 'border border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300'
                     }`}
                   >
                     <Scale className='size-5' />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold tracking-tight text-foreground'>
-                    {formatRupiah(selisihKas)}{' '}
-                    <span className='text-base font-normal text-muted-foreground'>Selisih</span>
-                  </div>
-                  <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                    <span
-                      className={`inline-flex items-center font-semibold ${
-                        isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                      }`}
-                    >
-                      {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
-                    </span>
-                    <span>
-                      • {isKasSeimbang ? 'Kas fisik TU cocok sistem' : 'Perlu pemeriksaan kas'}
-                    </span>
-                  </div>
+                  {rekonsiliasi ? (
+                    <>
+                      <div className='text-2xl font-bold tracking-tight text-foreground'>
+                        {formatRupiah(saldoMengendapKas)}
+                      </div>
+                      <div className='flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground mt-1'>
+                        <span
+                          className={`inline-flex items-center font-semibold ${
+                            isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                          }`}
+                        >
+                          {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
+                        </span>
+                        <span>
+                          • Saldo mengendap (selisih {formatRupiah(selisihKas)})
+                        </span>
+                      </div>
+                    </>
+                  ) : rekonsiliasiStatus === 'loading' ? (
+                    <>
+                      <div className='text-2xl font-bold tracking-tight text-muted-foreground'>
+                        —
+                      </div>
+                      <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                        <span>Memuat data rekonsiliasi...</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className='text-2xl font-bold tracking-tight text-muted-foreground'>
+                        —
+                      </div>
+                      <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                        <span className='inline-flex items-center font-semibold text-amber-600 dark:text-amber-400'>
+                          Belum dimuat
+                        </span>
+                        <span>• Data rekonsiliasi tidak tersedia</span>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ) : (

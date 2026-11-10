@@ -94,15 +94,25 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     await expect.element(screen.getByText('Akses Terbatas')).not.toBeInTheDocument()
   })
 
-  it('memanggil getRekonsiliasi dan menampilkan status rekonsiliasi untuk peran bendahara', async () => {
+  it('memanggil getRekonsiliasi dan menampilkan saldo mengendap serta status seimbang untuk peran bendahara', async () => {
     mockRole = 'bendahara'
     const screen = await render(<DashboardPage />)
 
     // Pastikan getRekonsiliasi terpanggil untuk peran bendahara
     expect(laporanApi.getRekonsiliasi).toHaveBeenCalled()
 
-    // Memverifikasi card rekonsiliasi menampilkan status seimbang
+    // Memverifikasi card rekonsiliasi menampilkan nominal saldo mengendap dan status seimbang
+    await expect.element(screen.getByText(/Rp\s*500\.000/)).toBeInTheDocument()
     await expect.element(screen.getByText('Seimbang')).toBeInTheDocument()
+  })
+
+  it('tidak menampilkan Rp 0 atau Seimbang palsu saat getRekonsiliasi gagal dimuat', async () => {
+    mockRole = 'bendahara'
+    vi.mocked(laporanApi.getRekonsiliasi).mockRejectedValueOnce(new Error('Network error'))
+    const screen = await render(<DashboardPage />)
+
+    await expect.element(screen.getByText('Belum dimuat')).toBeInTheDocument()
+    await expect.element(screen.getByText('Seimbang')).not.toBeInTheDocument()
   })
 })
 
