@@ -90,14 +90,18 @@ export interface BarisPenjualanItem {
 }
 
 export interface BarisPenjualanKategori {
-  kategoriId: number
+  kategoriId?: number
+  kunciId?: number
   nama: string
-  jumlahItem: number
+  jumlahItem?: number
   qty: number
-  penjualanBersih: number
-  totalHpp: number
-  labaKotor: number
-  margin: number
+  total?: number
+  penjualanBersih?: number
+  totalHpp?: number
+  modal?: number
+  labaKotor?: number
+  margin?: number
+  marginPersen?: number
 }
 
 export interface BarisPenjualanKasir {

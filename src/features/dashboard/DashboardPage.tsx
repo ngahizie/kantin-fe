@@ -37,19 +37,68 @@ import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { useRoleStore } from '@/stores/useRoleStore'
 import apiClient from '@/lib/api-client'
-import type { RingkasanPenjualan, RingkasanRekonsiliasi } from '@/features/laporan/types'
+import type { RingkasanPenjualan, RingkasanRekonsiliasi, BarisPenjualanKategori } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
 
-// Data tren penjualan 7 hari terakhir (baseline)
-const SALES_TREND_DATA = [
-  { hari: 'Sen (26 Sep)', makanan: 1250000, minuman: 420000, snack: 180000, total: 1850000, transaksi: 124 },
-  { hari: 'Sel (27 Sep)', makanan: 1420000, minuman: 480000, snack: 220000, total: 2120000, transaksi: 148 },
-  { hari: 'Rab (28 Sep)', makanan: 1310000, minuman: 440000, snack: 190000, total: 1940000, transaksi: 135 },
-  { hari: 'Kam (29 Sep)', makanan: 1580000, minuman: 530000, snack: 240000, total: 2350000, transaksi: 160 },
-  { hari: 'Jum (30 Sep)', makanan: 1820000, minuman: 610000, snack: 250000, total: 2680000, transaksi: 185 },
-  { hari: 'Sab (01 Okt)', makanan: 980000, minuman: 320000, snack: 150000, total: 1450000, transaksi: 92 },
-  { hari: 'Hari Ini', makanan: 0, minuman: 0, snack: 0, total: 0, transaksi: 0 },
+export interface DynamicCategory {
+  id: number
+  key: string
+  nama: string
+  color: string
+}
+
+export interface ChartDayItem {
+  hari: string
+  date: string
+  total: number
+  [key: string]: string | number
+}
+
+const CATEGORY_COLORS = [
+  '#3b82f6', // blue
+  '#06b6d4', // cyan
+  '#f59e0b', // amber
+  '#10b981', // emerald
+  '#8b5cf6', // purple
+  '#ec4899', // pink
+  '#f97316', // orange
+  '#64748b', // slate
 ]
+
+const DEFAULT_CATEGORIES: DynamicCategory[] = [
+  { id: 1, key: 'cat_1', nama: 'Makanan', color: '#3b82f6' },
+  { id: 2, key: 'cat_2', nama: 'Minuman', color: '#06b6d4' },
+  { id: 3, key: 'cat_3', nama: 'Snack', color: '#f59e0b' },
+]
+
+const getLast7Days = () => {
+  const result: { dateStr: string; label: string }[] = []
+  const today = new Date()
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${day}`
+
+    let label: string
+    if (i === 0) {
+      label = 'Hari Ini'
+    } else {
+      const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' })
+      const dayNum = String(d.getDate()).padStart(2, '0')
+      const monthName = d.toLocaleDateString('id-ID', { month: 'short' })
+      label = `${dayName} (${dayNum} ${monthName})`
+    }
+
+    result.push({ dateStr, label })
+  }
+
+  return result
+}
 
 interface LowStockDisplayItem {
   id: number
@@ -102,6 +151,14 @@ export function DashboardPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
+  const [chartCategories, setChartCategories] = useState<DynamicCategory[]>(DEFAULT_CATEGORIES)
+  const [rawWeeklyData, setRawWeeklyData] = useState<ChartDayItem[]>(() => {
+    return getLast7Days().map((d) => ({
+      hari: d.label,
+      date: d.dateStr,
+      total: 0,
+    }))
+  })
 
   const canViewRekonsiliasi = useMemo(() => {
     return ['admin', 'bendahara', 'tu', 'kepsek'].includes(currentRole)
@@ -192,6 +249,101 @@ export function DashboardPage() {
         } else if (trxRes.status === 'fulfilled') {
           setRecentTransactions([])
         }
+
+        // 6. Data Tren Penjualan 7 Hari Terakhir per Kategori dari Database
+        const sevenDays = getLast7Days()
+
+        // Ambil kategori dari database katalog_menu
+        const categoriesFromDb: DynamicCategory[] = []
+        if (kategoriRes.status === 'fulfilled' && Array.isArray(kategoriRes.value) && kategoriRes.value.length > 0) {
+          kategoriRes.value.forEach((k, idx) => {
+            categoriesFromDb.push({
+              id: k.id,
+              key: `cat_${k.id}`,
+              nama: k.nama,
+              color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+            })
+          })
+        } else {
+          categoriesFromDb.push(...DEFAULT_CATEGORIES)
+        }
+
+        // Panggil laporan penjualan per kategori untuk 7 hari terakhir secara paralel dari BE
+        const weeklyPromises = sevenDays.map((d) =>
+          laporanApi
+            .getPenjualanPerKategori({ tanggal: d.dateStr })
+            .catch(() => [])
+        )
+        const weeklyResults = await Promise.allSettled(weeklyPromises)
+
+        // Cek jika ada kategori lain yang muncul di data transaksi
+        const resolvedCategories = [...categoriesFromDb]
+        weeklyResults.forEach((res) => {
+          if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+            res.value.forEach((row: BarisPenjualanKategori) => {
+              const catName = String(row.nama || '').trim()
+              const catId = Number(row.kunciId ?? row.kategoriId ?? 0)
+              if (
+                catName &&
+                !resolvedCategories.some(
+                  (c) => c.nama.toLowerCase() === catName.toLowerCase()
+                )
+              ) {
+                resolvedCategories.push({
+                  id: catId || 1000 + resolvedCategories.length,
+                  key: `cat_${catId || resolvedCategories.length}`,
+                  nama: catName,
+                  color:
+                    CATEGORY_COLORS[
+                      resolvedCategories.length % CATEGORY_COLORS.length
+                    ],
+                })
+              }
+            })
+          }
+        })
+
+        // Susun data per hari untuk chart
+        const dynamicChartData: ChartDayItem[] = sevenDays.map((day, idx) => {
+          const row: ChartDayItem = {
+            hari: day.label,
+            date: day.dateStr,
+            total: 0,
+          }
+
+          resolvedCategories.forEach((cat) => {
+            row[cat.key] = 0
+          })
+
+          const dayRes = weeklyResults[idx]
+          if (dayRes.status === 'fulfilled' && Array.isArray(dayRes.value)) {
+            let dayTotal = 0
+            dayRes.value.forEach((item: BarisPenjualanKategori) => {
+              const catName = String(item.nama || '').trim()
+              const catId = Number(item.kunciId ?? item.kategoriId ?? 0)
+              const amount = Number(item.total ?? item.penjualanBersih ?? 0)
+
+              const matchedCat = resolvedCategories.find(
+                (c) =>
+                  (catId > 0 && c.id === catId) ||
+                  c.nama.toLowerCase() === catName.toLowerCase()
+              )
+
+              if (matchedCat) {
+                row[matchedCat.key] =
+                  ((row[matchedCat.key] as number) || 0) + amount
+              }
+              dayTotal += amount
+            })
+            row.total = dayTotal
+          }
+
+          return row
+        })
+
+        if (!isMounted) return
+        setChartCategories(resolvedCategories)
+        setRawWeeklyData(dynamicChartData)
       } catch {
         // Fallback graceful
       }
@@ -228,22 +380,23 @@ export function DashboardPage() {
   const selisihKas = rekonsiliasi?.selisih ?? 0
   const isKasSeimbang = rekonsiliasi ? rekonsiliasi.seimbang : true
 
-  // Grafik tren penjualan 7 hari yang tersinkronisasi dinamis
+  // Pastikan bar 'Hari Ini' selalu sinkron jika total penjualan hari ini bertambah
   const chartData = useMemo(() => {
-    return SALES_TREND_DATA.map((item, idx) => {
-      if (idx === SALES_TREND_DATA.length - 1) {
-        return {
-          ...item,
-          makanan: Math.round(todaySales * 0.68),
-          minuman: Math.round(todaySales * 0.22),
-          snack: Math.round(todaySales * 0.10),
-          total: todaySales,
-          transaksi: todayTransactions,
-        }
-      }
-      return item
-    })
-  }, [todaySales, todayTransactions])
+    if (todaySales <= 0 || rawWeeklyData.length === 0) return rawWeeklyData
+    const lastIdx = rawWeeklyData.length - 1
+    const lastItem = rawWeeklyData[lastIdx]
+    if (lastItem.total >= todaySales) return rawWeeklyData
+
+    const updated = [...rawWeeklyData]
+    const diff = todaySales - lastItem.total
+    const primaryKey = chartCategories[0]?.key || 'cat_1'
+    updated[lastIdx] = {
+      ...lastItem,
+      [primaryKey]: ((lastItem[primaryKey] as number) || 0) + diff,
+      total: todaySales,
+    }
+    return updated
+  }, [rawWeeklyData, todaySales, chartCategories])
 
   return (
     <>
@@ -419,20 +572,17 @@ export function DashboardPage() {
                     Grafik omset harian kasir kantin dalam Rupiah (Rp) per kategori
                   </CardDescription>
                 </div>
-                {/* Legend Kategori */}
-                <div className='flex items-center gap-3.5 text-xs shrink-0'>
-                  <div className='flex items-center gap-1.5'>
-                    <span className='size-2.5 rounded-full bg-[#3b82f6] shrink-0' />
-                    <span className='font-medium text-muted-foreground'>Makanan</span>
-                  </div>
-                  <div className='flex items-center gap-1.5'>
-                    <span className='size-2.5 rounded-full bg-[#06b6d4] shrink-0' />
-                    <span className='font-medium text-muted-foreground'>Minuman</span>
-                  </div>
-                  <div className='flex items-center gap-1.5'>
-                    <span className='size-2.5 rounded-full bg-[#f59e0b] shrink-0' />
-                    <span className='font-medium text-muted-foreground'>Snack</span>
-                  </div>
+                {/* Legend Kategori Dinamis */}
+                <div className='flex flex-wrap items-center gap-3.5 text-xs shrink-0'>
+                  {chartCategories.map((cat) => (
+                    <div key={cat.key} className='flex items-center gap-1.5'>
+                      <span
+                        className='size-2.5 rounded-full shrink-0'
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className='font-medium text-muted-foreground'>{cat.nama}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardHeader>
@@ -501,9 +651,16 @@ export function DashboardPage() {
                         return null
                       }}
                     />
-                    <Bar dataKey='makanan' name='Makanan' stackId='a' fill='#3b82f6' radius={[0, 0, 0, 0]} />
-                    <Bar dataKey='minuman' name='Minuman' stackId='a' fill='#06b6d4' radius={[0, 0, 0, 0]} />
-                    <Bar dataKey='snack' name='Snack' stackId='a' fill='#f59e0b' radius={[6, 6, 0, 0]} />
+                    {chartCategories.map((cat, idx) => (
+                      <Bar
+                        key={cat.key}
+                        dataKey={cat.key}
+                        name={cat.nama}
+                        stackId='a'
+                        fill={cat.color}
+                        radius={idx === chartCategories.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>

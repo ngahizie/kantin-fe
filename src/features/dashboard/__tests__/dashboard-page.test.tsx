@@ -44,6 +44,7 @@ vi.mock('@/features/laporan/api/laporan-api', () => ({
       saldoMengendap: 500000,
       penjualanBersih: 1500000,
     }),
+    getPenjualanPerKategori: vi.fn().mockResolvedValue([]),
   },
 }))
 
