@@ -130,6 +130,70 @@ const formatRupiah = (val: number) => {
   }).format(val)
 }
 
+const getRoundedTopBarPath = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius = 6
+) => {
+  if (height <= 0 || width <= 0) return ''
+  const r = Math.min(radius, width / 2, height)
+  return `M ${x},${y + height} L ${x},${y + r} Q ${x},${y} ${x + r},${y} L ${x + width - r},${y} Q ${x + width},${y} ${x + width},${y + r} L ${x + width},${y + height} Z`
+}
+
+const isTopSegment = (
+  payload: Record<string, unknown> | undefined,
+  currentKey: string,
+  categories: DynamicCategory[]
+): boolean => {
+  if (!payload) return false
+  for (let i = categories.length - 1; i >= 0; i--) {
+    const key = categories[i].key
+    const val = Number(payload[key] ?? 0)
+    if (val > 0) {
+      return key === currentKey
+    }
+  }
+  return false
+}
+
+const renderStackedBar = (
+  props: {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+    fill?: string
+    payload?: Record<string, unknown>
+  },
+  currentKey: string,
+  categories: DynamicCategory[]
+) => {
+  const { x = 0, y = 0, width = 0, height = 0, fill = '#3b82f6', payload } = props
+  if (height <= 0 || width <= 0) return null
+
+  const isTop = isTopSegment(payload, currentKey, categories)
+  if (isTop) {
+    return (
+      <path
+        d={getRoundedTopBarPath(x, y, width, height, 6)}
+        fill={fill}
+      />
+    )
+  }
+
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={fill}
+    />
+  )
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const getStatusBadgeClass = (status: string) => {
   const normalized = status.toUpperCase()
@@ -691,14 +755,27 @@ export function DashboardPage() {
                         return null
                       }}
                     />
-                    {chartCategories.map((cat, idx) => (
+                    {chartCategories.map((cat) => (
                       <Bar
                         key={cat.key}
                         dataKey={cat.key}
                         name={cat.nama}
                         stackId='a'
                         fill={cat.color}
-                        radius={idx === chartCategories.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                        shape={(barProps: unknown) =>
+                          renderStackedBar(
+                            barProps as {
+                              x?: number
+                              y?: number
+                              width?: number
+                              height?: number
+                              fill?: string
+                              payload?: Record<string, unknown>
+                            },
+                            cat.key,
+                            chartCategories
+                          )
+                        }
                       />
                     ))}
                   </BarChart>
