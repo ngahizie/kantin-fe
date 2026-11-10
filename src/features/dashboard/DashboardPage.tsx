@@ -575,9 +575,9 @@ export function DashboardPage() {
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-7'>
           {/* Kolom Kiri: Tren Penjualan 7 Hari Terakhir (Recharts) */}
           <Card className='col-span-1 lg:col-span-4 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
-            <CardHeader className='pb-2'>
-              <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-                <div className='shrink-0'>
+            <CardHeader className='pb-3 space-y-3'>
+              <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2'>
+                <div>
                   <CardTitle className='text-base font-semibold'>
                     Tren Penjualan 7 Hari Terakhir
                   </CardTitle>
@@ -585,68 +585,46 @@ export function DashboardPage() {
                     Grafik omset harian kasir kantin dalam Rupiah (Rp) per kategori
                   </CardDescription>
                 </div>
-                {/* Legend Kategori Dinamis (tampil 2 baris jika kategori banyak > 3) */}
-                {chartCategories.length > 3 ? (
-                  <div className='flex flex-col gap-1.5 sm:items-end text-xs'>
-                    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:justify-end'>
-                      {chartCategories
-                        .slice(0, Math.ceil(chartCategories.length / 2))
-                        .map((cat) => (
-                          <div
-                            key={cat.key}
-                            className='flex items-center gap-1.5'
-                            title={cat.nama}
-                          >
-                            <span
-                              className='size-2.5 rounded-full shrink-0'
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
-                              {cat.nama}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                    <div className='flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:justify-end'>
-                      {chartCategories
-                        .slice(Math.ceil(chartCategories.length / 2))
-                        .map((cat) => (
-                          <div
-                            key={cat.key}
-                            className='flex items-center gap-1.5'
-                            title={cat.nama}
-                          >
-                            <span
-                              className='size-2.5 rounded-full shrink-0'
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
-                              {cat.nama}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className='flex flex-wrap items-center gap-3.5 text-xs sm:justify-end'>
-                    {chartCategories.map((cat) => (
-                      <div
-                        key={cat.key}
-                        className='flex items-center gap-1.5'
-                        title={cat.nama}
-                      >
-                        <span
-                          className='size-2.5 rounded-full shrink-0'
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        <span className='font-medium text-muted-foreground whitespace-nowrap max-w-[130px] truncate'>
-                          {cat.nama}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {/* Legend Kategori Dinamis: Grid Presisi 4 Kolom x 2 Baris yang Rapi */}
+              {chartCategories.length > 3 ? (
+                <div className='grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
+                  {chartCategories.map((cat) => (
+                    <div
+                      key={cat.key}
+                      className='flex items-center gap-2 min-w-0'
+                      title={cat.nama}
+                    >
+                      <span
+                        className='size-2.5 rounded-full shrink-0 shadow-sm'
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className='font-medium text-muted-foreground truncate'>
+                        {cat.nama}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className='flex flex-wrap items-center gap-4 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/60'>
+                  {chartCategories.map((cat) => (
+                    <div
+                      key={cat.key}
+                      className='flex items-center gap-2'
+                      title={cat.nama}
+                    >
+                      <span
+                        className='size-2.5 rounded-full shrink-0 shadow-sm'
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className='font-medium text-muted-foreground whitespace-nowrap'>
+                        {cat.nama}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardHeader>
             <CardContent className='ps-2 pe-6 pb-4 pt-3'>
               <div className='h-[310px] w-full min-h-[310px] min-w-0'>
