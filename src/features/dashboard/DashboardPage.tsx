@@ -258,7 +258,7 @@ export function DashboardPage() {
           }`}
         >
           {/* Card 1: Penjualan Hari Ini */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Penjualan Hari Ini
@@ -281,7 +281,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Card 2: Total Transaksi Hari Ini */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Transaksi Hari Ini
@@ -306,7 +306,7 @@ export function DashboardPage() {
           {/* Card 3: Status Rekonsiliasi Kas (Hanya ditampilkan untuk peran selain pengelola) */}
           {currentRole !== 'pengelola' && (
             canViewRekonsiliasi ? (
-              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium text-muted-foreground'>
                     Status Rekonsiliasi Kas
@@ -341,7 +341,7 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium text-muted-foreground'>
                     Status Rekonsiliasi Kas
@@ -366,7 +366,7 @@ export function DashboardPage() {
           )}
 
           {/* Card 4: Alert Status Stok Menipis */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Peringatan Stok Barang
@@ -408,7 +408,7 @@ export function DashboardPage() {
         {/* ===== Grid Konten Tengah: Grafik Penjualan 7 Hari & Alert Stok Menipis ===== */}
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-7'>
           {/* Kolom Kiri: Tren Penjualan 7 Hari Terakhir (Recharts) */}
-          <Card className='col-span-1 lg:col-span-4 border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='col-span-1 lg:col-span-4 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
             <CardHeader className='pb-2'>
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
                 <div>
@@ -511,7 +511,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Kolom Kanan: Stok Menipis */}
-          <Card className='col-span-1 lg:col-span-3 border-0 bg-muted/70 dark:bg-muted/30 flex flex-col'>
+          <Card className='col-span-1 lg:col-span-3 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30 flex flex-col'>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base font-semibold flex items-center gap-2'>
                 <AlertTriangle className='size-4 text-amber-500' />
@@ -579,7 +579,7 @@ export function DashboardPage() {
         </div>
 
         {/* Transaksi Kasir Terkini */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+        <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base font-semibold'>
               Aktivitas Transaksi Kasir Terakhir
