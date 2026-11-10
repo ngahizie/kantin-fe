@@ -96,15 +96,15 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='max-w-md select-none border-none shadow-none rounded-2xl bg-card'>
+      <DialogContent className='max-w-md select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
         <DialogHeader>
-          <div className='flex items-center gap-2 text-primary'>
+          <div className='flex items-center gap-2 text-blue-600 dark:text-blue-400'>
             <CreditCard className='h-5 w-5' />
-            <DialogTitle className='text-base font-bold'>
+            <DialogTitle className='text-base font-bold text-slate-800 dark:text-white'>
               Bayar / Tap Kartu RFID
             </DialogTitle>
           </div>
-          <DialogDescription className='text-xs'>
+          <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
             Dekatkan kartu RFID ke alat scanner atau masukkan nomor UID untuk langsung memproses pembayaran.
           </DialogDescription>
         </DialogHeader>
@@ -112,7 +112,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
         <form onSubmit={handleSubmit} className='space-y-4 pt-2'>
           {/* Input UID */}
           <div className='space-y-1.5'>
-            <label className='block text-xs font-semibold text-foreground'>
+            <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300'>
               Nomor UID Kartu RFID:
             </label>
             <div className='flex gap-2'>
@@ -124,12 +124,12 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
                 placeholder='Tap kartu RFID atau masukkan UID...'
                 disabled={isProcessing}
                 autoFocus
-                className='text-sm font-semibold tracking-wider uppercase border-none bg-muted/60 shadow-none focus-visible:bg-muted focus-visible:ring-0 rounded-xl'
+                className='text-sm font-semibold tracking-wider uppercase has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl'
               />
               <Button
                 type='submit'
                 disabled={!uidInput.trim() || isProcessing}
-                className='shrink-0 font-semibold border-none rounded-xl shadow-none'
+                className='shrink-0 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
               >
                 {isProcessing ? (
                   <RefreshCw className='h-4 w-4 animate-spin' />

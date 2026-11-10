@@ -82,6 +82,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
   )
   const kerugianStokList: KerugianStokMock[] = [...MOCK_KERUGIAN_STOK]
 
+  let lastTrxId = Date.now()
+  const nextUniqueTrxId = () => {
+    const now = Date.now()
+    lastTrxId = now > lastTrxId ? now : lastTrxId + 1
+    return lastTrxId
+  }
+
   const idempotencyStore = new Map<
     string,
     { status: number; data: MockResponseData }
@@ -90,6 +97,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     number,
     {
       total: number
+      nomorStruk: string
       siswaUid?: string
       kartuTamuUid?: string
       items: { menuId: number; qty: number }[]
@@ -912,12 +920,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       (url.includes('/api/v1/kasir/transaksi') ||
         url.includes('/api/kasir/tap')) &&
       method === 'post' &&
-      !url.includes('/void')
+      !url.includes('/void') &&
+      !url.includes('/refund')
     ) {
       const trxPayload = payload as TransaksiPayload & {
         rfidUid?: string
         idempotency_key?: string
         idempotencyKey?: string
+        titikKasirId?: number
       }
       const kartuUid = trxPayload.kartu_uid || trxPayload.rfidUid || ''
       const items = (trxPayload.items || []).map((it) => ({
@@ -1053,9 +1063,19 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         }
       }
 
-      const trxId = Date.now()
+      const trxId = nextUniqueTrxId()
+      const nowIso = new Date().toISOString()
+      const waktuStruk = nowIso.slice(0, 19) + 'Z'
+      const nomorStruk = `TRX-${nowIso.slice(0, 10).replace(/-/g, '')}-${trxId}`
+      const targetTitikKasir = titikKasirList.find(
+        (tk) => tk.id === (trxPayload.titikKasirId || 1)
+      )
+      const titikKasirNama =
+        targetTitikKasir?.nama || currentSesiMock.titikKasirNama
+
       recordedTransactions.set(trxId, {
         total: totalBelanja,
+        nomorStruk,
         siswaUid: siswa ? siswa.uid : undefined,
         kartuTamuUid: kartuTamu ? kartuTamu.uid : undefined,
         items: items.map((it) => ({ menuId: it.menu_id, qty: it.qty })),
@@ -1077,8 +1097,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       mockSesiTransactions.unshift({
         id: trxId,
         transaksiId: trxId,
-        nomorReferensi: `TRX-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(trxId).slice(-4)}`,
-        waktu: new Date().toISOString(),
+        nomorReferensi: nomorStruk,
+        waktu: waktuStruk,
         pembeliTipe: siswa ? 'SISWA' : 'KARTU_TAMU',
         pembeliNama: siswa ? siswa.nama : kartuTamu!.label_pemegang,
         pembeliKelas: siswa?.kelas,
@@ -1099,8 +1119,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           data: {
             transaksi_id: trxId,
             transaksiId: trxId,
+            nomorStruk,
+            titikKasir: titikKasirNama,
             total: totalBelanja,
-            waktu: new Date().toISOString(),
+            waktu: waktuStruk,
             pembeli: siswa
               ? {
                   tipe: 'SISWA' as const,
@@ -1133,18 +1155,79 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       return successResponse
     }
 
-    // --- 4b. Kasir: Void Transaksi (Darurat & Manual Sesi) ---
-    const voidMatch = url.match(/\/kasir\/transaksi\/(\d+)\/void/)
-    if (voidMatch && method === 'post') {
-      const trxId = Number(voidMatch[1])
-      const voidPayload = (payload as { alasan?: string }) || {}
-      const alasanFinal =
-        voidPayload.alasan || 'Wajah pembeli tidak cocok dengan foto kartu'
+    // --- 4b. Kasir: Refund / Void Transaksi (BE #292 wajib alasan + kodeStruk) ---
+    const refundMatch = url.match(/\/kasir\/transaksi\/(\d+)\/(?:refund|void)/)
+    if (refundMatch && method === 'post') {
+      const trxId = Number(refundMatch[1])
+      const refundPayload =
+        (payload as { alasan?: string; kodeStruk?: string }) || {}
+      const alasanFinal = (refundPayload.alasan || '').trim()
+      const kodeStrukFinal = (refundPayload.kodeStruk || '').trim()
 
-      // Update di mockSesiTransactions
+      if (!alasanFinal) {
+        return {
+          status: 400,
+          data: {
+            code: 400,
+            status: 'BAD_REQUEST',
+            message: 'Alasan refund wajib diisi',
+          },
+        }
+      }
+
+      if (!kodeStrukFinal) {
+        return {
+          status: 400,
+          data: {
+            code: 400,
+            status: 'BAD_REQUEST',
+            message: 'Kode struk wajib diisi',
+          },
+        }
+      }
+
+      const trx = recordedTransactions.get(trxId)
       const targetSesiTrx = mockSesiTransactions.find(
         (t) => t.id === trxId || t.transaksiId === trxId
       )
+
+      if (!trx && !targetSesiTrx) {
+        return {
+          status: 404,
+          data: {
+            code: 404,
+            status: 'NOT_FOUND',
+            message: 'Transaksi tidak ditemukan',
+          },
+        }
+      }
+
+      if (targetSesiTrx?.status === 'VOID') {
+        return {
+          status: 400,
+          data: {
+            code: 400,
+            status: 'BAD_REQUEST',
+            message: 'Transaksi sudah di-refund',
+          },
+        }
+      }
+
+      const expectedKode = trx?.nomorStruk || targetSesiTrx?.nomorReferensi || ''
+      if (
+        !expectedKode ||
+        expectedKode.trim().toLowerCase() !== kodeStrukFinal.toLowerCase()
+      ) {
+        return {
+          status: 400,
+          data: {
+            code: 400,
+            status: 'BAD_REQUEST',
+            message: 'Kode struk tidak cocok dengan transaksi ini (PRD §6.3)',
+          },
+        }
+      }
+
       if (targetSesiTrx) {
         targetSesiTrx.status = 'VOID'
         targetSesiTrx.voidAlasan = alasanFinal
@@ -1152,7 +1235,6 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         targetSesiTrx.voidOleh = 'Petugas Kasir'
       }
 
-      const trx = recordedTransactions.get(trxId)
       if (trx) {
         if (trx.siswaUid) {
           const targetSiswa = siswaList.find((s) => s.uid === trx.siswaUid)
@@ -1186,11 +1268,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         data: {
           code: 200,
           status: 'SUCCESS',
-          message: 'Transaksi berhasil dibatalkan (void)',
+          message: 'Transaksi berhasil di-refund',
           data: {
             transaksi_id: trxId,
+            transaksiId: trxId,
             status: 'VOID',
             alasan: alasanFinal,
+            kodeStruk: expectedKode,
           },
         },
       }
@@ -3090,25 +3174,26 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // LAPORAN PENJUALAN & LABA KOTOR (PRD §9.5)
+    // LAPORAN PENJUALAN & LABA KOTOR (PRD §9.5, BE #291)
     // ─────────────────────────────────────────────────────────────
     if (url.includes('/api/laporan/penjualan/item') && method === 'get') {
       const barisItem = menuList.map((m, idx) => {
         const qty = [42, 38, 25, 20, 18, 15, 12, 10, 8, 6][idx % 10] || 5
         const hpp = m.hpp || Math.round(m.harga_jual * 0.7)
-        const penjualanBersih = qty * m.harga_jual
-        const totalHpp = qty * hpp
-        const labaKotor = penjualanBersih - totalHpp
-        const margin = Math.round((labaKotor / penjualanBersih) * 100)
+        const total = qty * m.harga_jual
+        const modal = qty * hpp
+        const laba = total - modal
+        const marginPersen =
+          total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
 
         return {
           kunciId: m.id,
           nama: m.nama,
           qty,
-          total: penjualanBersih,
+          total,
           hargaSatuan: m.harga_jual,
-          modal: totalHpp,
-          marginPersen: margin,
+          modal,
+          marginPersen,
         }
       })
 
@@ -3128,22 +3213,21 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const barisKategori = kategoriList.map((k) => {
         const menusInKat = menuList.filter((m) => m.kategori_id === k.id)
         const qty = menusInKat.length * 30 || 20
-        const totalJual = menusInKat.reduce(
-          (acc, m) => acc + m.harga_jual * 30,
-          0
-        ) || 350000
-        const totalHpp = Math.round(totalJual * 0.68)
-        const labaKotor = totalJual - totalHpp
-        const margin = Math.round((labaKotor / totalJual) * 100)
+        const total =
+          menusInKat.reduce((acc, m) => acc + m.harga_jual * 30, 0) || 350000
+        const modal = Math.round(total * 0.68)
+        const laba = total - modal
+        const marginPersen =
+          total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
 
         return {
           kunciId: k.id,
           nama: k.nama,
           qty,
-          total: totalJual,
+          total,
           hargaSatuan: null,
-          modal: totalHpp,
-          marginPersen: margin,
+          modal,
+          marginPersen,
         }
       })
 
@@ -3186,14 +3270,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     if (url.includes('/api/laporan/penjualan') && method === 'get') {
-      // Bentuk respons mengikuti BE pasca #291: refund/modal/laba + margin.
-      const penjualanBruto = 3420000
+      const penjualanBruto = 3375000
       const jumlahRefund = 3
       const nilaiRefund = 45000
       const penjualanBersih = 3375000
       const totalModal = 2180000
       const laba = penjualanBersih - totalModal
-      const marginPersen = Math.round((laba / penjualanBersih) * 1000) / 10
+      const marginPersen =
+        Math.round((laba * 10000) / penjualanBersih) / 100
 
       return {
         status: 200,

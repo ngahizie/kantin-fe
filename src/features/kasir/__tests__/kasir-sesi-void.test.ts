@@ -42,10 +42,21 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
     })
 
     vi.spyOn(kasirApi, 'refundTransaksi').mockImplementation(
-      async (transaksiId: number, alasan?: string) => {
-        await testAxios.post(`/api/kasir/transaksi/${transaksiId}/void`, {
-          alasan,
+      async (transaksiId: number, alasan: string, kodeStruk: string) => {
+        await testAxios.post(`/api/kasir/transaksi/${transaksiId}/refund`, {
+          alasan: alasan.trim(),
+          kodeStruk: kodeStruk.trim(),
         })
+      }
+    )
+
+    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
+      async (
+        transaksiId: number,
+        alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
+        kodeStruk = ''
+      ) => {
+        await kasirApi.refundTransaksi(transaksiId, alasan, kodeStruk)
       }
     )
   })
@@ -139,14 +150,37 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
       expect(PILIHAN_ALASAN_VOID).toContain('Lainnya')
     })
 
-    it('dapat melakukan void transaksi sesi dengan alasan yang valid', async () => {
+    it('menolak refund jika kode struk kosong atau tidak cocok (HTTP 400 BE #292)', async () => {
+      const initialList = await kasirApi.getRiwayatTransaksiSesi(1)
+      const targetTrx = initialList.find((t) => t.status === 'SUKSES')
+      expect(targetTrx).toBeDefined()
+      const targetTrxId = targetTrx!.id
+
+      await expect(
+        kasirApi.refundTransaksi(targetTrxId, 'Pembeli membatalkan', '')
+      ).rejects.toMatchObject({ response: { status: 400 } })
+
+      await expect(
+        kasirApi.refundTransaksi(
+          targetTrxId,
+          'Pembeli membatalkan',
+          'TRX-SALAH-9999'
+        )
+      ).rejects.toMatchObject({ response: { status: 400 } })
+
+      const afterList = await kasirApi.getRiwayatTransaksiSesi(1)
+      const unchanged = afterList.find((t) => t.id === targetTrxId)
+      expect(unchanged?.status).toBe('SUKSES')
+    })
+
+    it('dapat melakukan refund/void transaksi sesi dengan alasan dan kode struk yang valid', async () => {
       const initialList = await kasirApi.getRiwayatTransaksiSesi(1)
       const targetTrx = initialList.find((t) => t.status === 'SUKSES')
       expect(targetTrx).toBeDefined()
       const targetTrxId = targetTrx!.id
 
       const alasan = 'Pembeli membatalkan'
-      await kasirApi.refundTransaksi(targetTrxId, alasan, 'TRX-20261110-1')
+      await kasirApi.refundTransaksi(targetTrxId, alasan, targetTrx!.nomorReferensi)
 
       // Verifikasi riwayat transaksi terupdate statusnya menjadi VOID
       const updatedList = await kasirApi.getRiwayatTransaksiSesi(1)

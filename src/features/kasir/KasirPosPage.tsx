@@ -47,12 +47,15 @@ import type {
   SesiKasirData,
   RekapSesiData,
   TransaksiSesiItem,
+  ReceiptData,
+  ReceiptLineItem,
 } from './types'
 import CartSidebar from './components/CartSidebar'
 import ManualRfidModal from './components/ManualRfidModal'
 import CekSaldoModal from './components/CekSaldoModal'
 import MenuGrid from './components/MenuGrid'
 import StudentFeedbackModal from './components/StudentFeedbackModal'
+import ReceiptDialog from './components/ReceiptDialog'
 import TransactionErrorModal, {
   type TransactionErrorInfo,
 } from './components/TransactionErrorModal'
@@ -70,8 +73,13 @@ export const KasirPosPage: React.FC = () => {
   const [mobileCartOpen, setMobileCartOpen] = useState(false)
 
   // Pengaturan operasional & Titik Kasir store
-  const { pengaturan, fetchPengaturan, fetchTitikKasir, activeTitikKasirId } =
-    usePengaturanStore()
+  const {
+    pengaturan,
+    fetchPengaturan,
+    fetchTitikKasir,
+    activeTitikKasirId,
+    getActiveTitikKasir,
+  } = usePengaturanStore()
 
   // Online Status & Sesi Kasir Harian
   const isOnline = useOnlineStatus()
@@ -88,19 +96,21 @@ export const KasirPosPage: React.FC = () => {
   const [manualRfidOpen, setManualRfidOpen] = useState(false)
   const [cekSaldoOpen, setCekSaldoOpen] = useState(false)
   const [studentModalOpen, setStudentModalOpen] = useState(false)
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [errorModalOpen, setErrorModalOpen] = useState(false)
   const [confirmManualOpen, setConfirmManualOpen] = useState(false)
   const [pendingScannedUid, setPendingScannedUid] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<TapTransaksiData | null>(null)
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [errorInfo, setErrorInfo] = useState<TransactionErrorInfo | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isVoiding, setIsVoiding] = useState(false)
+  const tapCompletedRef = useRef(false)
 
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const { items, addItem, getItemQty, totalItems, totalHarga, clearCart } =
     useCartStore()
-  const { playSuccess, playError, playVoid } = useBeepAudio()
+  const { playSuccess, playError } = useBeepAudio()
 
   // Muat data sesi kasir harian & transaksi sesi
   const loadSesiData = useCallback(async () => {
@@ -184,6 +194,7 @@ export const KasirPosPage: React.FC = () => {
       if (
         isProcessing ||
         studentModalOpen ||
+        receiptModalOpen ||
         confirmManualOpen ||
         closeSessionModalOpen ||
         historyModalOpen ||
@@ -204,6 +215,7 @@ export const KasirPosPage: React.FC = () => {
   }, [
     isProcessing,
     studentModalOpen,
+    receiptModalOpen,
     confirmManualOpen,
     closeSessionModalOpen,
     historyModalOpen,
@@ -227,7 +239,8 @@ export const KasirPosPage: React.FC = () => {
       if (
         e.key === '/' &&
         document.activeElement?.tagName !== 'INPUT' &&
-        document.activeElement?.tagName !== 'TEXTAREA'
+        document.activeElement?.tagName !== 'TEXTAREA' &&
+        document.activeElement?.tagName !== 'SELECT'
       ) {
         e.preventDefault()
         searchInputRef.current?.focus()
@@ -313,8 +326,56 @@ export const KasirPosPage: React.FC = () => {
           titikKasirId: activeTitikKasirId ?? undefined,
         })
 
+        const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
+          menuId: it.menu.id,
+          namaMenu: it.menu.nama,
+          qty: it.qty,
+          hargaSatuan: it.menu.hargaJual,
+          subtotal: it.subtotal,
+        }))
+        const buyer = result.pembeli
+        const rawResult = result as TapTransaksiData & {
+          subjekTipe?: 'SISWA' | 'KARTU_TAMU'
+          nama?: string
+          kelas?: string | null
+          saldoSisa?: number
+          nomorReferensi?: string | null
+        }
+        const resolvedTipe: 'SISWA' | 'KARTU_TAMU' =
+          buyer?.tipe ||
+          buyer?.subjekTipe ||
+          rawResult.subjekTipe ||
+          (buyer?.kelas || rawResult.kelas ? 'SISWA' : 'KARTU_TAMU')
+        const activeTitik = getActiveTitikKasir()
+
+        const nextReceipt: ReceiptData = {
+          transaksiId: Number(result.transaksiId || result.transaksi_id || 0),
+          nomorStruk: result.nomorStruk || rawResult.nomorReferensi || null,
+          waktu: result.waktu || new Date().toISOString(),
+          namaKantin: pengaturan.namaKantin || 'Kantin Sehat SKOOLIA',
+          titikKasir:
+            result.titikKasir ||
+            activeTitik?.nama ||
+            sesi?.titikKasirNama ||
+            null,
+          pembeliTipe: resolvedTipe,
+          pembeliNama: buyer?.nama || rawResult.nama || 'Pembeli',
+          pembeliKelas: buyer?.kelas ?? rawResult.kelas ?? null,
+          pembeliNis: buyer?.nis ?? null,
+          pembeliNomorKartu: buyer?.nomor_kartu || buyer?.nomorKartu || null,
+          items: snapshotItems,
+          namaItemFallback: result.namaItem,
+          total: Number(result.total ?? 0),
+          saldoSisa: Number(
+            buyer?.sisa_saldo ?? buyer?.saldoSisa ?? rawResult.saldoSisa ?? 0
+          ),
+        }
+
         // Transaksi Sukses
         playSuccess()
+        tapCompletedRef.current = false
+        setReceiptModalOpen(false)
+        setReceiptData(nextReceipt)
         setSuccessData(result)
         setStudentModalOpen(true)
         setMobileCartOpen(false)
@@ -343,7 +404,16 @@ export const KasirPosPage: React.FC = () => {
         setIsProcessing(false)
       }
     },
-    [items, isProcessing, activeTitikKasirId, playSuccess, playError]
+    [
+      items,
+      isProcessing,
+      activeTitikKasirId,
+      getActiveTitikKasir,
+      pengaturan.namaKantin,
+      sesi,
+      playSuccess,
+      playError,
+    ]
   )
 
   // Handler proses tap RFID: konfirmasi manual (jika aktif) atau eksekusi langsung
@@ -391,13 +461,32 @@ export const KasirPosPage: React.FC = () => {
     ]
   )
 
+  // Bersihkan UID yang ikut tertulis bila scan terjadi saat kursor berada di input cari menu
+  const handleHardwareRfidScan = useCallback(
+    (scannedUid: string) => {
+      if (document.activeElement === searchInputRef.current) {
+        setSearchQuery((prev) => {
+          if (!prev) return prev
+          const lowerUid = scannedUid.toLowerCase()
+          return prev.toLowerCase().endsWith(lowerUid)
+            ? prev.slice(0, prev.length - scannedUid.length)
+            : prev
+        })
+        searchInputRef.current?.blur()
+      }
+      void handleProcessTap(scannedUid)
+    },
+    [handleProcessTap]
+  )
+
   // Integrasi USB RFID Reader Hook
   useRfidScanner({
-    onScan: handleProcessTap,
+    onScan: handleHardwareRfidScan,
     enabled:
       isOnline &&
       !isSessionClosed &&
       !studentModalOpen &&
+      !receiptModalOpen &&
       !isProcessing &&
       !confirmManualOpen &&
       !historyModalOpen &&
@@ -406,48 +495,27 @@ export const KasirPosPage: React.FC = () => {
       !cekSaldoOpen,
   })
 
-  // Selesai transaksi (hitung mundur selesai atau tombol selesai ditekan)
+  // Selesai transaksi (hitung mundur selesai, tombol selesai, atau dialog ditutup): bersihkan & buka dialog Cetak Struk
   const handleTransactionComplete = useCallback(() => {
+    if (tapCompletedRef.current) return
+    tapCompletedRef.current = true
     setStudentModalOpen(false)
     setSuccessData(null)
     clearCart()
     loadKatalogData()
     loadSesiData()
+    setReceiptModalOpen(true)
   }, [clearCart, loadKatalogData, loadSesiData])
 
-  // Refund transaksi darurat jika wajah tidak cocok (PRD §6.3 revisi)
-  const handleTransactionVoid = useCallback(
-    async (transaksiId: number) => {
-      const kodeStruk = successData?.nomorStruk
-      if (!kodeStruk) {
-        toast.error('Kode struk tidak tersedia', {
-          description:
-            'Transaksi ini tidak membawa nomor struk. Refund lewat riwayat sesi kasir.',
-        })
+  const handleStudentModalOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        handleTransactionComplete()
         return
       }
-      try {
-        setIsVoiding(true)
-        await kasirApi.refundTransaksi(
-          transaksiId,
-          'Wajah pembeli tidak cocok dengan foto kartu',
-          kodeStruk
-        )
-        playVoid()
-        toast.warning(
-          'Transaksi berhasil di-refund. Saldo dan stok telah dikembalikan.'
-        )
-        setStudentModalOpen(false)
-        setSuccessData(null)
-        loadKatalogData()
-        loadSesiData()
-      } catch {
-        toast.error('Gagal membatalkan transaksi')
-      } finally {
-        setIsVoiding(false)
-      }
+      setStudentModalOpen(true)
     },
-    [playVoid, loadKatalogData, loadSesiData, successData]
+    [handleTransactionComplete]
   )
 
   const hasActiveFilters = Boolean(
@@ -455,13 +523,13 @@ export const KasirPosPage: React.FC = () => {
   )
 
   return (
-    <div className='flex h-full w-full flex-col overflow-hidden bg-background'>
+    <div className='flex h-full w-full flex-col overflow-hidden bg-[#FDFCF8] dark:bg-[#050510] text-slate-800 dark:text-white'>
       {/* Banner Peringatan Offline */}
       {!isOnline && <OfflineBanner className='border-none' />}
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center justify-between gap-2 border-none bg-destructive/10 px-4 py-2 text-xs font-medium text-destructive'>
+        <div className='flex items-center justify-between gap-2 has-border !border-b !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
           <div className='flex items-center gap-2'>
             <Lock className='h-4 w-4 shrink-0' />
             <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
@@ -470,7 +538,7 @@ export const KasirPosPage: React.FC = () => {
             type='button'
             size='sm'
             variant='secondary'
-            className='h-7 border-none bg-destructive/20 text-xs text-destructive hover:bg-destructive/30'
+            className='h-8 has-border !border !border-rose-200 dark:!border-rose-800/70 bg-white dark:bg-[#0a0a0a] text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-xl shadow-none'
             onClick={() => setHistoryModalOpen(true)}
           >
             Lihat Riwayat Sesi
@@ -482,32 +550,28 @@ export const KasirPosPage: React.FC = () => {
         {/* Sisi Kiri: Katalog POS (Pencarian, Filter Kategori, Grid Menu) */}
         <div className='flex flex-1 flex-col overflow-hidden'>
           {/* Top Control Bar: Search & Status */}
-          <div className='flex flex-col gap-2.5 border-none bg-card p-3 shadow-none sm:p-4'>
+          <div className='flex flex-col gap-2.5 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none sm:p-4'>
             <div className='flex items-center gap-2'>
               {/* Input Pencarian dengan Shortcut '/' */}
               <div className='relative flex-1'>
-                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500' />
                 <Input
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder='Cari menu makanan atau minuman...'
-                  className='h-10 border-none bg-muted/60 dark:bg-muted/40 pr-16 pl-9 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:bg-muted focus-visible:ring-0 rounded-xl shadow-none'
+                  className='h-10 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 pr-10 pl-9 text-sm text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 focus-visible:ring-0 rounded-xl shadow-none'
                 />
-                {searchQuery ? (
+                {searchQuery && (
                   <Button
                     type='button'
                     variant='ghost'
                     size='icon'
                     onClick={() => setSearchQuery('')}
-                    className='absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded-xl'
+                    className='absolute top-1/2 right-1.5 h-7 w-7 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg'
                   >
                     <X className='h-3.5 w-3.5' />
                   </Button>
-                ) : (
-                  <kbd className='pointer-events-none absolute top-1/2 right-2.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded-md border-none bg-background/90 px-1.5 text-[11px] font-semibold text-muted-foreground shadow-none select-none sm:flex'>
-                    /
-                  </kbd>
                 )}
               </div>
 
@@ -516,10 +580,10 @@ export const KasirPosPage: React.FC = () => {
                 type='button'
                 variant='secondary'
                 onClick={() => setCekSaldoOpen(true)}
-                className='h-10 gap-1.5 border-none bg-muted/70 dark:bg-muted/30 px-3 text-xs font-semibold text-foreground hover:bg-muted rounded-xl shadow-none'
+                className='h-10 gap-1.5 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
                 title='Cek saldo siswa atau kartu tamu'
               >
-                <Wallet className='h-4 w-4' />
+                <Wallet className='h-4 w-4 text-blue-600 dark:text-blue-400' />
                 <span className='hidden md:inline'>Cek Saldo</span>
               </Button>
 
@@ -528,13 +592,13 @@ export const KasirPosPage: React.FC = () => {
                 type='button'
                 variant='secondary'
                 onClick={() => setHistoryModalOpen(true)}
-                className='h-10 gap-1.5 border-none bg-muted/70 dark:bg-muted/30 px-3 text-xs font-semibold text-foreground hover:bg-muted rounded-xl shadow-none'
+                className='h-10 gap-1.5 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
                 title='Lihat riwayat transaksi sesi hari ini'
               >
-                <History className='h-4 w-4' />
+                <History className='h-4 w-4 text-blue-600 dark:text-blue-400' />
                 <span className='hidden sm:inline'>Riwayat Sesi</span>
                 {transactions.length > 0 && (
-                  <Badge variant='secondary' className='ml-0.5 border-none bg-background/80 px-2 py-0.5 text-[10px] font-semibold text-foreground rounded-full shadow-none'>
+                  <Badge variant='secondary' className='ml-0.5 bg-blue-100 dark:bg-blue-950/70 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-400 rounded-full shadow-none'>
                     {transactions.length}
                   </Badge>
                 )}
@@ -546,10 +610,10 @@ export const KasirPosPage: React.FC = () => {
                 variant='secondary'
                 onClick={() => setCloseSessionModalOpen(true)}
                 disabled={isSessionClosed}
-                className={`h-10 gap-1.5 border-none px-3 text-xs font-semibold rounded-xl shadow-none ${
+                className={`h-10 gap-1.5 px-3 text-xs font-semibold rounded-xl shadow-none ${
                   isSessionClosed
-                    ? 'cursor-not-allowed opacity-60'
-                    : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                    ? 'cursor-not-allowed opacity-60 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-100 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400'
+                    : 'has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60'
                 }`}
                 title='Tutup sesi kasir harian'
               >
@@ -562,7 +626,7 @@ export const KasirPosPage: React.FC = () => {
 
           {/* Banner Peringatan Tutup Otomatis */}
           {isPastClosingTime && (
-            <div className='flex items-center gap-2 rounded-xl border-none bg-amber-500/15 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
+            <div className='flex items-center gap-2 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
               <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
               <span>
                 <strong>Perhatian:</strong> Melewati jam operasional tutup ({pengaturan.jamTutupOtomatis || '23:59'}).
@@ -577,20 +641,20 @@ export const KasirPosPage: React.FC = () => {
               size='sm'
               variant={selectedKategoriId === null ? 'default' : 'secondary'}
               onClick={() => setSelectedKategoriId(null)}
-              className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3.5 text-xs font-semibold shadow-none ${
+              className={`h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold shadow-none ${
                 selectedKategoriId === null
-                  ? ''
-                  : 'bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted'
+                  ? '!bg-blue-600 hover:!bg-blue-500 !text-white !border !border-blue-600'
+                  : 'has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <Layers className='mr-1.5 h-3.5 w-3.5' />
               Semua Menu
               <Badge
                 variant='secondary'
-                className={`ml-1.5 h-4 border-none px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
+                className={`ml-1.5 h-4 px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
                   selectedKategoriId === null
-                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                    : 'bg-background/80 text-muted-foreground'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {menus.filter((m) => m.aktif).length}
@@ -608,19 +672,19 @@ export const KasirPosPage: React.FC = () => {
                   size='sm'
                   variant={isSelected ? 'default' : 'secondary'}
                   onClick={() => setSelectedKategoriId(kat.id)}
-                  className={`h-8 shrink-0 touch-manipulation rounded-full border-none px-3.5 text-xs font-semibold shadow-none ${
+                  className={`h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold shadow-none ${
                     isSelected
-                      ? ''
-                      : 'bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted'
+                      ? '!bg-blue-600 hover:!bg-blue-500 !text-white !border !border-blue-600'
+                      : 'has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {kat.nama}
                   <Badge
                     variant='secondary'
-                    className={`ml-1.5 h-4 border-none px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
+                    className={`ml-1.5 h-4 px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
                       isSelected
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-background/80 text-muted-foreground'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {count}
@@ -632,7 +696,7 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Area Scrollable Katalog Menu */}
-        <div className='flex-1 overflow-y-auto bg-background'>
+        <div className='flex-1 overflow-y-auto bg-[#FDFCF8] dark:bg-[#050510]'>
           <MenuGrid
             menus={filteredMenus}
             loading={loading}
@@ -644,10 +708,10 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Floating Cart Trigger untuk Layar Mobile / Tablet Kecil (< lg) */}
-        <div className='flex shrink-0 border-none bg-card p-3 shadow-none lg:hidden'>
+        <div className='flex shrink-0 has-border !border-t !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none lg:hidden'>
           <Button
             type='button'
-            className='h-11 w-full justify-between font-bold border-none rounded-xl shadow-none'
+            className='h-11 w-full justify-between font-bold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
             onClick={() => setMobileCartOpen(true)}
           >
             <div className='flex items-center gap-2'>
@@ -660,7 +724,7 @@ export const KasirPosPage: React.FC = () => {
       </div>
 
       {/* Sisi Kanan: Panel Keranjang Belanja Desktop/Tablet Besar (>= lg) */}
-      <div className='hidden h-full shrink-0 lg:flex'>
+      <div className='hidden h-full shrink-0 lg:flex has-border !border-l !border-slate-200 dark:!border-slate-800'>
         <CartSidebar
           onCheckout={() => setManualRfidOpen(true)}
           onManualRfidOpen={() => setManualRfidOpen(true)}
@@ -675,7 +739,7 @@ export const KasirPosPage: React.FC = () => {
       <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
         <SheetContent
           side='right'
-          className='flex w-full flex-col p-0 sm:max-w-md border-none shadow-none'
+          className='flex w-full flex-col gap-0 p-0 sm:max-w-md bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white has-border !border-l !border-slate-200 dark:!border-slate-800 shadow-none'
         >
           <SheetHeader className='sr-only'>
             <SheetTitle>Keranjang Belanja Kasir</SheetTitle>
@@ -705,7 +769,7 @@ export const KasirPosPage: React.FC = () => {
         isProcessing={isProcessing}
       />
 
-      {/* Modal Feedback Siswa (Foto Sesuai Pengaturan Durasi + Tombol Batalkan / Void) */}
+      {/* Modal Feedback Siswa (Foto Sesuai Pengaturan Durasi) */}
       <StudentFeedbackModal
         key={
           successData?.transaksi_id ||
@@ -713,11 +777,9 @@ export const KasirPosPage: React.FC = () => {
           'student-modal'
         }
         open={studentModalOpen}
-        onOpenChange={setStudentModalOpen}
+        onOpenChange={handleStudentModalOpenChange}
         data={successData}
         onComplete={handleTransactionComplete}
-        onVoid={handleTransactionVoid}
-        isVoiding={isVoiding}
         durasiDetik={
           pengaturan.durasiFotoDetik && pengaturan.durasiFotoDetik !== 3
             ? pengaturan.durasiFotoDetik
@@ -725,35 +787,42 @@ export const KasirPosPage: React.FC = () => {
         }
       />
 
+      {/* Dialog Cetak Struk (muncul otomatis setelah dialog transaksi berhasil selesai) */}
+      <ReceiptDialog
+        open={receiptModalOpen}
+        onOpenChange={setReceiptModalOpen}
+        receipt={receiptData}
+      />
+
       {/* Dialog Konfirmasi Manual Transaksi (Fitur Pengaturan Operasional) */}
       <AlertDialog
         open={confirmManualOpen}
         onOpenChange={setConfirmManualOpen}
       >
-        <AlertDialogContent className='border-none rounded-2xl shadow-none'>
+        <AlertDialogContent className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none'>
           <AlertDialogHeader>
-            <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className='text-slate-800 dark:text-white'>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
+            <AlertDialogDescription className='text-slate-500 dark:text-slate-400'>
               Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className='space-y-2 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3.5 text-sm shadow-none'>
+          <div className='space-y-2 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3.5 text-sm shadow-none'>
             <div className='flex justify-between'>
-              <span className='text-muted-foreground'>UID Kartu:</span>
-              <span className='font-semibold text-foreground tracking-wider'>{pendingScannedUid}</span>
+              <span className='text-slate-500 dark:text-slate-400'>UID Kartu:</span>
+              <span className='font-semibold text-slate-800 dark:text-white tracking-wider'>{pendingScannedUid}</span>
             </div>
             <div className='flex justify-between'>
-              <span className='text-muted-foreground'>Total Item:</span>
-              <span className='font-medium'>{totalItems()} item</span>
+              <span className='text-slate-500 dark:text-slate-400'>Total Item:</span>
+              <span className='font-medium text-slate-800 dark:text-white'>{totalItems()} item</span>
             </div>
-            <div className='flex justify-between border-none pt-2 text-base font-bold'>
-              <span>Total Tagihan:</span>
-              <span className='text-primary tabular-nums'>{formatRupiah(totalHarga())}</span>
+            <div className='flex justify-between has-border !border-t !border-slate-200 dark:!border-slate-800 pt-2 text-base font-bold'>
+              <span className='text-slate-800 dark:text-white'>Total Tagihan:</span>
+              <span className='text-blue-600 dark:text-blue-400 tabular-nums'>{formatRupiah(totalHarga())}</span>
             </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className='border-none bg-muted/80 text-foreground hover:bg-muted rounded-xl shadow-none'
+              className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
               onClick={() => {
                 setConfirmManualOpen(false)
                 setPendingScannedUid(null)
@@ -762,7 +831,7 @@ export const KasirPosPage: React.FC = () => {
               Batalkan
             </AlertDialogCancel>
             <AlertDialogAction
-              className='border-none rounded-xl shadow-none'
+              className='!bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
               onClick={async () => {
                 if (pendingScannedUid) {
                   const uid = pendingScannedUid
@@ -785,15 +854,18 @@ export const KasirPosPage: React.FC = () => {
         errorInfo={errorInfo}
       />
 
-      {/* Modal Riwayat Transaksi Sesi Hari Ini */}
+      {/* Modal Riwayat Transaksi Sesi Hari Ini (termasuk aksi Refund BE #292) */}
       <SessionHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         transactions={transactions}
         isLoading={isHistoryLoading}
         isSessionClosed={isSessionClosed}
-        onRefresh={loadSesiData}
-        onTransactionVoided={loadSesiData}
+        isOffline={!isOnline}
+        onTransactionRefunded={() => {
+          loadKatalogData()
+          loadSesiData()
+        }}
       />
 
       {/* Modal Tutup Kasir Harian */}

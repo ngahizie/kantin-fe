@@ -8,6 +8,7 @@ describe('StudentFeedbackModal', () => {
     // Simulasi respons langsung dari backend TapResponse (flat tanpa objek pembeli)
     const backendData = {
       transaksiId: 9988,
+      nomorStruk: 'TRX-20261110-9988',
       subjekTipe: 'SISWA' as const,
       nama: 'Budi Handoko',
       kelas: 'VIII-B',
@@ -17,7 +18,6 @@ describe('StudentFeedbackModal', () => {
     } as unknown as TapTransaksiData
 
     const onComplete = vi.fn()
-    const onVoid = vi.fn()
 
     const screen = await render(
       <StudentFeedbackModal
@@ -25,7 +25,6 @@ describe('StudentFeedbackModal', () => {
         onOpenChange={vi.fn()}
         data={backendData}
         onComplete={onComplete}
-        onVoid={onVoid}
       />
     )
 
@@ -34,6 +33,13 @@ describe('StudentFeedbackModal', () => {
     await expect.element(screen.getByText('VIII-B')).toBeInTheDocument()
     await expect.element(screen.getByText('Rp 25.000')).toBeInTheDocument()
     await expect.element(screen.getByText('Rp 75.000')).toBeInTheDocument()
+    await expect.element(screen.getByText('Kode Struk')).not.toBeInTheDocument()
+    await expect
+      .element(screen.getByText('TRX-20261110-9988'))
+      .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: /Batalkan/i }))
+      .not.toBeInTheDocument()
   })
 
   it('dapat merender modal transaksi dari struktur dengan objek pembeli bersarang (mock style)', async () => {
@@ -58,7 +64,6 @@ describe('StudentFeedbackModal', () => {
         onOpenChange={vi.fn()}
         data={mockData}
         onComplete={vi.fn()}
-        onVoid={vi.fn()}
       />
     )
 
@@ -89,7 +94,6 @@ describe('StudentFeedbackModal', () => {
         onOpenChange={vi.fn()}
         data={mockData}
         onComplete={vi.fn()}
-        onVoid={vi.fn()}
       />
     )
 
@@ -119,11 +123,11 @@ describe('StudentFeedbackModal', () => {
         onOpenChange={vi.fn()}
         data={mockData}
         onComplete={vi.fn()}
-        onVoid={vi.fn()}
         durasiDetik={42}
       />
     )
 
     await expect.element(screen.getByText('42', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Kode Struk')).not.toBeInTheDocument()
   })
 })

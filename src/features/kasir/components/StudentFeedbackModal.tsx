@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   User,
   CreditCard,
-  Ban,
   Clock,
   ArrowRight,
 } from 'lucide-react'
@@ -26,8 +25,6 @@ export interface StudentFeedbackModalProps {
   onOpenChange: (open: boolean) => void
   data: TapTransaksiData | null
   onComplete: () => void
-  onVoid: (transaksiId: number) => void
-  isVoiding?: boolean
   durasiDetik?: number
 }
 
@@ -38,14 +35,13 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
   onOpenChange,
   data,
   onComplete,
-  onVoid,
-  isVoiding = false,
   durasiDetik = DEFAULT_COUNTDOWN_SECONDS,
 }) => {
   const effectiveDuration =
     durasiDetik && durasiDetik > 0 ? durasiDetik : DEFAULT_COUNTDOWN_SECONDS
   const [countdown, setCountdown] = useState(effectiveDuration)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const completedRef = useRef(false)
   const [prevOpen, setPrevOpen] = useState(open)
 
   if (open !== prevOpen) {
@@ -55,15 +51,24 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
     }
   }
 
+  // Reset guard penyelesaian setiap modal dibuka kembali
+  useEffect(() => {
+    if (open) {
+      completedRef.current = false
+    }
+  }, [open, data])
+
   // Mulai hitung mundur saat modal terbuka, tersinkronisasi dengan durasi pengaturan operasional
   useEffect(() => {
-    if (!open || !data || isVoiding) return
+    if (!open || !data) return
 
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          onComplete()
+          if (timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+          }
           return 0
         }
         return prev - 1
@@ -71,62 +76,64 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
     }, 1000)
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
     }
-  }, [open, data, isVoiding, onComplete])
+  }, [open, data])
+
+  // Panggil onComplete di luar state updater saat hitung mundur mencapai 0
+  useEffect(() => {
+    if (open && data && countdown === 0 && !completedRef.current) {
+      completedRef.current = true
+      onComplete()
+    }
+  }, [open, data, countdown, onComplete])
 
   if (!data) return null
 
+  const rawExtra = data as unknown as {
+    subjekTipe?: string
+    fotoUrl?: string
+    saldoSisa?: number
+    nama?: string
+  }
   const pembeli: Partial<TapBuyerInfo> =
     data.pembeli || (data as unknown as Partial<TapBuyerInfo>) || {}
   const isSiswa =
     pembeli?.tipe === 'SISWA' ||
     pembeli?.subjekTipe === 'SISWA' ||
-    (data as unknown as { subjekTipe?: string }).subjekTipe === 'SISWA' ||
+    rawExtra.subjekTipe === 'SISWA' ||
     Boolean(pembeli?.kelas)
   const fotoUrl =
-    pembeli?.foto_url ||
-    pembeli?.fotoUrl ||
-    (data as unknown as { fotoUrl?: string }).fotoUrl ||
-    null
+    pembeli?.foto_url || pembeli?.fotoUrl || rawExtra.fotoUrl || null
   const sisaSaldo =
-    pembeli?.sisa_saldo ??
-    pembeli?.saldoSisa ??
-    (data as unknown as { saldoSisa?: number }).saldoSisa ??
-    0
-  const transaksiId =
-    data.transaksi_id ||
-    data.transaksiId ||
-    (data as unknown as { id?: number }).id ||
-    0
-  const namaPembeli =
-    pembeli?.nama ||
-    (data as unknown as { nama?: string }).nama ||
-    'Pembeli'
-
-  const handleVoidClick = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    if (transaksiId) {
-      onVoid(transaksiId)
-    }
-  }
+    pembeli?.sisa_saldo ?? pembeli?.saldoSisa ?? rawExtra.saldoSisa ?? 0
+  const namaPembeli = pembeli?.nama || rawExtra.nama || 'Pembeli'
 
   const handleDoneClick = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    onComplete()
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    if (!completedRef.current) {
+      completedRef.current = true
+      onComplete()
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md overflow-hidden p-6 select-none border-none shadow-none rounded-2xl bg-card'>
+      <DialogContent className='max-w-md overflow-hidden p-6 select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
         <DialogHeader className='pb-2 text-center'>
-          <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
+          <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'>
             <CheckCircle2 className='h-7 w-7' />
           </div>
-          <DialogTitle className='text-xl font-bold tracking-tight text-foreground'>
+          <DialogTitle className='text-xl font-bold tracking-tight text-slate-800 dark:text-white'>
             Transaksi Berhasil
           </DialogTitle>
-          <DialogDescription className='text-xs text-muted-foreground'>
+          <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
             Verifikasi visual wajah pembeli dengan foto identitas kartu di bawah
             ini.
           </DialogDescription>
@@ -136,7 +143,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
-            <Avatar className='h-32 w-32 rounded-2xl border-none shadow-none'>
+            <Avatar className='h-32 w-32 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 shadow-none'>
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
@@ -144,7 +151,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
                   className='object-cover'
                 />
               )}
-              <AvatarFallback className='rounded-2xl bg-muted text-muted-foreground'>
+              <AvatarFallback className='rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500'>
                 {isSiswa ? (
                   <User className='h-16 w-16 stroke-[1.5]' />
                 ) : (
@@ -155,7 +162,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <div className='absolute -bottom-2.5 left-1/2 -translate-x-1/2'>
               <Badge
                 variant='secondary'
-                className='border-none bg-background/95 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
+                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-700 dark:text-slate-200 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
               >
                 {isSiswa ? pembeli?.kelas || 'Siswa' : 'Kartu Tamu'}
               </Badge>
@@ -164,47 +171,47 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
           {/* Nama & Rincian */}
           <div className='mt-1 space-y-1 text-center'>
-            <h3 className='text-lg font-bold tracking-tight text-foreground'>
+            <h3 className='text-lg font-bold tracking-tight text-slate-800 dark:text-white'>
               {namaPembeli}
             </h3>
             {isSiswa && pembeli?.nis && (
-              <p className='text-xs text-muted-foreground'>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
                 NIS: {pembeli.nis}
               </p>
             )}
             {!isSiswa && (pembeli?.nomor_kartu || pembeli?.nomorKartu) && (
-              <p className='text-xs text-muted-foreground'>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
                 No. Kartu: {pembeli.nomor_kartu || pembeli.nomorKartu}
               </p>
             )}
           </div>
 
           {/* Ringkasan Saldo & Total Belanja */}
-          <div className='grid w-full grid-cols-2 gap-3 rounded-2xl border-none bg-muted/70 dark:bg-muted/30 p-3 text-center shadow-none'>
+          <div className='grid w-full grid-cols-2 gap-3 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 text-center shadow-none'>
             <div>
-              <span className='text-[11px] text-muted-foreground'>
+              <span className='text-[11px] text-slate-500 dark:text-slate-400'>
                 Total Belanja
               </span>
-              <p className='text-sm font-bold text-foreground tabular-nums'>
+              <p className='text-sm font-bold text-slate-800 dark:text-white tabular-nums'>
                 {formatRupiah(data.total)}
               </p>
             </div>
             <div className='pl-2'>
-              <span className='text-[11px] text-muted-foreground'>
+              <span className='text-[11px] text-slate-500 dark:text-slate-400'>
                 Sisa Saldo
               </span>
-              <p className='text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
+              <p className='text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(sisaSaldo)}
               </p>
             </div>
           </div>
 
           {/* Indikator Countdown Otomatis 15 Detik */}
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <Clock className='h-3.5 w-3.5 animate-pulse text-primary' />
+          <div className='flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400'>
+            <Clock className='h-3.5 w-3.5 animate-pulse text-blue-600 dark:text-blue-400' />
             <span>
               Menutup otomatis dalam{' '}
-              <strong className='font-bold text-primary tabular-nums'>
+              <strong className='font-bold text-blue-600 dark:text-blue-400 tabular-nums'>
                 {countdown}
               </strong>{' '}
               detik...
@@ -213,31 +220,14 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         </div>
 
         {/* Footer Tombol Aksi */}
-        <DialogFooter className='flex-col gap-2 border-none pt-2 sm:flex-row'>
-          {/* Tombol Batalkan / Void Darurat jika Wajah Tidak Cocok */}
-          <Button
-            type='button'
-            variant='destructive'
-            size='sm'
-            disabled={isVoiding}
-            onClick={handleVoidClick}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:w-auto border-none rounded-xl shadow-none'
-            title='Batalkan transaksi seketika jika wajah tidak cocok dengan pemilik kartu'
-          >
-            <Ban className='h-4 w-4' />
-            <span>
-              {isVoiding ? 'Membatalkan...' : 'Batalkan (Wajah Beda)'}
-            </span>
-          </Button>
-
+        <DialogFooter className='pt-2'>
           {/* Tombol Selesai Cepat */}
           <Button
             type='button'
             variant='default'
             size='sm'
             onClick={handleDoneClick}
-            disabled={isVoiding}
-            className='h-9 w-full gap-1.5 text-xs font-semibold sm:flex-1 border-none rounded-xl shadow-none'
+            className='h-9 w-full gap-1.5 text-xs font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
           >
             <span>Selesai</span>
             <ArrowRight className='h-3.5 w-3.5' />

@@ -112,23 +112,40 @@ export const kasirApi = {
         undefined,
     }
 
+    // Jika nama masih default 'Pembeli' atau data profil siswa belum lengkap, perkaya dari MOCK_SISWA
+    const matchedSiswa = MOCK_SISWA.find(
+      (s) => s.uid?.toUpperCase() === data.rfidUid.toUpperCase()
+    )
+    if (matchedSiswa && (pembeli.nama === 'Pembeli' || !pembeli.nama)) {
+      pembeli.nama = matchedSiswa.nama
+      pembeli.kelas = matchedSiswa.kelas || pembeli.kelas
+      pembeli.fotoUrl = matchedSiswa.foto_url || pembeli.fotoUrl
+      pembeli.foto_url = matchedSiswa.foto_url || pembeli.foto_url
+      pembeli.nis = matchedSiswa.nis || pembeli.nis
+    }
+
     return {
       transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
       transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
+      nomorStruk:
+        raw.nomorStruk ||
+        raw.nomor_struk ||
+        raw.kodeStruk ||
+        raw.kode_struk ||
+        raw.nomorReferensi ||
+        null,
+      titikKasir: raw.titikKasir || raw.titik_kasir || null,
+      namaItem: Array.isArray(raw.namaItem)
+        ? raw.namaItem.map(String)
+        : undefined,
       total: Number(raw.total || 0),
       waktu: raw.waktu || new Date().toISOString(),
-      // Nomor struk dipakai untuk refund (PRD §6.3 revisi).
-      nomorStruk: raw.nomorStruk ?? raw.nomor_struk ?? undefined,
       pembeli,
     }
   },
 
   /**
-   * Refund transaksi kasir (PRD §6.3 revisi).
-   *
-   * `kodeStruk` wajib dan harus cocok dengan nomor struk transaksi
-   * (format `TRX-yyyyMMdd-<id>`, didapat dari `nomorStruk` respons tap).
-   * Tujuannya mencegah kasir salah membatalkan transaksi orang lain.
+   * Refund (pembatalan) transaksi kasir dengan alasan dan kode struk wajib (PRD §6.3, BE #292)
    */
   async refundTransaksi(
     transaksiId: number,
@@ -136,9 +153,20 @@ export const kasirApi = {
     kodeStruk: string
   ): Promise<void> {
     await apiClient.post(`/api/kasir/transaksi/${transaksiId}/refund`, {
-      alasan,
-      kodeStruk,
+      alasan: alasan.trim(),
+      kodeStruk: kodeStruk.trim(),
     })
+  },
+
+  /**
+   * @deprecated Gunakan refundTransaksi; endpoint /refund mewajibkan alasan dan kodeStruk (BE #292)
+   */
+  async voidTransaksi(
+    transaksiId: number,
+    alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
+    kodeStruk = ''
+  ): Promise<void> {
+    await this.refundTransaksi(transaksiId, alasan, kodeStruk)
   },
 
   /**
