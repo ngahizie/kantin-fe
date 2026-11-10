@@ -37,6 +37,23 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
+    id: 'rowNumber',
+    header: () => (
+      <span className='text-xs font-semibold px-2 text-center block'>No.</span>
+    ),
+    cell: ({ row, table }) => {
+      const pageIndex = table.getState().pagination.pageIndex
+      const pageSize = table.getState().pagination.pageSize
+      return (
+        <span className='font-mono text-xs text-muted-foreground text-center block px-2'>
+          {pageIndex * pageSize + row.index + 1}
+        </span>
+      )
+    },
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     accessorKey: 'username',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Username' />

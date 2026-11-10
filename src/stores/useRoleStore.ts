@@ -31,13 +31,13 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   tu: {
     id: 'tu',
     label: 'Petugas TU',
-    description: 'Layanan top-up tunai siswa & operasional kartu tamu',
+    description: 'Layanan isi saldo siswa & setoran kas TU harian',
     badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
   },
   bendahara: {
     id: 'bendahara',
     label: 'Bendahara Sekolah',
-    description: 'Rekonsiliasi saldo kas, mutasi koreksi, dan laporan keuangan',
+    description: 'Cek selisih uang, mutasi koreksi, dan laporan keuangan',
     badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800',
   },
   kasir: {

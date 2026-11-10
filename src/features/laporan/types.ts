@@ -180,6 +180,61 @@ export interface RiwayatBelanjaSiswaItem {
   items?: RincianItemBelanja[]
 }
 
+/**
+ * Memastikan nilai Titik Kasir/Lokasi dan Nama Petugas selalu terisi secara bermakna
+ * meskipun backend mengembalikan nilai placeholder '-' untuk mutasi non-kasir (seperti Top-up TU atau Koreksi).
+ */
+export function resolveTitikDanPetugas(trx: {
+  jenis?: string
+  titikKasir?: string | null
+  petugas?: string | null
+}): { titik: string; petugas: string } {
+  const hasTitik = Boolean(trx.titikKasir && trx.titikKasir !== '-' && trx.titikKasir.trim() !== '')
+  const hasPetugas = Boolean(trx.petugas && trx.petugas !== '-' && trx.petugas.trim() !== '')
+
+  if (hasTitik && hasPetugas) {
+    return { titik: trx.titikKasir!, petugas: trx.petugas! }
+  }
+
+  const jenis = trx.jenis || ''
+  if (jenis === 'TOPUP_TUNAI') {
+    return {
+      titik: hasTitik ? trx.titikKasir! : 'Loket TU',
+      petugas: hasPetugas ? trx.petugas! : 'Petugas TU',
+    }
+  }
+  if (jenis === 'TOPUP_ONLINE') {
+    return {
+      titik: hasTitik ? trx.titikKasir! : 'Aplikasi SKOOLIA',
+      petugas: hasPetugas ? trx.petugas! : 'Sistem Online',
+    }
+  }
+  if (jenis === 'KOREKSI') {
+    return {
+      titik: hasTitik ? trx.titikKasir! : 'Ruang Bendahara',
+      petugas: hasPetugas ? trx.petugas! : 'Bendahara Sekolah',
+    }
+  }
+  if (jenis === 'REFUND') {
+    return {
+      titik: hasTitik ? trx.titikKasir! : 'Loket TU',
+      petugas: hasPetugas ? trx.petugas! : 'Petugas TU',
+    }
+  }
+
+  return {
+    titik: hasTitik ? trx.titikKasir! : 'Kasir Kantin',
+    petugas: hasPetugas ? trx.petugas! : 'Petugas Kasir',
+  }
+}
+
+export interface RiwayatTransaksiKeseluruhanItem extends RiwayatBelanjaSiswaItem {
+  siswaId: number
+  siswaNama: string
+  siswaNis: string
+  siswaKelas: string
+}
+
 export interface ProfilSiswaRiwayat {
   siswaId: number
   nis: string

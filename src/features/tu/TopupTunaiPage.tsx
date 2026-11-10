@@ -272,7 +272,7 @@ export function TopupTunaiPage() {
         {/* Header Title Section */}
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Pengisian Saldo Tunai Siswa
+            Isi Saldo Siswa
           </h1>
         </div>
 

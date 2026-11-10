@@ -227,8 +227,8 @@ export function KategoriPage() {
             <Table>
               <TableHeader>
                 <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
-                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
-                    Urutan
+                  <TableHead className='w-20 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
+                    No.
                   </TableHead>
                   <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>
                     Nama Kategori
@@ -269,7 +269,7 @@ export function KategoriPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredKategori.map((kat) => {
+                  filteredKategori.map((kat, idx) => {
                     const isAktif = kat.isActive !== false && kat.aktif !== false
                     const itemQty = kat.jumlahItem ?? 0
 
@@ -279,7 +279,7 @@ export function KategoriPage() {
                         className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'
                       >
                         <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums ps-6'>
-                          {kat.urutan ?? kat.id}
+                          {idx + 1}
                         </TableCell>
                         <TableCell className='border-none py-3.5 font-semibold text-foreground text-sm ps-2'>
                           <div className='flex items-center gap-2'>

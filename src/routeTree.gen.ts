@@ -37,6 +37,7 @@ import { Route as AuthenticatedSaldoKoreksiIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedPengaturanTitikKasirIndexRouteImport } from './routes/_authenticated/pengaturan/titik-kasir/index'
 import { Route as AuthenticatedLaporanSaldoMengendapIndexRouteImport } from './routes/_authenticated/laporan/saldo-mengendap/index'
 import { Route as AuthenticatedLaporanRiwayatSiswaIndexRouteImport } from './routes/_authenticated/laporan/riwayat-siswa/index'
+import { Route as AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport } from './routes/_authenticated/laporan/riwayat-keseluruhan/index'
 import { Route as AuthenticatedLaporanRekonsiliasiIndexRouteImport } from './routes/_authenticated/laporan/rekonsiliasi/index'
 import { Route as AuthenticatedLaporanPenjualanIndexRouteImport } from './routes/_authenticated/laporan/penjualan/index'
 import { Route as AuthenticatedLaporanLabaKotorIndexRouteImport } from './routes/_authenticated/laporan/laba-kotor/index'
@@ -197,6 +198,12 @@ const AuthenticatedLaporanRiwayatSiswaIndexRoute =
     path: '/laporan/riwayat-siswa/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLaporanRiwayatKeseluruhanIndexRoute =
+  AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport.update({
+    id: '/laporan/riwayat-keseluruhan/',
+    path: '/laporan/riwayat-keseluruhan/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLaporanRekonsiliasiIndexRoute =
   AuthenticatedLaporanRekonsiliasiIndexRouteImport.update({
     id: '/laporan/rekonsiliasi/',
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
   '/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
+  '/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/laporan/riwayat-siswa/': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
   '/laporan/saldo-mengendap/': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
   '/pengaturan/titik-kasir/': typeof AuthenticatedPengaturanTitikKasirIndexRoute
@@ -274,6 +282,7 @@ export interface FileRoutesByTo {
   '/laporan/laba-kotor': typeof AuthenticatedLaporanLabaKotorIndexRoute
   '/laporan/penjualan': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/laporan/rekonsiliasi': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
+  '/laporan/riwayat-keseluruhan': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/laporan/riwayat-siswa': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
   '/laporan/saldo-mengendap': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
   '/pengaturan/titik-kasir': typeof AuthenticatedPengaturanTitikKasirIndexRoute
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
   '/_authenticated/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/_authenticated/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
+  '/_authenticated/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/_authenticated/laporan/riwayat-siswa/': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
   '/_authenticated/laporan/saldo-mengendap/': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
   '/_authenticated/pengaturan/titik-kasir/': typeof AuthenticatedPengaturanTitikKasirIndexRoute
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/laporan/laba-kotor/'
     | '/laporan/penjualan/'
     | '/laporan/rekonsiliasi/'
+    | '/laporan/riwayat-keseluruhan/'
     | '/laporan/riwayat-siswa/'
     | '/laporan/saldo-mengendap/'
     | '/pengaturan/titik-kasir/'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/laporan/laba-kotor'
     | '/laporan/penjualan'
     | '/laporan/rekonsiliasi'
+    | '/laporan/riwayat-keseluruhan'
     | '/laporan/riwayat-siswa'
     | '/laporan/saldo-mengendap'
     | '/pengaturan/titik-kasir'
@@ -410,6 +422,7 @@ export interface FileRouteTypes {
     | '/_authenticated/laporan/laba-kotor/'
     | '/_authenticated/laporan/penjualan/'
     | '/_authenticated/laporan/rekonsiliasi/'
+    | '/_authenticated/laporan/riwayat-keseluruhan/'
     | '/_authenticated/laporan/riwayat-siswa/'
     | '/_authenticated/laporan/saldo-mengendap/'
     | '/_authenticated/pengaturan/titik-kasir/'
@@ -633,6 +646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanRiwayatSiswaIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/laporan/riwayat-keseluruhan/': {
+      id: '/_authenticated/laporan/riwayat-keseluruhan/'
+      path: '/laporan/riwayat-keseluruhan'
+      fullPath: '/laporan/riwayat-keseluruhan/'
+      preLoaderRoute: typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/laporan/rekonsiliasi/': {
       id: '/_authenticated/laporan/rekonsiliasi/'
       path: '/laporan/rekonsiliasi'
@@ -676,6 +696,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLaporanLabaKotorIndexRoute: typeof AuthenticatedLaporanLabaKotorIndexRoute
   AuthenticatedLaporanPenjualanIndexRoute: typeof AuthenticatedLaporanPenjualanIndexRoute
   AuthenticatedLaporanRekonsiliasiIndexRoute: typeof AuthenticatedLaporanRekonsiliasiIndexRoute
+  AuthenticatedLaporanRiwayatKeseluruhanIndexRoute: typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   AuthenticatedLaporanRiwayatSiswaIndexRoute: typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
   AuthenticatedLaporanSaldoMengendapIndexRoute: typeof AuthenticatedLaporanSaldoMengendapIndexRoute
   AuthenticatedPengaturanTitikKasirIndexRoute: typeof AuthenticatedPengaturanTitikKasirIndexRoute
@@ -706,6 +727,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedLaporanPenjualanIndexRoute,
   AuthenticatedLaporanRekonsiliasiIndexRoute:
     AuthenticatedLaporanRekonsiliasiIndexRoute,
+  AuthenticatedLaporanRiwayatKeseluruhanIndexRoute:
+    AuthenticatedLaporanRiwayatKeseluruhanIndexRoute,
   AuthenticatedLaporanRiwayatSiswaIndexRoute:
     AuthenticatedLaporanRiwayatSiswaIndexRoute,
   AuthenticatedLaporanSaldoMengendapIndexRoute:

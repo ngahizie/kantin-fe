@@ -83,11 +83,11 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '3',
-        pos: 'Refund Saldo Siswa & Tamu',
+        pos: 'Pengembalian Saldo Siswa (Refund)',
         kategori: 'KELUAR',
         arah: 'DEBIT',
         nominal: data.refund,
-        keterangan: 'Pengembalian saldo siswa lulus/pindah & pengembalian kartu tamu',
+        keterangan: 'Pengembalian sisa saldo bagi siswa yang lulus atau pindah sekolah',
       },
       {
         id: '4',
@@ -103,15 +103,7 @@ export function LaporanRekonsiliasiPage() {
         kategori: 'SALDO',
         arah: 'STATUS',
         nominal: data.saldoSiswa,
-        keterangan: 'Total saldo aktif pada kartu seluruh siswa (kewajiban sekolah)',
-      },
-      {
-        id: '6',
-        pos: 'Saldo Mengendap Kartu Tamu',
-        kategori: 'SALDO',
-        arah: 'STATUS',
-        nominal: data.saldoKartuTamu,
-        keterangan: 'Total saldo aktif pada kartu guru, staf, & tamu',
+        keterangan: 'Total dana titipan tersimpan di kartu seluruh siswa (kewajiban sekolah)',
       },
       {
         id: '7',
@@ -168,11 +160,11 @@ export function LaporanRekonsiliasiPage() {
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Tamu + Penjualan)',
+          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
           kategori: 'EVALUASI',
           arah: 'NETTO',
           nominal: data.totalPenggunaan,
-          keterangan: 'Formula: Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih',
+          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
@@ -241,11 +233,11 @@ export function LaporanRekonsiliasiPage() {
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Tamu + Penjualan)',
+          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
           kategori: 'EVALUASI',
           arah: 'NETTO',
           nominal: formatRupiah(data.totalPenggunaan),
-          keterangan: 'Formula: Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih',
+          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
@@ -295,7 +287,7 @@ export function LaporanRekonsiliasiPage() {
               Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Rekonsiliasi Harian</span>
+            <span className="text-xs font-medium">Cek Selisih Uang</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitch />
@@ -310,7 +302,7 @@ export function LaporanRekonsiliasiPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Laporan Rekonsiliasi Harian
+                Cek Selisih Uang (Pencocokan Harian)
               </h1>
             </div>
 
@@ -352,7 +344,7 @@ export function LaporanRekonsiliasiPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h2 className="text-xl font-extrabold tracking-tight text-red-700 dark:text-red-400">
-                        PERINGATAN: INVARIANT AKUNTANSI TIDAK SEIMBANG!
+                        PERINGATAN: DITEMUKAN SELISIH HITUNGAN UANG!
                       </h2>
                       <Badge variant="destructive" className="font-mono text-xs">
                         SELISIH: {formatRupiah(data.selisih)}
@@ -363,8 +355,8 @@ export function LaporanRekonsiliasiPage() {
                       <strong className="font-semibold underline">
                         {formatRupiah(data.selisih)}
                       </strong>{' '}
-                      antara arus top-up bersih dengan akumulasi saldo mengendap dan penjualan bersih.
-                      Hal ini mengindikasikan adanya inkonsistensi mutasi kas, selisih pembulatan, atau transaksi void yang belum terekonsiliasi.
+                      antara total uang masuk (isi saldo) dengan uang yang dibelanjakan serta sisa saldo di kartu.
+                      Hal ini menandakan adanya perbedaan catatan, uang fisik kas yang belum disetor, atau transaksi yang belum tuntas.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
                       <span className="rounded-md bg-red-200/80 px-2.5 py-1 font-medium text-red-900 dark:bg-red-900/60 dark:text-red-200">
@@ -396,13 +388,15 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kiri */}
                   <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 1: Top-up Bersih
+                      Sisi 1: Total Kredit Sistem
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary">
-                      {formatRupiah(data.topupBersih)}
+                      {formatRupiah(data.totalKreditSemua || data.topupBersih)}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Topup Tunai ({formatRupiah(data.topupTunai)}) + Online ({formatRupiah(data.topupOnline)}) − Refund ({formatRupiah(data.totalRefundSemua)})
+                      {data.totalKreditSemua > 0
+                        ? `Akumulasi Uang Masuk & Kredit (${formatRupiah(data.totalKreditSemua)})`
+                        : `Topup Tunai (${formatRupiah(data.topupTunai)}) + Online (${formatRupiah(data.topupOnline)}) − Refund (${formatRupiah(data.totalRefundSemua)})`}
                     </p>
                   </div>
 
@@ -431,13 +425,19 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kanan */}
                   <div className="rounded-xl border-0 bg-card p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 2: Penggunaan & Saldo
+                      Sisi 2: Penggunaan & Saldo Siswa
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary">
-                      {formatRupiah(data.totalPenggunaan)}
+                      {formatRupiah(
+                        data.totalKreditSemua > 0
+                          ? data.totalDebitSemua + (data.saldoSiswa || data.saldoMengendap)
+                          : data.totalPenggunaan
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Saldo Mengendap ({formatRupiah(data.saldoMengendap)}) + Penjualan Bersih ({formatRupiah(data.penjualanBersih)})
+                      {data.totalKreditSemua > 0
+                        ? `Debit Terpakai (${formatRupiah(data.totalDebitSemua)}) + Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)})`
+                        : `Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)}) + Penjualan (${formatRupiah(data.penjualanBersih)})`}
                     </p>
                   </div>
                 </div>
@@ -489,11 +489,10 @@ export function LaporanRekonsiliasiPage() {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold tracking-tight">
-                  {data ? formatRupiah(data.saldoMengendap) : '...'}
+                  {data ? formatRupiah(data.saldoSiswa) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
-                  <span>Siswa: {data ? formatRupiah(data.saldoSiswa) : '-'}</span>
-                  <span>Tamu: {data ? formatRupiah(data.saldoKartuTamu) : '-'}</span>
+                <div className="text-xs text-muted-foreground mt-1.5">
+                  Total saldo aktif tersimpan di kartu seluruh siswa
                 </div>
               </CardContent>
             </Card>
@@ -501,7 +500,7 @@ export function LaporanRekonsiliasiPage() {
             <Card className={data && !data.seimbang ? 'border-0 bg-red-500/10 dark:bg-red-950/30' : 'border-0 bg-muted/70 dark:bg-muted/30'}>
               <CardHeader className="p-4 pb-1">
                 <CardTitle className="text-xs font-medium text-muted-foreground">
-                  Status Rekonsiliasi
+                  Status Kecocokan Saldo
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -510,12 +509,12 @@ export function LaporanRekonsiliasiPage() {
                     data?.seimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                   }`}
                 >
-                  {data?.seimbang ? 'SEIMBANG' : `SELISIH ${formatRupiah(data?.selisih || 0)}`}
+                  {data?.seimbang ? 'COCOK (SEIMBANG)' : `SELISIH ${formatRupiah(data?.selisih || 0)}`}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1.5">
                   {data?.seimbang
-                    ? '100% Invariant Akuntansi Terpenuhi'
-                    : 'Periksa fisik kas & ledger'}
+                    ? 'Hitungan klop, saldo uang masuk dan keluar sesuai'
+                    : 'Periksa fisik kas & catatan transaksi'}
                 </p>
               </CardContent>
             </Card>
@@ -526,10 +525,10 @@ export function LaporanRekonsiliasiPage() {
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-bold">
-                  Rincian Pos Mutasi & Ledger Akuntansi
+                  Rincian Aliran Dana & Saldo
                 </CardTitle>
                 <CardDescription>
-                  Daftar seluruh komponen pembentuk arus kas saldo kantin periode terpilih.
+                  Daftar rincian uang masuk, uang belanja terpakai, dan sisa saldo pada periode terpilih.
                 </CardDescription>
               </div>
 
@@ -551,7 +550,7 @@ export function LaporanRekonsiliasiPage() {
                 <Table>
                   <TableHeader className="bg-muted/80 dark:bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead className="w-12 text-center">No.</TableHead>
                       <TableHead>Pos Akuntansi / Ledger</TableHead>
                       <TableHead className="text-center">Kategori</TableHead>
                       <TableHead className="text-center">Arah</TableHead>

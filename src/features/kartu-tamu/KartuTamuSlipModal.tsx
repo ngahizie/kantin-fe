@@ -1,7 +1,6 @@
 import {
   Printer,
   CheckCircle2,
-  Building2,
   Calendar,
   UserCheck,
   CreditCard,
@@ -141,9 +140,13 @@ export function KartuTamuSlipModal({
 
             {/* Header Nota */}
             <div className='text-center space-y-1 pb-3 print-border-dashed border-b border-dashed border-slate-300'>
-              <div className='flex items-center justify-center gap-1 font-bold text-sm tracking-tight text-slate-900 uppercase'>
-                <Building2 className='h-4 w-4 text-blue-600 no-print' />
-                SKOOLIA CANTEEN
+              <div className='flex items-center justify-center gap-2 font-bold text-sm tracking-tight text-slate-900 uppercase'>
+                <img
+                  src='/logo.png'
+                  alt='Logo Skoolia'
+                  className='h-5 w-5 object-contain'
+                />
+                KANTIN SKOOLIA
               </div>
               <p className='text-[10px] text-slate-600 uppercase font-semibold tracking-wider'>
                 {config.label}
@@ -290,7 +293,7 @@ export function KartuTamuSlipModal({
                 Simpan slip ini sebagai bukti transaksi sah Kasir TU Sekolah.
               </div>
               <div className='font-mono text-[9px] text-slate-400 font-bold tracking-widest pt-1 uppercase'>
-                *** SKOOLIA CASHLESS CANTEEN ***
+                *** KANTIN SKOOLIA ***
               </div>
             </div>
           </div>
