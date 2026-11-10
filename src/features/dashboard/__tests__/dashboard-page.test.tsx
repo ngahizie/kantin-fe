@@ -108,15 +108,15 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
 
 describe('getStatusBadgeClass color semantics', () => {
   it('memberikan warna hijau untuk status positif', () => {
-    expect(getStatusBadgeClass('SUKSES')).toContain('text-emerald-600')
-    expect(getStatusBadgeClass('BERHASIL')).toContain('text-emerald-600')
-    expect(getStatusBadgeClass('SELESAI')).toContain('text-emerald-600')
+    expect(getStatusBadgeClass('SUKSES')).toContain('text-emerald-700')
+    expect(getStatusBadgeClass('BERHASIL')).toContain('text-emerald-700')
+    expect(getStatusBadgeClass('SELESAI')).toContain('text-emerald-700')
   })
 
   it('memberikan warna merah untuk status negatif', () => {
-    expect(getStatusBadgeClass('VOID')).toContain('text-destructive')
-    expect(getStatusBadgeClass('GAGAL')).toContain('text-destructive')
-    expect(getStatusBadgeClass('DIBATALKAN')).toContain('text-destructive')
+    expect(getStatusBadgeClass('VOID')).toContain('text-rose-700')
+    expect(getStatusBadgeClass('GAGAL')).toContain('text-rose-700')
+    expect(getStatusBadgeClass('DIBATALKAN')).toContain('text-rose-700')
   })
 
   it('memberikan warna amber untuk status pending/menunggu', () => {

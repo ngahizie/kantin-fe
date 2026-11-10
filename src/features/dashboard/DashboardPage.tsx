@@ -36,6 +36,7 @@ import { Main } from '@/components/layout/main'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { useRoleStore } from '@/stores/useRoleStore'
+import { formatTimeWithZone } from '@/lib/formatters'
 import apiClient from '@/lib/api-client'
 import type { RingkasanPenjualan, RingkasanRekonsiliasi, BarisPenjualanKategori } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
@@ -113,7 +114,7 @@ interface RecentTransactionDisplayItem {
   id: string
   waktu: string
   nama: string
-  identitas: string
+  identitas?: string
   tipe: string
   item: string
   total: number
@@ -223,18 +224,13 @@ export function DashboardPage() {
           const rawItems = trxRes.value.data.data.items || trxRes.value.data.data
           if (Array.isArray(rawItems) && rawItems.length > 0) {
             const mapped: RecentTransactionDisplayItem[] = rawItems.slice(0, 5).map((trx: Record<string, unknown>) => {
-              const timeStr = trx.waktu
-                ? new Date(String(trx.waktu)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                : '-'
+              const timeStr = formatTimeWithZone(trx.waktu as string | Date)
               const isSiswa = trx.subjekTipe === 'SISWA'
               const isTamu = trx.subjekTipe === 'KARTU_TAMU'
               return {
                 id: `TRX-${trx.id}`,
                 waktu: timeStr,
-                nama: String(trx.subjekNama || (isSiswa ? `Siswa #${trx.subjekId}` : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
-                identitas: isTamu
-                  ? (trx.kartuUid ? `Kartu: ${trx.kartuUid}` : 'Kartu Tamu')
-                  : (trx.subjekId ? `ID: ${trx.subjekId}` : 'Siswa Kantin'),
+                nama: String(trx.subjekNama || (isSiswa ? 'Siswa' : isTamu ? 'Tamu / Guru' : 'Pelanggan')),
                 tipe: isTamu ? 'Tamu/Guru' : 'Siswa',
                 item: trx.titikKasirNama ? `POS ${trx.titikKasirNama}` : 'Transaksi Tap RFID',
                 total: Number(trx.total ?? 0),
@@ -750,7 +746,7 @@ export function DashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className='text-xs bg-muted/40'>
-                    <TableHead className='w-[140px] ps-6'>Waktu & ID</TableHead>
+                    <TableHead className='w-[140px] ps-6'>Waktu</TableHead>
                     <TableHead className='w-[200px]'>Pelanggan</TableHead>
                     <TableHead>Item Menu</TableHead>
                     <TableHead className='text-right w-[140px]'>Total Belanja</TableHead>
@@ -767,14 +763,12 @@ export function DashboardPage() {
                     </TableRow>
                   ) : (
                     recentTransactions.map((trx) => (
-                      <TableRow key={trx.id} className='text-xs'>
+                      <TableRow key={trx.id} className='text-xs hover:bg-muted/30'>
                         <TableCell className='ps-6 py-3'>
                           <div className='font-medium text-foreground tabular-nums'>{trx.waktu}</div>
-                          <div className='text-[10px] text-muted-foreground tabular-nums'>{trx.id}</div>
                         </TableCell>
                         <TableCell className='py-3'>
                           <div className='font-semibold text-foreground'>{trx.nama}</div>
-                          <div className='text-[10px] text-muted-foreground'>{trx.identitas}</div>
                         </TableCell>
                         <TableCell className='text-muted-foreground py-3'>
                           {trx.item}
