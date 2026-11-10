@@ -67,6 +67,7 @@ export function LaporanPenjualanPage() {
   const [activeTab, setActiveTab] = useState<'item' | 'kategori' | 'kasir'>('item')
   const [searchQuery, setSearchQuery] = useState('')
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('ALL')
+  const [itemMarginFilter, setItemMarginFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
   const [sortByItem, setSortByItem] = useState<'terlaris' | 'laba' | 'margin' | 'omset'>('terlaris')
   const [sortByKategori, setSortByKategori] = useState<'omset' | 'qty' | 'laba' | 'margin'>('omset')
   const [sortByKasir, setSortByKasir] = useState<'penjualan' | 'trx' | 'void'>('penjualan')
@@ -121,6 +122,14 @@ export function LaporanPenjualanPage() {
       list = list.filter((i) => i.kategoriNama === itemCategoryFilter)
     }
 
+    if (itemMarginFilter === 'HIGH') {
+      list = list.filter((i) => (i.margin || 0) >= 35)
+    } else if (itemMarginFilter === 'MEDIUM') {
+      list = list.filter((i) => (i.margin || 0) >= 20 && (i.margin || 0) < 35)
+    } else if (itemMarginFilter === 'LOW') {
+      list = list.filter((i) => (i.margin || 0) < 20)
+    }
+
     if (sortByItem === 'terlaris') {
       list.sort((a, b) => b.qty - a.qty)
     } else if (sortByItem === 'laba') {
@@ -131,7 +140,7 @@ export function LaporanPenjualanPage() {
       list.sort((a, b) => b.penjualanBersih - a.penjualanBersih)
     }
     return list
-  }, [items, searchQuery, itemCategoryFilter, sortByItem])
+  }, [items, searchQuery, itemCategoryFilter, itemMarginFilter, sortByItem])
 
   // Filter & Sort Kategoris
   const filteredKategoris = useMemo(() => {
@@ -200,6 +209,18 @@ export function LaporanPenjualanPage() {
         })
       }
       list.push({
+        title: 'Margin',
+        options: [
+          { label: 'Margin Tinggi (≥ 35%)', value: 'HIGH' },
+          { label: 'Margin Sedang (20-34%)', value: 'MEDIUM' },
+          { label: 'Margin Tipis (< 20%)', value: 'LOW' },
+        ],
+        selectedValues: itemMarginFilter !== 'ALL' ? [itemMarginFilter] : [],
+        onSelect: (vals) =>
+          setItemMarginFilter((vals[0] as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'ALL'),
+        isSingleSelect: true,
+      })
+      list.push({
         title: 'Urutkan',
         options: [
           { label: 'Terlaris', value: 'terlaris' },
@@ -255,6 +276,7 @@ export function LaporanPenjualanPage() {
     activeTab,
     kategoriOptions,
     itemCategoryFilter,
+    itemMarginFilter,
     sortByItem,
     sortByKategori,
     sortByKasir,
@@ -263,7 +285,11 @@ export function LaporanPenjualanPage() {
   const isFiltered = useMemo(() => {
     if (searchQuery.trim()) return true
     if (activeTab === 'item') {
-      return itemCategoryFilter !== 'ALL' || sortByItem !== 'terlaris'
+      return (
+        itemCategoryFilter !== 'ALL' ||
+        itemMarginFilter !== 'ALL' ||
+        sortByItem !== 'terlaris'
+      )
     }
     if (activeTab === 'kategori') {
       return sortByKategori !== 'omset'
@@ -276,6 +302,7 @@ export function LaporanPenjualanPage() {
     searchQuery,
     activeTab,
     itemCategoryFilter,
+    itemMarginFilter,
     sortByItem,
     sortByKategori,
     sortByKasir,
@@ -285,6 +312,7 @@ export function LaporanPenjualanPage() {
     setSearchQuery('')
     if (activeTab === 'item') {
       setItemCategoryFilter('ALL')
+      setItemMarginFilter('ALL')
       setSortByItem('terlaris')
     } else if (activeTab === 'kategori') {
       setSortByKategori('omset')

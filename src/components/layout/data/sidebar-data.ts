@@ -155,11 +155,6 @@ export const sidebarData: SidebarData = {
               roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
             {
-              title: 'Analisis Laba Kotor',
-              url: '/laporan/laba-kotor',
-              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
-            },
-            {
               title: 'Saldo Mengendap',
               url: '/laporan/saldo-mengendap',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
