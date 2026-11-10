@@ -30,20 +30,25 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
-import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem } from './types'
+import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem, LaporanFilterParams } from './types'
 
 export function LaporanRekonsiliasiPage() {
   const [data, setData] = useState<RingkasanRekonsiliasi | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+
   useEffect(() => {
     let isMounted = true
     const loadData = async () => {
       try {
         setIsLoading(true)
-        const res = await laporanApi.getRekonsiliasi()
+        const res = await laporanApi.getRekonsiliasi(dateFilterParams)
         if (!isMounted) return
         setData(res)
       } catch (err: unknown) {
@@ -58,7 +63,7 @@ export function LaporanRekonsiliasiPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Baris Rincian Pos Akuntansi
   const rincianPos: ArusPosRekonsiliasiItem[] = useMemo(() => {
@@ -181,6 +186,7 @@ export function LaporanRekonsiliasiPage() {
         title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
           'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
@@ -254,6 +260,7 @@ export function LaporanRekonsiliasiPage() {
         subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
           'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
@@ -304,9 +311,19 @@ export function LaporanRekonsiliasiPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Cek Selisih Uang (Pencocokan Harian)
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="ALL"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="default"
                 size="sm"

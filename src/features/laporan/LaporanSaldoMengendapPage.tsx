@@ -1,4 +1,4 @@
-import { TableToolbar } from '@/components/data-table'
+import { TableToolbar, type TableToolbarFilter } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Download,
@@ -35,10 +35,12 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
+import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanSaldoMengendap,
   SiswaSaldoDetail,
+  LaporanFilterParams,
 } from './types'
 
 export function LaporanSaldoMengendapPage() {
@@ -54,6 +56,11 @@ export function LaporanSaldoMengendapPage() {
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Filter Tanggal & Saldo
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
 
   useEffect(() => {
     let isMounted = true
@@ -79,12 +86,13 @@ export function LaporanSaldoMengendapPage() {
           resSiswa &&
           resSiswa.length > 0
         ) {
-          const totalSiswa = resSiswa.reduce((sum, s) => sum + (s.saldo || 0), 0)
+          const siswaBersaldo = resSiswa.filter((s) => (s.saldo || 0) > 0)
+          const totalSiswa = siswaBersaldo.reduce((sum, s) => sum + (s.saldo || 0), 0)
           setRingkasan({
             ...resRingkasan,
             saldoSiswa: totalSiswa,
             saldoKartuTamu: 0,
-            jumlahSiswa: resSiswa.length,
+            jumlahSiswa: siswaBersaldo.length,
             jumlahKartuTamu: 0,
             total: totalSiswa,
           })
@@ -114,16 +122,45 @@ export function LaporanSaldoMengendapPage() {
   // Filter Siswa
   const filteredSiswa = useMemo(() => {
     if (!canAccessSiswa) return []
-    if (!searchQuery.trim()) return siswaList
+    let list = [...siswaList]
+
+    if (statusFilter === 'POSITIVE') {
+      list = list.filter((s) => (s.saldo || 0) > 0)
+    } else if (statusFilter === 'ZERO') {
+      list = list.filter((s) => (s.saldo || 0) === 0)
+    }
+
+    // Filter tanggal berdasarkan transaksi terakhir bila filter tanggal spesifik aktif
+    if (dateFilterParams.tanggal) {
+      const targetDate = dateFilterParams.tanggal
+      list = list.filter((s) => {
+        if (!s.terakhirTransaksi) return false
+        return s.terakhirTransaksi.startsWith(targetDate)
+      })
+    } else if (
+      dateFilterParams.dari &&
+      dateFilterParams.sampai &&
+      dateFilterParams.dari !== ALL_TIME_PARAMS.dari
+    ) {
+      const dariTime = new Date(dateFilterParams.dari).getTime()
+      const sampaiTime = new Date(dateFilterParams.sampai).getTime()
+      list = list.filter((s) => {
+        if (!s.terakhirTransaksi) return false
+        const tTime = new Date(s.terakhirTransaksi).getTime()
+        return tTime >= dariTime && tTime <= sampaiTime
+      })
+    }
+
+    if (!searchQuery.trim()) return list
     const q = searchQuery.toLowerCase()
-    return siswaList.filter(
+    return list.filter(
       (s) =>
         s.nama.toLowerCase().includes(q) ||
         s.nis.toLowerCase().includes(q) ||
         s.kelas.toLowerCase().includes(q) ||
-        s.parentName.toLowerCase().includes(q)
+        (s.parentName && s.parentName.toLowerCase().includes(q))
     )
-  }, [canAccessSiswa, siswaList, searchQuery])
+  }, [canAccessSiswa, siswaList, searchQuery, statusFilter, dateFilterParams])
 
   // Ekspor Excel Multi-Sheet disesuaikan dengan role
   const handleExportExcel = () => {
@@ -313,9 +350,19 @@ export function LaporanSaldoMengendapPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Laporan Saldo Mengendap Siswa
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="ALL"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="default"
                 size="sm"
@@ -360,7 +407,7 @@ export function LaporanSaldoMengendapPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Jumlah Siswa Terdaftar
+                  Jumlah Siswa Bersaldo
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -368,7 +415,7 @@ export function LaporanSaldoMengendapPage() {
                   {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Total siswa pemilik akun dan saldo berjalan
+                  Total siswa yang memiliki saldo mengendap berjalan
                 </p>
               </CardContent>
             </Card>
@@ -395,8 +442,25 @@ export function LaporanSaldoMengendapPage() {
                 searchPlaceholder="Cari nama, NIS, kelas, wali..."
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
-                isFiltered={Boolean(searchQuery)}
-                onReset={() => setSearchQuery('')}
+                filters={[
+                  {
+                    title: 'Status Saldo',
+                    options: [
+                      { label: 'Semua Siswa', value: 'ALL' },
+                      { label: 'Hanya Bersaldo (> Rp 0)', value: 'POSITIVE' },
+                      { label: 'Saldo Rp 0', value: 'ZERO' },
+                    ],
+                    selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
+                    onSelect: (vals) =>
+                      setStatusFilter((vals[0] as 'ALL' | 'POSITIVE' | 'ZERO') || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery) || statusFilter !== 'ALL'}
+                onReset={() => {
+                  setSearchQuery('')
+                  setStatusFilter('ALL')
+                }}
               />
 
               <Card className="border-0 bg-muted/70 dark:bg-muted/30">

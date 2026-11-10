@@ -32,12 +32,14 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanPenjualan,
   BarisPenjualanItem,
   BarisPenjualanKategori,
   BarisPenjualanKasir,
+  LaporanFilterParams,
 } from './types'
 
 const getCategoryBadgeClass = (kategori: string) => {
@@ -72,17 +74,21 @@ export function LaporanPenjualanPage() {
   const [sortByKategori, setSortByKategori] = useState<'omset' | 'qty' | 'laba' | 'margin'>('omset')
   const [sortByKasir, setSortByKasir] = useState<'penjualan' | 'trx' | 'void'>('penjualan')
 
+  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
 
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
+        setIsLoading(true)
         const [resRingkasan, resItems, resKategoris] = await Promise.all([
-          laporanApi.getPenjualan(),
-          laporanApi.getPenjualanPerItem(),
-          laporanApi.getPenjualanPerKategori(),
+          laporanApi.getPenjualan(dateFilterParams),
+          laporanApi.getPenjualanPerItem(dateFilterParams),
+          laporanApi.getPenjualanPerKategori(dateFilterParams),
         ])
-        const resKasirs = await laporanApi.getPenjualanPerKasir().catch((err) => {
+        const resKasirs = await laporanApi.getPenjualanPerKasir(dateFilterParams).catch((err) => {
           // eslint-disable-next-line no-console
           console.warn('Endpoint penjualan per kasir belum tersedia atau gagal:', err)
           return []
@@ -104,7 +110,7 @@ export function LaporanPenjualanPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Filter & Sort Items
   const filteredItems = useMemo(() => {
@@ -421,6 +427,7 @@ export function LaporanPenjualanPage() {
         subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Laporan': dateFilterLabel,
           'Penjualan Bersih Total': formatRupiah(ringkasan.penjualanBersih),
           'Beban Pokok Penjualan': formatRupiah(ringkasan.totalHpp),
           'Laba Kotor Total': formatRupiah(ringkasan.labaKotor),
@@ -560,9 +567,19 @@ export function LaporanPenjualanPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Laporan Penjualan & Laba Kotor
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="ALL"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="default"
                 size="sm"

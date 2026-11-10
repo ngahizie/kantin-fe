@@ -43,9 +43,11 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
   type RiwayatTransaksiKeseluruhanItem,
+  type LaporanFilterParams,
   resolveTitikDanPetugas,
 } from './types'
 
@@ -57,6 +59,10 @@ export function LaporanRiwayatKeseluruhanPage() {
   const [searchFilter, setSearchFilter] = useState('')
   const [jenisFilter, setJenisFilter] = useState<string>('ALL')
 
+  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+
   // Modal Struk Digital
   const [selectedTrxForReceipt, setSelectedTrxForReceipt] =
     useState<RiwayatTransaksiKeseluruhanItem | null>(null)
@@ -67,7 +73,7 @@ export function LaporanRiwayatKeseluruhanPage() {
     const init = async () => {
       try {
         setIsLoading(true)
-        const list = await laporanApi.getRiwayatTransaksiKeseluruhan()
+        const list = await laporanApi.getRiwayatTransaksiKeseluruhan(dateFilterParams)
         if (!isMounted) return
         setTransaksiList(list)
       } catch (_err: unknown) {
@@ -81,7 +87,7 @@ export function LaporanRiwayatKeseluruhanPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Filter transaksi
   const filteredTransaksi = useMemo(() => {
@@ -143,6 +149,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN SISWA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Data`,
         },
@@ -207,6 +214,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         orientation: 'landscape',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Catatan`,
         },
@@ -458,9 +466,19 @@ export function LaporanRiwayatKeseluruhanPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Riwayat Transaksi
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="ALL"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="outline"
                 size="sm"

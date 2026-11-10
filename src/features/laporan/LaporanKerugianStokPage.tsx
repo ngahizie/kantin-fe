@@ -28,8 +28,9 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
 import { laporanApi } from './api/laporan-api'
-import type { BarisKerugianStok, RingkasanKerugianStok } from './types'
+import type { BarisKerugianStok, RingkasanKerugianStok, LaporanFilterParams } from './types'
 
 export function LaporanKerugianStokPage() {
   const [kerugianList, setKerugianList] = useState<BarisKerugianStok[]>([])
@@ -41,15 +42,18 @@ export function LaporanKerugianStokPage() {
   const [jenisFilter, setJenisFilter] = useState<'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK'>('ALL')
   const [sortBy, setSortBy] = useState<'nilai_desc' | 'qty_desc' | 'waktu_desc'>('nilai_desc')
 
-
+  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
 
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
+        setIsLoading(true)
         const [resList, resRingkasan] = await Promise.all([
-          laporanApi.getKerugianStok(),
-          laporanApi.getRingkasanKerugianStok(),
+          laporanApi.getKerugianStok(dateFilterParams),
+          laporanApi.getRingkasanKerugianStok(dateFilterParams),
         ])
         if (!isMounted) return
         setKerugianList(resList)
@@ -66,7 +70,7 @@ export function LaporanKerugianStokPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Filter & Urutan
   const filteredList = useMemo(() => {
@@ -113,6 +117,7 @@ export function LaporanKerugianStokPage() {
         title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA (PRD §9.5)',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
           'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,
           'Kerugian Opname Keluar': formatRupiah(ringkasan?.kerugianOpname || 0),
@@ -162,6 +167,7 @@ export function LaporanKerugianStokPage() {
         subtitle: 'Daftar Selisih Stok Opname dan Barang Rusak/Kadaluarsa',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
           'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,
           'Kerugian Opname Keluar': formatRupiah(ringkasan?.kerugianOpname || 0),
@@ -234,9 +240,19 @@ export function LaporanKerugianStokPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Laporan Kerugian Stok
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="ALL"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="default"
                 size="sm"
