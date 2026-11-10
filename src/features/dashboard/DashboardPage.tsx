@@ -56,18 +56,18 @@ export interface ChartDayItem {
 
 const CATEGORY_COLORS = [
   '#3b82f6', // blue
-  '#06b6d4', // cyan
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#8b5cf6', // purple
+  '#22c55e', // green (emerald)
+  '#f59e0b', // amber (gold)
+  '#9333ea', // purple (violet)
+  '#ef4444', // red (rose)
+  '#0ea5e9', // sky
   '#ec4899', // pink
-  '#f97316', // orange
   '#64748b', // slate
 ]
 
 const DEFAULT_CATEGORIES: DynamicCategory[] = [
   { id: 1, key: 'cat_1', nama: 'Makanan', color: '#3b82f6' },
-  { id: 2, key: 'cat_2', nama: 'Minuman', color: '#06b6d4' },
+  { id: 2, key: 'cat_2', nama: 'Minuman', color: '#22c55e' },
   { id: 3, key: 'cat_3', nama: 'Snack', color: '#f59e0b' },
 ]
 
@@ -133,15 +133,15 @@ const formatRupiah = (val: number) => {
 export const getStatusBadgeClass = (status: string) => {
   const normalized = status.toUpperCase()
   if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
-    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+    return 'border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
   }
   if (['VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
-    return 'bg-destructive/15 text-destructive dark:text-red-400'
+    return 'border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
   }
   if (['PENDING', 'MENUNGGU', 'MENIPIS', 'DIKOREKSI', 'PROSES'].includes(normalized)) {
-    return 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+    return 'border border-amber-200 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
   }
-  return 'bg-muted text-muted-foreground'
+  return 'border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300'
 }
 
 export function DashboardPage() {
@@ -411,12 +411,12 @@ export function DashboardPage() {
           }`}
         >
           {/* Card 1: Penjualan Hari Ini */}
-          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Penjualan Hari Ini
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'>
+              <div className='flex size-9 items-center justify-center rounded-lg border border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300'>
                 <Banknote className='size-5' />
               </div>
             </CardHeader>
@@ -434,12 +434,12 @@ export function DashboardPage() {
           </Card>
 
           {/* Card 2: Total Transaksi Hari Ini */}
-          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Total Transaksi Hari Ini
               </CardTitle>
-              <div className='flex size-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400'>
+              <div className='flex size-9 items-center justify-center rounded-lg border border-violet-100 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300'>
                 <ShoppingCart className='size-5' />
               </div>
             </CardHeader>
@@ -459,7 +459,7 @@ export function DashboardPage() {
           {/* Card 3: Status Rekonsiliasi Kas (Hanya ditampilkan untuk peran selain pengelola) */}
           {currentRole !== 'pengelola' && (
             canViewRekonsiliasi ? (
-              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium text-muted-foreground'>
                     Status Rekonsiliasi Kas
@@ -467,8 +467,8 @@ export function DashboardPage() {
                   <div
                     className={`flex size-9 items-center justify-center rounded-lg ${
                       isKasSeimbang
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-destructive/10 text-destructive'
+                        ? 'border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        : 'border border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300'
                     }`}
                   >
                     <Scale className='size-5' />
@@ -482,7 +482,7 @@ export function DashboardPage() {
                   <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
                     <span
                       className={`inline-flex items-center font-semibold ${
-                        isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
+                        isKasSeimbang ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
                       {isKasSeimbang ? 'Seimbang' : 'Ada Selisih'}
@@ -494,12 +494,12 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+              <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium text-muted-foreground'>
                     Status Rekonsiliasi Kas
                   </CardTitle>
-                  <div className='flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
+                  <div className='flex size-9 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'>
                     <Scale className='size-5' />
                   </div>
                 </CardHeader>
@@ -519,7 +519,7 @@ export function DashboardPage() {
           )}
 
           {/* Card 4: Alert Status Stok Menipis */}
-          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
                 Peringatan Stok Barang
@@ -527,8 +527,8 @@ export function DashboardPage() {
               <div
                 className={`flex size-9 items-center justify-center rounded-lg ${
                   lowStockItems.length === 0
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    ? 'border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    : 'border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
                 }`}
               >
                 {lowStockItems.length === 0 ? (
@@ -561,7 +561,7 @@ export function DashboardPage() {
         {/* ===== Grid Konten Tengah: Grafik Penjualan 7 Hari & Alert Stok Menipis ===== */}
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-7'>
           {/* Kolom Kiri: Tren Penjualan 7 Hari Terakhir (Recharts) */}
-          <Card className='col-span-1 lg:col-span-4 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+          <Card className='col-span-1 lg:col-span-4 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
             <CardHeader className='pb-2'>
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
                 <div>
@@ -600,7 +600,7 @@ export function DashboardPage() {
                     maxBarSize={36}
                     margin={{ top: 10, right: 10, left: 10, bottom: 4 }}
                   >
-                    <CartesianGrid strokeDasharray='3 3' className='stroke-border/50' vertical={false} />
+                    <CartesianGrid strokeDasharray='3 3' className='stroke-slate-200/80 dark:stroke-slate-800' vertical={false} />
                     <XAxis
                       dataKey='hari'
                       stroke='#888888'
@@ -628,7 +628,7 @@ export function DashboardPage() {
                         if (active && payload && payload.length) {
                           const total = payload.reduce((sum, entry) => sum + (Number(entry.value) || 0), 0)
                           return (
-                            <div className='rounded-xl border-0 bg-popover p-3 text-xs shadow-lg min-w-[200px]'>
+                            <div className='rounded-xl border border-border bg-popover/95 p-3 text-xs shadow-xl shadow-slate-950/10 backdrop-blur-sm min-w-[200px]'>
                               <p className='font-semibold text-foreground mb-2'>{label}</p>
                               {payload.map((entry) => (
                                 <div key={entry.name} className='flex items-center justify-between gap-6 py-1'>
@@ -668,7 +668,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Kolom Kanan: Stok Menipis */}
-          <Card className='col-span-1 lg:col-span-3 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30 flex flex-col'>
+          <Card className='col-span-1 lg:col-span-3 has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm flex flex-col'>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base font-semibold flex items-center gap-2'>
                 <AlertTriangle className='size-4 text-amber-500' />
@@ -682,7 +682,7 @@ export function DashboardPage() {
               <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
-                    <TableRow className='text-xs'>
+                    <TableRow className='text-xs bg-muted/40'>
                       <TableHead className='ps-6'>Menu</TableHead>
                       <TableHead className='text-center'>Sisa / Min</TableHead>
                       <TableHead className='text-center pe-6'>Status</TableHead>
@@ -700,7 +700,7 @@ export function DashboardPage() {
                       lowStockItems.map((item) => {
                         const isOut = item.stok === 0
                         return (
-                          <TableRow key={item.id} className='text-xs'>
+                          <TableRow key={item.id} className='text-xs hover:bg-muted/30'>
                             <TableCell className='ps-6 py-3 font-medium'>
                               <div className='flex flex-col'>
                                 <span className='text-foreground font-semibold'>{item.nama}</span>
@@ -715,11 +715,11 @@ export function DashboardPage() {
                             </TableCell>
                             <TableCell className='text-center pe-6 py-3'>
                               {isOut ? (
-                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-0 bg-destructive/15 text-destructive dark:text-red-400 uppercase tracking-wide'>
+                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border border-rose-200 dark:border-rose-900 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 uppercase tracking-wide shadow-none'>
                                   HABIS
                                 </Badge>
                               ) : (
-                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-0 bg-amber-500/15 text-amber-700 dark:text-amber-300 uppercase tracking-wide'>
+                                <Badge variant='outline' className='rounded-full text-[10px] font-semibold px-2.5 py-0.5 border border-amber-200 dark:border-amber-900 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 uppercase tracking-wide shadow-none'>
                                   MENIPIS
                                 </Badge>
                               )}
@@ -736,7 +736,7 @@ export function DashboardPage() {
         </div>
 
         {/* Transaksi Kasir Terkini */}
-        <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-muted/70 dark:bg-muted/30'>
+        <Card className='has-outline outline-2 outline-slate-200 dark:outline-slate-800 border-0 bg-card shadow-sm'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base font-semibold'>
               Aktivitas Transaksi Kasir Terakhir
@@ -749,7 +749,7 @@ export function DashboardPage() {
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
-                  <TableRow className='text-xs'>
+                  <TableRow className='text-xs bg-muted/40'>
                     <TableHead className='w-[140px] ps-6'>Waktu & ID</TableHead>
                     <TableHead className='w-[200px]'>Pelanggan</TableHead>
                     <TableHead>Item Menu</TableHead>
@@ -783,7 +783,7 @@ export function DashboardPage() {
                           {formatRupiah(trx.total)}
                         </TableCell>
                         <TableCell className='text-center pe-6 py-3'>
-                          <Badge variant='outline' className={`rounded-full text-[10px] font-semibold px-2.5 py-0.5 border-0 uppercase tracking-wide ${getStatusBadgeClass(trx.status)}`}>
+                          <Badge variant='outline' className={`rounded-full text-[10px] font-semibold px-2.5 py-0.5 uppercase tracking-wide shadow-none ${getStatusBadgeClass(trx.status)}`}>
                             {trx.status}
                           </Badge>
                         </TableCell>
