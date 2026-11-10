@@ -183,7 +183,7 @@ export function DashboardPage() {
         ] = await Promise.allSettled([
           laporanApi.getPenjualan(),
           canViewRekonsiliasi ? laporanApi.getRekonsiliasi() : Promise.resolve(null),
-          canViewKatalog ? katalogApi.getMenuList() : Promise.resolve([]),
+          canViewKatalog ? katalogApi.getMenuList(undefined, true) : Promise.resolve([]),
           canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
           canViewTransaksi
             ? apiClient.get('/api/kasir/transaksi', {
@@ -379,9 +379,11 @@ export function DashboardPage() {
     }))
   }, [menuItems, kategoriMap])
 
-  // Item dengan stok menipis (stok <= stok_minimum)
+  // Item dengan stok menipis (stok <= stok_minimum), diurutkan dari stok paling sedikit
   const lowStockItems = useMemo(() => {
-    return effectiveMenuItems.filter((item) => item.stok <= item.stok_minimum)
+    return effectiveMenuItems
+      .filter((item) => item.stok <= item.stok_minimum)
+      .sort((a, b) => a.stok - b.stok)
   }, [effectiveMenuItems])
 
   // Hitung metrik hari ini dari BE
