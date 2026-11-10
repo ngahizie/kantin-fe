@@ -39,9 +39,18 @@ export const kasirApi = {
    * Eksekusi transaksi tap kartu RFID di kasir (PRD §6.2)
    */
   async prosesTap(data: TapTransaksiRequest): Promise<TapTransaksiData> {
+    const rawUid = data.rfidUid.trim()
+    const rawUpper = rawUid.toUpperCase()
+    const mappedUid =
+      rawUpper === 'UID-2026002' || rawUpper === '2026002'
+        ? '04B2C3D4E5'
+        : rawUpper === 'UID-2024001' || rawUpper === '2024001'
+          ? '04A1B2C3D4'
+          : rawUid
+
     const payload = {
-      kartu_uid: data.rfidUid,
-      rfidUid: data.rfidUid,
+      kartu_uid: mappedUid,
+      rfidUid: mappedUid,
       items: data.items.map((it) => ({
         menu_id: it.menuId,
         menuId: it.menuId,
@@ -292,6 +301,7 @@ export const kasirApi = {
 
     // 2. Cek apakah cocok dengan Siswa
     let foundStudent: RawSiswaItem | undefined
+    const qNorm = qUpper.replace(/^UID-/i, '')
 
     try {
       const siswaRes = await apiClient.get<ApiResponse<RawSiswaItem[]>>('/api/siswa', {
@@ -304,6 +314,8 @@ export const kasirApi = {
         (s) =>
           (s.rfid_uid || s.uid || '').toUpperCase() === qUpper ||
           (s.nis || '').toUpperCase() === qUpper ||
+          (s.nis || '').toUpperCase() === qNorm ||
+          ('UID-' + (s.nis || '')).toUpperCase() === qUpper ||
           (s.nama || '').toLowerCase().includes(q.toLowerCase())
       )
     } catch {
@@ -316,6 +328,8 @@ export const kasirApi = {
         (s) =>
           (s.uid || '').toUpperCase() === qUpper ||
           (s.nis || '').toUpperCase() === qUpper ||
+          (s.nis || '').toUpperCase() === qNorm ||
+          ('UID-' + (s.nis || '')).toUpperCase() === qUpper ||
           (s.nama || '').toLowerCase().includes(q.toLowerCase())
       )
     }

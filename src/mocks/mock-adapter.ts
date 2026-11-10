@@ -941,8 +941,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
 
       // Validasi 1: Kartu dikenal?
+      const normUid = kartuUid.toUpperCase().replace(/^UID-/i, '')
       const siswa = siswaList.find(
-        (s) => s.uid.toUpperCase() === kartuUid.toUpperCase()
+        (s) =>
+          s.uid.toUpperCase() === kartuUid.toUpperCase() ||
+          s.nis.toUpperCase() === kartuUid.toUpperCase() ||
+          s.nis.toUpperCase() === normUid ||
+          ('UID-' + s.nis).toUpperCase() === kartuUid.toUpperCase()
       )
       const kartuTamu = kartuTamuList.find(
         (k) => k.uid.toUpperCase() === kartuUid.toUpperCase()

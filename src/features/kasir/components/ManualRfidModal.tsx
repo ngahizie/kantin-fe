@@ -58,7 +58,8 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
     const isCompletedUid =
       /^\d{8,16}$/.test(trimmed) ||
       /^[0-9a-fA-F]{8,16}$/.test(trimmed) ||
-      /^KT-\d+$/i.test(trimmed)
+      /^KT-\d+$/i.test(trimmed) ||
+      /^UID-.*$/i.test(trimmed)
 
     if (!isCompletedUid) return
 
