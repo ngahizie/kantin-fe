@@ -13,7 +13,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Pencil,
-  Banknote,
   RotateCcw as ResetIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -143,19 +142,19 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg border-none rounded-2xl shadow-none select-none'>
+      <DialogContent className='max-w-md sm:max-w-lg has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none select-none'>
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'>
               <Lock className='h-5 w-5' />
             </div>
             <div>
-              <DialogTitle className='text-lg font-bold'>
+              <DialogTitle className='text-lg font-bold text-slate-800 dark:text-white'>
                 {step === 'INPUT_CASH'
                   ? 'Tutup Sesi Kasir Harian'
                   : 'Rekonsiliasi & Tutup Sesi Kasir'}
               </DialogTitle>
-              <DialogDescription className='text-xs text-muted-foreground'>
+              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
                 {step === 'INPUT_CASH'
                   ? 'Langkah 1 dari 2: Hitung uang tunai fisik di laci kasir.'
                   : 'Langkah 2 dari 2: Verifikasi kecocokan kas fisik dengan data sistem.'}
@@ -165,18 +164,18 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         </DialogHeader>
 
         {/* Informasi Titik Kasir & Tanggal */}
-        <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 dark:bg-muted/20 px-3.5 py-2 text-xs'>
-          <div className='flex items-center gap-1.5 text-muted-foreground'>
-            <Store className='h-3.5 w-3.5 text-primary' />
+        <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3.5 py-2 text-xs'>
+          <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+            <Store className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
             <span>Titik:</span>
-            <strong className='text-foreground'>
+            <strong className='text-slate-800 dark:text-white'>
               {sesi?.titikKasirNama || `Titik #${sesi?.titikKasirId || 1}`}
             </strong>
           </div>
-          <div className='flex items-center gap-1.5 text-muted-foreground'>
+          <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
             <Calendar className='h-3.5 w-3.5' />
             <span>Tanggal:</span>
-            <strong className='font-semibold text-foreground tabular-nums'>
+            <strong className='font-semibold text-slate-800 dark:text-white tabular-nums'>
               {sesi?.tanggal || new Date().toISOString().split('T')[0]}
             </strong>
           </div>
@@ -187,26 +186,16 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         {/* ============================================================== */}
         {step === 'INPUT_CASH' && (
           <form onSubmit={handleProceedToReconcile} className='space-y-4 pt-1'>
-            {/* Kotak Petunjuk Blind Count */}
-            <div className='flex items-start gap-2.5 rounded-xl border-none bg-primary/10 p-3 text-xs text-primary shadow-none'>
-              <Banknote className='h-4 w-4 shrink-0 mt-0.5' />
-              <span>
-                <strong>Penghitungan Laci Uang:</strong> Hitung seluruh uang tunai
-                fisik yang ada di kasir saat ini. Angka pendapatan bersih sistem
-                akan ditampilkan pada langkah berikutnya untuk verifikasi selisih.
-              </span>
-            </div>
-
             {/* Input Nominal Uang Fisik */}
             <div className='space-y-1.5'>
               <label
                 htmlFor='input-cash-drawer'
-                className='block text-xs font-semibold text-foreground'
+                className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
               >
                 Total Uang Tunai di Laci Kasir:
               </label>
               <div className='relative'>
-                <span className='absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground'>
+                <span className='absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 dark:text-slate-400'>
                   Rp
                 </span>
                 <Input
@@ -220,14 +209,14 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                   }}
                   placeholder='0'
                   autoFocus
-                  className='pl-10 text-base font-bold tabular-nums border-none bg-muted/60 shadow-none focus-visible:bg-muted focus-visible:ring-0 rounded-xl'
+                  className='pl-10 text-base font-bold tabular-nums has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl'
                 />
               </div>
             </div>
 
             {/* Chip Preset Pecahan Cepat */}
             <div className='space-y-1.5'>
-              <span className='block text-[11px] font-medium text-muted-foreground'>
+              <span className='block text-[11px] font-medium text-slate-500 dark:text-slate-400'>
                 Tambah Cepat Pecahan:
               </span>
               <div className='flex flex-wrap items-center gap-1.5'>
@@ -238,7 +227,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     variant='outline'
                     size='sm'
                     onClick={() => handleAddPreset(nominal)}
-                    className='h-7 text-xs font-semibold border-none bg-muted/70 hover:bg-muted rounded-lg shadow-none px-2.5 py-0'
+                    className='h-7 text-xs font-semibold has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none px-2.5 py-0'
                   >
                     +{formatNumber(nominal)}
                   </Button>
@@ -249,7 +238,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     variant='ghost'
                     size='sm'
                     onClick={handleResetCash}
-                    className='h-7 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg px-2 py-0'
+                    className='h-7 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl px-2 py-0'
                   >
                     <ResetIcon className='h-3 w-3 mr-1' /> Reset
                   </Button>
@@ -263,7 +252,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 variant='secondary'
                 size='sm'
                 onClick={() => handleOpenChange(false)}
-                className='border-none bg-muted/80 text-foreground hover:bg-muted rounded-xl shadow-none'
+                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
               >
                 Batal
               </Button>
@@ -271,7 +260,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 type='submit'
                 size='sm'
                 disabled={!cashInput.trim()}
-                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+                className='gap-1.5 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
               >
                 <span>Lanjut ke Rekapitulasi</span>
                 <ArrowRight className='h-3.5 w-3.5' />
@@ -288,22 +277,22 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
             {/* Rekapitulasi Metrik Sesi */}
             <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 text-xs'>
               {/* Total Transaksi Sukses */}
-              <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5'>
-                    <Receipt className='h-3 w-3 text-emerald-600' /> Transaksi Sukses
+                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                    <Receipt className='h-3 w-3 text-emerald-600 dark:text-emerald-400' /> Transaksi Sukses
                   </span>
-                  <span className='text-base font-bold tracking-tight text-foreground tabular-nums block'>
+                  <span className='text-base font-bold tracking-tight text-slate-800 dark:text-white tabular-nums block'>
                     {formatNumber(jumlahTransaksi)}
                   </span>
                 </CardContent>
               </Card>
 
               {/* Total Transaksi Void */}
-              <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5'>
-                    <RotateCcw className='h-3 w-3 text-rose-600' /> Transaksi Void
+                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                    <RotateCcw className='h-3 w-3 text-rose-600 dark:text-rose-400' /> Transaksi Void
                   </span>
                   <span className='text-base font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums block'>
                     {formatNumber(jumlahVoid)}
@@ -312,12 +301,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               </Card>
 
               {/* Total Bruto */}
-              <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none col-span-2 sm:col-span-1'>
+              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none col-span-2 sm:col-span-1'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5'>
-                    <Coins className='h-3 w-3 text-muted-foreground' /> Total Bruto
+                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                    <Coins className='h-3 w-3 text-slate-500 dark:text-slate-400' /> Total Bruto
                   </span>
-                  <span className='text-xs font-semibold text-foreground tabular-nums block'>
+                  <span className='text-xs font-semibold text-slate-800 dark:text-white tabular-nums block'>
                     {formatRupiah(totalBruto)}
                   </span>
                 </CardContent>
@@ -327,9 +316,9 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
             {/* Perbandingan Kas Fisik vs Pendapatan Sistem */}
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
               {/* Uang Kas Fisik Diinput */}
-              <div className='rounded-xl border border-border/40 bg-card p-3 shadow-none'>
+              <div className='rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
-                  <span className='text-[11px] font-semibold text-muted-foreground'>
+                  <span className='text-[11px] font-semibold text-slate-500 dark:text-slate-400'>
                     Uang Fisik di Laci:
                   </span>
                   <Button
@@ -337,28 +326,28 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     variant='ghost'
                     size='sm'
                     onClick={() => setStep('INPUT_CASH')}
-                    className='h-6 text-[10px] text-primary hover:bg-primary/10 px-1.5 py-0 rounded'
+                    className='h-6 text-[10px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 px-1.5 py-0 rounded-lg'
                   >
                     <Pencil className='h-2.5 w-2.5 mr-1' /> Ubah
                   </Button>
                 </div>
-                <span className='text-lg font-bold text-foreground tabular-nums block'>
+                <span className='text-lg font-bold text-slate-800 dark:text-white tabular-nums block'>
                   {formatRupiah(cashValue)}
                 </span>
               </div>
 
               {/* Pendapatan Bersih Sistem */}
-              <div className='rounded-xl border border-primary/20 bg-primary/5 p-3 shadow-none'>
+              <div className='rounded-xl has-border !border !border-blue-200 dark:!border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
-                  <span className='text-[11px] font-semibold text-primary'>
+                  <span className='text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
                     Pendapatan Bersih (Net):
                   </span>
                 </div>
-                <span className='text-lg font-bold text-primary tabular-nums block'>
+                <span className='text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums block'>
                   {formatRupiah(totalBersih)}
                 </span>
                 {totalVoid > 0 && (
-                  <span className='text-[10px] text-muted-foreground mt-0.5 block'>
+                  <span className='text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block'>
                     (Bruto {formatRupiah(totalBruto)} - Void {formatRupiah(totalVoid)})
                   </span>
                 )}
@@ -367,12 +356,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
             {/* Banner Status Selisih Kas */}
             <div
-              className={`rounded-xl p-3 border shadow-none text-xs flex items-start gap-2.5 ${
+              className={`rounded-xl p-3 has-border !border shadow-none text-xs flex items-start gap-2.5 ${
                 selisih === 0
-                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
+                  ? '!border-emerald-200 dark:!border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
                   : selisih < 0
-                  ? 'border-rose-500/20 bg-rose-500/10 text-rose-800 dark:text-rose-300'
-                  : 'border-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-amber-300'
+                  ? '!border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
+                  : '!border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
               }`}
             >
               {selisih === 0 ? (
@@ -393,12 +382,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                   </strong>
                   <Badge
                     variant={selisih === 0 ? 'outline' : 'destructive'}
-                    className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0 border-none ${
+                    className={`rounded-full text-[10px] font-bold uppercase tracking-wider px-2 py-0 shadow-none ${
                       selisih === 0
-                        ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
                         : selisih < 0
-                        ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300'
-                        : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
+                        : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
                     }`}
                   >
                     {selisih === 0 ? 'Pas' : selisih < 0 ? 'Kurang' : 'Lebih'}
@@ -419,7 +408,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <div className='flex items-center justify-between'>
                 <label
                   htmlFor='input-catatan-selisih'
-                  className='block text-xs font-semibold text-foreground'
+                  className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
                 >
                   Catatan / Keterangan Selisih:
                 </label>
@@ -428,7 +417,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     * Wajib diisi karena ada selisih
                   </span>
                 ) : (
-                  <span className='text-[10px] text-muted-foreground'>
+                  <span className='text-[10px] text-slate-500 dark:text-slate-400'>
                     Opsional
                   </span>
                 )}
@@ -443,12 +432,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     ? 'Wajib diisi: jelaskan alasan selisih kas fisik (mis. kembalian tertinggal, pembulatan, dll.)...'
                     : 'Tambahkan catatan penutupan sesi jika ada (opsional)...'
                 }
-                className='text-xs border-none bg-muted/60 shadow-none focus-visible:bg-muted focus-visible:ring-0 rounded-xl resize-none'
+                className='text-xs has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl resize-none'
               />
             </div>
 
             {/* Peringatan Konfirmasi Penguncian */}
-            <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/10 p-2.5 text-xs text-amber-900 dark:text-amber-200 shadow-none'>
+            <div className='flex items-start gap-2.5 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
               <AlertTriangle className='h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
               <span className='text-[11px] leading-relaxed'>
                 <strong>Konfirmasi:</strong> Setelah sesi ditutup, transaksi kasir
@@ -463,7 +452,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 size='sm'
                 onClick={() => setStep('INPUT_CASH')}
                 disabled={isSubmitting}
-                className='border-none bg-muted/80 text-foreground hover:bg-muted rounded-xl shadow-none gap-1'
+                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none gap-1'
               >
                 <ArrowLeft className='h-3.5 w-3.5' />
                 <span>Kembali</span>
@@ -474,7 +463,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 size='sm'
                 onClick={handleCloseSession}
                 disabled={isSubmitting || (isSelisihAda && !catatanSelisih.trim())}
-                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+                className='gap-1.5 font-semibold !bg-rose-600 hover:!bg-rose-500 !text-white rounded-xl shadow-none'
               >
                 {isSubmitting ? (
                   <>

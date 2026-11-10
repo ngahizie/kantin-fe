@@ -60,20 +60,20 @@ export function KasirLayout() {
   }
 
   return (
-    <div className='flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground select-none'>
+    <div className='flex h-screen w-screen flex-col overflow-hidden bg-[#FDFCF8] dark:bg-[#050510] text-slate-800 dark:text-white select-none'>
       {/* Banner Peringatan Offline */}
       {!isOnline && (
-        <div className='flex items-center justify-center gap-2 bg-destructive py-2 text-sm font-semibold text-destructive-foreground animate-pulse'>
+        <div className='flex items-center justify-center gap-2 bg-rose-600 py-2 text-sm font-semibold text-white animate-pulse'>
           <WifiOff className='h-4 w-4' />
           <span>Offline - Transaksi kasir tidak tersedia sampai koneksi pulih</span>
         </div>
       )}
 
       {/* Top Header Kasir POS */}
-      <header className='flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border/50 bg-card px-4 shadow-none'>
+      <header className='flex h-14 shrink-0 items-center justify-between has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] px-4 shadow-none'>
         {/* Sisi Kiri: Branding & Titik Kasir */}
         <div className='flex items-center gap-3'>
-          <div className='flex aspect-square size-8 items-center justify-center rounded-xl overflow-hidden bg-muted dark:bg-white p-1'>
+          <div className='flex aspect-square size-8 items-center justify-center rounded-xl overflow-hidden bg-slate-100 dark:bg-white has-border !border !border-slate-200 dark:!border-slate-800 p-1'>
             <img
               src='/logo.png'
               alt='Kantin SKOOLIA'
@@ -81,8 +81,8 @@ export function KasirLayout() {
             />
           </div>
           <div>
-            <span className='block font-bold text-sm tracking-tight'>SKOOLIA Kantin POS</span>
-            <p className='text-xs text-muted-foreground flex items-center gap-1'>
+            <span className='block font-bold text-sm tracking-tight text-slate-800 dark:text-white'>SKOOLIA Kantin POS</span>
+            <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1'>
               <User className='h-3 w-3' /> Petugas: {user?.nama || 'Ahmad Kasir'} (Aktif)
             </p>
           </div>
@@ -95,7 +95,7 @@ export function KasirLayout() {
           <Button
             variant='ghost'
             size='icon'
-            className='h-8 w-8 text-muted-foreground hover:text-foreground rounded-xl'
+            className='h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl'
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
           >
@@ -103,11 +103,15 @@ export function KasirLayout() {
           </Button>
 
           {/* Pengalih Tema (Dark/Light/System) */}
-          <ThemeSwitch />
+          <ThemeSwitch
+            triggerClassName='h-8 w-8 scale-100 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80'
+            contentClassName='p-1 has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-xl shadow-none'
+            itemClassName='rounded-lg px-2.5 py-1.5 text-xs font-medium cursor-pointer focus:bg-slate-100 dark:focus:bg-slate-800/80 focus:text-slate-800 dark:focus:text-white'
+          />
 
           {/* Kembali ke Dashboard (disembunyikan untuk peran kasir, tetap tampil untuk pengelola/admin) */}
           {canGoBack && (
-            <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl border-none bg-muted/70 dark:bg-muted/30 hover:bg-muted text-foreground shadow-none' title='Kembali ke Dashboard'>
+            <Button asChild variant='secondary' size='sm' className='h-8 gap-1.5 text-xs font-semibold ml-1 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-none' title='Kembali ke Dashboard'>
               <Link to='/'>
                 <ArrowLeft className='h-3.5 w-3.5' />
                 <span className='hidden sm:inline'>Kembali</span>
@@ -119,7 +123,7 @@ export function KasirLayout() {
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl'
+            className='h-8 gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl'
             onClick={() => setSignOutOpen(true)}
             title='Keluar Akun'
           >
@@ -130,12 +134,18 @@ export function KasirLayout() {
       </header>
 
       {/* Main Content Kasir */}
-      <main className='flex-1 overflow-hidden relative'>
+      <main className='flex-1 overflow-hidden relative bg-[#FDFCF8] dark:bg-[#050510]'>
         <Outlet />
       </main>
 
       {/* Dialog Konfirmasi Keluar */}
-      <SignOutDialog open={!!signOutOpen} onOpenChange={setSignOutOpen} />
+      <SignOutDialog
+        open={!!signOutOpen}
+        onOpenChange={setSignOutOpen}
+        className='bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white has-border !border !border-slate-200 dark:!border-slate-800 rounded-2xl shadow-none'
+        cancelBtnClassName='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl'
+        confirmBtnClassName='!bg-rose-600 hover:!bg-rose-500 !text-white rounded-xl shadow-none'
+      />
     </div>
   )
 }

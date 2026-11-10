@@ -1,13 +1,23 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
+import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface SignOutDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  className?: string
+  cancelBtnClassName?: string
+  confirmBtnClassName?: string
 }
 
-export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
+export function SignOutDialog({
+  open,
+  onOpenChange,
+  className,
+  cancelBtnClassName,
+  confirmBtnClassName,
+}: SignOutDialogProps) {
   const navigate = useNavigate()
   const { auth } = useAuthStore()
 
@@ -31,8 +41,12 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       cancelBtnText='Batal'
       destructive
       handleConfirm={handleSignOut}
-      className='sm:max-w-sm border-0'
-      cancelBtnClassName='border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus-visible:border-transparent outline-none focus:outline-none focus-visible:outline-none'
+      className={cn('sm:max-w-sm border-0', className)}
+      cancelBtnClassName={cn(
+        'border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus-visible:border-transparent outline-none focus:outline-none focus-visible:outline-none',
+        cancelBtnClassName
+      )}
+      confirmBtnClassName={confirmBtnClassName}
     />
   )
 }
