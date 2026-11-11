@@ -9,6 +9,9 @@ node_modules
 dist
 *.local
 
+# pnpm content-addressable store (lokal; jangan pernah ikut commit)
+.pnpm-store/
+
 # Environment variables
 .env
 

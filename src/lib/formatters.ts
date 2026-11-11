@@ -58,3 +58,54 @@ export function formatDate(date: string | Date | null | undefined): string {
     year: 'numeric',
   }).format(d)
 }
+
+/**
+ * Dapatkan penanda zona waktu Indonesia (WIB, WITA, WIT)
+ * berdasarkan zona waktu perangkat sekolah atau offset UTC
+ */
+export function getTimezoneSuffix(date: Date = new Date()): 'WIB' | 'WITA' | 'WIT' {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    if (tz.includes('Jayapura') || tz.includes('East_Indonesia')) {
+      return 'WIT'
+    }
+    if (
+      tz.includes('Makassar') ||
+      tz.includes('Ujung_Pandang') ||
+      tz.includes('Bali') ||
+      tz.includes('Denpasar') ||
+      tz.includes('Manado') ||
+      tz.includes('Banjarmasin') ||
+      tz.includes('Balikpapan') ||
+      tz.includes('Samarinda') ||
+      tz.includes('Mataram') ||
+      tz.includes('Kupang') ||
+      tz.includes('Central_Indonesia')
+    ) {
+      return 'WITA'
+    }
+    const offsetHours = -date.getTimezoneOffset() / 60
+    if (offsetHours === 9) return 'WIT'
+    if (offsetHours === 8) return 'WITA'
+  } catch {
+    // fallback ke WIB
+  }
+  return 'WIB'
+}
+
+/**
+ * Format jam dan menit dengan penanda zona waktu (WIB/WITA/WIT) tanpa detik
+ * Contoh: "14.58 WIB"
+ */
+export function formatTimeWithZone(date: string | Date | null | undefined): string {
+  if (!date) return '-'
+  const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) return '-'
+  const timeStr = d
+    .toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    .replace(':', '.')
+  return `${timeStr} ${getTimezoneSuffix(d)}`
+}
