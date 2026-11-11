@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
   kategoriFormSchema,
   menuFormSchema,
+  type MenuItem,
 } from './types'
+import { sortMenusNewestFirst } from './menu-utils'
 
 describe('Katalog Kategori Zod Validation Schema', () => {
   it('berhasil memvalidasi nama kategori yang valid', () => {
@@ -228,5 +230,41 @@ describe('Ekstraksi Pesan Error Respons Backend (Issue #110)', () => {
       'Gagal mengunggah foto produk'
 
     expect(message).toBe('Gagal mengunggah foto produk')
+  })
+})
+
+describe('sortMenusNewestFirst', () => {
+  const makeMenu = (id: number, nama: string): MenuItem => ({
+    id,
+    kategoriId: 1,
+    nama,
+    hargaJual: 10000,
+    satuan: 'PCS',
+    stokMinimum: 5,
+    stokBerjalan: 10,
+    aktif: true,
+  })
+
+  it('menempatkan menu baru dengan id lebih besar di posisi paling atas meski namanya berada di belakang secara alfabetis', () => {
+    const input = [
+      makeMenu(10, 'Ayam Goreng'),
+      makeMenu(25, 'Bakso Urat'),
+      makeMenu(1794362846000, 'Zebra Cake'),
+    ]
+
+    const sorted = sortMenusNewestFirst(input)
+    expect(sorted.map((item) => item.nama)).toEqual([
+      'Zebra Cake',
+      'Bakso Urat',
+      'Ayam Goreng',
+    ])
+  })
+
+  it('mengurutkan alfabetis bila id bernilai sama tanpa memutasi array asal', () => {
+    const input = [makeMenu(5, 'Teh Manis'), makeMenu(5, 'Air Mineral')]
+    const sorted = sortMenusNewestFirst(input)
+
+    expect(sorted.map((item) => item.nama)).toEqual(['Air Mineral', 'Teh Manis'])
+    expect(input.map((item) => item.nama)).toEqual(['Teh Manis', 'Air Mineral'])
   })
 })

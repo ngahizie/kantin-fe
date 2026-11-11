@@ -195,7 +195,7 @@ export function MenuFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto border-none rounded-2xl shadow-none bg-card'>
+      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg bg-card'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
           <DialogDescription className='text-xs text-muted-foreground'>
@@ -208,7 +208,7 @@ export function MenuFormModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 py-1'>
             {/* Foto Produk Section */}
-            <div className='rounded-xl border-none bg-muted/40 p-3 space-y-3'>
+            <div className='rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-muted/30 p-3 space-y-3'>
               <Label className='text-xs font-semibold text-foreground flex items-center justify-between'>
                 <span>Foto Produk</span>
                 <span className='text-[11px] font-normal text-muted-foreground'>
@@ -217,7 +217,7 @@ export function MenuFormModal({
               </Label>
 
               <div className='flex items-center gap-4'>
-                <div className='relative size-20 rounded-xl border-none bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
+                <div className='relative size-20 rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
                   {previewUrl ? (
                     <>
                       <img
@@ -256,9 +256,9 @@ export function MenuFormModal({
                     />
                     <Button
                       type='button'
-                      variant='secondary'
+                      variant='outline'
                       size='sm'
-                      className='gap-1.5 text-xs border-none bg-background/80 dark:bg-background/20 text-foreground hover:bg-background rounded-xl shadow-none'
+                      className='gap-1.5 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || isSubmitting}
                     >
@@ -445,7 +445,7 @@ export function MenuFormModal({
             </div>
 
             {/* Toggle Status Aktif */}
-            <div className='flex items-center justify-between rounded-xl border-none p-3 bg-muted/40'>
+            <div className='flex items-center justify-between rounded-xl has-border border border-slate-200 dark:border-slate-800 p-3 bg-muted/30'>
               <div className='space-y-0.5'>
                 <Label className='text-xs font-semibold'>Status Aktif Menu</Label>
                 <p className='text-xs text-muted-foreground'>
@@ -468,10 +468,10 @@ export function MenuFormModal({
             <DialogFooter className='pt-3 sm:justify-end gap-2 sm:gap-2.5'>
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
-                className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+                className='has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
               >
                 Batal
               </Button>

@@ -2,6 +2,8 @@ import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   UtensilsCrossed,
+  CheckCircle2,
+  EyeOff,
   Plus,
   RefreshCw,
   Pencil,
@@ -17,7 +19,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -40,9 +42,47 @@ import { toast } from 'sonner'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { katalogApi } from './api/katalog-api'
 import { MenuFormModal } from './MenuFormModal'
+import { sortMenusNewestFirst } from './menu-utils'
 import type { MenuItem, KategoriItem } from './types'
 
 const PAGE_SIZE = 10
+
+const CARD_SURFACE_CLASS =
+  'has-border border-2 border-slate-200 dark:border-slate-800 bg-card shadow-sm'
+
+const BADGE_TONE_CLASSES = {
+  kategori:
+    'has-border border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300',
+  habis:
+    'has-border border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
+  menipis:
+    'has-border border border-amber-200 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+  aktif:
+    'has-border border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+  nonaktif:
+    'has-border border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-400',
+} as const
+
+const SUMMARY_ICON_CLASSES = {
+  sky: 'has-border border border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300',
+  emerald:
+    'has-border border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
+  amber:
+    'has-border border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
+  slate:
+    'has-border border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400',
+} as const
+
+async function fetchKatalogData() {
+  const [menus, categories] = await Promise.all([
+    katalogApi.getMenuList(undefined, false),
+    katalogApi.getKategoriList(false),
+  ])
+  return {
+    menus: sortMenusNewestFirst(menus),
+    categories,
+  }
+}
 
 export function MenuPage() {
   const [menuList, setMenuList] = useState<MenuItem[]>([])
@@ -73,10 +113,7 @@ export function MenuPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [menus, categories] = await Promise.all([
-        katalogApi.getMenuList(undefined, false),
-        katalogApi.getKategoriList(false),
-      ])
+      const { menus, categories } = await fetchKatalogData()
       setMenuList(menus)
       setKategoriList(categories)
     } catch (err: unknown) {
@@ -91,10 +128,7 @@ export function MenuPage() {
     let isMounted = true
     const init = async () => {
       try {
-        const [menus, categories] = await Promise.all([
-          katalogApi.getMenuList(undefined, false),
-          katalogApi.getKategoriList(false),
-        ])
+        const { menus, categories } = await fetchKatalogData()
         if (isMounted) {
           setMenuList(menus)
           setKategoriList(categories)
@@ -159,10 +193,11 @@ export function MenuPage() {
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredMenu.length / PAGE_SIZE) || 1
+  const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedMenu = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE
+    const start = (safeCurrentPage - 1) * PAGE_SIZE
     return filteredMenu.slice(start, start + PAGE_SIZE)
-  }, [filteredMenu, currentPage])
+  }, [filteredMenu, safeCurrentPage])
 
   const handleAdd = () => {
     setSelectedMenu(null)
@@ -172,6 +207,13 @@ export function MenuPage() {
   const handleEdit = (menu: MenuItem) => {
     setSelectedMenu(menu)
     setIsModalOpen(true)
+  }
+
+  const handleFormSuccess = () => {
+    if (!selectedMenu) {
+      setCurrentPage(1)
+    }
+    void loadData()
   }
 
   const confirmDelete = async () => {
@@ -194,7 +236,7 @@ export function MenuPage() {
 
   return (
     <>
-      <Header fixed className='border-b border-sidebar-border/50'>
+      <Header fixed className='has-border border-b border-slate-200 dark:border-slate-800'>
         <div className='flex items-center gap-2 overflow-hidden me-auto'>
           <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
             Katalog Menu Kantin
@@ -207,80 +249,114 @@ export function MenuPage() {
       </Header>
 
       <Main className='space-y-6 pb-12'>
-        {/* Actions */}
-        <div className='flex items-center justify-end gap-2'>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={loadData}
-            disabled={loading}
-            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-          >
-            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Segarkan
-          </Button>
-          <Button
-            size='sm'
-            onClick={handleAdd}
-            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
-          >
-            <Plus className='size-4' />
-            Tambah Menu Baru
-          </Button>
-        </div>
-
         {/* Ringkasan Widgets */}
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Menu</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Terdaftar di katalog</p>
+          <Card className={CARD_SURFACE_CLASS}>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground'>
+                Total Menu
+              </CardTitle>
+              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.sky}`}>
+                <UtensilsCrossed className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                {stats.total}
+              </div>
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                <span className='font-semibold text-sky-600 dark:text-sky-400'>
+                  Katalog
+                </span>
+                <span>• Terdaftar di sistem</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Aktif</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
+          <Card className={CARD_SURFACE_CLASS}>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground'>
+                Menu Aktif
+              </CardTitle>
+              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.emerald}`}>
+                <CheckCircle2 className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {stats.aktif}
-              </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Tampil di kasir POS</p>
+              </div>
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                <span className='font-semibold text-emerald-600 dark:text-emerald-400'>
+                  Tersedia
+                </span>
+                <span>• Tampil di kasir POS</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Menipis / Habis</p>
-              <h3
-                className={`mt-1 text-2xl font-bold tracking-tight tabular-nums ${
+          <Card className={CARD_SURFACE_CLASS}>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground'>
+                Stok Menipis / Habis
+              </CardTitle>
+              <div
+                className={`flex size-9 items-center justify-center rounded-lg ${
                   stats.stokMenipis === 0
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-amber-600 dark:text-amber-400'
+                    ? SUMMARY_ICON_CLASSES.emerald
+                    : SUMMARY_ICON_CLASSES.amber
                 }`}
               >
+                <AlertTriangle className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {stats.stokMenipis}
-              </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>
-                {stats.stokMenipis === 0 ? 'Semua stok aman' : 'Perlu restock segera'}
-              </p>
+              </div>
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                <span
+                  className={`font-semibold ${
+                    stats.stokMenipis === 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}
+                >
+                  {stats.stokMenipis === 0 ? 'Aman' : 'Perlu Restock'}
+                </span>
+                <span>
+                  • {stats.stokMenipis === 0 ? 'Semua stok di atas minimum' : 'Segera tambah stok'}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Menu Nonaktif</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
+          <Card className={CARD_SURFACE_CLASS}>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground'>
+                Menu Nonaktif
+              </CardTitle>
+              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.slate}`}>
+                <EyeOff className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {stats.nonaktif}
-              </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Disembunyikan</p>
+              </div>
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
+                <span className='font-semibold text-slate-600 dark:text-slate-400'>
+                  Arsip
+                </span>
+                <span>• Disembunyikan dari POS</span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filter Controls & Search */}
-        <Card className='border border-border bg-card shadow-xs'>
-          <div className='p-4 border-b'>
+        <Card className={`${CARD_SURFACE_CLASS} gap-0 py-0 overflow-hidden`}>
+          <div className='p-4 has-border border-b border-slate-200 dark:border-slate-800'>
             <TableToolbar
               searchPlaceholder='Cari nama menu...'
               searchValue={searchQuery}
@@ -335,7 +411,7 @@ export function MenuPage() {
           <CardContent className='p-0 overflow-x-auto'>
             <Table>
               <TableHeader>
-                <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
+                <TableRow className='bg-muted/40 hover:bg-muted/40 has-border border-b border-slate-200 dark:border-slate-800'>
                   <TableHead className='w-12 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-4'>No.</TableHead>
                   <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Foto</TableHead>
                   <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>Nama Menu</TableHead>
@@ -380,13 +456,16 @@ export function MenuPage() {
                     const isHabis = item.stokBerjalan <= 0
 
                     return (
-                      <TableRow key={item.id} className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'>
+                      <TableRow
+                        key={item.id}
+                        className='hover:bg-muted/30 has-border border-b border-slate-100 dark:border-slate-800/60 transition-colors'
+                      >
                         <TableCell className='text-center font-mono text-xs text-muted-foreground border-none py-3.5 ps-4'>
-                          {(currentPage - 1) * PAGE_SIZE + idx + 1}
+                          {(safeCurrentPage - 1) * PAGE_SIZE + idx + 1}
                         </TableCell>
                         {/* Foto Thumbnail */}
                         <TableCell className='text-center border-none py-3.5'>
-                          <div className='size-11 rounded-xl border-none bg-background/80 dark:bg-background/20 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
+                          <div className='size-11 rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-muted/40 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
                             {item.fotoUrl ? (
                               <img
                                 src={katalogApi.getImageUrl(item.fotoUrl)}
@@ -412,8 +491,8 @@ export function MenuPage() {
                         {/* Kategori */}
                         <TableCell className='border-none py-3.5'>
                           <Badge
-                            variant='secondary'
-                            className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                            variant='outline'
+                            className={`rounded-full font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.kategori}`}
                           >
                             {kategoriNama}
                           </Badge>
@@ -430,7 +509,7 @@ export function MenuPage() {
                             <span
                               className={`font-semibold text-sm tabular-nums ${
                                 isHabis
-                                  ? 'text-destructive font-bold'
+                                  ? 'text-rose-600 dark:text-rose-400 font-bold'
                                   : isStokMenipis
                                   ? 'text-amber-600 dark:text-amber-400 font-bold'
                                   : 'text-foreground'
@@ -440,15 +519,15 @@ export function MenuPage() {
                             </span>
                             {isHabis ? (
                               <Badge
-                                variant='secondary'
-                                className='rounded-full border-none bg-destructive/15 text-destructive text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
+                                variant='outline'
+                                className={`rounded-full text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none ${BADGE_TONE_CLASSES.habis}`}
                               >
                                 Habis
                               </Badge>
                             ) : isStokMenipis ? (
                               <Badge
-                                variant='secondary'
-                                className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none'
+                                variant='outline'
+                                className={`rounded-full text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none ${BADGE_TONE_CLASSES.menipis}`}
                               >
                                 Menipis
                               </Badge>
@@ -470,15 +549,15 @@ export function MenuPage() {
                         <TableCell className='text-center border-none py-3.5'>
                           {item.aktif ? (
                             <Badge
-                              variant='secondary'
-                              className='rounded-full border-none bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                              variant='outline'
+                              className={`rounded-full text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.aktif}`}
                             >
                               Aktif
                             </Badge>
                           ) : (
                             <Badge
-                              variant='secondary'
-                              className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                              variant='outline'
+                              className={`rounded-full text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.nonaktif}`}
                             >
                               Nonaktif
                             </Badge>
@@ -491,7 +570,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
+                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
                               onClick={() => handleEdit(item)}
                               title='Ubah Menu'
                             >
@@ -500,7 +579,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
+                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-none'
                               onClick={() => handleDeleteClick(item)}
                               title='Nonaktifkan Menu'
                             >
@@ -518,28 +597,28 @@ export function MenuPage() {
 
           {/* Pagination Footer */}
           {totalPages > 1 && (
-            <div className='p-4 flex items-center justify-between'>
+            <div className='p-4 has-border border-t border-slate-200 dark:border-slate-800 flex items-center justify-between'>
               <div className='text-xs font-medium text-muted-foreground tabular-nums'>
-                Halaman <span className='font-semibold text-foreground'>{currentPage}</span> dari{' '}
+                Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
                 <span className='font-semibold text-foreground'>{totalPages}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Button
-                  variant='secondary'
+                  variant='outline'
                   size='sm'
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className='gap-1 h-8 text-xs border-none bg-background/80 dark:bg-background/20 hover:bg-background text-foreground rounded-xl shadow-none'
+                  onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 1))}
+                  disabled={safeCurrentPage === 1}
+                  className='gap-1 h-8 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background hover:bg-muted text-foreground rounded-lg shadow-none'
                 >
                   <ChevronLeft className='size-3.5' />
                   Sebelumnya
                 </Button>
                 <Button
-                  variant='secondary'
+                  variant='outline'
                   size='sm'
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className='gap-1 h-8 text-xs border-none bg-background/80 dark:bg-background/20 hover:bg-background text-foreground rounded-xl shadow-none'
+                  onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                  className='gap-1 h-8 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background hover:bg-muted text-foreground rounded-lg shadow-none'
                 >
                   Selanjutnya
                   <ChevronRight className='size-3.5' />
@@ -556,15 +635,15 @@ export function MenuPage() {
         onOpenChange={setIsModalOpen}
         selectedMenu={selectedMenu}
         kategoriList={kategoriList}
-        onSuccess={loadData}
+        onSuccess={handleFormSuccess}
       />
 
       {/* Alert Dialog Konfirmasi Nonaktifkan Menu */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
+        <AlertDialogContent className='has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg max-w-md bg-card'>
           <AlertDialogHeader>
             <div className='flex items-center gap-2.5'>
-              <div className='flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive'>
+              <div className='flex size-10 items-center justify-center rounded-xl has-border border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'>
                 <AlertTriangle className='size-5' />
               </div>
               <AlertDialogTitle className='text-lg font-bold'>Nonaktifkan Menu?</AlertDialogTitle>
@@ -584,14 +663,14 @@ export function MenuPage() {
           <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
             <AlertDialogCancel
               disabled={isDeleting}
-              className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
+              className='has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
             >
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
+              className='border-none rounded-xl shadow-none bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 font-semibold'
             >
               {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
             </AlertDialogAction>
