@@ -565,7 +565,7 @@ export const KasirPosPage: React.FC = () => {
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center justify-between gap-2 has-border !border-b !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
+        <div className='flex items-center justify-between gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
           <div className='flex items-center gap-2'>
             <Lock className='h-4 w-4 shrink-0' />
             <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
