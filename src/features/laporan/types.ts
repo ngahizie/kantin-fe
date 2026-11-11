@@ -10,6 +10,7 @@ export interface LaporanFilterParams {
   kategoriId?: number
   titikKasirId?: number
   search?: string
+  batas?: number
   simulasiSelisih?: boolean
 }
 
@@ -62,6 +63,11 @@ export interface ArusPosRekonsiliasiItem {
 // PENJUALAN & LABA KOTOR
 // ─────────────────────────────────────────────────────────────
 
+/**
+ * Ringkasan penjualan — nama field mengikuti BE (PRD §9.5 revisi):
+ * refund (bukan void), modal (bukan HPP), laba, dan margin sudah dihitung
+ * server sehingga FE tidak perlu menghitung sendiri.
+ */
 export interface RingkasanPenjualan {
   dari: string
   sampai: string

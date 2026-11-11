@@ -39,9 +39,9 @@
   }
 
   /* Hilangkan semua garis luar (outline, ring, border) di seluruh elemen di seluruh halaman */
-  *:not(.animate-spin):not(.has-border):not([class*='!border-']),
-  *:not(.animate-spin):not(.has-border):not([class*='!border-'])::before,
-  *:not(.animate-spin):not(.has-border):not([class*='!border-'])::after {
+  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline),
+  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline)::before,
+  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline)::after {
     outline: none !important;
     border-color: transparent !important;
   }

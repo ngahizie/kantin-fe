@@ -57,7 +57,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
             src={menu.fotoUrl}
             alt={menu.nama}
             onError={() => setImageError(true)}
-            className={`block h-full w-full object-cover ${
+            className={`block aspect-4/3 h-full w-full object-cover ${
               isHabis ? 'grayscale filter' : ''
             }`}
             loading='lazy'
@@ -80,18 +80,18 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
       {/* Nama Menu */}
       <h4
-        className='px-3.5 pt-3 text-sm leading-snug font-semibold tracking-tight text-slate-800 dark:text-white line-clamp-2 [overflow-wrap:anywhere]'
+        className='min-h-[calc(0.75rem+2.75em)] px-3.5 pt-3 text-sm leading-snug font-semibold tracking-tight text-slate-800 dark:text-white line-clamp-2 [overflow-wrap:anywhere]'
         title={menu.nama}
       >
         {menu.nama}
       </h4>
 
       {/* Footer Harga & Satuan */}
-      <footer className='mt-auto flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 px-3.5 pt-2.5 pb-3.5'>
-        <span className='text-base font-bold tracking-tight text-blue-600 dark:text-blue-400 tabular-nums sm:text-lg'>
+      <footer className='mt-auto flex items-baseline justify-between gap-2 whitespace-nowrap px-3.5 pt-2 pb-3.5'>
+        <span className='shrink-0 text-base font-bold tracking-tight text-blue-600 dark:text-blue-400 tabular-nums sm:text-lg'>
           {formatRupiah(menu.hargaJual)}
         </span>
-        <span className='shrink-0 text-xs font-medium tracking-wide text-slate-500 dark:text-slate-400 uppercase'>
+        <span className='min-w-0 truncate text-xs font-medium tracking-wide text-slate-500 dark:text-slate-400 uppercase'>
           /{menu.satuan || 'porsi'}
         </span>
       </footer>
