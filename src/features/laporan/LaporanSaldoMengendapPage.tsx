@@ -74,29 +74,15 @@ export function LaporanSaldoMengendapPage() {
           siswaPromise,
         ])
         if (!isMounted) return
-        if (
-          resRingkasan &&
-          resRingkasan.jumlahSiswa === 0 &&
-          resSiswa &&
-          resSiswa.length > 0
-        ) {
-          const siswaBersaldo = resSiswa.filter((s) => (s.saldo || 0) > 0)
-          const totalSiswa = siswaBersaldo.reduce((sum, s) => sum + (s.saldo || 0), 0)
+        if (resRingkasan) {
           setRingkasan({
             ...resRingkasan,
-            saldoSiswa: totalSiswa,
             saldoKartuTamu: 0,
-            jumlahSiswa: siswaBersaldo.length,
             jumlahKartuTamu: 0,
-            total: totalSiswa,
+            total: resRingkasan.saldoSiswa ?? resRingkasan.total ?? 0,
           })
         } else {
-          setRingkasan({
-            ...resRingkasan,
-            saldoKartuTamu: 0,
-            jumlahKartuTamu: 0,
-            total: resRingkasan?.saldoSiswa ?? 0,
-          })
+          setRingkasan(null)
         }
         setSiswaList(resSiswa || [])
       } catch (err: unknown) {

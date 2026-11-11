@@ -13,6 +13,13 @@ import {
   exportMultiSectionPdf,
 } from '@/lib/pdfExport'
 import { formatRupiah } from '@/lib/formatters'
+import {
+  ALL_TIME_PARAMS,
+  formatYmd,
+  getTimezoneOffsetString,
+  startOfDayIso,
+  nextDayStartIso,
+} from '../components/date-filter-utils'
 
 describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   beforeAll(() => {
@@ -192,12 +199,12 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(kasirs[0]).toHaveProperty('penjualanBersih')
     })
 
-    it('memastikan margin bernilai 0 bila data kosong atau undefined agar tidak menampilkan undefined%', () => {
-      const formatMargin = (val?: number | null) => (val ? `${val}%` : '0')
-      expect(formatMargin(undefined)).toBe('0')
-      expect(formatMargin(null)).toBe('0')
-      expect(formatMargin(0)).toBe('0')
-      expect(formatMargin(25.5)).toBe('25.5%')
+    it('memastikan format margin merender 0% bila data kosong, nol, atau undefined agar tidak menampilkan undefined%', () => {
+      const formatMarginDisplay = (val?: number | null) => (val ? `${val}%` : '0%')
+      expect(formatMarginDisplay(undefined)).toBe('0%')
+      expect(formatMarginDisplay(null)).toBe('0%')
+      expect(formatMarginDisplay(0)).toBe('0%')
+      expect(formatMarginDisplay(25.5)).toBe('25.5%')
     })
 
     it('mengembalikan array kosong [] saat backend mengembalikan data kosong tanpa fallback mock palsu', async () => {
@@ -419,6 +426,36 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(found?.totalNilai).toBe((found?.qty || 0) * (found?.hppSnapshot || 0))
       expect(found?.alasan).toContain('barang hilang dari etalase')
       expect(found?.petugas).toBeTruthy()
+    })
+  })
+
+  describe('Utilitas Filter Tanggal Laporan (Date Filter Utils)', () => {
+    it('ALL_TIME_PARAMS berupa object kosong agar backend memakai parameter default canonical', () => {
+      expect(ALL_TIME_PARAMS).toEqual({})
+      expect(Object.keys(ALL_TIME_PARAMS).length).toBe(0)
+    })
+
+    it('formatYmd memformat objek tanggal ke format YYYY-MM-DD secara konsisten', () => {
+      const d = new Date(2026, 10, 10) // 10 Nov 2026 (month index 10 = Nov)
+      expect(formatYmd(d)).toBe('2026-11-10')
+    })
+
+    it('getTimezoneOffsetString mengembalikan format offset yang valid (+HH:MM atau -HH:MM)', () => {
+      const offset = getTimezoneOffsetString()
+      expect(offset).toMatch(/^[+-]\d{2}:\d{2}$/)
+    })
+
+    it('startOfDayIso dan nextDayStartIso menghasilkan rentang setengah terbuka [dari, sampai) yang presisi', () => {
+      const offset = getTimezoneOffsetString()
+      const start = startOfDayIso('2026-11-10')
+      const end = nextDayStartIso('2026-11-10')
+
+      expect(start).toBe(`2026-11-10T00:00:00${offset}`)
+      expect(end).toBe(`2026-11-11T00:00:00${offset}`)
+
+      // Menguji pergantian akhir tahun
+      const endOfYearNext = nextDayStartIso('2026-12-31')
+      expect(endOfYearNext).toBe(`2027-01-01T00:00:00${offset}`)
     })
   })
 })

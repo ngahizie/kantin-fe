@@ -131,29 +131,11 @@ export function LaporanPenjualanPage() {
 
   const summaryPenjualanBruto = ringkasan?.penjualanBruto ?? 0
   const summaryPenjualanBersih = ringkasan?.penjualanBersih ?? 0
-  const summaryJumlahRefund =
-    ringkasan?.jumlahRefund ??
-    (ringkasan as (RingkasanPenjualan & { jumlahVoid?: number }) | null)
-      ?.jumlahVoid ??
-    0
-  const summaryNilaiRefund =
-    ringkasan?.nilaiRefund ??
-    (ringkasan as (RingkasanPenjualan & { nilaiVoid?: number }) | null)
-      ?.nilaiVoid ??
-    0
-  const summaryTotalModal =
-    ringkasan?.totalModal ??
-    (ringkasan as (RingkasanPenjualan & { totalHpp?: number }) | null)?.totalHpp ??
-    0
-  const summaryLaba =
-    ringkasan?.laba ??
-    (ringkasan as (RingkasanPenjualan & { labaKotor?: number }) | null)?.labaKotor ??
-    0
-  const summaryMargin =
-    ringkasan?.marginPersen ??
-    (ringkasan as (RingkasanPenjualan & { marginLabaPersen?: number }) | null)
-      ?.marginLabaPersen ??
-    0
+  const summaryJumlahRefund = ringkasan?.jumlahRefund ?? 0
+  const summaryNilaiRefund = ringkasan?.nilaiRefund ?? 0
+  const summaryTotalModal = ringkasan?.totalModal ?? 0
+  const summaryLaba = ringkasan?.laba ?? 0
+  const summaryMargin = ringkasan?.marginPersen ?? 0
 
   // Filter & Sort Items
   const filteredItems = useMemo(() => {

@@ -72,13 +72,8 @@ export interface RingkasanPenjualan {
   nilaiRefund: number
   penjualanBersih: number
   totalModal: number
-  totalHpp: number
   laba: number
-  labaKotor: number
   marginPersen: number
-  marginLabaPersen: number
-  jumlahVoid?: number
-  nilaiVoid?: number
 }
 
 export interface BarisPenjualanItem {

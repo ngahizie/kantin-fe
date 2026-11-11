@@ -133,13 +133,8 @@ function normalizeRingkasanPenjualan(
     nilaiRefund,
     penjualanBersih,
     totalModal,
-    totalHpp: totalModal,
     laba,
-    labaKotor: laba,
     marginPersen,
-    marginLabaPersen: marginPersen,
-    jumlahVoid: jumlahRefund,
-    nilaiVoid: nilaiRefund,
   }
 }
 
@@ -413,27 +408,18 @@ export const laporanApi = {
       // Fallback
     }
 
-    const penjualanBruto = 3375000
-    const jumlahRefund = 3
-    const nilaiRefund = 45000
-    const penjualanBersih = 3375000
-    const totalModal = 2180000
-    const laba = penjualanBersih - totalModal
-    const marginPersen =
-      Math.round((laba / penjualanBersih) * 10000) / 100
-
-    return normalizeRingkasanPenjualan({
+    return {
       dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
       sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
-      jumlahTransaksi: 185,
-      penjualanBruto,
-      jumlahRefund,
-      nilaiRefund,
-      penjualanBersih,
-      totalModal,
-      laba,
-      marginPersen,
-    })
+      jumlahTransaksi: 0,
+      penjualanBruto: 0,
+      jumlahRefund: 0,
+      nilaiRefund: 0,
+      penjualanBersih: 0,
+      totalModal: 0,
+      laba: 0,
+      marginPersen: 0,
+    }
   },
 
   /**

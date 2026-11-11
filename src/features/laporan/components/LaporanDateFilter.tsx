@@ -1,11 +1,18 @@
 import { useState } from 'react'
 import { Calendar as CalendarIcon, Check, ChevronDown, RotateCcw } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/formatters'
 import type { LaporanFilterParams } from '../types'
+import {
+  ALL_TIME_PARAMS,
+  formatYmd,
+  startOfDayIso,
+  nextDayStartIso,
+} from './date-filter-utils'
 
 export type DateFilterPreset =
   | 'ALL'
@@ -24,26 +31,6 @@ export interface LaporanDateFilterProps {
   align?: 'start' | 'end' | 'center'
 }
 
-function formatYmd(d: Date): string {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function startOfDayIso(ymd: string): string {
-  return `${ymd}T00:00:00+07:00`
-}
-
-function endOfDayIso(ymd: string): string {
-  return `${ymd}T23:59:59+07:00`
-}
-
-export const ALL_TIME_PARAMS: LaporanFilterParams = {
-  dari: '2020-01-01T00:00:00+07:00',
-  sampai: '2030-12-31T23:59:59+07:00',
-}
-
 export function LaporanDateFilter({
   initialPreset = 'ALL',
   onChange,
@@ -54,14 +41,14 @@ export function LaporanDateFilter({
   const [selectedPreset, setSelectedPreset] = useState<DateFilterPreset>(initialPreset)
   const [activeLabel, setActiveLabel] = useState<string>('Semua Waktu')
 
-  // State untuk Pilih Hari Tertentu
-  const [singleDateInput, setSingleDateInput] = useState<string>(formatYmd(new Date()))
+  // State untuk Pilih Hari Tertentu (lazy initializer agar bebas dari impure render)
+  const [singleDateInput, setSingleDateInput] = useState<string>(() => formatYmd(new Date()))
 
-  // State untuk Rentang Tanggal
-  const [rangeStartInput, setRangeStartInput] = useState<string>(
+  // State untuk Rentang Tanggal (lazy initializer)
+  const [rangeStartInput, setRangeStartInput] = useState<string>(() =>
     formatYmd(new Date(Date.now() - 6 * 86400000))
   )
-  const [rangeEndInput, setRangeEndInput] = useState<string>(formatYmd(new Date()))
+  const [rangeEndInput, setRangeEndInput] = useState<string>(() => formatYmd(new Date()))
 
   const handleSelectPreset = (preset: DateFilterPreset) => {
     const today = new Date()
@@ -79,14 +66,7 @@ export function LaporanDateFilter({
     if (preset === 'TODAY') {
       const label = `Hari Ini (${formatDate(today)})`
       setActiveLabel(label)
-      onChange(
-        {
-          tanggal: todayYmd,
-          dari: startOfDayIso(todayYmd),
-          sampai: endOfDayIso(todayYmd),
-        },
-        label
-      )
+      onChange({ tanggal: todayYmd }, label)
       setOpen(false)
       return
     }
@@ -96,14 +76,7 @@ export function LaporanDateFilter({
       const yestYmd = formatYmd(yest)
       const label = `Kemarin (${formatDate(yest)})`
       setActiveLabel(label)
-      onChange(
-        {
-          tanggal: yestYmd,
-          dari: startOfDayIso(yestYmd),
-          sampai: endOfDayIso(yestYmd),
-        },
-        label
-      )
+      onChange({ tanggal: yestYmd }, label)
       setOpen(false)
       return
     }
@@ -115,7 +88,7 @@ export function LaporanDateFilter({
       onChange(
         {
           dari: startOfDayIso(formatYmd(d7)),
-          sampai: endOfDayIso(todayYmd),
+          sampai: nextDayStartIso(todayYmd),
         },
         label
       )
@@ -130,7 +103,7 @@ export function LaporanDateFilter({
       onChange(
         {
           dari: startOfDayIso(formatYmd(d30)),
-          sampai: endOfDayIso(todayYmd),
+          sampai: nextDayStartIso(todayYmd),
         },
         label
       )
@@ -150,7 +123,7 @@ export function LaporanDateFilter({
       onChange(
         {
           dari: startOfDayIso(formatYmd(firstDay)),
-          sampai: endOfDayIso(formatYmd(lastDay)),
+          sampai: nextDayStartIso(formatYmd(lastDay)),
         },
         label
       )
@@ -164,26 +137,25 @@ export function LaporanDateFilter({
     setSelectedPreset('CUSTOM_DAY')
     const label = `Hari: ${formatDate(singleDateInput)}`
     setActiveLabel(label)
-    onChange(
-      {
-        tanggal: singleDateInput,
-        dari: startOfDayIso(singleDateInput),
-        sampai: endOfDayIso(singleDateInput),
-      },
-      label
-    )
+    onChange({ tanggal: singleDateInput }, label)
     setOpen(false)
   }
 
   const handleApplyRange = () => {
     if (!rangeStartInput || !rangeEndInput) return
+    if (rangeStartInput > rangeEndInput) {
+      toast.error('Rentang tanggal tidak valid', {
+        description: 'Tanggal awal tidak boleh melebihi tanggal akhir.',
+      })
+      return
+    }
     setSelectedPreset('CUSTOM_RANGE')
     const label = `${formatDate(rangeStartInput)} – ${formatDate(rangeEndInput)}`
     setActiveLabel(label)
     onChange(
       {
         dari: startOfDayIso(rangeStartInput),
-        sampai: endOfDayIso(rangeEndInput),
+        sampai: nextDayStartIso(rangeEndInput),
       },
       label
     )
