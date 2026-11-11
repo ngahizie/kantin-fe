@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name='color-scheme'][content='dark']),
+  &.dark {
+    color-scheme: dark;
+  }
+
+  &:has(> head > meta[name='color-scheme'][content='light']),
+  &.light {
+    color-scheme: light;
+  }
+}
+
 @layer base {
   /* Samakan semua font teks, angka, kode, dan elemen input agar 100% konsisten */
   html,
@@ -139,5 +153,44 @@
   }
   to {
     height: 0;
+  }
+}
+
+@media print {
+  body:has([data-receipt-printable][data-print-active='true']) {
+    min-height: auto !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  body:has([data-receipt-printable][data-print-active='true']) > #root,
+  body:has([data-receipt-printable][data-print-active='true'])
+    [data-slot='dialog-overlay'],
+  body:has([data-receipt-printable][data-print-active='true'])
+    [data-slot='dialog-close'] {
+    display: none !important;
+  }
+
+  body:has([data-receipt-printable][data-print-active='true'])
+    [data-slot='dialog-content']:has(
+      [data-receipt-printable][data-print-active='true']
+    ) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 80mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  [data-receipt-printable][data-print-active='true'] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

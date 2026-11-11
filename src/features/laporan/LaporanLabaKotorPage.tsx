@@ -82,6 +82,32 @@ export function LaporanLabaKotorPage() {
     }
   }, [])
 
+  // Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
+  const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
+  const getItemOmset = (i: BarisPenjualanItem) => i.total ?? i.penjualanBersih ?? 0
+  const getItemModal = (i: BarisPenjualanItem) => i.modal ?? i.totalHpp ?? 0
+  const getItemLaba = (i: BarisPenjualanItem) =>
+    i.laba ?? i.labaKotor ?? getItemOmset(i) - getItemModal(i)
+  const getItemMargin = (i: BarisPenjualanItem) => i.marginPersen ?? i.margin ?? 0
+  const getItemHarga = (i: BarisPenjualanItem) =>
+    i.hargaSatuan ?? i.hargaJual ?? (i.qty > 0 ? Math.round(getItemOmset(i) / i.qty) : 0)
+  const getItemUnitModal = (i: BarisPenjualanItem) =>
+    i.hpp ?? (i.qty > 0 ? Math.round(getItemModal(i) / i.qty) : 0)
+
+  const summaryTotalModal =
+    ringkasan?.totalModal ??
+    (ringkasan as (RingkasanPenjualan & { totalHpp?: number }) | null)?.totalHpp ??
+    0
+  const summaryLaba =
+    ringkasan?.laba ??
+    (ringkasan as (RingkasanPenjualan & { labaKotor?: number }) | null)?.labaKotor ??
+    0
+  const summaryMargin =
+    ringkasan?.marginPersen ??
+    (ringkasan as (RingkasanPenjualan & { marginLabaPersen?: number }) | null)
+      ?.marginLabaPersen ??
+    0
+
   // Filter & Urutan
   const filteredItems = useMemo(() => {
     let list = [...items]
@@ -90,25 +116,38 @@ export function LaporanLabaKotorPage() {
       const q = searchQuery.toLowerCase()
       list = list.filter(
         (i) =>
-          i.nama.toLowerCase().includes(q) ||
-          i.kategoriNama.toLowerCase().includes(q)
+          (i.nama || '').toLowerCase().includes(q) ||
+          (i.kategoriNama || '').toLowerCase().includes(q)
       )
     }
 
     if (marginFilter === 'HIGH') {
-      list = list.filter((i) => i.margin >= 35)
+      list = list.filter((i) => (i.marginPersen ?? i.margin ?? 0) >= 35)
     } else if (marginFilter === 'MEDIUM') {
-      list = list.filter((i) => i.margin >= 20 && i.margin < 35)
+      list = list.filter((i) => {
+        const m = i.marginPersen ?? i.margin ?? 0
+        return m >= 20 && m < 35
+      })
     } else if (marginFilter === 'LOW') {
-      list = list.filter((i) => i.margin < 20)
+      list = list.filter((i) => (i.marginPersen ?? i.margin ?? 0) < 20)
     }
 
     if (sortBy === 'laba_desc') {
-      list.sort((a, b) => b.labaKotor - a.labaKotor)
+      list.sort(
+        (a, b) =>
+          (b.laba ?? b.labaKotor ?? 0) - (a.laba ?? a.labaKotor ?? 0)
+      )
     } else if (sortBy === 'margin_desc') {
-      list.sort((a, b) => b.margin - a.margin)
+      list.sort(
+        (a, b) =>
+          (b.marginPersen ?? b.margin ?? 0) - (a.marginPersen ?? a.margin ?? 0)
+      )
     } else if (sortBy === 'omset_desc') {
-      list.sort((a, b) => b.penjualanBersih - a.penjualanBersih)
+      list.sort(
+        (a, b) =>
+          (b.total ?? b.penjualanBersih ?? 0) -
+          (a.total ?? a.penjualanBersih ?? 0)
+      )
     }
 
     return list
@@ -117,7 +156,9 @@ export function LaporanLabaKotorPage() {
   // Hitung menu kontributor laba terbesar
   const topProfitItem = useMemo(() => {
     if (items.length === 0) return null
-    return [...items].sort((a, b) => b.labaKotor - a.labaKotor)[0]
+    return [...items].sort(
+      (a, b) => (b.laba ?? b.labaKotor ?? 0) - (a.laba ?? a.labaKotor ?? 0)
+    )[0]
   }, [items])
 
   const handleExportExcel = () => {
@@ -127,35 +168,48 @@ export function LaporanLabaKotorPage() {
     }
 
     try {
+      const exportRows = filteredItems.map((item) => ({
+        menuId: getItemId(item),
+        nama: item.nama || '-',
+        kategoriNama: item.kategoriNama || 'Umum',
+        qty: item.qty ?? 0,
+        hargaSatuan: getItemHarga(item),
+        hpp: getItemUnitModal(item),
+        total: getItemOmset(item),
+        modal: getItemModal(item),
+        laba: getItemLaba(item),
+        marginPersen: getItemMargin(item),
+      }))
+
       exportTableToExcel({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Laba Kotor',
         title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA (PRD §9.5)',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
-          'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
+          'Total Modal (HPP)': formatRupiah(summaryTotalModal),
+          'Total Laba': formatRupiah(summaryLaba),
+          'Rata-rata Gross Margin': `${summaryMargin}%`,
         },
         columns: [
           { header: 'No', key: 'menuId', width: 8 },
           { header: 'Nama Menu', key: 'nama', width: 28 },
           { header: 'Kategori', key: 'kategoriNama', width: 18 },
           { header: 'Qty Terjual', key: 'qty', width: 12 },
-          { header: 'Harga Satuan (Rp)', key: 'hargaJual', width: 16 },
-          { header: 'HPP Unit (Rp)', key: 'hpp', width: 14 },
-          { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
-          { header: 'Total HPP (Rp)', key: 'totalHpp', width: 18 },
-          { header: 'Laba Kotor (Rp)', key: 'labaKotor', width: 18 },
+          { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
+          { header: 'Modal Unit (Rp)', key: 'hpp', width: 14 },
+          { header: 'Total Penjualan (Rp)', key: 'total', width: 20 },
+          { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
+          { header: 'Laba (Rp)', key: 'laba', width: 18 },
           {
             header: 'Margin (%)',
-            key: 'margin',
-            formatter: (v) => `${v}%`,
+            key: 'marginPersen',
+            formatter: (v) => `${Number(v ?? 0)}%`,
             width: 12,
           },
         ],
-        data: filteredItems,
+        data: exportRows,
       })
 
       toast.success('Ekspor Excel Berhasil', {
@@ -174,16 +228,29 @@ export function LaporanLabaKotorPage() {
     }
 
     try {
+      const exportRows = filteredItems.map((item) => ({
+        menuId: getItemId(item),
+        nama: item.nama || '-',
+        kategoriNama: item.kategoriNama || 'Umum',
+        qty: item.qty ?? 0,
+        hargaSatuan: getItemHarga(item),
+        hpp: getItemUnitModal(item),
+        total: getItemOmset(item),
+        modal: getItemModal(item),
+        laba: getItemLaba(item),
+        marginPersen: getItemMargin(item),
+      }))
+
       exportTableToPdf({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
         subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih),
-          'Beban Pokok Penjualan (HPP)': formatRupiah(ringkasan.totalHpp),
-          'Total Laba Kotor': formatRupiah(ringkasan.labaKotor),
-          'Rata-rata Gross Margin': `${ringkasan.marginLabaPersen}%`,
+          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
+          'Total Modal (HPP)': formatRupiah(summaryTotalModal),
+          'Total Laba': formatRupiah(summaryLaba),
+          'Rata-rata Gross Margin': `${summaryMargin}%`,
         },
         columns: [
           { header: 'No', key: 'menuId' },
@@ -192,36 +259,36 @@ export function LaporanLabaKotorPage() {
           { header: 'Qty Terjual', key: 'qty' },
           {
             header: 'Harga Satuan',
-            key: 'hargaJual',
-            formatter: (v) => formatRupiah(Number(v)),
+            key: 'hargaSatuan',
+            formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'HPP Unit',
+            header: 'Modal Unit',
             key: 'hpp',
-            formatter: (v) => formatRupiah(Number(v)),
+            formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Penjualan Bersih',
-            key: 'penjualanBersih',
-            formatter: (v) => formatRupiah(Number(v)),
+            header: 'Total Penjualan',
+            key: 'total',
+            formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Total HPP',
-            key: 'totalHpp',
-            formatter: (v) => formatRupiah(Number(v)),
+            header: 'Total Modal',
+            key: 'modal',
+            formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Laba Kotor',
-            key: 'labaKotor',
-            formatter: (v) => formatRupiah(Number(v)),
+            header: 'Laba',
+            key: 'laba',
+            formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
             header: 'Margin',
-            key: 'margin',
-            formatter: (v) => `${v}%`,
+            key: 'marginPersen',
+            formatter: (v) => `${Number(v ?? 0)}%`,
           },
         ],
-        data: filteredItems,
+        data: exportRows,
       })
 
       toast.success('Ekspor PDF Berhasil', {
@@ -295,10 +362,10 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-emerald-600">
-                  {ringkasan ? formatRupiah(ringkasan.labaKotor) : '...'}
+                  {ringkasan ? formatRupiah(summaryLaba) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Keuntungan murni setelah dipotong beban HPP
+                  Keuntungan murni setelah dipotong total modal
                 </p>
               </CardContent>
             </Card>
@@ -311,10 +378,10 @@ export function LaporanLabaKotorPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight text-blue-600">
-                  {ringkasan ? `${ringkasan.marginLabaPersen}%` : '...'}
+                  {ringkasan ? `${summaryMargin}%` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Rasio laba kotor terhadap penjualan bersih
+                  Rasio laba terhadap penjualan bersih
                 </p>
               </CardContent>
             </Card>
@@ -322,12 +389,12 @@ export function LaporanLabaKotorPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Beban Pokok Penjualan (HPP)
+                  Total Modal (HPP)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
-                  {ringkasan ? formatRupiah(ringkasan.totalHpp) : '...'}
+                  {ringkasan ? formatRupiah(summaryTotalModal) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total modal kulakan menu terjual
@@ -346,7 +413,7 @@ export function LaporanLabaKotorPage() {
                   {topProfitItem ? topProfitItem.nama : '-'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 font-mono">
-                  {topProfitItem ? `Laba: ${formatRupiah(topProfitItem.labaKotor)}` : '-'}
+                  {topProfitItem ? `Laba: ${formatRupiah(getItemLaba(topProfitItem))}` : '-'}
                 </p>
               </CardContent>
             </Card>
@@ -410,11 +477,11 @@ export function LaporanLabaKotorPage() {
                       <TableHead>Nama Menu</TableHead>
                       <TableHead>Kategori</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Harga Jual</TableHead>
-                      <TableHead className="text-right">HPP Unit</TableHead>
-                      <TableHead className="text-right">Penjualan Bersih</TableHead>
-                      <TableHead className="text-right">Total HPP</TableHead>
-                      <TableHead className="text-right font-bold text-emerald-600">Laba Kotor</TableHead>
+                      <TableHead className="text-right">Harga Satuan</TableHead>
+                      <TableHead className="text-right">Modal Unit</TableHead>
+                      <TableHead className="text-right">Total Penjualan</TableHead>
+                      <TableHead className="text-right">Total Modal</TableHead>
+                      <TableHead className="text-right font-bold text-emerald-600">Laba</TableHead>
                       <TableHead className="text-center">Margin</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -432,56 +499,59 @@ export function LaporanLabaKotorPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredItems.map((item, idx) => (
-                        <TableRow key={item.menuId}>
-                          <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell className="font-semibold text-sm">
-                            {item.nama}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="secondary"
-                              className={`text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
-                            >
-                              {item.kategoriNama}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-bold">
-                            {formatNumber(item.qty)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs">
-                            {formatRupiah(item.hargaJual)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                            {formatRupiah(item.hpp)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-bold text-sm">
-                            {formatRupiah(item.penjualanBersih)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                            {formatRupiah(item.totalHpp)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-bold text-sm text-emerald-600">
-                            {formatRupiah(item.labaKotor)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge
-                              variant="secondary"
-                              className={`font-mono text-xs ${
-                                item.margin >= 35
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : item.margin >= 20
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-                                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                              }`}
-                            >
-                              {item.margin}%
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      filteredItems.map((item, idx) => {
+                        const itemMargin = getItemMargin(item)
+                        return (
+                          <TableRow key={getItemId(item) || idx}>
+                            <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className="font-semibold text-sm">
+                              {item.nama}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
+                              >
+                                {item.kategoriNama || 'Umum'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold">
+                              {formatNumber(item.qty ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs">
+                              {formatRupiah(getItemHarga(item))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                              {formatRupiah(getItemUnitModal(item))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm">
+                              {formatRupiah(getItemOmset(item))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                              {formatRupiah(getItemModal(item))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm text-emerald-600">
+                              {formatRupiah(getItemLaba(item))}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant="secondary"
+                                className={`font-mono text-xs ${
+                                  itemMargin >= 35
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                    : itemMargin >= 20
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                }`}
+                              >
+                                {itemMargin}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>

@@ -68,41 +68,49 @@ export interface RingkasanPenjualan {
   sampai: string
   jumlahTransaksi: number
   penjualanBruto: number
-  jumlahVoid: number
-  nilaiVoid: number
+  jumlahRefund: number
+  nilaiRefund: number
   penjualanBersih: number
-  totalHpp: number
-  labaKotor: number
-  marginLabaPersen: number
+  totalModal: number
+  laba: number
+  marginPersen: number
 }
 
 export interface BarisPenjualanItem {
+  kunciId: number
   menuId: number
   nama: string
   kategoriId: number
   kategoriNama: string
   qty: number
+  hargaSatuan: number
   hargaJual: number
   hpp: number
+  total: number
   penjualanBersih: number
+  modal: number
   totalHpp: number
+  laba: number
   labaKotor: number
+  marginPersen: number
   margin: number
 }
 
 export interface BarisPenjualanKategori {
-  kategoriId?: number
-  kunciId?: number
+  kunciId: number
+  kategoriId: number
   nama: string
-  jumlahItem?: number
+  jumlahItem: number | null
   qty: number
-  total?: number
-  penjualanBersih?: number
-  totalHpp?: number
-  modal?: number
-  labaKotor?: number
-  margin?: number
-  marginPersen?: number
+  hargaSatuan: number | null
+  total: number
+  penjualanBersih: number
+  modal: number
+  totalHpp: number
+  laba: number
+  labaKotor: number
+  marginPersen: number
+  margin: number
 }
 
 export interface BarisPenjualanKasir {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import * as XLSX from 'xlsx'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { apiClient } from '@/lib/api-client'
@@ -124,17 +124,20 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
     })
   })
 
-  describe('Laporan Penjualan & Laba Kotor (PRD §9.5)', () => {
-    it('mengambil ringkasan penjualan, HPP, laba kotor, dan margin dengan tepat', async () => {
+  describe('Laporan Penjualan & Laba Kotor (PRD §9.5, BE #291)', () => {
+    it('mengambil ringkasan penjualan, totalModal, laba, jumlahRefund, dan marginPersen dengan tepat', async () => {
       const data = await laporanApi.getPenjualan()
 
       expect(data).toBeDefined()
-      expect(data.penjualanBersih).toBe(data.penjualanBruto - data.nilaiVoid)
-      expect(data.labaKotor).toBe(data.penjualanBersih - data.totalHpp)
-      expect(data.marginLabaPersen).toBeGreaterThan(0)
+      expect(data.penjualanBersih).toBe(data.penjualanBruto)
+      expect(data.jumlahRefund).toBeGreaterThanOrEqual(0)
+      expect(data.nilaiRefund).toBeGreaterThanOrEqual(0)
+      expect(data.totalModal).toBeGreaterThan(0)
+      expect(data.laba).toBe(data.penjualanBersih - data.totalModal)
+      expect(data.marginPersen).toBeGreaterThan(0)
     })
 
-    it('mengambil penjualan per item menu, kategori, dan titik kasir', async () => {
+    it('mengambil penjualan per item menu, kategori, dan titik kasir sesuai kontrak BE #291', async () => {
       const [items, kategoris, kasirs] = await Promise.all([
         laporanApi.getPenjualanPerItem(),
         laporanApi.getPenjualanPerKategori(),
@@ -142,18 +145,79 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       ])
 
       expect(items.length).toBeGreaterThan(0)
+      expect(items[0]).toHaveProperty('kunciId')
       expect(items[0]).toHaveProperty('nama')
       expect(items[0]).toHaveProperty('qty')
-      expect(items[0]).toHaveProperty('labaKotor')
+      expect(items[0]).toHaveProperty('total')
+      expect(items[0]).toHaveProperty('hargaSatuan')
+      expect(items[0]).toHaveProperty('modal')
+      expect(items[0]).toHaveProperty('marginPersen')
+      expect(items[0].laba).toBe(items[0].total - items[0].modal)
       expect(items[0].labaKotor).toBe(items[0].penjualanBersih - items[0].totalHpp)
+      expect(items[0].kategoriNama).toBeTruthy()
 
       expect(kategoris.length).toBeGreaterThan(0)
+      expect(kategoris[0]).toHaveProperty('kunciId')
       expect(kategoris[0]).toHaveProperty('nama')
-      expect(kategoris[0]).toHaveProperty('penjualanBersih')
+      expect(kategoris[0]).toHaveProperty('total')
+      expect(kategoris[0]).toHaveProperty('modal')
+      expect(kategoris[0]).toHaveProperty('laba')
+      expect(kategoris[0]).toHaveProperty('marginPersen')
+      expect(kategoris[0].hargaSatuan).toBeNull()
+      expect(kategoris[0].jumlahItem).not.toBeNull()
 
       expect(kasirs.length).toBeGreaterThan(0)
       expect(kasirs[0]).toHaveProperty('namaTitikKasir')
       expect(kasirs[0]).toHaveProperty('penjualanBersih')
+    })
+
+    it('mengembalikan array kosong [] saat backend mengembalikan data kosong tanpa fallback mock palsu', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+        data: { code: 200, status: 'SUCCESS', data: [] },
+      })
+
+      try {
+        const [items, kategoris] = await Promise.all([
+          laporanApi.getPenjualanPerItem(),
+          laporanApi.getPenjualanPerKategori(),
+        ])
+        expect(items).toEqual([])
+        expect(kategoris).toEqual([])
+      } finally {
+        getSpy.mockRestore()
+      }
+    })
+
+    it('menangani ringkasan penjualan bernilai 0 tanpa menghasilkan undefined atau NaN', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          data: {
+            dari: '2026-10-08T00:00:00Z',
+            sampai: '2026-10-08T23:59:59Z',
+            jumlahTransaksi: 0,
+            penjualanBruto: 0,
+            jumlahRefund: 0,
+            nilaiRefund: 0,
+            penjualanBersih: 0,
+            totalModal: 0,
+            laba: 0,
+            marginPersen: 0,
+          },
+        },
+      })
+
+      try {
+        const summary = await laporanApi.getPenjualan()
+        expect(summary.jumlahTransaksi).toBe(0)
+        expect(summary.totalModal).toBe(0)
+        expect(summary.laba).toBe(0)
+        expect(summary.marginPersen).toBe(0)
+        expect(Number.isNaN(summary.marginPersen)).toBe(false)
+      } finally {
+        getSpy.mockRestore()
+      }
     })
 
     it('dapat mengekspor laporan penjualan multi-sheet ke format Excel (.xlsx)', () => {
