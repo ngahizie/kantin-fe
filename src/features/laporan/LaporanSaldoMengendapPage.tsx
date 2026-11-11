@@ -1,7 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   ArrowRight,
   UserCheck,
   Ban,
@@ -35,6 +34,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
+import { LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanSaldoMengendap,
@@ -54,6 +54,7 @@ export function LaporanSaldoMengendapPage() {
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
 
   useEffect(() => {
     let isMounted = true
@@ -73,28 +74,15 @@ export function LaporanSaldoMengendapPage() {
           siswaPromise,
         ])
         if (!isMounted) return
-        if (
-          resRingkasan &&
-          resRingkasan.jumlahSiswa === 0 &&
-          resSiswa &&
-          resSiswa.length > 0
-        ) {
-          const totalSiswa = resSiswa.reduce((sum, s) => sum + (s.saldo || 0), 0)
+        if (resRingkasan) {
           setRingkasan({
             ...resRingkasan,
-            saldoSiswa: totalSiswa,
             saldoKartuTamu: 0,
-            jumlahSiswa: resSiswa.length,
             jumlahKartuTamu: 0,
-            total: totalSiswa,
+            total: resRingkasan.saldoSiswa ?? resRingkasan.total ?? 0,
           })
         } else {
-          setRingkasan({
-            ...resRingkasan,
-            saldoKartuTamu: 0,
-            jumlahKartuTamu: 0,
-            total: resRingkasan?.saldoSiswa ?? 0,
-          })
+          setRingkasan(null)
         }
         setSiswaList(resSiswa || [])
       } catch (err: unknown) {
@@ -114,16 +102,24 @@ export function LaporanSaldoMengendapPage() {
   // Filter Siswa
   const filteredSiswa = useMemo(() => {
     if (!canAccessSiswa) return []
-    if (!searchQuery.trim()) return siswaList
+    let list = [...siswaList]
+
+    if (statusFilter === 'POSITIVE') {
+      list = list.filter((s) => (s.saldo || 0) > 0)
+    } else if (statusFilter === 'ZERO') {
+      list = list.filter((s) => (s.saldo || 0) === 0)
+    }
+
+    if (!searchQuery.trim()) return list
     const q = searchQuery.toLowerCase()
-    return siswaList.filter(
+    return list.filter(
       (s) =>
         s.nama.toLowerCase().includes(q) ||
         s.nis.toLowerCase().includes(q) ||
         s.kelas.toLowerCase().includes(q) ||
-        s.parentName.toLowerCase().includes(q)
+        (s.parentName && s.parentName.toLowerCase().includes(q))
     )
-  }, [canAccessSiswa, siswaList, searchQuery])
+  }, [canAccessSiswa, siswaList, searchQuery, statusFilter])
 
   // Ekspor Excel Multi-Sheet disesuaikan dengan role
   const handleExportExcel = () => {
@@ -316,26 +312,11 @@ export function LaporanSaldoMengendapPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || !ringkasan}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || !ringkasan}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 
@@ -360,7 +341,7 @@ export function LaporanSaldoMengendapPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Jumlah Siswa Terdaftar
+                  Jumlah Siswa Bersaldo
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -368,7 +349,7 @@ export function LaporanSaldoMengendapPage() {
                   {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Total siswa pemilik akun dan saldo berjalan
+                  Total siswa yang memiliki saldo mengendap berjalan
                 </p>
               </CardContent>
             </Card>
@@ -395,8 +376,25 @@ export function LaporanSaldoMengendapPage() {
                 searchPlaceholder="Cari nama, NIS, kelas, wali..."
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
-                isFiltered={Boolean(searchQuery)}
-                onReset={() => setSearchQuery('')}
+                filters={[
+                  {
+                    title: 'Status Saldo',
+                    options: [
+                      { label: 'Semua Siswa', value: 'ALL' },
+                      { label: 'Hanya Bersaldo (> Rp 0)', value: 'POSITIVE' },
+                      { label: 'Saldo Rp 0', value: 'ZERO' },
+                    ],
+                    selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
+                    onSelect: (vals) =>
+                      setStatusFilter((vals[0] as 'ALL' | 'POSITIVE' | 'ZERO') || 'ALL'),
+                    isSingleSelect: true,
+                  },
+                ]}
+                isFiltered={Boolean(searchQuery) || statusFilter !== 'ALL'}
+                onReset={() => {
+                  setSearchQuery('')
+                  setStatusFilter('ALL')
+                }}
               />
 
               <Card className="border-0 bg-muted/70 dark:bg-muted/30">

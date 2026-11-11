@@ -2,7 +2,6 @@ import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Search,
-  Download,
   User,
   Phone,
   FileText,
@@ -44,6 +43,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
   type ProfilSiswaRiwayat,
@@ -756,26 +756,11 @@ export function LaporanRiwayatSiswaPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleExportExcel}
+                <LaporanExportButton
+                  onExportExcel={handleExportExcel}
+                  onExportPdf={handleExportPdf}
                   disabled={isLoading || !profil}
-                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Ekspor Excel (.xlsx)</span>
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleExportPdf}
-                  disabled={isLoading || !profil}
-                  className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Ekspor PDF (.pdf)</span>
-                </Button>
+                />
               </div>
             </div>
           </div>

@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   Search,
   ShieldAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -30,20 +28,29 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
-import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem } from './types'
+import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem, LaporanFilterParams } from './types'
 
 export function LaporanRekonsiliasiPage() {
   const [data, setData] = useState<RingkasanRekonsiliasi | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
+
   useEffect(() => {
     let isMounted = true
     const loadData = async () => {
       try {
         setIsLoading(true)
-        const res = await laporanApi.getRekonsiliasi()
+        const res = await laporanApi.getRekonsiliasi(dateFilterParams)
         if (!isMounted) return
         setData(res)
       } catch (err: unknown) {
@@ -58,7 +65,7 @@ export function LaporanRekonsiliasiPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Baris Rincian Pos Akuntansi
   const rincianPos: ArusPosRekonsiliasiItem[] = useMemo(() => {
@@ -95,7 +102,7 @@ export function LaporanRekonsiliasiPage() {
         kategori: 'SALDO',
         arah: 'DEBIT',
         nominal: data.penjualanBersih,
-        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi void ${formatRupiah(data.voidPenjualan)}`,
+        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi pembatalan ${formatRupiah(data.voidPenjualan)}`,
       },
       {
         id: '5',
@@ -115,7 +122,7 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '8',
-        pos: 'Void Penjualan Kasir',
+        pos: 'Pembatalan Transaksi Kasir',
         kategori: 'MASUK',
         arah: 'KREDIT',
         nominal: data.voidPenjualan,
@@ -181,6 +188,7 @@ export function LaporanRekonsiliasiPage() {
         title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
           'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
@@ -254,6 +262,7 @@ export function LaporanRekonsiliasiPage() {
         subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
           'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
@@ -304,29 +313,24 @@ export function LaporanRekonsiliasiPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Cek Selisih Uang (Pencocokan Harian)
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanDateFilter
+                initialPreset="TODAY"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || !data}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || !data}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 
@@ -475,8 +479,8 @@ export function LaporanRekonsiliasiPage() {
                   {data ? formatRupiah(data.penjualanBersih) : '...'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1.5 flex justify-between">
-                  <span>Bruto: {data ? formatRupiah(data.penjualan) : '-'}</span>
-                  <span className="text-amber-600 font-medium">Void: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
+                  <span>Kotor: {data ? formatRupiah(data.penjualan) : '-'}</span>
+                  <span className="text-amber-600 font-medium">Batal: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
                 </div>
               </CardContent>
             </Card>

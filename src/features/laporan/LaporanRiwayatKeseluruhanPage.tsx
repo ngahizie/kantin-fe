@@ -1,7 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  Download,
   FileText,
   Printer,
   ArrowRight,
@@ -43,9 +42,11 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
   type RiwayatTransaksiKeseluruhanItem,
+  type LaporanFilterParams,
   resolveTitikDanPetugas,
 } from './types'
 
@@ -57,6 +58,14 @@ export function LaporanRiwayatKeseluruhanPage() {
   const [searchFilter, setSearchFilter] = useState('')
   const [jenisFilter, setJenisFilter] = useState<string>('ALL')
 
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
+
   // Modal Struk Digital
   const [selectedTrxForReceipt, setSelectedTrxForReceipt] =
     useState<RiwayatTransaksiKeseluruhanItem | null>(null)
@@ -67,7 +76,7 @@ export function LaporanRiwayatKeseluruhanPage() {
     const init = async () => {
       try {
         setIsLoading(true)
-        const list = await laporanApi.getRiwayatTransaksiKeseluruhan()
+        const list = await laporanApi.getRiwayatTransaksiKeseluruhan(dateFilterParams)
         if (!isMounted) return
         setTransaksiList(list)
       } catch (_err: unknown) {
@@ -81,7 +90,7 @@ export function LaporanRiwayatKeseluruhanPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Filter transaksi
   const filteredTransaksi = useMemo(() => {
@@ -143,6 +152,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN SISWA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Data`,
         },
@@ -207,6 +217,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         orientation: 'landscape',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Catatan`,
         },
@@ -458,9 +469,19 @@ export function LaporanRiwayatKeseluruhanPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Riwayat Transaksi
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                initialPreset="TODAY"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -472,26 +493,11 @@ export function LaporanRiwayatKeseluruhanPage() {
                   <span>Lihat Riwayat per Siswa</span>
                 </Link>
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || filteredTransaksi.length === 0}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || filteredTransaksi.length === 0}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 

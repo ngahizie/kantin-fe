@@ -13,6 +13,16 @@ import {
   exportMultiSectionPdf,
 } from '@/lib/pdfExport'
 import { formatRupiah } from '@/lib/formatters'
+import {
+  ALL_TIME_PARAMS,
+  formatYmd,
+  getTimezoneOffsetString,
+  startOfDayIso,
+  nextDayStartIso,
+  getDefaultDateFilter,
+  getPresetLabel,
+} from '../components/date-filter-utils'
+import { formatMargin } from '../laporan-utils'
 
 describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   beforeAll(() => {
@@ -190,6 +200,14 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(kasirs.length).toBeGreaterThan(0)
       expect(kasirs[0]).toHaveProperty('namaTitikKasir')
       expect(kasirs[0]).toHaveProperty('penjualanBersih')
+    })
+
+    it('memastikan formatMargin dari LaporanPenjualanPage merender 0% bila data kosong, nol, atau undefined agar tidak menampilkan undefined%', () => {
+      expect(formatMargin(undefined)).toBe('0%')
+      expect(formatMargin(null)).toBe('0%')
+      expect(formatMargin(0)).toBe('0%')
+      expect(formatMargin(25.5)).toBe('25.5%')
+      expect(formatMargin(Number.NaN)).toBe('0%')
     })
 
     it('mengembalikan array kosong [] saat backend mengembalikan data kosong tanpa fallback mock palsu', async () => {
@@ -411,6 +429,52 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(found?.totalNilai).toBe((found?.qty || 0) * (found?.hppSnapshot || 0))
       expect(found?.alasan).toContain('barang hilang dari etalase')
       expect(found?.petugas).toBeTruthy()
+    })
+  })
+
+  describe('Utilitas Filter Tanggal Laporan (Date Filter Utils)', () => {
+    it('getDefaultDateFilter mengembalikan tanggal hari ini dan label canonical yang sesuai', () => {
+      const testDate = new Date(2026, 10, 11)
+      const res = getDefaultDateFilter(testDate)
+      expect(res.params).toEqual({ tanggal: '2026-11-11' })
+      expect(res.label).toContain('Hari Ini')
+    })
+
+    it('getPresetLabel mengembalikan label yang sesuai untuk preset hari ini, kemarin, dan rentang waktu', () => {
+      const testDate = new Date(2026, 10, 11)
+      expect(getPresetLabel('TODAY', testDate)).toContain('Hari Ini')
+      expect(getPresetLabel('YESTERDAY', testDate)).toContain('Kemarin')
+      expect(getPresetLabel('LAST_7_DAYS', testDate)).toBe('7 Hari Terakhir')
+      expect(getPresetLabel('LAST_30_DAYS', testDate)).toBe('30 Hari Terakhir')
+      expect(getPresetLabel('THIS_MONTH', testDate)).toContain('Bulan Ini')
+    })
+
+    it('ALL_TIME_PARAMS berupa object kosong untuk kompatibilitas ke belakang', () => {
+      expect(ALL_TIME_PARAMS).toEqual({})
+      expect(Object.keys(ALL_TIME_PARAMS).length).toBe(0)
+    })
+
+    it('formatYmd memformat objek tanggal ke format YYYY-MM-DD secara konsisten', () => {
+      const d = new Date(2026, 10, 10) // 10 Nov 2026 (month index 10 = Nov)
+      expect(formatYmd(d)).toBe('2026-11-10')
+    })
+
+    it('getTimezoneOffsetString mengembalikan format offset yang valid (+HH:MM atau -HH:MM)', () => {
+      const offset = getTimezoneOffsetString()
+      expect(offset).toMatch(/^[+-]\d{2}:\d{2}$/)
+    })
+
+    it('startOfDayIso dan nextDayStartIso menghasilkan rentang setengah terbuka [dari, sampai) yang presisi', () => {
+      const offset = getTimezoneOffsetString()
+      const start = startOfDayIso('2026-11-10')
+      const end = nextDayStartIso('2026-11-10')
+
+      expect(start).toBe(`2026-11-10T00:00:00${offset}`)
+      expect(end).toBe(`2026-11-11T00:00:00${offset}`)
+
+      // Menguji pergantian akhir tahun
+      const endOfYearNext = nextDayStartIso('2026-12-31')
+      expect(endOfYearNext).toBe(`2027-01-01T00:00:00${offset}`)
     })
   })
 })

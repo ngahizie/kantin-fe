@@ -1,13 +1,11 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   Tag,
   Store,
   Layers,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -32,12 +30,15 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
+import { formatMargin } from './laporan-utils'
 import type {
   RingkasanPenjualan,
   BarisPenjualanItem,
   BarisPenjualanKategori,
   BarisPenjualanKasir,
+  LaporanFilterParams,
 } from './types'
 
 const getCategoryBadgeClass = (kategori: string) => {
@@ -68,17 +69,25 @@ export function LaporanPenjualanPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'terlaris' | 'laba' | 'margin'>('terlaris')
 
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
 
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
+        setIsLoading(true)
         const [resRingkasan, resItems, resKategoris] = await Promise.all([
-          laporanApi.getPenjualan(),
-          laporanApi.getPenjualanPerItem(),
-          laporanApi.getPenjualanPerKategori(),
+          laporanApi.getPenjualan(dateFilterParams),
+          laporanApi.getPenjualanPerItem(dateFilterParams),
+          laporanApi.getPenjualanPerKategori(dateFilterParams),
         ])
-        const resKasirs = await laporanApi.getPenjualanPerKasir().catch((err) => {
+        const resKasirs = await laporanApi.getPenjualanPerKasir(dateFilterParams).catch((err) => {
           // eslint-disable-next-line no-console
           console.warn('Endpoint penjualan per kasir belum tersedia atau gagal:', err)
           return []
@@ -100,7 +109,7 @@ export function LaporanPenjualanPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
   const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
@@ -125,29 +134,11 @@ export function LaporanPenjualanPage() {
 
   const summaryPenjualanBruto = ringkasan?.penjualanBruto ?? 0
   const summaryPenjualanBersih = ringkasan?.penjualanBersih ?? 0
-  const summaryJumlahRefund =
-    ringkasan?.jumlahRefund ??
-    (ringkasan as (RingkasanPenjualan & { jumlahVoid?: number }) | null)
-      ?.jumlahVoid ??
-    0
-  const summaryNilaiRefund =
-    ringkasan?.nilaiRefund ??
-    (ringkasan as (RingkasanPenjualan & { nilaiVoid?: number }) | null)
-      ?.nilaiVoid ??
-    0
-  const summaryTotalModal =
-    ringkasan?.totalModal ??
-    (ringkasan as (RingkasanPenjualan & { totalHpp?: number }) | null)?.totalHpp ??
-    0
-  const summaryLaba =
-    ringkasan?.laba ??
-    (ringkasan as (RingkasanPenjualan & { labaKotor?: number }) | null)?.labaKotor ??
-    0
-  const summaryMargin =
-    ringkasan?.marginPersen ??
-    (ringkasan as (RingkasanPenjualan & { marginLabaPersen?: number }) | null)
-      ?.marginLabaPersen ??
-    0
+  const summaryJumlahRefund = ringkasan?.jumlahRefund ?? 0
+  const summaryNilaiRefund = ringkasan?.nilaiRefund ?? 0
+  const summaryTotalModal = ringkasan?.totalModal ?? 0
+  const summaryLaba = ringkasan?.laba ?? 0
+  const summaryMargin = ringkasan?.marginPersen ?? 0
 
   // Filter & Sort Items
   const filteredItems = useMemo(() => {
@@ -234,6 +225,7 @@ export function LaporanPenjualanPage() {
             title: 'LAPORAN PENJUALAN PER ITEM MENU KANTIN SKOOLIA',
             metadata: {
               'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+              'Periode Laporan': dateFilterLabel,
               'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
               'Total Modal (HPP)': formatRupiah(summaryTotalModal),
               'Laba Total': formatRupiah(summaryLaba),
@@ -341,6 +333,7 @@ export function LaporanPenjualanPage() {
         subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Periode Laporan': dateFilterLabel,
           'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
           'Laba Total': formatRupiah(summaryLaba),
@@ -480,29 +473,24 @@ export function LaporanPenjualanPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 Laporan Penjualan & Laba Kotor
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanDateFilter
+                initialPreset="TODAY"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || !ringkasan}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || !ringkasan}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 
@@ -553,7 +541,7 @@ export function LaporanPenjualanPage() {
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
                   <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
-                    Margin: {summaryMargin}%
+                    Margin: {formatMargin(summaryMargin)}
                   </Badge>
                   <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
                 </div>
@@ -611,9 +599,10 @@ export function LaporanPenjualanPage() {
                         options: [
                           { label: 'Terlaris', value: 'terlaris' },
                           { label: 'Laba Terbesar', value: 'laba' },
+                          { label: 'Margin Tertinggi', value: 'margin' },
                         ],
                         selectedValues: [sortBy],
-                        onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba') || 'terlaris'),
+                        onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba' | 'margin') || 'terlaris'),
                         isSingleSelect: true,
                       },
                     ]
@@ -625,7 +614,8 @@ export function LaporanPenjualanPage() {
                 setSortBy('terlaris')
               }}
             />
-{/* TAB CONTENT 1: PENJUALAN PER ITEM */}
+
+            {/* TAB CONTENT 1: PENJUALAN PER ITEM */}
             <TabsContent value="item" className="space-y-4">
               <Card className="border-0 bg-muted/70 dark:bg-muted/30">
                 <CardHeader>
@@ -707,14 +697,14 @@ export function LaporanPenjualanPage() {
                                   <Badge
                                     variant="secondary"
                                     className={`font-mono text-xs ${
-                                      itemMargin >= 35
+                                      (itemMargin || 0) >= 35
                                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                        : itemMargin >= 20
+                                        : (itemMargin || 0) >= 20
                                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                         : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                     }`}
                                   >
-                                    {itemMargin}%
+                                    {formatMargin(itemMargin)}
                                   </Badge>
                                 </TableCell>
                               </TableRow>
@@ -795,7 +785,7 @@ export function LaporanPenjualanPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <Badge variant="secondary" className="font-mono text-xs">
-                                  {getKatMargin(kat)}%
+                                  {formatMargin(getKatMargin(kat))}
                                 </Badge>
                               </TableCell>
                             </TableRow>

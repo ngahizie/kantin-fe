@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons'
+import { CheckIcon } from '@radix-ui/react-icons'
+import { ArrowUpDown, SlidersHorizontal } from 'lucide-react'
 import { type Column } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +24,7 @@ import { Separator } from '@/components/ui/separator'
 type DataTableFacetedFilterProps<TData, TValue> = {
   column?: Column<TData, TValue>
   title?: string
+  icon?: React.ComponentType<{ className?: string }>
   options: {
     label: string
     value: string
@@ -36,12 +38,20 @@ type DataTableFacetedFilterProps<TData, TValue> = {
 export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
+  icon: customIcon,
   options,
   selectedValues: propSelectedValues,
   onSelect: propOnSelect,
   isSingleSelect,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
+
+  const isSortTitle = React.useMemo(() => {
+    const t = (title || '').toLowerCase()
+    return t.includes('urutkan') || t.includes('sort')
+  }, [title])
+
+  const TriggerIcon = customIcon || (isSortTitle ? ArrowUpDown : SlidersHorizontal)
 
   const selectedValues = React.useMemo(() => {
     if (propSelectedValues !== undefined) {
@@ -91,10 +101,10 @@ export function DataTableFacetedFilter<TData, TValue>({
         <Button
           variant='secondary'
           size='sm'
-          className='h-8 text-xs border-0 bg-muted/70 hover:bg-muted text-foreground shadow-none'
+          className='h-8 text-xs border-0 bg-muted/70 hover:bg-muted text-foreground shadow-none gap-1.5'
         >
-          <PlusCircledIcon className='size-4' />
-          {title}
+          <TriggerIcon className='size-3.5 shrink-0' />
+          <span>{title}</span>
           {selectedValues?.size > 0 && (
             <>
               <Separator orientation='vertical' className='mx-2 h-4' />
@@ -143,16 +153,34 @@ export function DataTableFacetedFilter<TData, TValue>({
                     key={option.value}
                     onSelect={() => handleSelect(option.value)}
                   >
-                    <div
-                      className={cn(
-                        'border-primary mr-2 flex size-4 items-center justify-center rounded-sm border',
-                        isSelected
-                          ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50 [&_svg]:invisible'
-                      )}
-                    >
-                      <CheckIcon className={cn('size-4')} />
-                    </div>
+                    {isSingleSelect ? (
+                      <div
+                        className={cn(
+                          'mr-2 flex size-4 items-center justify-center rounded-full border',
+                          isSelected
+                            ? 'border-primary'
+                            : 'border-muted-foreground/40'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'size-2 rounded-full bg-primary transition-opacity',
+                            isSelected ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className={cn(
+                          'border-primary mr-2 flex size-4 items-center justify-center rounded-sm border',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground'
+                            : 'opacity-50 [&_svg]:invisible'
+                        )}
+                      >
+                        <CheckIcon className={cn('size-4')} />
+                      </div>
+                    )}
                     {option.icon && (
                       <option.icon className='text-muted-foreground mr-2 size-4' />
                     )}
