@@ -35,12 +35,17 @@ import type { KategoriItem, MenuItem } from './types'
 export function MenuDetailPage() {
   const navigate = useNavigate()
   const { menuId } = useParams({ from: '/_authenticated/menu/$menuId' })
+  // Rute non-numerik (/menu/abc) tidak boleh menembak GET /api/katalog/menu/NaN.
   const idMenu = Number(menuId)
+  const idValid = Number.isInteger(idMenu) && idMenu > 0
+
   const [menu, setMenu] = useState<MenuItem | null>(null)
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
+  const [kategoriError, setKategoriError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [fotoGagal, setFotoGagal] = useState(false)
 
   // Muat data setiap kali menuId berubah atau tombol Segarkan ditekan.
   // setState hanya dipanggil setelah `await`, supaya tidak memicu render
@@ -48,16 +53,32 @@ export function MenuDetailPage() {
   const [versiMuat, setVersiMuat] = useState(0)
 
   useEffect(() => {
+    if (!idValid) return
     let masihAktif = true
     void (async () => {
       try {
-        const [detail, kategori] = await Promise.all([
+        // Kategori dimuat berdampingan, tapi kegagalannya TIDAK ditelan diam-diam:
+        // hasilnya dicatat di `kategoriError` dan ditampilkan ke pengguna.
+        const [detail, hasilKategori] = await Promise.all([
           katalogApi.getMenuDetail(idMenu),
-          katalogApi.getKategoriList().catch(() => [] as KategoriItem[]),
+          katalogApi
+            .getKategoriList()
+            .then((list) => ({ ok: true as const, list }))
+            .catch((err: unknown) => ({
+              ok: false as const,
+              list: [] as KategoriItem[],
+              err,
+            })),
         ])
         if (!masihAktif) return
         setMenu(detail)
-        setKategoriList(kategori)
+        setFotoGagal(false)
+        setKategoriList(hasilKategori.list)
+        setKategoriError(
+          hasilKategori.ok
+            ? null
+            : 'Daftar kategori gagal dimuat, jadi nama kategori belum bisa ditampilkan dan menu belum bisa diubah.'
+        )
         setError(null)
       } catch (err) {
         if (!masihAktif) return
@@ -79,12 +100,22 @@ export function MenuDetailPage() {
     return () => {
       masihAktif = false
     }
-  }, [idMenu, versiMuat])
+  }, [idMenu, idValid, versiMuat])
 
   const muatUlang = () => {
     setLoading(true)
     setVersiMuat((v) => v + 1)
   }
+
+  const pesanGalat = idValid
+    ? error
+    : `Nomor menu "${menuId}" tidak valid. Alamat halaman harus berisi angka, misalnya /menu/4.`
+  const sedangMemuat = idValid && loading
+  const kategoriSiap = kategoriList.length > 0
+  // Backend bisa mengirim path relatif storage; resolve lewat getImageUrl supaya
+  // tidak dianggap relatif terhadap /menu/$menuId.
+  const fotoSrc =
+    menu?.fotoUrl && !fotoGagal ? katalogApi.getImageUrl(menu.fotoUrl) : ''
 
   const kategoriNama =
     kategoriList.find((k) => k.id === menu?.kategoriId)?.nama ?? '—'
@@ -121,7 +152,7 @@ export function MenuDetailPage() {
             variant='secondary'
             size='sm'
             onClick={muatUlang}
-            disabled={loading}
+            disabled={sedangMemuat}
             className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -130,7 +161,12 @@ export function MenuDetailPage() {
           <Button
             size='sm'
             onClick={() => setIsModalOpen(true)}
-            disabled={!menu}
+            disabled={!menu || !kategoriSiap}
+            title={
+              kategoriSiap
+                ? 'Ubah menu'
+                : 'Daftar kategori belum siap — menu tidak bisa diubah'
+            }
             className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
           >
             <Pencil className='size-4' />
@@ -138,7 +174,24 @@ export function MenuDetailPage() {
           </Button>
         </div>
 
-        {loading && (
+        {kategoriError && menu && (
+          <div className='flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-800 dark:text-amber-300'>
+            <AlertTriangle className='mt-0.5 size-4 shrink-0' />
+            <div className='space-y-1'>
+              <p>{kategoriError}</p>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={muatUlang}
+                className='h-7 rounded-lg px-2 text-xs font-semibold text-amber-800 hover:bg-amber-500/15 dark:text-amber-300'
+              >
+                Muat ulang
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {sedangMemuat && (
           <Card className='border-none shadow-sm'>
             <CardContent className='p-6'>
               <div className='flex flex-col gap-6 sm:flex-row'>
@@ -154,7 +207,7 @@ export function MenuDetailPage() {
           </Card>
         )}
 
-        {!loading && error && (
+        {!sedangMemuat && pesanGalat && (
           <Card className='border-none shadow-sm'>
             <CardContent className='flex flex-col items-center gap-3 p-10 text-center'>
               <div className='rounded-full bg-destructive/10 p-3'>
@@ -164,7 +217,7 @@ export function MenuDetailPage() {
                 <p className='font-semibold text-foreground'>
                   Menu tidak dapat ditampilkan
                 </p>
-                <p className='text-sm text-muted-foreground'>{error}</p>
+                <p className='text-sm text-muted-foreground'>{pesanGalat}</p>
               </div>
               <div className='flex gap-2 pt-1'>
                 <Button
@@ -188,17 +241,18 @@ export function MenuDetailPage() {
           </Card>
         )}
 
-        {!loading && !error && menu && (
+        {!sedangMemuat && !pesanGalat && menu && (
           <div className='grid gap-6 md:grid-cols-[260px_1fr]'>
             {/* Foto & status */}
             <Card className='mx-auto w-full max-w-[260px] border-none shadow-sm md:mx-0 md:max-w-none'>
               <CardContent className='space-y-4 p-5'>
                 <div className='relative aspect-square w-full overflow-hidden rounded-2xl bg-muted/50'>
-                  {menu.fotoUrl ? (
+                  {fotoSrc ? (
                     <img
-                      src={menu.fotoUrl}
+                      src={fotoSrc}
                       alt={menu.nama}
                       className='size-full object-cover'
+                      onError={() => setFotoGagal(true)}
                     />
                   ) : (
                     <div className='flex size-full items-center justify-center text-muted-foreground'>

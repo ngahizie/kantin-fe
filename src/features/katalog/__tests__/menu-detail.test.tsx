@@ -5,9 +5,11 @@ import { MenuDetailPage } from '../MenuDetailPage'
 import { katalogApi } from '../api/katalog-api'
 import type { MenuItem } from '../types'
 
-// Halaman ini membaca `menuId` dari route param; di tes cukup dipatok.
+// Halaman ini membaca `menuId` dari route param; nilainya dipatok per tes.
+const route = vi.hoisted(() => ({ menuId: '4' }))
+
 vi.mock('@tanstack/react-router', () => ({
-  useParams: () => ({ menuId: '4' }),
+  useParams: () => ({ menuId: route.menuId }),
   useNavigate: () => vi.fn(),
 }))
 
@@ -23,9 +25,17 @@ const menuContoh: MenuItem = {
   aktif: true,
 }
 
+const renderHalaman = () =>
+  render(
+    <SidebarProvider>
+      <MenuDetailPage />
+    </SidebarProvider>
+  )
+
 describe('MenuDetailPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    route.menuId = '4'
     vi.spyOn(katalogApi, 'getKategoriList').mockResolvedValue([
       { id: 2, nama: 'Minuman', aktif: true },
     ] as never)
@@ -36,15 +46,9 @@ describe('MenuDetailPage', () => {
       .spyOn(katalogApi, 'getMenuDetail')
       .mockResolvedValue(menuContoh)
 
-    const screen = await render(
-      <SidebarProvider>
-        <MenuDetailPage />
-      </SidebarProvider>
-    )
+    const screen = await renderHalaman()
 
-    await expect
-      .element(screen.getByText('Air Mineral'))
-      .toBeInTheDocument()
+    await expect.element(screen.getByText('Air Mineral')).toBeInTheDocument()
     await expect.element(screen.getByText('Rp 4.000')).toBeInTheDocument()
     await expect.element(screen.getByText('Minuman')).toBeInTheDocument()
     await expect.element(screen.getByText('14')).toBeInTheDocument()
@@ -59,11 +63,7 @@ describe('MenuDetailPage', () => {
       response: { status: 404 },
     })
 
-    const screen = await render(
-      <SidebarProvider>
-        <MenuDetailPage />
-      </SidebarProvider>
-    )
+    const screen = await renderHalaman()
 
     await expect
       .element(screen.getByText(/Menu dengan nomor ini tidak ditemukan/i))
@@ -71,5 +71,47 @@ describe('MenuDetailPage', () => {
     await expect
       .element(screen.getByText('Kembali ke daftar'))
       .toBeInTheDocument()
+  })
+
+  it('tidak memanggil API saat nomor menu bukan angka', async () => {
+    route.menuId = 'abc'
+    const spy = vi.spyOn(katalogApi, 'getMenuDetail')
+
+    const screen = await renderHalaman()
+
+    await expect.element(screen.getByText(/tidak valid/i)).toBeInTheDocument()
+    // Tidak menembak GET /api/katalog/menu/NaN
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('menampilkan peringatan dan menahan tombol Ubah saat kategori gagal dimuat', async () => {
+    vi.spyOn(katalogApi, 'getMenuDetail').mockResolvedValue(menuContoh)
+    vi.spyOn(katalogApi, 'getKategoriList').mockRejectedValue(
+      new Error('jaringan putus')
+    )
+
+    const screen = await renderHalaman()
+
+    await expect
+      .element(screen.getByText(/Daftar kategori gagal dimuat/i))
+      .toBeInTheDocument()
+
+    const tombolUbah = screen.getByRole('button', { name: /Ubah Menu/i })
+    await expect.element(tombolUbah).toBeDisabled()
+  })
+
+  it('mengubah path foto relatif menjadi URL storage', async () => {
+    vi.spyOn(katalogApi, 'getMenuDetail').mockResolvedValue({
+      ...menuContoh,
+      fotoUrl: 'menu/4.jpg',
+    })
+
+    const screen = await renderHalaman()
+
+    await expect.element(screen.getByText('Air Mineral')).toBeInTheDocument()
+    const gambar = document.querySelector('img')
+    expect(gambar?.getAttribute('src')).toContain(
+      `/api/storage/file?path=${encodeURIComponent('menu/4.jpg')}`
+    )
   })
 })
