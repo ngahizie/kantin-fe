@@ -820,7 +820,7 @@ export function DashboardPage() {
               <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
-                    <TableRow className='text-xs bg-muted/40'>
+                    <TableRow className='text-xs bg-muted/40 hover:bg-muted/40'>
                       <TableHead className='w-12 text-center ps-4'>No.</TableHead>
                       <TableHead className='ps-2'>Menu</TableHead>
                       <TableHead className='text-center'>Sisa / Min</TableHead>
@@ -829,7 +829,7 @@ export function DashboardPage() {
                   </TableHeader>
                   <TableBody>
                     {lowStockItems.length === 0 ? (
-                      <TableRow>
+                      <TableRow className='hover:bg-transparent'>
                         <TableCell colSpan={4} className='h-28 text-center text-xs text-muted-foreground px-6'>
                           <CheckCircle2 className='size-6 text-emerald-500 mx-auto mb-1 opacity-70' />
                           Semua stok menu dalam kondisi aman di atas batas minimum.
@@ -839,7 +839,7 @@ export function DashboardPage() {
                       lowStockItems.map((item, idx) => {
                         const isOut = item.stok === 0
                         return (
-                          <TableRow key={item.id} className='text-xs hover:bg-muted/30'>
+                          <TableRow key={item.id} className='text-xs hover:bg-transparent'>
                             <TableCell className='text-center font-mono text-xs text-muted-foreground ps-4 py-3'>
                               {idx + 1}
                             </TableCell>
@@ -885,7 +885,7 @@ export function DashboardPage() {
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
-                  <TableRow className='text-xs bg-muted/40'>
+                  <TableRow className='text-xs bg-muted/40 hover:bg-muted/40'>
                     <TableHead className='w-12 text-center ps-4'>No.</TableHead>
                     <TableHead className='w-[140px] ps-2'>Waktu</TableHead>
                     <TableHead className='w-[200px]'>Pelanggan</TableHead>
@@ -896,7 +896,7 @@ export function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {recentTransactions.length === 0 ? (
-                    <TableRow>
+                    <TableRow className='hover:bg-transparent'>
                       <TableCell colSpan={6} className='h-28 text-center text-xs text-muted-foreground px-6'>
                         <ShoppingCart className='size-6 text-muted-foreground/50 mx-auto mb-1 opacity-70' />
                         Belum ada aktivitas transaksi kasir hari ini.
@@ -904,7 +904,7 @@ export function DashboardPage() {
                     </TableRow>
                   ) : (
                     recentTransactions.map((trx, idx) => (
-                      <TableRow key={trx.id} className='text-xs hover:bg-muted/30'>
+                      <TableRow key={trx.id} className='text-xs hover:bg-transparent'>
                         <TableCell className='text-center font-mono text-xs text-muted-foreground ps-4 py-3'>
                           {idx + 1}
                         </TableCell>
