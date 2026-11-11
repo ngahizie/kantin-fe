@@ -534,6 +534,9 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     await expect
       .element(screen.getByText(/Sesi kasir hari ini telah ditutup/i))
       .toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: /Lihat Riwayat Sesi/i }))
+      .not.toBeInTheDocument()
 
     // Simulasi muat ulang halaman ketika sesi hari ini sudah ditutup di backend
     await screen.unmount()

@@ -565,20 +565,9 @@ export const KasirPosPage: React.FC = () => {
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center justify-between gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
-          <div className='flex items-center gap-2'>
-            <Lock className='h-4 w-4 shrink-0' />
-            <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
-          </div>
-          <Button
-            type='button'
-            size='sm'
-            variant='secondary'
-            className='h-8 has-border !border !border-rose-200 dark:!border-rose-800/70 bg-white dark:bg-[#0a0a0a] text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-xl shadow-none'
-            onClick={() => setHistoryModalOpen(true)}
-          >
-            Lihat Riwayat Sesi
-          </Button>
+        <div className='flex items-center gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
+          <Lock className='h-4 w-4 shrink-0' />
+          <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
         </div>
       )}
 
