@@ -62,6 +62,11 @@ export const menuFormSchema = z.object({
 
 export type MenuFormValues = z.infer<typeof menuFormSchema>
 
+export type MenuUpdatePayload = Omit<MenuFormValues, 'kategoriId' | 'satuan'> & {
+  kategoriId?: number | null
+  satuan?: SatuanType | string
+}
+
 export interface UploadResponseData {
   path: string
   url: string

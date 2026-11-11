@@ -4,6 +4,7 @@ import type {
   MenuItem,
   KategoriFormValues,
   MenuFormValues,
+  MenuUpdatePayload,
   UploadResponseData,
 } from '../types'
 
@@ -72,12 +73,12 @@ export const katalogApi = {
     return res.data.data
   },
 
-  async updateMenu(id: number, data: MenuFormValues): Promise<MenuItem> {
+  async updateMenu(id: number, data: MenuFormValues | MenuUpdatePayload): Promise<MenuItem> {
     const res = await apiClient.put<ApiResponse<MenuItem>>(`/api/katalog/menu/${id}`, {
       nama: data.nama,
-      kategoriId: data.kategoriId,
+      kategoriId: data.kategoriId ?? null,
       hargaJual: data.hargaJual,
-      satuan: data.satuan,
+      satuan: data.satuan || 'PCS',
       fotoUrl: data.fotoUrl || null,
       stokMinimum: data.stokMinimum,
       aktif: data.aktif,

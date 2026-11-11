@@ -765,14 +765,24 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         const idx = menuList.findIndex((m) => m.id === targetId)
         if (idx === -1)
           return { status: 404, data: { message: 'Menu tidak ditemukan' } }
-        // Soft delete
-        menuList[idx].is_active = false
+        const [removed] = menuList.splice(idx, 1)
         return {
           status: 200,
           data: {
             code: 200,
             status: 'SUCCESS',
-            message: 'Menu berhasil dinonaktifkan',
+            message: 'Menu dihapus',
+            data: {
+              id: removed.id,
+              kategoriId: removed.kategori_id,
+              nama: removed.nama,
+              hargaJual: removed.harga_jual,
+              satuan: removed.satuan,
+              fotoUrl: removed.foto_url || null,
+              stokMinimum: removed.stok_minimum,
+              stokBerjalan: removed.stok,
+              aktif: false,
+            },
           },
         }
       }
