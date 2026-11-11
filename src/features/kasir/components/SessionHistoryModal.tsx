@@ -32,6 +32,15 @@ import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import RefundDialog from './RefundDialog'
 import type { TransaksiSesiItem } from '../api/kasir-api'
 
+const FILTER_STATUS_OPTIONS = [
+  { value: 'ALL', label: 'Semua Status' },
+  { value: 'SUKSES', label: 'Hanya Sukses' },
+  { value: 'VOID', label: 'Hanya Void' },
+] as const
+
+const FILTER_SELECT_ITEM_CLASS =
+  'rounded-lg py-1.5 ps-2 pe-8 text-xs font-medium cursor-pointer focus:bg-slate-100 dark:focus:bg-slate-800/80 focus:text-slate-800 dark:focus:text-white'
+
 export interface SessionHistoryModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -212,9 +221,15 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                   </span>
                 </SelectTrigger>
                 <SelectContent className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-xl shadow-none'>
-                  <SelectItem value='ALL'>Semua Status</SelectItem>
-                  <SelectItem value='SUKSES'>Hanya Sukses</SelectItem>
-                  <SelectItem value='VOID'>Hanya Void</SelectItem>
+                  {FILTER_STATUS_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      className={FILTER_SELECT_ITEM_CLASS}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
