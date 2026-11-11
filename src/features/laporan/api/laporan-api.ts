@@ -295,12 +295,16 @@ export const laporanApi = {
    * Mengambil data Rekonsiliasi Harian & Invariant Saldo (PRD §9.5, §5)
    */
   async getRekonsiliasi(
-    params?: LaporanFilterParams
+    params?: LaporanFilterParams,
+    options?: { silent?: boolean }
   ): Promise<RingkasanRekonsiliasi> {
     try {
+      const requestConfig = options?.silent
+        ? ({ params, silent: true } as unknown as Record<string, unknown>)
+        : { params }
       const res = await apiClient.get<ApiResponse<RingkasanRekonsiliasi>>(
         '/api/laporan/rekonsiliasi',
-        { params }
+        requestConfig
       )
       const raw = res.data?.data
 
@@ -320,7 +324,10 @@ export const laporanApi = {
         if (saldoSiswa === undefined || saldoKartuTamu === undefined) {
           try {
             const saldoRes = await apiClient.get<ApiResponse<RingkasanSaldoMengendap>>(
-              '/api/laporan/saldo-mengendap'
+              '/api/laporan/saldo-mengendap',
+              options?.silent
+                ? ({ silent: true } as unknown as Record<string, unknown>)
+                : undefined
             )
             if (saldoRes.data?.data) {
               saldoSiswa = saldoRes.data.data.saldoSiswa ?? 0
@@ -348,8 +355,15 @@ export const laporanApi = {
           saldoKartuTamu: saldoKartuTamu ?? 0,
         }
       }
-    } catch {
-      // Fallback data rekonsiliasi jika backend offline
+    } catch (err) {
+      if (import.meta.env.VITE_USE_MOCK !== 'true') {
+        throw err
+      }
+      // Fallback data rekonsiliasi jika backend offline (hanya mode mock)
+    }
+
+    if (import.meta.env.VITE_USE_MOCK !== 'true') {
+      throw new Error('Data rekonsiliasi tidak tersedia dari server')
     }
 
     return {

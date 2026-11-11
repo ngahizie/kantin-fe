@@ -240,7 +240,9 @@ export function DashboardPage() {
           trxRes,
         ] = await Promise.allSettled([
           laporanApi.getPenjualan(),
-          canViewRekonsiliasi ? laporanApi.getRekonsiliasi() : Promise.resolve(null),
+          canViewRekonsiliasi
+            ? laporanApi.getRekonsiliasi(undefined, { silent: true })
+            : Promise.resolve(null),
           canViewKatalog ? katalogApi.getMenuList(undefined, true) : Promise.resolve([]),
           canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
           canViewTransaksi
