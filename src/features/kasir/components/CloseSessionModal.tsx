@@ -468,7 +468,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
               <div className='rounded-xl has-border !border !border-blue-200 dark:!border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
                   <span className='text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
-                    Pendapatan Bersih (Net):
+                    Pendapatan Bersih:
                   </span>
                 </div>
                 <span className='text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums block'>
