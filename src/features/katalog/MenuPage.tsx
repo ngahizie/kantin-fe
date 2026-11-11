@@ -1,5 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   UtensilsCrossed,
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Image as ImageIcon,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -86,6 +88,7 @@ async function fetchKatalogData() {
 }
 
 export function MenuPage() {
+  const navigate = useNavigate()
   const [menuList, setMenuList] = useState<MenuItem[]>([])
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -606,6 +609,20 @@ export function MenuPage() {
                               title={item.aktif ? 'Nonaktifkan Menu' : 'Aktifkan Menu'}
                               className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
                             />
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
+                              onClick={() =>
+                                navigate({
+                                  to: '/menu/$menuId',
+                                  params: { menuId: String(item.id) },
+                                })
+                              }
+                              title='Lihat Detail'
+                            >
+                              <Eye className='size-4' />
+                            </Button>
                             <Button
                               variant='ghost'
                               size='icon'

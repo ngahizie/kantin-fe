@@ -25,6 +25,7 @@ import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedKontrolSiswaIndexRouteImport } from './routes/_authenticated/kontrol-siswa/index'
 import { Route as AuthenticatedKategoriIndexRouteImport } from './routes/_authenticated/kategori/index'
 import { Route as AuthenticatedKartuTamuIndexRouteImport } from './routes/_authenticated/kartu-tamu/index'
+import { Route as AuthenticatedMenuMenuIdRouteImport } from './routes/_authenticated/menu/$menuId'
 import { Route as AuthenticatedTuTopupIndexRouteImport } from './routes/_authenticated/tu/topup/index'
 import { Route as AuthenticatedTuSetoranIndexRouteImport } from './routes/_authenticated/tu/setoran/index'
 import { Route as AuthenticatedStokRusakIndexRouteImport } from './routes/_authenticated/stok/rusak/index'
@@ -126,6 +127,11 @@ const AuthenticatedKartuTamuIndexRoute =
     path: '/kartu-tamu/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMenuMenuIdRoute = AuthenticatedMenuMenuIdRouteImport.update({
+  id: '/menu/$menuId',
+  path: '/menu/$menuId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTuTopupIndexRoute =
   AuthenticatedTuTopupIndexRouteImport.update({
     id: '/tu/topup/',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/kasir/': typeof KasirIndexRoute
+  '/menu/$menuId': typeof AuthenticatedMenuMenuIdRoute
   '/kartu-tamu/': typeof AuthenticatedKartuTamuIndexRoute
   '/kategori/': typeof AuthenticatedKategoriIndexRoute
   '/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
   '/kasir': typeof KasirIndexRoute
+  '/menu/$menuId': typeof AuthenticatedMenuMenuIdRoute
   '/kartu-tamu': typeof AuthenticatedKartuTamuIndexRoute
   '/kategori': typeof AuthenticatedKategoriIndexRoute
   '/kontrol-siswa': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/kasir/': typeof KasirIndexRoute
+  '/_authenticated/menu/$menuId': typeof AuthenticatedMenuMenuIdRoute
   '/_authenticated/kartu-tamu/': typeof AuthenticatedKartuTamuIndexRoute
   '/_authenticated/kategori/': typeof AuthenticatedKategoriIndexRoute
   '/_authenticated/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/kasir/'
+    | '/menu/$menuId'
     | '/kartu-tamu/'
     | '/kategori/'
     | '/kontrol-siswa/'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/'
     | '/kasir'
+    | '/menu/$menuId'
     | '/kartu-tamu'
     | '/kategori'
     | '/kontrol-siswa'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/'
     | '/kasir/'
+    | '/_authenticated/menu/$menuId'
     | '/_authenticated/kartu-tamu/'
     | '/_authenticated/kategori/'
     | '/_authenticated/kontrol-siswa/'
@@ -562,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKartuTamuIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/menu/$menuId': {
+      id: '/_authenticated/menu/$menuId'
+      path: '/menu/$menuId'
+      fullPath: '/menu/$menuId'
+      preLoaderRoute: typeof AuthenticatedMenuMenuIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tu/topup/': {
       id: '/_authenticated/tu/topup/'
       path: '/tu/topup'
@@ -686,6 +705,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedMenuMenuIdRoute: typeof AuthenticatedMenuMenuIdRoute
   AuthenticatedKartuTamuIndexRoute: typeof AuthenticatedKartuTamuIndexRoute
   AuthenticatedKategoriIndexRoute: typeof AuthenticatedKategoriIndexRoute
   AuthenticatedKontrolSiswaIndexRoute: typeof AuthenticatedKontrolSiswaIndexRoute
@@ -713,6 +733,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedMenuMenuIdRoute: AuthenticatedMenuMenuIdRoute,
   AuthenticatedKartuTamuIndexRoute: AuthenticatedKartuTamuIndexRoute,
   AuthenticatedKategoriIndexRoute: AuthenticatedKategoriIndexRoute,
   AuthenticatedKontrolSiswaIndexRoute: AuthenticatedKontrolSiswaIndexRoute,
