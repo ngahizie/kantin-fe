@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Loader2,
@@ -26,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import {
   Form,
   FormControl,
@@ -440,27 +439,6 @@ export function MenuFormModal({
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Toggle Status Aktif */}
-            <div className='flex items-center justify-between rounded-xl has-border border border-slate-200 dark:border-slate-800 p-3 bg-muted/30'>
-              <div className='space-y-0.5'>
-                <Label className='text-xs font-semibold'>Status Aktif Menu</Label>
-                <p className='text-xs text-muted-foreground'>
-                  Menu nonaktif otomatis disembunyikan dari layar kasir POS.
-                </p>
-              </div>
-              <Controller
-                control={form.control}
-                name='aktif'
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={isSubmitting}
-                  />
                 )}
               />
             </div>

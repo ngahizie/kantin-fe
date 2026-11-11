@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { setupMockAdapter } from '@/mocks/mock-adapter'
+import { apiClient } from '@/lib/api-client'
+import { katalogApi } from './api/katalog-api'
 import {
   kategoriFormSchema,
   menuFormSchema,
@@ -266,5 +269,49 @@ describe('sortMenusNewestFirst', () => {
 
     expect(sorted.map((item) => item.nama)).toEqual(['Air Mineral', 'Teh Manis'])
     expect(input.map((item) => item.nama)).toEqual(['Teh Manis', 'Air Mineral'])
+  })
+})
+
+describe('Katalog Menu API Toggle Status & Hapus Menu', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('dapat menonaktifkan dan mengaktifkan kembali menu via updateMenu serta menghapus menu dari daftar', async () => {
+    const created = await katalogApi.createMenu({
+      nama: 'Pastel Ayam Uji',
+      kategoriId: 1,
+      hargaJual: 4000,
+      satuan: 'PCS',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+
+    const deactivated = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: false,
+    })
+    expect(deactivated.aktif).toBe(false)
+
+    const reactivated = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(reactivated.aktif).toBe(true)
+
+    await katalogApi.deleteMenu(created.id)
+    const listAfterDelete = await katalogApi.getMenuList(undefined, false)
+    expect(listAfterDelete.some((m) => m.id === created.id)).toBe(false)
   })
 })

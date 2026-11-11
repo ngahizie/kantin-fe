@@ -20,6 +20,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -99,10 +100,11 @@ export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null)
 
-  // Delete dialog state
+  // Delete & status toggle states
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [activeDeleteTarget, setActiveDeleteTarget] = useState<MenuItem | null>(null)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
   const handleDeleteClick = (item: MenuItem) => {
     setDeleteTarget(item)
     setActiveDeleteTarget(item)
@@ -216,18 +218,47 @@ export function MenuPage() {
     void loadData()
   }
 
+  const handleToggleAktif = async (item: MenuItem) => {
+    const nextAktif = !item.aktif
+    try {
+      setTogglingId(item.id)
+      const updated = await katalogApi.updateMenu(item.id, {
+        nama: item.nama,
+        kategoriId: item.kategoriId ?? null,
+        hargaJual: item.hargaJual,
+        satuan: item.satuan || 'PCS',
+        stokMinimum: item.stokMinimum ?? 0,
+        fotoUrl: item.fotoUrl || '',
+        aktif: nextAktif,
+      })
+      setMenuList((prev) =>
+        prev.map((m) => (m.id === item.id ? { ...m, ...updated, aktif: nextAktif } : m))
+      )
+      toast.success(
+        nextAktif ? `Menu "${item.nama}" diaktifkan` : `Menu "${item.nama}" dinonaktifkan`
+      )
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const message =
+        error.response?.data?.message || error.message || 'Gagal memperbarui status menu'
+      toast.error(message)
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
   const confirmDelete = async () => {
     const target = activeDeleteTarget
     if (!target) return
     try {
       setIsDeleting(true)
       await katalogApi.deleteMenu(target.id)
-      toast.success(`Menu "${target.nama}" berhasil dinonaktifkan`)
+      toast.success(`Menu "${target.nama}" berhasil dihapus`)
       setDeleteTarget(null)
-      loadData()
+      await loadData()
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message = error.response?.data?.message || error.message || 'Gagal menonaktifkan menu'
+      const message = error.response?.data?.message || error.message || 'Gagal menghapus menu'
       toast.error(message)
     } finally {
       setIsDeleting(false)
@@ -421,7 +452,7 @@ export function MenuPage() {
                   <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Satuan</TableHead>
                   <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Min.</TableHead>
                   <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</TableHead>
-                  <TableHead className='w-28 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>Aksi</TableHead>
+                  <TableHead className='w-36 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -566,7 +597,15 @@ export function MenuPage() {
 
                         {/* Aksi */}
                         <TableCell className='text-right border-none py-3.5 pe-6'>
-                          <div className='flex items-center justify-end gap-1'>
+                          <div className='flex items-center justify-end gap-1.5'>
+                            <Switch
+                              checked={item.aktif}
+                              disabled={togglingId === item.id}
+                              onCheckedChange={() => void handleToggleAktif(item)}
+                              aria-label={item.aktif ? `Nonaktifkan ${item.nama}` : `Aktifkan ${item.nama}`}
+                              title={item.aktif ? 'Nonaktifkan Menu' : 'Aktifkan Menu'}
+                              className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
+                            />
                             <Button
                               variant='ghost'
                               size='icon'
@@ -581,7 +620,7 @@ export function MenuPage() {
                               size='icon'
                               className='size-8 rounded-lg border-none text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-none'
                               onClick={() => handleDeleteClick(item)}
-                              title='Nonaktifkan Menu'
+                              title='Hapus Menu'
                             >
                               <Trash2 className='size-4' />
                             </Button>
@@ -638,7 +677,7 @@ export function MenuPage() {
         onSuccess={handleFormSuccess}
       />
 
-      {/* Alert Dialog Konfirmasi Nonaktifkan Menu */}
+      {/* Alert Dialog Konfirmasi Hapus Menu */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className='has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg max-w-md bg-card'>
           <AlertDialogHeader>
@@ -646,17 +685,16 @@ export function MenuPage() {
               <div className='flex size-10 items-center justify-center rounded-xl has-border border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'>
                 <AlertTriangle className='size-5' />
               </div>
-              <AlertDialogTitle className='text-lg font-bold'>Nonaktifkan Menu?</AlertDialogTitle>
+              <AlertDialogTitle className='text-lg font-bold'>Hapus Menu?</AlertDialogTitle>
             </div>
             <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
               <p>
-                Apakah Anda yakin ingin menonaktifkan menu{' '}
+                Apakah Anda yakin ingin menghapus menu{' '}
                 <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
               </p>
               <p className='text-xs text-muted-foreground'>
-                Menu yang dinonaktifkan akan <strong>otomatis disembunyikan</strong> dari layar
-                kasir POS dan tidak dapat dipesan lagi. Data riwayat penjualan yang sudah ada tetap
-                tersimpan aman.
+                Menu yang dihapus akan dihilangkan dari daftar katalog maupun layar kasir POS.
+                Data riwayat transaksi dan mutasi stok yang sudah tercatat tetap tersimpan aman.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -672,7 +710,7 @@ export function MenuPage() {
               disabled={isDeleting}
               className='border-none rounded-xl shadow-none bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 font-semibold'
             >
-              {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
