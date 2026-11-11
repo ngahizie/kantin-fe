@@ -1,10 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
-import {
-  Download,
-} from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -28,7 +24,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
+import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type { BarisKerugianStok, RingkasanKerugianStok, LaporanFilterParams } from './types'
 
@@ -253,26 +249,11 @@ export function LaporanKerugianStokPage() {
                   setDateFilterLabel(label)
                 }}
               />
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || kerugianList.length === 0}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || kerugianList.length === 0}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 

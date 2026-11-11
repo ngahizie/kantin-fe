@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   Search,
   ShieldAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -30,7 +28,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
+import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem, LaporanFilterParams } from './types'
 
@@ -324,26 +322,11 @@ export function LaporanRekonsiliasiPage() {
                   setDateFilterLabel(label)
                 }}
               />
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || !data}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || !data}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 

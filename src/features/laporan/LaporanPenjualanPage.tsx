@@ -1,13 +1,11 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   Tag,
   Store,
   Layers,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -32,7 +30,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
+import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
   RingkasanPenjualan,
@@ -483,26 +481,11 @@ export function LaporanPenjualanPage() {
                   setDateFilterLabel(label)
                 }}
               />
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || !ringkasan}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || !ringkasan}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 

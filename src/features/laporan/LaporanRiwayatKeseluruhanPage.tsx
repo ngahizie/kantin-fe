@@ -1,7 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  Download,
   FileText,
   Printer,
   ArrowRight,
@@ -43,7 +42,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS } from './components'
+import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
   type RiwayatTransaksiKeseluruhanItem,
@@ -490,26 +489,11 @@ export function LaporanRiwayatKeseluruhanPage() {
                   <span>Lihat Riwayat per Siswa</span>
                 </Link>
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportExcel}
+              <LaporanExportButton
+                onExportExcel={handleExportExcel}
+                onExportPdf={handleExportPdf}
                 disabled={isLoading || filteredTransaksi.length === 0}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor Excel (.xlsx)</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isLoading || filteredTransaksi.length === 0}
-                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Download className="h-4 w-4" />
-                <span>Ekspor PDF (.pdf)</span>
-              </Button>
+              />
             </div>
           </div>
 
