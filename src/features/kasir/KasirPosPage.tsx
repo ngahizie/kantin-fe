@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { formatRupiah } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import { useBeepAudio } from '@/hooks/useBeepAudio'
 import { useRfidScanner } from '@/hooks/useRfidScanner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -84,13 +85,15 @@ export const KasirPosPage: React.FC = () => {
   // Online Status & Sesi Kasir Harian
   const isOnline = useOnlineStatus()
   const [sesi, setSesi] = useState<SesiKasirData | null>(null)
+  const [sessionClosedOverride, setSessionClosedOverride] = useState(false)
   const [rekapSesi, setRekapSesi] = useState<RekapSesiData | null>(null)
   const [transactions, setTransactions] = useState<TransaksiSesiItem[]>([])
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [closeSessionModalOpen, setCloseSessionModalOpen] = useState(false)
 
-  const isSessionClosed = sesi?.status === 'DITUTUP'
+  const isSessionClosed =
+    sesi?.status === 'DITUTUP' || sessionClosedOverride
 
   // Modals & Transaksi state
   const [manualRfidOpen, setManualRfidOpen] = useState(false)
@@ -120,9 +123,25 @@ export const KasirPosPage: React.FC = () => {
         activeTitikKasirId ?? undefined
       )
       if (!currentSesi) {
-        currentSesi = await kasirApi.bukaSesi(activeTitikKasirId ?? undefined)
+        try {
+          currentSesi = await kasirApi.bukaSesi(
+            activeTitikKasirId ?? undefined
+          )
+        } catch (openErr: unknown) {
+          const openMsg = getErrorMessage(openErr, '').toLowerCase()
+          if (openMsg.includes('sudah ditutup')) {
+            setSessionClosedOverride(true)
+            setSesi((prev) =>
+              prev ? { ...prev, status: 'DITUTUP' } : prev
+            )
+            return
+          }
+          throw openErr
+        }
       }
+
       setSesi(currentSesi)
+      setSessionClosedOverride(currentSesi?.status === 'DITUTUP')
 
       if (currentSesi?.id) {
         const [rekap, trxList] = await Promise.all([
@@ -138,6 +157,23 @@ export const KasirPosPage: React.FC = () => {
       setIsHistoryLoading(false)
     }
   }, [activeTitikKasirId])
+
+  const handleSessionClosed = useCallback(
+    (closedSesi?: SesiKasirData) => {
+      setSessionClosedOverride(true)
+      if (closedSesi) {
+        setSesi((prev) => ({
+          ...prev,
+          ...closedSesi,
+          status: 'DITUTUP',
+        }))
+      } else {
+        setSesi((prev) => (prev ? { ...prev, status: 'DITUTUP' } : prev))
+      }
+      void loadSesiData()
+    },
+    [loadSesiData]
+  )
 
   // Muat data katalog menu & kategori serta pengaturan operasional
   const loadKatalogData = useCallback(async () => {
@@ -608,7 +644,9 @@ export const KasirPosPage: React.FC = () => {
               <Button
                 type='button'
                 variant='secondary'
-                onClick={() => setCloseSessionModalOpen(true)}
+                onClick={() => {
+                  if (!isSessionClosed) setCloseSessionModalOpen(true)
+                }}
                 disabled={isSessionClosed}
                 className={`h-10 gap-1.5 px-3 text-xs font-semibold rounded-xl shadow-none ${
                   isSessionClosed
@@ -874,7 +912,7 @@ export const KasirPosPage: React.FC = () => {
         onOpenChange={setCloseSessionModalOpen}
         sesi={sesi}
         rekap={rekapSesi}
-        onSuccess={loadSesiData}
+        onSuccess={handleSessionClosed}
       />
     </div>
   )

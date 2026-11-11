@@ -1,7 +1,11 @@
+import { AxiosError, AxiosHeaders } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { userEvent } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
 import { toast } from 'sonner'
+import { katalogApi } from '@/features/katalog/api/katalog-api'
+import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
+import { DEFAULT_PENGATURAN_KANTIN } from '@/features/pengaturan/types'
 import { kasirApi, type RekapSesiData, type SesiKasirData } from '../api/kasir-api'
 import {
   KANTIN_CLOSE_SESSION_LOCKS_KEY,
@@ -10,6 +14,7 @@ import {
   saveCloseSessionLock,
 } from '../close-session-lock'
 import { CloseSessionModal } from '../components/CloseSessionModal'
+import { KasirPosPage } from '../KasirPosPage'
 
 const sampleSesi: SesiKasirData = {
   id: 41,
@@ -355,6 +360,9 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     expect(getCloseSessionLock(sampleSesi)).toBeNull()
     expect(onOpenChange).toHaveBeenCalledWith(false)
     expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'DITUTUP' })
+    )
 
     // Sesi berikutnya dibuka bersih di Langkah 1
     await screen.rerender(
@@ -372,5 +380,174 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     await expect
       .element(screen.getByLabelText(/Total Uang Tunai di Laci Kasir/i))
       .toHaveValue('')
+  })
+
+  it('menampilkan pesan asli dari backend (bukan Request failed with status code 400) dan menyinkronkan status saat sesi sudah ditutup', async () => {
+    const errorSpy = vi.spyOn(toast, 'error').mockImplementation(() => 'err-1')
+    const axios400 = new AxiosError(
+      'Request failed with status code 400',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        status: 400,
+        statusText: 'Bad Request',
+        headers: new AxiosHeaders(),
+        config: { headers: new AxiosHeaders() },
+        data: {
+          code: 400,
+          message: 'Sesi kasir sudah ditutup',
+        },
+      }
+    )
+    vi.spyOn(kasirApi, 'tutupSesi').mockRejectedValue(axios400)
+
+    const onOpenChange = vi.fn()
+    const onSuccess = vi.fn()
+
+    const screen = await render(
+      <CloseSessionModal
+        open={true}
+        onOpenChange={onOpenChange}
+        sesi={sampleSesi}
+        rekap={sampleRekap}
+        onSuccess={onSuccess}
+      />
+    )
+
+    await userEvent.fill(
+      screen.getByLabelText(/Total Uang Tunai di Laci Kasir/i),
+      '100000'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: /Lanjut ke Rekapitulasi/i })
+    )
+    await userEvent.fill(
+      screen.getByLabelText(/Catatan \/ Keterangan Selisih/i),
+      'Test tutup ulang'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: /Konfirmasi & Tutup Kasir/i })
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith('Gagal Menutup Sesi', {
+      description: 'Sesi kasir sudah ditutup',
+    })
+    expect(getCloseSessionLock(sampleSesi)).toBeNull()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'DITUTUP' })
+    )
+  })
+
+  it('mengunci tombol Tutup Kasir menjadi Sesi Ditutup langsung setelah konfirmasi pertama dan saat dimuat ulang meski bukaSesi membalas 400 sudah ditutup', async () => {
+    await page.viewport(1280, 800)
+
+    vi.spyOn(toast, 'success').mockImplementation(() => 'ok-1')
+    vi.spyOn(katalogApi, 'getMenuList').mockResolvedValue([])
+    vi.spyOn(katalogApi, 'getKategoriList').mockResolvedValue([])
+    vi.spyOn(pengaturanApi, 'getPengaturan').mockResolvedValue({
+      ...DEFAULT_PENGATURAN_KANTIN,
+      jamTutupOtomatis: '23:59',
+    })
+    vi.spyOn(pengaturanApi, 'getTitikKasirList').mockResolvedValue([
+      {
+        id: 1,
+        sekolahId: 1,
+        nama: 'Kasir Kantin Utama',
+        kode: 'KSR-01',
+        aktif: true,
+        createdAt: '2026-11-11T00:00:00Z',
+        updatedAt: '2026-11-11T00:00:00Z',
+      },
+    ])
+
+    let closedOnBackend = false
+    vi.spyOn(kasirApi, 'getSesiAktif').mockImplementation(async () => {
+      if (closedOnBackend) {
+        return null as unknown as SesiKasirData
+      }
+      return sampleSesi
+    })
+    vi.spyOn(kasirApi, 'bukaSesi').mockImplementation(async () => {
+      if (closedOnBackend) {
+        throw new AxiosError(
+          'Request failed with status code 400',
+          'ERR_BAD_REQUEST',
+          undefined,
+          undefined,
+          {
+            status: 400,
+            statusText: 'Bad Request',
+            headers: new AxiosHeaders(),
+            config: { headers: new AxiosHeaders() },
+            data: {
+              code: 400,
+              message: 'Sesi kasir hari ini sudah ditutup',
+            },
+          }
+        )
+      }
+      return sampleSesi
+    })
+    vi.spyOn(kasirApi, 'getRekapSesi').mockResolvedValue(sampleRekap)
+    vi.spyOn(kasirApi, 'getRiwayatTransaksiSesi').mockResolvedValue([])
+    vi.spyOn(kasirApi, 'tutupSesi').mockImplementation(async () => {
+      closedOnBackend = true
+      return {
+        ...sampleSesi,
+        status: 'DITUTUP',
+        uangFisik: 100000,
+        selisih: -98000,
+        catatan: 'Selisih kas',
+      }
+    })
+
+    const screen = await render(
+      <div className='h-[700px] w-full'>
+        <KasirPosPage />
+      </div>
+    )
+
+    const tutupBtn = screen.getByRole('button', { name: /Tutup Kasir/i })
+    await expect.element(tutupBtn).toBeEnabled()
+    await userEvent.click(tutupBtn)
+
+    await userEvent.fill(
+      screen.getByLabelText(/Total Uang Tunai di Laci Kasir/i),
+      '100000'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: /Lanjut ke Rekapitulasi/i })
+    )
+    await userEvent.fill(
+      screen.getByLabelText(/Catatan \/ Keterangan Selisih/i),
+      'Kembalian kurang'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: /Konfirmasi & Tutup Kasir/i })
+    )
+
+    await expect
+      .element(screen.getByRole('button', { name: /Sesi Ditutup/i }))
+      .toBeDisabled()
+    await expect
+      .element(screen.getByText(/Sesi kasir hari ini telah ditutup/i))
+      .toBeInTheDocument()
+
+    // Simulasi muat ulang halaman ketika sesi hari ini sudah ditutup di backend
+    await screen.unmount()
+    const reloaded = await render(
+      <div className='h-[700px] w-full'>
+        <KasirPosPage />
+      </div>
+    )
+
+    await expect
+      .element(reloaded.getByRole('button', { name: /Sesi Ditutup/i }))
+      .toBeDisabled()
+    await expect
+      .element(reloaded.getByText(/Sesi kasir hari ini telah ditutup/i))
+      .toBeInTheDocument()
   })
 })

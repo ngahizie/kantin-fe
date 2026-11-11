@@ -28,6 +28,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import {
   kasirApi,
   type SesiKasirData,
@@ -46,7 +47,7 @@ export interface CloseSessionModalProps {
   onOpenChange: (open: boolean) => void
   sesi: SesiKasirData | null
   rekap: RekapSesiData | null
-  onSuccess?: () => void
+  onSuccess?: (closedSesi?: SesiKasirData) => void
 }
 
 type CloseSessionStep = 'INPUT_CASH' | 'RECONCILE'
@@ -177,8 +178,18 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
   }
 
   const handleCloseSession = async () => {
+    if (isSubmitting) return
+
     if (!sesi?.id) {
       toast.error('Data sesi kasir tidak ditemukan')
+      return
+    }
+
+    if (sesi.status === 'DITUTUP') {
+      clearCloseSessionLock(sesi.id)
+      toast.info('Sesi kasir hari ini sudah ditutup')
+      onOpenChange(false)
+      onSuccess?.(sesi)
       return
     }
 
@@ -193,7 +204,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
 
     try {
       setIsSubmitting(true)
-      await kasirApi.tutupSesi(sesi.id, {
+      const closedSesi = await kasirApi.tutupSesi(sesi.id, {
         uangFisik: authoritativeCash,
         selisih: authoritativeSelisih,
         catatan: catatanSelisih.trim() || undefined,
@@ -213,11 +224,18 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
       setCashInput('')
       setCatatanSelisih('')
       onOpenChange(false)
-      onSuccess?.()
+      onSuccess?.(closedSesi)
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Gagal menutup sesi kasir'
+      const msg = getErrorMessage(err, 'Gagal menutup sesi kasir')
       toast.error('Gagal Menutup Sesi', { description: msg })
+      if (msg.toLowerCase().includes('sudah ditutup')) {
+        clearCloseSessionLock(sesi.id)
+        setStep('INPUT_CASH')
+        setCashInput('')
+        setCatatanSelisih('')
+        onOpenChange(false)
+        onSuccess?.({ ...sesi, status: 'DITUTUP' })
+      }
     } finally {
       setIsSubmitting(false)
     }
