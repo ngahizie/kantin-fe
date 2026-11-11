@@ -1,5 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   UtensilsCrossed,
   Plus,
@@ -9,6 +10,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Image as ImageIcon,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -45,6 +47,7 @@ import type { MenuItem, KategoriItem } from './types'
 const PAGE_SIZE = 10
 
 export function MenuPage() {
+  const navigate = useNavigate()
   const [menuList, setMenuList] = useState<MenuItem[]>([])
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -488,6 +491,20 @@ export function MenuPage() {
                         {/* Aksi */}
                         <TableCell className='text-right border-none py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1'>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
+                              onClick={() =>
+                                navigate({
+                                  to: '/menu/$menuId',
+                                  params: { menuId: String(item.id) },
+                                })
+                              }
+                              title='Lihat Detail'
+                            >
+                              <Eye className='size-4' />
+                            </Button>
                             <Button
                               variant='ghost'
                               size='icon'
