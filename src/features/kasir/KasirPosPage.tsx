@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { formatRupiah } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import { useBeepAudio } from '@/hooks/useBeepAudio'
 import { useRfidScanner } from '@/hooks/useRfidScanner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -84,13 +85,15 @@ export const KasirPosPage: React.FC = () => {
   // Online Status & Sesi Kasir Harian
   const isOnline = useOnlineStatus()
   const [sesi, setSesi] = useState<SesiKasirData | null>(null)
+  const [sessionClosedOverride, setSessionClosedOverride] = useState(false)
   const [rekapSesi, setRekapSesi] = useState<RekapSesiData | null>(null)
   const [transactions, setTransactions] = useState<TransaksiSesiItem[]>([])
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [closeSessionModalOpen, setCloseSessionModalOpen] = useState(false)
 
-  const isSessionClosed = sesi?.status === 'DITUTUP'
+  const isSessionClosed =
+    sesi?.status === 'DITUTUP' || sessionClosedOverride
 
   // Modals & Transaksi state
   const [manualRfidOpen, setManualRfidOpen] = useState(false)
@@ -120,9 +123,25 @@ export const KasirPosPage: React.FC = () => {
         activeTitikKasirId ?? undefined
       )
       if (!currentSesi) {
-        currentSesi = await kasirApi.bukaSesi(activeTitikKasirId ?? undefined)
+        try {
+          currentSesi = await kasirApi.bukaSesi(
+            activeTitikKasirId ?? undefined
+          )
+        } catch (openErr: unknown) {
+          const openMsg = getErrorMessage(openErr, '').toLowerCase()
+          if (openMsg.includes('sudah ditutup')) {
+            setSessionClosedOverride(true)
+            setSesi((prev) =>
+              prev ? { ...prev, status: 'DITUTUP' } : prev
+            )
+            return
+          }
+          throw openErr
+        }
       }
+
       setSesi(currentSesi)
+      setSessionClosedOverride(currentSesi?.status === 'DITUTUP')
 
       if (currentSesi?.id) {
         const [rekap, trxList] = await Promise.all([
@@ -138,6 +157,23 @@ export const KasirPosPage: React.FC = () => {
       setIsHistoryLoading(false)
     }
   }, [activeTitikKasirId])
+
+  const handleSessionClosed = useCallback(
+    (closedSesi?: SesiKasirData) => {
+      setSessionClosedOverride(true)
+      if (closedSesi) {
+        setSesi((prev) => ({
+          ...prev,
+          ...closedSesi,
+          status: 'DITUTUP',
+        }))
+      } else {
+        setSesi((prev) => (prev ? { ...prev, status: 'DITUTUP' } : prev))
+      }
+      void loadSesiData()
+    },
+    [loadSesiData]
+  )
 
   // Muat data katalog menu & kategori serta pengaturan operasional
   const loadKatalogData = useCallback(async () => {
@@ -529,26 +565,15 @@ export const KasirPosPage: React.FC = () => {
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center justify-between gap-2 has-border !border-b !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
-          <div className='flex items-center gap-2'>
-            <Lock className='h-4 w-4 shrink-0' />
-            <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
-          </div>
-          <Button
-            type='button'
-            size='sm'
-            variant='secondary'
-            className='h-8 has-border !border !border-rose-200 dark:!border-rose-800/70 bg-white dark:bg-[#0a0a0a] text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-xl shadow-none'
-            onClick={() => setHistoryModalOpen(true)}
-          >
-            Lihat Riwayat Sesi
-          </Button>
+        <div className='flex items-center gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
+          <Lock className='h-4 w-4 shrink-0' />
+          <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
         </div>
       )}
 
       <div className='flex flex-1 overflow-hidden'>
         {/* Sisi Kiri: Katalog POS (Pencarian, Filter Kategori, Grid Menu) */}
-        <div className='flex flex-1 flex-col overflow-hidden'>
+        <div className='flex flex-1 min-w-0 flex-col overflow-hidden'>
           {/* Top Control Bar: Search & Status */}
           <div className='flex flex-col gap-2.5 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none sm:p-4'>
             <div className='flex items-center gap-2'>
@@ -608,7 +633,9 @@ export const KasirPosPage: React.FC = () => {
               <Button
                 type='button'
                 variant='secondary'
-                onClick={() => setCloseSessionModalOpen(true)}
+                onClick={() => {
+                  if (!isSessionClosed) setCloseSessionModalOpen(true)
+                }}
                 disabled={isSessionClosed}
                 className={`h-10 gap-1.5 px-3 text-xs font-semibold rounded-xl shadow-none ${
                   isSessionClosed
@@ -696,7 +723,7 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Area Scrollable Katalog Menu */}
-        <div className='flex-1 overflow-y-auto bg-[#FDFCF8] dark:bg-[#050510]'>
+        <div className='flex-1 min-w-0 overflow-y-auto [scrollbar-gutter:stable] bg-[#FDFCF8] dark:bg-[#050510]'>
           <MenuGrid
             menus={filteredMenus}
             loading={loading}
@@ -874,7 +901,7 @@ export const KasirPosPage: React.FC = () => {
         onOpenChange={setCloseSessionModalOpen}
         sesi={sesi}
         rekap={rekapSesi}
-        onSuccess={loadSesiData}
+        onSuccess={handleSessionClosed}
       />
     </div>
   )

@@ -75,6 +75,8 @@ describe('SessionHistoryModal', () => {
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
     await expect.element(screen.getByText('2x Air Mineral')).toBeInTheDocument()
     await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('REFUND', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('VOID', { exact: true })).not.toBeInTheDocument()
     await expect.element(screen.getByText(/Alasan Refund:/i)).toBeInTheDocument()
 
     // Search bar dan filter status tersedia; tombol lama "Void Transaksi" tetap tidak ada
@@ -139,9 +141,9 @@ describe('SessionHistoryModal', () => {
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
     await expect.element(screen.getByText('Tamu 01')).not.toBeInTheDocument()
 
-    // Filter status "Hanya Void" + query yang tidak cocok -> tampil tombol Reset Filter
+    // Filter status "Hanya Refund" + query yang tidak cocok -> tampil tombol Reset Filter
     await userEvent.click(statusFilter)
-    await userEvent.click(screen.getByRole('option', { name: 'Hanya Void' }))
+    await userEvent.click(screen.getByRole('option', { name: 'Hanya Refund' }))
     await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
     await expect
       .element(screen.getByText('Budi Santoso'))

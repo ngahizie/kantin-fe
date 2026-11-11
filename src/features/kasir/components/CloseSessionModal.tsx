@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useId, useState } from 'react'
 import {
   Lock,
   AlertTriangle,
@@ -11,8 +11,6 @@ import {
   Loader2,
   CheckCircle2,
   ArrowRight,
-  ArrowLeft,
-  Pencil,
   RotateCcw as ResetIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,35 +28,100 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import {
   kasirApi,
   type SesiKasirData,
   type RekapSesiData,
 } from '../api/kasir-api'
+import {
+  KANTIN_CLOSE_SESSION_LOCKS_KEY,
+  clearCloseSessionLock,
+  getCloseSessionLock,
+  saveCloseSessionLock,
+  updateCloseSessionLockCatatan,
+} from '../close-session-lock'
 
 export interface CloseSessionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   sesi: SesiKasirData | null
   rekap: RekapSesiData | null
-  onSuccess?: () => void
+  onSuccess?: (closedSesi?: SesiKasirData) => void
 }
 
 type CloseSessionStep = 'INPUT_CASH' | 'RECONCILE'
 
 const PRESET_PECANGAN = [10_000, 20_000, 50_000, 100_000]
 
-export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
+const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
   open,
   onOpenChange,
   sesi,
   rekap,
   onSuccess,
 }) => {
-  const [step, setStep] = useState<CloseSessionStep>('INPUT_CASH')
-  const [cashInput, setCashInput] = useState<string>('')
-  const [catatanSelisih, setCatatanSelisih] = useState<string>('')
+  const cashLockHintId = useId()
+  const catatanHintId = useId()
+
+  const initialLock = getCloseSessionLock(sesi)
+  const [step, setStep] = useState<CloseSessionStep>(() =>
+    initialLock ? 'RECONCILE' : 'INPUT_CASH'
+  )
+  const [cashInput, setCashInput] = useState<string>(() =>
+    initialLock ? String(initialLock.cashValue) : ''
+  )
+  const [catatanSelisih, setCatatanSelisih] = useState<string>(
+    () => initialLock?.catatanSelisih ?? ''
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [prevOpen, setPrevOpen] = useState(open)
+
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      const storedLock = getCloseSessionLock(sesi)
+      if (storedLock) {
+        setStep('RECONCILE')
+        setCashInput(String(storedLock.cashValue))
+        setCatatanSelisih(storedLock.catatanSelisih ?? '')
+      } else if (step === 'INPUT_CASH') {
+        setCashInput('')
+        setCatatanSelisih('')
+      }
+    }
+  }
+
+  const sesiId = sesi?.id
+  const sesiStatus = sesi?.status
+  const sesiTanggal = sesi?.tanggal
+  const sesiTitikKasirId = sesi?.titikKasirId
+
+  useEffect(() => {
+    if (sesiStatus === 'DITUTUP' && sesiId) {
+      clearCloseSessionLock(sesiId)
+    }
+  }, [sesiId, sesiStatus])
+
+  useEffect(() => {
+    if (!sesiId || sesiStatus === 'DITUTUP') return
+    const handleStorageSync = (e: StorageEvent) => {
+      if (e.key !== KANTIN_CLOSE_SESSION_LOCKS_KEY) return
+      const externalLock = getCloseSessionLock({
+        id: sesiId,
+        status: sesiStatus ?? 'TERBUKA',
+        tanggal: sesiTanggal ?? '',
+        titikKasirId: sesiTitikKasirId ?? 1,
+      })
+      if (externalLock) {
+        setStep('RECONCILE')
+        setCashInput(String(externalLock.cashValue))
+        setCatatanSelisih(externalLock.catatanSelisih ?? '')
+      }
+    }
+    window.addEventListener('storage', handleStorageSync)
+    return () => window.removeEventListener('storage', handleStorageSync)
+  }, [sesiId, sesiStatus, sesiTanggal, sesiTitikKasirId])
 
   // Nilai numerik kas fisik yang diinput
   const cashValue = Number(cashInput.replace(/\D/g, '')) || 0
@@ -75,10 +138,8 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
   const isSelisihAda = selisih !== 0
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      setStep('INPUT_CASH')
-      setCashInput('')
-      setCatatanSelisih('')
+    if (!isOpen && isSubmitting) {
+      return
     }
     onOpenChange(isOpen)
   }
@@ -94,47 +155,87 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
   const handleProceedToReconcile = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
+    if (step === 'RECONCILE') return
     if (!cashInput.trim()) {
       toast.error('Masukkan jumlah uang tunai fisik di laci terlebih dahulu')
       return
+    }
+    const existingLock = getCloseSessionLock(sesi)
+    if (existingLock) {
+      setCashInput(String(existingLock.cashValue))
+      setCatatanSelisih(existingLock.catatanSelisih ?? '')
+      setStep('RECONCILE')
+      toast.info(
+        `Nominal kas fisik sesi ini sudah dikunci pada ${formatRupiah(existingLock.cashValue)}`
+      )
+      return
+    }
+    const locked = saveCloseSessionLock(sesi, cashValue, catatanSelisih)
+    if (locked) {
+      setCashInput(String(locked.cashValue))
     }
     setStep('RECONCILE')
   }
 
   const handleCloseSession = async () => {
+    if (isSubmitting) return
+
     if (!sesi?.id) {
       toast.error('Data sesi kasir tidak ditemukan')
       return
     }
 
-    if (isSelisihAda && !catatanSelisih.trim()) {
+    if (sesi.status === 'DITUTUP') {
+      clearCloseSessionLock(sesi.id)
+      toast.info('Sesi kasir hari ini sudah ditutup')
+      onOpenChange(false)
+      onSuccess?.(sesi)
+      return
+    }
+
+    const existingLock = getCloseSessionLock(sesi)
+    const authoritativeCash = existingLock ? existingLock.cashValue : cashValue
+    const authoritativeSelisih = authoritativeCash - totalBersih
+
+    if (authoritativeSelisih !== 0 && !catatanSelisih.trim()) {
       toast.error('Keterangan selisih wajib diisi sebelum menutup sesi')
       return
     }
 
     try {
       setIsSubmitting(true)
-      await kasirApi.tutupSesi(sesi.id, {
-        uangFisik: cashValue,
-        selisih,
+      const closedSesi = await kasirApi.tutupSesi(sesi.id, {
+        uangFisik: authoritativeCash,
+        selisih: authoritativeSelisih,
         catatan: catatanSelisih.trim() || undefined,
       })
 
       const deskripsiNotif =
-        selisih === 0
+        authoritativeSelisih === 0
           ? 'Seluruh transaksi dikunci. Kas seimbang (Pas Rp 0).'
-          : `Seluruh transaksi dikunci. Selisih kas: ${selisih > 0 ? '+' : ''}${formatRupiah(selisih)}.`
+          : `Seluruh transaksi dikunci. Selisih kas: ${authoritativeSelisih > 0 ? '+' : ''}${formatRupiah(authoritativeSelisih)}.`
 
       toast.success('Sesi kasir harian berhasil ditutup', {
         description: deskripsiNotif,
       })
 
-      handleOpenChange(false)
-      onSuccess?.()
+      clearCloseSessionLock(sesi.id)
+      setStep('INPUT_CASH')
+      setCashInput('')
+      setCatatanSelisih('')
+      onOpenChange(false)
+      onSuccess?.(closedSesi)
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Gagal menutup sesi kasir'
+      const msg = getErrorMessage(err, 'Gagal menutup sesi kasir')
       toast.error('Gagal Menutup Sesi', { description: msg })
+      if (msg.toLowerCase().includes('sudah ditutup')) {
+        clearCloseSessionLock(sesi.id)
+        setStep('INPUT_CASH')
+        setCashInput('')
+        setCatatanSelisih('')
+        onOpenChange(false)
+        onSuccess?.({ ...sesi, status: 'DITUTUP' })
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -142,11 +243,28 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none select-none'>
+      <DialogContent
+        onEscapeKeyDown={(e) => {
+          if (isSubmitting) {
+            e.preventDefault()
+          }
+        }}
+        onPointerDownOutside={(e) => {
+          if (isSubmitting || step === 'RECONCILE') {
+            e.preventDefault()
+          }
+        }}
+        onInteractOutside={(e) => {
+          if (isSubmitting || step === 'RECONCILE') {
+            e.preventDefault()
+          }
+        }}
+        className='max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none select-none'
+      >
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
             <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'>
-              <Lock className='h-5 w-5' />
+              <Lock className='h-5 w-5' aria-hidden='true' />
             </div>
             <div>
               <DialogTitle className='text-lg font-bold text-slate-800 dark:text-white'>
@@ -166,14 +284,17 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         {/* Informasi Titik Kasir & Tanggal */}
         <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3.5 py-2 text-xs'>
           <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
-            <Store className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+            <Store
+              className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400'
+              aria-hidden='true'
+            />
             <span>Titik:</span>
             <strong className='text-slate-800 dark:text-white'>
               {sesi?.titikKasirNama || `Titik #${sesi?.titikKasirId || 1}`}
             </strong>
           </div>
           <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
-            <Calendar className='h-3.5 w-3.5' />
+            <Calendar className='h-3.5 w-3.5' aria-hidden='true' />
             <span>Tanggal:</span>
             <strong className='font-semibold text-slate-800 dark:text-white tabular-nums'>
               {sesi?.tanggal || new Date().toISOString().split('T')[0]}
@@ -185,7 +306,15 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         {/* LANGKAH 1: INPUT KAS FISIK DI LACI KASIR                      */}
         {/* ============================================================== */}
         {step === 'INPUT_CASH' && (
-          <form onSubmit={handleProceedToReconcile} className='space-y-4 pt-1'>
+          <form
+            onSubmit={handleProceedToReconcile}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.nativeEvent.isComposing) {
+                e.preventDefault()
+              }
+            }}
+            className='space-y-4 pt-1'
+          >
             {/* Input Nominal Uang Fisik */}
             <div className='space-y-1.5'>
               <label
@@ -194,6 +323,13 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               >
                 Total Uang Tunai di Laci Kasir:
               </label>
+              <p
+                id={cashLockHintId}
+                className='text-[11px] text-slate-500 dark:text-slate-400'
+              >
+                Nominal uang fisik dikunci dan tidak dapat diubah setelah lanjut
+                ke rekapitulasi.
+              </p>
               <div className='relative'>
                 <span className='absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 dark:text-slate-400'>
                   Rp
@@ -202,6 +338,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                   id='input-cash-drawer'
                   type='text'
                   inputMode='numeric'
+                  autoComplete='off'
                   value={cashInput ? formatNumber(cashValue) : ''}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/\D/g, '')
@@ -209,6 +346,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                   }}
                   placeholder='0'
                   autoFocus
+                  aria-describedby={cashLockHintId}
                   className='pl-10 text-base font-bold tabular-nums has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl'
                 />
               </div>
@@ -240,7 +378,8 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                     onClick={handleResetCash}
                     className='h-7 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl px-2 py-0'
                   >
-                    <ResetIcon className='h-3 w-3 mr-1' /> Reset
+                    <ResetIcon className='h-3 w-3 mr-1' aria-hidden='true' />{' '}
+                    Reset
                   </Button>
                 )}
               </div>
@@ -263,7 +402,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 className='gap-1.5 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
               >
                 <span>Lanjut ke Rekapitulasi</span>
-                <ArrowRight className='h-3.5 w-3.5' />
+                <ArrowRight className='h-3.5 w-3.5' aria-hidden='true' />
               </Button>
             </DialogFooter>
           </form>
@@ -280,7 +419,11 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
                 <CardContent className='p-2.5'>
                   <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
-                    <Receipt className='h-3 w-3 text-emerald-600 dark:text-emerald-400' /> Transaksi Sukses
+                    <Receipt
+                      className='h-3 w-3 text-emerald-600 dark:text-emerald-400'
+                      aria-hidden='true'
+                    />{' '}
+                    Transaksi Sukses
                   </span>
                   <span className='text-base font-bold tracking-tight text-slate-800 dark:text-white tabular-nums block'>
                     {formatNumber(jumlahTransaksi)}
@@ -288,11 +431,15 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Total Transaksi Void */}
+              {/* Total Transaksi Refund */}
               <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
                 <CardContent className='p-2.5'>
                   <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
-                    <RotateCcw className='h-3 w-3 text-rose-600 dark:text-rose-400' /> Transaksi Void
+                    <RotateCcw
+                      className='h-3 w-3 text-rose-600 dark:text-rose-400'
+                      aria-hidden='true'
+                    />{' '}
+                    Transaksi Refund
                   </span>
                   <span className='text-base font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums block'>
                     {formatNumber(jumlahVoid)}
@@ -300,11 +447,15 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Total Bruto */}
+              {/* Total Penjualan Kotor */}
               <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none col-span-2 sm:col-span-1'>
                 <CardContent className='p-2.5'>
                   <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
-                    <Coins className='h-3 w-3 text-slate-500 dark:text-slate-400' /> Total Bruto
+                    <Coins
+                      className='h-3 w-3 text-slate-500 dark:text-slate-400'
+                      aria-hidden='true'
+                    />{' '}
+                    Penjualan Kotor
                   </span>
                   <span className='text-xs font-semibold text-slate-800 dark:text-white tabular-nums block'>
                     {formatRupiah(totalBruto)}
@@ -315,21 +466,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
 
             {/* Perbandingan Kas Fisik vs Pendapatan Sistem */}
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-              {/* Uang Kas Fisik Diinput */}
+              {/* Uang Kas Fisik Diinput (Terkunci Permanen) */}
               <div className='rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
                   <span className='text-[11px] font-semibold text-slate-500 dark:text-slate-400'>
                     Uang Fisik di Laci:
                   </span>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setStep('INPUT_CASH')}
-                    className='h-6 text-[10px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 px-1.5 py-0 rounded-lg'
-                  >
-                    <Pencil className='h-2.5 w-2.5 mr-1' /> Ubah
-                  </Button>
                 </div>
                 <span className='text-lg font-bold text-slate-800 dark:text-white tabular-nums block'>
                   {formatRupiah(cashValue)}
@@ -340,7 +482,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <div className='rounded-xl has-border !border !border-blue-200 dark:!border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 p-3 shadow-none'>
                 <div className='flex items-center justify-between mb-1'>
                   <span className='text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
-                    Pendapatan Bersih (Net):
+                    Pendapatan Bersih:
                   </span>
                 </div>
                 <span className='text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums block'>
@@ -348,7 +490,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                 </span>
                 {totalVoid > 0 && (
                   <span className='text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block'>
-                    (Bruto {formatRupiah(totalBruto)} - Void {formatRupiah(totalVoid)})
+                    (Kotor {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
                   </span>
                 )}
               </div>
@@ -365,11 +507,20 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               }`}
             >
               {selisih === 0 ? (
-                <CheckCircle2 className='h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5' />
+                <CheckCircle2
+                  className='h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5'
+                  aria-hidden='true'
+                />
               ) : selisih < 0 ? (
-                <AlertTriangle className='h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5' />
+                <AlertTriangle
+                  className='h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5'
+                  aria-hidden='true'
+                />
               ) : (
-                <AlertCircle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
+                <AlertCircle
+                  className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5'
+                  aria-hidden='true'
+                />
               )}
               <div className='flex-1'>
                 <div className='flex items-center justify-between'>
@@ -413,11 +564,17 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
                   Catatan / Keterangan Selisih:
                 </label>
                 {isSelisihAda ? (
-                  <span className='text-[10px] font-semibold text-rose-600 dark:text-rose-400'>
+                  <span
+                    id={catatanHintId}
+                    className='text-[10px] font-semibold text-rose-600 dark:text-rose-400'
+                  >
                     * Wajib diisi karena ada selisih
                   </span>
                 ) : (
-                  <span className='text-[10px] text-slate-500 dark:text-slate-400'>
+                  <span
+                    id={catatanHintId}
+                    className='text-[10px] text-slate-500 dark:text-slate-400'
+                  >
                     Opsional
                   </span>
                 )}
@@ -425,8 +582,15 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               <Textarea
                 id='input-catatan-selisih'
                 rows={2}
+                autoFocus
+                required={isSelisihAda}
+                aria-describedby={catatanHintId}
                 value={catatanSelisih}
-                onChange={(e) => setCatatanSelisih(e.target.value)}
+                onChange={(e) => {
+                  const nextVal = e.target.value
+                  setCatatanSelisih(nextVal)
+                  updateCloseSessionLockCatatan(sesi?.id, nextVal)
+                }}
                 placeholder={
                   isSelisihAda
                     ? 'Wajib diisi: jelaskan alasan selisih kas fisik (mis. kembalian tertinggal, pembulatan, dll.)...'
@@ -436,27 +600,7 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               />
             </div>
 
-            {/* Peringatan Konfirmasi Penguncian */}
-            <div className='flex items-start gap-2.5 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
-              <AlertTriangle className='h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
-              <span className='text-[11px] leading-relaxed'>
-                <strong>Konfirmasi:</strong> Setelah sesi ditutup, transaksi kasir
-                akan dikunci dan dibukukan ke laporan. Aksi ini tidak dapat dibatalkan.
-              </span>
-            </div>
-
             <DialogFooter className='gap-2 sm:gap-2 pt-1'>
-              <Button
-                type='button'
-                variant='secondary'
-                size='sm'
-                onClick={() => setStep('INPUT_CASH')}
-                disabled={isSubmitting}
-                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none gap-1'
-              >
-                <ArrowLeft className='h-3.5 w-3.5' />
-                <span>Kembali</span>
-              </Button>
               <Button
                 type='button'
                 variant='destructive'
@@ -467,12 +611,18 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                    <Loader2
+                      className='h-3.5 w-3.5 animate-spin'
+                      aria-hidden='true'
+                    />
                     <span>Menutup Sesi Kasir...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className='h-3.5 w-3.5' />
+                    <CheckCircle2
+                      className='h-3.5 w-3.5'
+                      aria-hidden='true'
+                    />
                     <span>Konfirmasi & Tutup Kasir</span>
                   </>
                 )}
@@ -482,6 +632,12 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = ({
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+export const CloseSessionModal: React.FC<CloseSessionModalProps> = (props) => {
+  return (
+    <CloseSessionModalBody key={props.sesi?.id ?? 'no-sesi'} {...props} />
   )
 }
 
