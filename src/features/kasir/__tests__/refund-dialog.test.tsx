@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { toast } from 'sonner'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
@@ -168,8 +169,11 @@ describe('RefundDialog (BE #292)', () => {
     expect(document.activeElement).toBe(detailTextarea.element())
   })
 
-  it('mempertahankan dialog terbuka dan menampilkan error saat kode struk ditolak BE #292', async () => {
+  it('mempertahankan dialog terbuka dan menampilkan error bersih tanpa tag PRD serta tanpa banner di bawah alasan refund saat kode struk ditolak BE #292', async () => {
     vi.spyOn(beepAudioEngine, 'playError').mockImplementation(() => {})
+    const toastErrorSpy = vi
+      .spyOn(toast, 'error')
+      .mockImplementation(() => 'toast-err-1')
     const refundSpy = vi
       .spyOn(kasirApi, 'refundTransaksi')
       .mockRejectedValue({
@@ -204,16 +208,65 @@ describe('RefundDialog (BE #292)', () => {
       'Salah input menu',
       'TRX-SALAH-999'
     )
+    expect(toastErrorSpy).toHaveBeenCalledWith('Gagal Memproses Refund', {
+      description: 'Kode struk tidak cocok dengan transaksi ini',
+    })
     await expect.element(kodeInput).toHaveAttribute('aria-invalid', 'true')
     await expect
-      .element(
-        screen
-          .getByText(/Kode struk tidak cocok dengan transaksi ini/i)
-          .first()
-      )
+      .element(screen.getByText('Kode struk tidak cocok dengan transaksi ini'))
       .toBeInTheDocument()
+    await expect
+      .element(screen.getByText(/\(PRD/i))
+      .not.toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it('tidak merender banner error di bawah daftar alasan refund dan menghapus teks PRD dalam kurung untuk error server lain', async () => {
+    vi.spyOn(beepAudioEngine, 'playError').mockImplementation(() => {})
+    const toastErrorSpy = vi
+      .spyOn(toast, 'error')
+      .mockImplementation(() => 'toast-err-2')
+    vi.spyOn(kasirApi, 'refundTransaksi').mockRejectedValue({
+      response: {
+        status: 400,
+        data: {
+          message:
+            'Sesi kasir sudah ditutup — koreksi hanya oleh bendahara (PRD §6.3)',
+        },
+      },
+    })
+
+    const screen = await render(
+      <RefundDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        transaction={sampleTransactions[0]}
+      />
+    )
+
+    const kodeInput = screen.getByLabelText(/Kode Struk/i)
+    await userEvent.fill(kodeInput, 'TRX-20261110-201')
+    await userEvent.click(
+      screen.getByRole('button', { name: /Konfirmasi Refund/i })
+    )
+
+    expect(toastErrorSpy).toHaveBeenCalledWith('Gagal Memproses Refund', {
+      description: 'Sesi kasir sudah ditutup — koreksi hanya oleh bendahara',
+    })
+    await expect
+      .element(screen.getByText(/\(PRD/i))
+      .not.toBeInTheDocument()
+
+    // Tidak ada banner alert error terlihat di bawah fieldset alasan refund
+    const form = document.querySelector(
+      'form[aria-label="Formulir refund transaksi kasir"]'
+    )
+    const fieldset = form?.querySelector('fieldset')
+    const afterFieldsetSibling = fieldset?.nextElementSibling
+    expect(afterFieldsetSibling?.getAttribute('data-slot')).toBe(
+      'dialog-footer'
+    )
   })
 
   it('mengirim transaksiId, alasan, dan kodeStruk yang dipangkas lalu memanggil onSuccess saat sukses', async () => {

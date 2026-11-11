@@ -21,9 +21,6 @@ import {
   saveStoredSaldo,
 } from '@/features/tu/saldo-storage'
 import {
-  MOCK_MENU,
-  MOCK_KATEGORI,
-  MOCK_TITIK_KASIR,
   MOCK_KARTU_TAMU,
   MOCK_KERUGIAN_STOK,
   MOCK_RIWAYAT_SISWA,
@@ -396,30 +393,15 @@ export const laporanApi = {
    * Mengambil Ringkasan Penjualan & Laba Kotor
    */
   async getPenjualan(params?: LaporanFilterParams): Promise<RingkasanPenjualan> {
-    try {
-      const res = await apiClient.get<ApiResponse<RawRingkasanPenjualan>>(
-        '/api/laporan/penjualan',
-        { params }
-      )
-      if (res.data?.data) {
-        return normalizeRingkasanPenjualan(res.data.data)
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<RawRingkasanPenjualan>>(
+      '/api/laporan/penjualan',
+      { params }
+    )
+    const data = res.data?.data
+    if (!data) {
+      throw new Error('Laporan penjualan tidak mengembalikan data')
     }
-
-    return {
-      dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
-      sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
-      jumlahTransaksi: 0,
-      penjualanBruto: 0,
-      jumlahRefund: 0,
-      nilaiRefund: 0,
-      penjualanBersih: 0,
-      totalModal: 0,
-      laba: 0,
-      marginPersen: 0,
-    }
+    return normalizeRingkasanPenjualan(data)
   },
 
   /**
@@ -428,58 +410,24 @@ export const laporanApi = {
   async getPenjualanPerItem(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanItem[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
-        '/api/laporan/penjualan/item',
-        { params }
-      )
-      if (Array.isArray(res.data?.data)) {
-        const rawList = res.data.data
-        if (rawList.length === 0) return []
-        const needsCategoryEnrich = rawList.some(
-          (item) =>
-            item.kategoriNama === undefined || item.kategoriId === undefined
-        )
-        const menuKategoriMap = needsCategoryEnrich
-          ? (await fetchKatalogLookup()).menuKategoriMap
-          : undefined
-        return rawList.map((row) =>
-          normalizeBarisPenjualanItem(row, menuKategoriMap)
-        )
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
+      '/api/laporan/penjualan/item',
+      { params }
+    )
+    const rawList = res.data?.data
+    if (!Array.isArray(rawList)) {
+      throw new Error('Laporan penjualan per item tidak mengembalikan data')
     }
-
-    return MOCK_MENU.map((m, idx) => {
-      const qty = [42, 38, 25, 20, 18, 15, 12, 10, 8, 6][idx % 10] || 5
-      const hpp = m.hpp || Math.round(m.harga_jual * 0.7)
-      const total = qty * m.harga_jual
-      const modal = qty * hpp
-      const laba = total - modal
-      const marginPersen =
-        total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
-
-      return {
-        kunciId: m.id,
-        menuId: m.id,
-        nama: m.nama,
-        kategoriId: m.kategori_id,
-        kategoriNama: m.kategori_nama || 'Umum',
-        qty,
-        hargaSatuan: m.harga_jual,
-        hargaJual: m.harga_jual,
-        hpp,
-        total,
-        penjualanBersih: total,
-        modal,
-        totalHpp: modal,
-        laba,
-        labaKotor: laba,
-        marginPersen,
-        margin: marginPersen,
-      }
-    })
+    if (rawList.length === 0) return []
+    const needsCategoryEnrich = rawList.some(
+      (item) => item.kategoriNama === undefined || item.kategoriId === undefined
+    )
+    const menuKategoriMap = needsCategoryEnrich
+      ? (await fetchKatalogLookup()).menuKategoriMap
+      : undefined
+    return rawList.map((row) =>
+      normalizeBarisPenjualanItem(row, menuKategoriMap)
+    )
   },
 
   /**
@@ -488,61 +436,24 @@ export const laporanApi = {
   async getPenjualanPerKategori(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKategori[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
-        '/api/laporan/penjualan/kategori',
-        { params }
-      )
-      if (Array.isArray(res.data?.data)) {
-        const rawList = res.data.data
-        if (rawList.length === 0) return []
-        const needsCountEnrich = rawList.some(
-          (item) => item.jumlahItem === undefined || item.jumlahItem === null
-        )
-        const kategoriJumlahMap = needsCountEnrich
-          ? (await fetchKatalogLookup()).kategoriJumlahMap
-          : undefined
-        return rawList.map((row) =>
-          normalizeBarisPenjualanKategori(row, kategoriJumlahMap)
-        )
-      }
-    } catch {
-      if (import.meta.env.VITE_USE_MOCK !== 'true') {
-        return []
-      }
+    const res = await apiClient.get<ApiResponse<RawBarisPenjualan[]>>(
+      '/api/laporan/penjualan/kategori',
+      { params }
+    )
+    const rawList = res.data?.data
+    if (!Array.isArray(rawList)) {
+      throw new Error('Laporan penjualan per kategori tidak mengembalikan data')
     }
-
-    if (import.meta.env.VITE_USE_MOCK !== 'true') {
-      return []
-    }
-
-    return MOCK_KATEGORI.map((k) => {
-      const menusInKat = MOCK_MENU.filter((m) => m.kategori_id === k.id)
-      const qty = menusInKat.length * 30 || 20
-      const total =
-        menusInKat.reduce((acc, m) => acc + m.harga_jual * 30, 0) || 350000
-      const modal = Math.round(total * 0.68)
-      const laba = total - modal
-      const marginPersen =
-        total > 0 ? Math.round((laba * 10000) / total) / 100 : 0
-
-      return {
-        kunciId: k.id,
-        kategoriId: k.id,
-        nama: k.nama,
-        jumlahItem: menusInKat.length,
-        qty,
-        hargaSatuan: null,
-        total,
-        penjualanBersih: total,
-        modal,
-        totalHpp: modal,
-        laba,
-        labaKotor: laba,
-        marginPersen,
-        margin: marginPersen,
-      }
-    })
+    if (rawList.length === 0) return []
+    const needsCountEnrich = rawList.some(
+      (item) => item.jumlahItem === undefined || item.jumlahItem === null
+    )
+    const kategoriJumlahMap = needsCountEnrich
+      ? (await fetchKatalogLookup()).kategoriJumlahMap
+      : undefined
+    return rawList.map((row) =>
+      normalizeBarisPenjualanKategori(row, kategoriJumlahMap)
+    )
   },
 
   /**
@@ -551,30 +462,15 @@ export const laporanApi = {
   async getPenjualanPerKasir(
     params?: LaporanFilterParams
   ): Promise<BarisPenjualanKasir[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<BarisPenjualanKasir[]>>(
-        '/api/laporan/penjualan/kasir',
-        { params, silent: true } as unknown as Record<string, unknown>
-      )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
-      }
-    } catch {
-      // Fallback
+    const res = await apiClient.get<ApiResponse<BarisPenjualanKasir[]>>(
+      '/api/laporan/penjualan/kasir',
+      { params, silent: true } as unknown as Record<string, unknown>
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per kasir tidak mengembalikan data')
     }
-
-    return MOCK_TITIK_KASIR.map((tk, idx) => {
-      const base = idx === 0 ? 2100000 : 1275000
-      return {
-        titikKasirId: tk.id,
-        namaTitikKasir: tk.nama,
-        petugas: idx === 0 ? 'Ahmad Kasir' : 'Nurul Hidayah',
-        jumlahTransaksi: idx === 0 ? 115 : 70,
-        penjualanBruto: base + (idx === 0 ? 30000 : 15000),
-        nilaiVoid: idx === 0 ? 30000 : 15000,
-        penjualanBersih: base,
-      }
-    })
+    return rows
   },
 
   /**
