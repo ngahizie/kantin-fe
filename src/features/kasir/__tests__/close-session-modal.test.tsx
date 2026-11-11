@@ -126,7 +126,7 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
       )
       .toBeInTheDocument()
     await expect.element(screen.getByText(/- Void Rp/i)).not.toBeInTheDocument()
-    await expect.element(screen.getByText('Terkunci')).toBeInTheDocument()
+    await expect.element(screen.getByText('Terkunci')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Rp 100.000')).toBeInTheDocument()
     await expect.element(screen.getByText('Rp 198.000')).toBeInTheDocument()
 

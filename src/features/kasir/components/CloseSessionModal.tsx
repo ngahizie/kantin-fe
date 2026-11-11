@@ -450,13 +450,9 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
               {/* Uang Kas Fisik Diinput (Terkunci Permanen) */}
               <div className='rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 shadow-none'>
-                <div className='flex items-center justify-between gap-2 mb-1'>
+                <div className='flex items-center justify-between mb-1'>
                   <span className='text-[11px] font-semibold text-slate-500 dark:text-slate-400'>
                     Uang Fisik di Laci:
-                  </span>
-                  <span className='inline-flex items-center gap-1 rounded-full bg-slate-200/70 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300'>
-                    <Lock className='h-2.5 w-2.5' aria-hidden='true' />
-                    Terkunci
                   </span>
                 </div>
                 <span className='text-lg font-bold text-slate-800 dark:text-white tabular-nums block'>
