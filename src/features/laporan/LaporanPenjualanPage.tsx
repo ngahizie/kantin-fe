@@ -30,8 +30,9 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
+import { formatMargin } from './laporan-utils'
 import type {
   RingkasanPenjualan,
   BarisPenjualanItem,
@@ -68,9 +69,13 @@ export function LaporanPenjualanPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'terlaris' | 'laba' | 'margin'>('terlaris')
 
-  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
-  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
-  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -475,7 +480,7 @@ export function LaporanPenjualanPage() {
 
             <div className="flex flex-wrap items-center gap-2.5">
               <LaporanDateFilter
-                initialPreset="ALL"
+                initialPreset="TODAY"
                 onChange={(params, label) => {
                   setDateFilterParams(params)
                   setDateFilterLabel(label)
@@ -536,7 +541,7 @@ export function LaporanPenjualanPage() {
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
                   <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
-                    Margin: {summaryMargin}%
+                    Margin: {formatMargin(summaryMargin)}
                   </Badge>
                   <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
                 </div>
@@ -699,7 +704,7 @@ export function LaporanPenjualanPage() {
                                         : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                     }`}
                                   >
-                                    {itemMargin ? `${itemMargin}%` : '0%'}
+                                    {formatMargin(itemMargin)}
                                   </Badge>
                                 </TableCell>
                               </TableRow>
@@ -780,7 +785,7 @@ export function LaporanPenjualanPage() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <Badge variant="secondary" className="font-mono text-xs">
-                                  {getKatMargin(kat) ? `${getKatMargin(kat)}%` : '0%'}
+                                  {formatMargin(getKatMargin(kat))}
                                 </Badge>
                               </TableCell>
                             </TableRow>

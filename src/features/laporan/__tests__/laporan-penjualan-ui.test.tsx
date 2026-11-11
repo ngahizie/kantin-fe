@@ -184,4 +184,79 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
     await userEvent.fill(searchInput, 'utama')
     await expect.element(screen.getByText('Kasir Utama')).toBeInTheDocument()
   })
+
+  it('merender margin 0% pada kartu dan tabel saat margin bernilai undefined atau 0 tanpa menampilkan undefined%', async () => {
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/laporan/penjualan') {
+        return {
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            data: {
+              ...BE_SUMMARY,
+              marginPersen: undefined,
+              laba: 0,
+            },
+          },
+        }
+      }
+      if (url === '/api/laporan/penjualan/item') {
+        return {
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            data: [
+              {
+                kunciId: 20,
+                nama: 'Kerupuk Putih',
+                qty: 1,
+                total: 2000,
+                hargaSatuan: 2000,
+                modal: 2000,
+                marginPersen: undefined,
+              },
+            ],
+          },
+        }
+      }
+      if (url === '/api/laporan/penjualan/kategori') {
+        return {
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            data: [
+              {
+                kunciId: 3,
+                nama: 'Snack',
+                qty: 1,
+                total: 2000,
+                hargaSatuan: null,
+                modal: 2000,
+                marginPersen: 0,
+              },
+            ],
+          },
+        }
+      }
+      if (url === '/api/laporan/penjualan/kasir') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
+      if (url === '/api/katalog/kategori') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
+      if (url === '/api/katalog/menu') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanPenjualanPage />)
+
+    await expect.element(screen.getByText('Margin: 0%')).toBeInTheDocument()
+    await expect.element(screen.getByText('Kerupuk Putih')).toBeInTheDocument()
+
+    const bodyText = screen.container.textContent || ''
+    expect(bodyText).not.toMatch(/undefined%/i)
+    expect(bodyText).not.toMatch(/NaN%/i)
+  })
 })

@@ -8,21 +8,14 @@ import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/formatters'
 import type { LaporanFilterParams } from '../types'
 import {
-  ALL_TIME_PARAMS,
+  type DateFilterPreset,
   formatYmd,
   startOfDayIso,
   nextDayStartIso,
+  getPresetLabel,
 } from './date-filter-utils'
 
-export type DateFilterPreset =
-  | 'ALL'
-  | 'TODAY'
-  | 'YESTERDAY'
-  | 'LAST_7_DAYS'
-  | 'LAST_30_DAYS'
-  | 'THIS_MONTH'
-  | 'CUSTOM_DAY'
-  | 'CUSTOM_RANGE'
+export type { DateFilterPreset } from './date-filter-utils'
 
 export interface LaporanDateFilterProps {
   initialPreset?: DateFilterPreset
@@ -32,14 +25,14 @@ export interface LaporanDateFilterProps {
 }
 
 export function LaporanDateFilter({
-  initialPreset = 'ALL',
+  initialPreset = 'TODAY',
   onChange,
   className,
   align = 'start',
 }: LaporanDateFilterProps) {
   const [open, setOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<DateFilterPreset>(initialPreset)
-  const [activeLabel, setActiveLabel] = useState<string>('Semua Waktu')
+  const [activeLabel, setActiveLabel] = useState<string>(() => getPresetLabel(initialPreset))
 
   // State untuk Pilih Hari Tertentu (lazy initializer agar bebas dari impure render)
   const [singleDateInput, setSingleDateInput] = useState<string>(() => formatYmd(new Date()))
@@ -56,15 +49,8 @@ export function LaporanDateFilter({
 
     setSelectedPreset(preset)
 
-    if (preset === 'ALL') {
-      setActiveLabel('Semua Waktu')
-      onChange(ALL_TIME_PARAMS, 'Semua Waktu')
-      setOpen(false)
-      return
-    }
-
     if (preset === 'TODAY') {
-      const label = `Hari Ini (${formatDate(today)})`
+      const label = getPresetLabel('TODAY', today)
       setActiveLabel(label)
       onChange({ tanggal: todayYmd }, label)
       setOpen(false)
@@ -74,7 +60,7 @@ export function LaporanDateFilter({
     if (preset === 'YESTERDAY') {
       const yest = new Date(Date.now() - 86400000)
       const yestYmd = formatYmd(yest)
-      const label = `Kemarin (${formatDate(yest)})`
+      const label = getPresetLabel('YESTERDAY', today)
       setActiveLabel(label)
       onChange({ tanggal: yestYmd }, label)
       setOpen(false)
@@ -83,7 +69,7 @@ export function LaporanDateFilter({
 
     if (preset === 'LAST_7_DAYS') {
       const d7 = new Date(Date.now() - 6 * 86400000)
-      const label = '7 Hari Terakhir'
+      const label = getPresetLabel('LAST_7_DAYS', today)
       setActiveLabel(label)
       onChange(
         {
@@ -98,7 +84,7 @@ export function LaporanDateFilter({
 
     if (preset === 'LAST_30_DAYS') {
       const d30 = new Date(Date.now() - 29 * 86400000)
-      const label = '30 Hari Terakhir'
+      const label = getPresetLabel('LAST_30_DAYS', today)
       setActiveLabel(label)
       onChange(
         {
@@ -114,11 +100,7 @@ export function LaporanDateFilter({
     if (preset === 'THIS_MONTH') {
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-      const monthName = new Intl.DateTimeFormat('id-ID', {
-        month: 'long',
-        year: 'numeric',
-      }).format(today)
-      const label = `Bulan Ini (${monthName})`
+      const label = getPresetLabel('THIS_MONTH', today)
       setActiveLabel(label)
       onChange(
         {
@@ -163,7 +145,7 @@ export function LaporanDateFilter({
   }
 
   const handleReset = () => {
-    handleSelectPreset('ALL')
+    handleSelectPreset(initialPreset)
   }
 
   return (
@@ -173,11 +155,7 @@ export function LaporanDateFilter({
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 gap-2 border-dashed font-normal ${
-              selectedPreset !== 'ALL'
-                ? 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/20'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className="h-9 gap-2 border-dashed font-normal border-primary/60 bg-primary/10 text-primary hover:bg-primary/20"
           >
             <CalendarIcon className="h-4 w-4 shrink-0 text-primary" />
             <span className="font-medium">{activeLabel}</span>
@@ -194,12 +172,12 @@ export function LaporanDateFilter({
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Filter Tanggal / Waktu
             </div>
-            {selectedPreset !== 'ALL' && (
+            {selectedPreset !== initialPreset && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
-                className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground gap-1"
+                className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
               >
                 <RotateCcw className="h-3 w-3" />
                 Reset
@@ -214,7 +192,6 @@ export function LaporanDateFilter({
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               {[
-                { preset: 'ALL' as const, label: 'Semua Waktu' },
                 { preset: 'TODAY' as const, label: 'Hari Ini' },
                 { preset: 'YESTERDAY' as const, label: 'Kemarin' },
                 { preset: 'LAST_7_DAYS' as const, label: '7 Hari Terakhir' },
@@ -251,12 +228,13 @@ export function LaporanDateFilter({
                   className="h-8 text-xs font-mono"
                 />
                 <Button
-                  variant="secondary"
+                  type="button"
                   size="sm"
+                  variant="secondary"
                   onClick={handleApplySingleDate}
-                  className="h-8 shrink-0 text-xs px-2.5"
+                  className="h-8 text-xs font-semibold px-3 shrink-0"
                 >
-                  Pilih
+                  Terapkan
                 </Button>
               </div>
             </div>
@@ -264,11 +242,11 @@ export function LaporanDateFilter({
             {/* Rentang Tanggal Kustom */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase">
-                Rentang Tanggal (Dari – Sampai)
+                Rentang Tanggal Kustom
               </Label>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px] text-muted-foreground block mb-0.5">Dari</span>
+                  <div className="text-[10px] text-muted-foreground mb-1">Mulai</div>
                   <Input
                     type="date"
                     value={rangeStartInput}
@@ -277,7 +255,7 @@ export function LaporanDateFilter({
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-muted-foreground block mb-0.5">Sampai</span>
+                  <div className="text-[10px] text-muted-foreground mb-1">Sampai</div>
                   <Input
                     type="date"
                     value={rangeEndInput}
@@ -287,31 +265,18 @@ export function LaporanDateFilter({
                 </div>
               </div>
               <Button
-                variant="secondary"
+                type="button"
                 size="sm"
+                variant="secondary"
                 onClick={handleApplyRange}
-                className="h-8 w-full text-xs mt-1"
+                className="w-full h-8 text-xs font-semibold mt-1"
               >
-                Terapkan Rentang Tanggal
+                Terapkan Rentang
               </Button>
             </div>
           </div>
         </PopoverContent>
       </Popover>
-
-      {/* Tombol Clear cepat bila filter bukan Semua Waktu */}
-      {selectedPreset !== 'ALL' && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleReset}
-          className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
-          title="Kembali ke Semua Waktu"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Reset</span>
-        </Button>
-      )}
     </div>
   )
 }

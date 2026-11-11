@@ -19,7 +19,10 @@ import {
   getTimezoneOffsetString,
   startOfDayIso,
   nextDayStartIso,
+  getDefaultDateFilter,
+  getPresetLabel,
 } from '../components/date-filter-utils'
+import { formatMargin } from '../laporan-utils'
 
 describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   beforeAll(() => {
@@ -199,12 +202,12 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(kasirs[0]).toHaveProperty('penjualanBersih')
     })
 
-    it('memastikan format margin merender 0% bila data kosong, nol, atau undefined agar tidak menampilkan undefined%', () => {
-      const formatMarginDisplay = (val?: number | null) => (val ? `${val}%` : '0%')
-      expect(formatMarginDisplay(undefined)).toBe('0%')
-      expect(formatMarginDisplay(null)).toBe('0%')
-      expect(formatMarginDisplay(0)).toBe('0%')
-      expect(formatMarginDisplay(25.5)).toBe('25.5%')
+    it('memastikan formatMargin dari LaporanPenjualanPage merender 0% bila data kosong, nol, atau undefined agar tidak menampilkan undefined%', () => {
+      expect(formatMargin(undefined)).toBe('0%')
+      expect(formatMargin(null)).toBe('0%')
+      expect(formatMargin(0)).toBe('0%')
+      expect(formatMargin(25.5)).toBe('25.5%')
+      expect(formatMargin(Number.NaN)).toBe('0%')
     })
 
     it('mengembalikan array kosong [] saat backend mengembalikan data kosong tanpa fallback mock palsu', async () => {
@@ -430,7 +433,23 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   })
 
   describe('Utilitas Filter Tanggal Laporan (Date Filter Utils)', () => {
-    it('ALL_TIME_PARAMS berupa object kosong agar backend memakai parameter default canonical', () => {
+    it('getDefaultDateFilter mengembalikan tanggal hari ini dan label canonical yang sesuai', () => {
+      const testDate = new Date(2026, 10, 11)
+      const res = getDefaultDateFilter(testDate)
+      expect(res.params).toEqual({ tanggal: '2026-11-11' })
+      expect(res.label).toContain('Hari Ini')
+    })
+
+    it('getPresetLabel mengembalikan label yang sesuai untuk preset hari ini, kemarin, dan rentang waktu', () => {
+      const testDate = new Date(2026, 10, 11)
+      expect(getPresetLabel('TODAY', testDate)).toContain('Hari Ini')
+      expect(getPresetLabel('YESTERDAY', testDate)).toContain('Kemarin')
+      expect(getPresetLabel('LAST_7_DAYS', testDate)).toBe('7 Hari Terakhir')
+      expect(getPresetLabel('LAST_30_DAYS', testDate)).toBe('30 Hari Terakhir')
+      expect(getPresetLabel('THIS_MONTH', testDate)).toContain('Bulan Ini')
+    })
+
+    it('ALL_TIME_PARAMS berupa object kosong untuk kompatibilitas ke belakang', () => {
       expect(ALL_TIME_PARAMS).toEqual({})
       expect(Object.keys(ALL_TIME_PARAMS).length).toBe(0)
     })

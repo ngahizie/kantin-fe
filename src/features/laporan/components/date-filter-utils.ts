@@ -1,10 +1,14 @@
+import { formatDate } from '@/lib/formatters'
 import type { LaporanFilterParams } from '../types'
 
-/**
- * Parameter filter kosong untuk mode "Semua Waktu" (default backend).
- * Mengizinkan backend memakai parameter default tanpa memaksakan scan rentang statis 10 tahun.
- */
-export const ALL_TIME_PARAMS: LaporanFilterParams = {}
+export type DateFilterPreset =
+  | 'TODAY'
+  | 'YESTERDAY'
+  | 'LAST_7_DAYS'
+  | 'LAST_30_DAYS'
+  | 'THIS_MONTH'
+  | 'CUSTOM_DAY'
+  | 'CUSTOM_RANGE'
 
 /**
  * Format Date ke string YYYY-MM-DD sesuai tanggal kalender lokal.
@@ -49,3 +53,50 @@ export function nextDayStartIso(ymd: string): string {
   const nextYmd = formatYmd(date)
   return `${nextYmd}T00:00:00${getTimezoneOffsetString(date)}`
 }
+
+/**
+ * Menghasilkan label teks representatif untuk preset filter tanggal.
+ */
+export function getPresetLabel(preset: DateFilterPreset, date: Date = new Date()): string {
+  if (preset === 'TODAY') {
+    return `Hari Ini (${formatDate(date)})`
+  }
+  if (preset === 'YESTERDAY') {
+    const yest = new Date(date.getTime() - 86400000)
+    return `Kemarin (${formatDate(yest)})`
+  }
+  if (preset === 'LAST_7_DAYS') {
+    return '7 Hari Terakhir'
+  }
+  if (preset === 'LAST_30_DAYS') {
+    return '30 Hari Terakhir'
+  }
+  if (preset === 'THIS_MONTH') {
+    const monthName = new Intl.DateTimeFormat('id-ID', {
+      month: 'long',
+      year: 'numeric',
+    }).format(date)
+    return `Bulan Ini (${monthName})`
+  }
+  return `Hari Ini (${formatDate(date)})`
+}
+
+/**
+ * Menghasilkan parameter request dan label untuk filter default (Hari Ini).
+ * Sesuai kontrak canonical LaporanService backend (jam.hariIni()).
+ */
+export function getDefaultDateFilter(date: Date = new Date()): {
+  params: LaporanFilterParams
+  label: string
+} {
+  const ymd = formatYmd(date)
+  return {
+    params: { tanggal: ymd },
+    label: getPresetLabel('TODAY', date),
+  }
+}
+
+/**
+ * @deprecated Gunakan getDefaultDateFilter() untuk mendapatkan filter default hari ini
+ */
+export const ALL_TIME_PARAMS: LaporanFilterParams = {}

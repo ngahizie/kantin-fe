@@ -42,7 +42,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
   type RiwayatTransaksiKeseluruhanItem,
@@ -58,9 +58,13 @@ export function LaporanRiwayatKeseluruhanPage() {
   const [searchFilter, setSearchFilter] = useState('')
   const [jenisFilter, setJenisFilter] = useState<string>('ALL')
 
-  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
-  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
-  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
 
   // Modal Struk Digital
   const [selectedTrxForReceipt, setSelectedTrxForReceipt] =
@@ -472,7 +476,7 @@ export function LaporanRiwayatKeseluruhanPage() {
 
             <div className="flex flex-wrap items-center gap-2.5">
               <LaporanDateFilter
-                initialPreset="ALL"
+                initialPreset="TODAY"
                 onChange={(params, label) => {
                   setDateFilterParams(params)
                   setDateFilterLabel(label)

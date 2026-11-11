@@ -28,7 +28,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanDateFilter, ALL_TIME_PARAMS, LaporanExportButton } from './components'
+import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem, LaporanFilterParams } from './types'
 
@@ -37,9 +37,13 @@ export function LaporanRekonsiliasiPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter Tanggal / Rentang Waktu (Default: Semua Waktu)
-  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(ALL_TIME_PARAMS)
-  const [dateFilterLabel, setDateFilterLabel] = useState<string>('Semua Waktu')
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -316,7 +320,7 @@ export function LaporanRekonsiliasiPage() {
 
             <div className="flex flex-wrap items-center gap-2.5">
               <LaporanDateFilter
-                initialPreset="ALL"
+                initialPreset="TODAY"
                 onChange={(params, label) => {
                   setDateFilterParams(params)
                   setDateFilterLabel(label)

@@ -1,4 +1,5 @@
 export * from './types'
+export * from './laporan-utils'
 export * from './api/laporan-api'
 export * from './components'
 export * from './LaporanRekonsiliasiPage'
