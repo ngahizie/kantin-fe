@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { DashboardPage, getStatusBadgeClass } from '../DashboardPage'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
+import { katalogApi } from '@/features/katalog/api/katalog-api'
 
 let mockRole = 'pengelola'
 
@@ -139,6 +140,75 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     const pengelolaScreen = await render(<DashboardPage />)
     await expect.element(pengelolaScreen.getByText('2x Nasi Goreng')).toBeInTheDocument()
     await expect.element(pengelolaScreen.getByText('Siswa #204')).toBeInTheDocument()
+  })
+
+  it('menghapus efek hover pada baris tabel stok menipis dan aktivitas transaksi kasir terakhir', async () => {
+    mockRole = 'pengelola'
+    vi.mocked(katalogApi.getMenuList).mockResolvedValueOnce([
+      {
+        id: 11,
+        kategoriId: 1,
+        nama: 'Teh Botol Dingin',
+        hargaJual: 5000,
+        satuan: 'BOTOL',
+        stokMinimum: 5,
+        stokBerjalan: 2,
+        aktif: true,
+      },
+    ])
+    vi.mocked(laporanApi.getRiwayatTransaksiKeseluruhan).mockResolvedValueOnce([
+      {
+        id: '990009',
+        waktu: '2026-11-10T13:45:00+07:00',
+        jenis: 'BELANJA',
+        arah: 'DEBIT',
+        nominal: 15000,
+        saldoSetelah: 85000,
+        titikKasir: 'Kasir Kantin Utama',
+        petugas: '-',
+        referensiId: '960009',
+        keterangan: '',
+        items: [{ nama: 'Mie Goreng Spesial', qty: 1, harga: 15000, subtotal: 15000 }],
+        siswaId: 205,
+        siswaNama: 'Siswa #205',
+        siswaNis: '205',
+        siswaKelas: '-',
+      },
+    ])
+
+    const screen = await render(<DashboardPage />)
+    await expect.element(screen.getByText('Teh Botol Dingin')).toBeInTheDocument()
+    await expect.element(screen.getByText('Mie Goreng Spesial')).toBeInTheDocument()
+
+    const tables = screen.container.querySelectorAll('table')
+    expect(tables).toHaveLength(2)
+
+    tables.forEach((table) => {
+      const headerRow = table.querySelector('thead tr')
+      const bodyRow = table.querySelector('tbody tr')
+
+      expect(headerRow?.className).toContain('hover:bg-muted/40')
+      expect(headerRow?.className).not.toContain('hover:bg-muted/50')
+      expect(bodyRow?.className).toContain('hover:bg-transparent')
+      expect(bodyRow?.className).not.toContain('hover:bg-muted/30')
+      expect(bodyRow?.className).not.toContain('hover:bg-muted/50')
+    })
+
+    const emptyScreen = await render(<DashboardPage />)
+    await expect
+      .element(emptyScreen.getByText('Semua stok menu dalam kondisi aman di atas batas minimum.'))
+      .toBeInTheDocument()
+    await expect
+      .element(emptyScreen.getByText('Belum ada aktivitas transaksi kasir hari ini.'))
+      .toBeInTheDocument()
+
+    const emptyTables = emptyScreen.container.querySelectorAll('table')
+    expect(emptyTables).toHaveLength(2)
+    emptyTables.forEach((table) => {
+      const emptyRow = table.querySelector('tbody tr')
+      expect(emptyRow?.className).toContain('hover:bg-transparent')
+      expect(emptyRow?.className).not.toContain('hover:bg-muted/50')
+    })
   })
 })
 
