@@ -60,7 +60,7 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
       .toBeInTheDocument()
     await expect
       .element(
-        screen.getByText(/nominal uang fisik akan dikunci dan tidak dapat diubah kembali/i)
+        screen.getByText(/dikunci dan tidak dapat diubah setelah lanjut ke rekapitulasi/i)
       )
       .toBeInTheDocument()
 
@@ -118,12 +118,15 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     await expect.element(screen.getByText('Rp 100.000')).toBeInTheDocument()
     await expect.element(screen.getByText('Rp 198.000')).toBeInTheDocument()
 
-    // Tidak boleh ada tombol kembali atau ubah lagi
+    // Tidak boleh ada tombol kembali, tombol ubah, maupun banner peringatan konfirmasi
     await expect
       .element(screen.getByRole('button', { name: /Ubah/i }))
       .not.toBeInTheDocument()
     await expect
       .element(screen.getByRole('button', { name: /Kembali/i }))
+      .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByText(/transaksi kasir akan dikunci dan dibukukan ke laporan/i))
       .not.toBeInTheDocument()
 
     // Fokus berpindah ke textarea catatan di Langkah 2

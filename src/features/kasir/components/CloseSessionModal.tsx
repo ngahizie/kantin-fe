@@ -305,6 +305,13 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
               >
                 Total Uang Tunai di Laci Kasir:
               </label>
+              <p
+                id={cashLockHintId}
+                className='text-[11px] text-slate-500 dark:text-slate-400'
+              >
+                Nominal uang fisik dikunci dan tidak dapat diubah setelah lanjut
+                ke rekapitulasi.
+              </p>
               <div className='relative'>
                 <span className='absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 dark:text-slate-400'>
                   Rp
@@ -358,22 +365,6 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                   </Button>
                 )}
               </div>
-            </div>
-
-            {/* Peringatan Penguncian Sebelum Rekapitulasi */}
-            <div
-              id={cashLockHintId}
-              className='flex items-start gap-2 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'
-            >
-              <Lock
-                className='h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5'
-                aria-hidden='true'
-              />
-              <span className='text-[11px] leading-relaxed'>
-                Pastikan hitungan uang fisik sudah benar. Setelah lanjut ke
-                rekapitulasi, nominal uang fisik akan <strong>dikunci</strong>{' '}
-                dan tidak dapat diubah kembali.
-              </span>
             </div>
 
             <DialogFooter className='gap-2 sm:gap-2 pt-2'>
@@ -593,19 +584,6 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 }
                 className='text-xs has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl resize-none'
               />
-            </div>
-
-            {/* Peringatan Konfirmasi Penguncian */}
-            <div className='flex items-start gap-2.5 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
-              <AlertTriangle
-                className='h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5'
-                aria-hidden='true'
-              />
-              <span className='text-[11px] leading-relaxed'>
-                <strong>Konfirmasi:</strong> Nominal uang fisik sudah dikunci.
-                Setelah sesi ditutup, transaksi kasir akan dikunci dan dibukukan
-                ke laporan. Aksi ini tidak dapat dibatalkan.
-              </span>
             </div>
 
             <DialogFooter className='gap-2 sm:gap-2 pt-1'>
