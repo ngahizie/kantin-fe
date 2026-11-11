@@ -35,7 +35,7 @@ import type { TransaksiSesiItem } from '../api/kasir-api'
 const FILTER_STATUS_OPTIONS = [
   { value: 'ALL', label: 'Semua Status' },
   { value: 'SUKSES', label: 'Hanya Sukses' },
-  { value: 'VOID', label: 'Hanya Void' },
+  { value: 'VOID', label: 'Hanya Refund' },
 ] as const
 
 const FILTER_SELECT_ITEM_CLASS =
@@ -299,7 +299,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                               : 'has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400'
                           }`}
                         >
-                          {isSukses ? 'SUKSES' : 'VOID'}
+                          {isSukses ? 'SUKSES' : 'REFUND'}
                         </Badge>
                       </div>
 
