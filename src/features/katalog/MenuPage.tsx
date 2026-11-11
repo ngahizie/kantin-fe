@@ -612,7 +612,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
+                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
                               onClick={() =>
                                 navigate({
                                   to: '/menu/$menuId',
@@ -626,7 +626,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl border-none text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
+                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
                               onClick={() => handleEdit(item)}
                               title='Ubah Menu'
                             >

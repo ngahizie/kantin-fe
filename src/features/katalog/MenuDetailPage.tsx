@@ -25,24 +25,50 @@ import { katalogApi } from './api/katalog-api'
 import { MenuFormModal } from './MenuFormModal'
 import type { KategoriItem, MenuItem } from './types'
 
+interface MenuDetailContentProps {
+  menuId: string
+  idMenu: number
+  idValid: boolean
+}
+
 /**
  * Halaman detail satu menu katalog.
  *
  * Memakai `GET /api/katalog/menu/{menuId}` (data tunggal dari server), bukan
  * mengambil dari daftar di halaman sebelumnya — supaya stok dan harga yang
  * tampil selalu yang terbaru saat halaman dibuka.
+ *
+ * Komponen ini hanya membaca parameter rute lalu menyerahkan sisanya ke
+ * `MenuDetailContent` dengan `key={menuId}`. Dengan begitu, saat pengguna
+ * berpindah `/menu/4` → `/menu/5`, seluruh state (menu, fotoGagal, error,
+ * kategoriError, loading) dibuang karena komponennya dipasang ulang — bukan
+ * menampilkan data menu sebelumnya sambil menunggu respons baru.
  */
 export function MenuDetailPage() {
-  const navigate = useNavigate()
   const { menuId } = useParams({ from: '/_authenticated/menu/$menuId' })
   // Rute non-numerik (/menu/abc) tidak boleh menembak GET /api/katalog/menu/NaN.
   const idMenu = Number(menuId)
   const idValid = Number.isInteger(idMenu) && idMenu > 0
 
+  return (
+    <MenuDetailContent
+      key={menuId}
+      menuId={menuId}
+      idMenu={idMenu}
+      idValid={idValid}
+    />
+  )
+}
+
+function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) {
+  const navigate = useNavigate()
+
   const [menu, setMenu] = useState<MenuItem | null>(null)
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [kategoriError, setKategoriError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Kalau id tidak valid tidak ada permintaan yang dijalankan, jadi jangan
+  // mulai dalam keadaan "memuat" — kalau tidak, ikon Segarkan berputar terus.
+  const [loading, setLoading] = useState(idValid)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [fotoGagal, setFotoGagal] = useState(false)
@@ -103,6 +129,7 @@ export function MenuDetailPage() {
   }, [idMenu, idValid, versiMuat])
 
   const muatUlang = () => {
+    if (!idValid) return
     setLoading(true)
     setVersiMuat((v) => v + 1)
   }
@@ -110,7 +137,6 @@ export function MenuDetailPage() {
   const pesanGalat = idValid
     ? error
     : `Nomor menu "${menuId}" tidak valid. Alamat halaman harus berisi angka, misalnya /menu/4.`
-  const sedangMemuat = idValid && loading
   const kategoriSiap = kategoriList.length > 0
   // Backend bisa mengirim path relatif storage; resolve lewat getImageUrl supaya
   // tidak dianggap relatif terhadap /menu/$menuId.
@@ -152,7 +178,8 @@ export function MenuDetailPage() {
             variant='secondary'
             size='sm'
             onClick={muatUlang}
-            disabled={sedangMemuat}
+            // Rute tidak valid: tidak ada yang bisa disegarkan.
+            disabled={!idValid || loading}
             className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
           >
             <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -161,7 +188,7 @@ export function MenuDetailPage() {
           <Button
             size='sm'
             onClick={() => setIsModalOpen(true)}
-            disabled={!menu || !kategoriSiap}
+            disabled={!idValid || !menu || !kategoriSiap}
             title={
               kategoriSiap
                 ? 'Ubah menu'
@@ -191,7 +218,7 @@ export function MenuDetailPage() {
           </div>
         )}
 
-        {sedangMemuat && (
+        {loading && (
           <Card className='border-none shadow-sm'>
             <CardContent className='p-6'>
               <div className='flex flex-col gap-6 sm:flex-row'>
@@ -207,7 +234,7 @@ export function MenuDetailPage() {
           </Card>
         )}
 
-        {!sedangMemuat && pesanGalat && (
+        {!loading && pesanGalat && (
           <Card className='border-none shadow-sm'>
             <CardContent className='flex flex-col items-center gap-3 p-10 text-center'>
               <div className='rounded-full bg-destructive/10 p-3'>
@@ -220,14 +247,18 @@ export function MenuDetailPage() {
                 <p className='text-sm text-muted-foreground'>{pesanGalat}</p>
               </div>
               <div className='flex gap-2 pt-1'>
-                <Button
-                  variant='secondary'
-                  size='sm'
-                  onClick={muatUlang}
-                  className='rounded-xl'
-                >
-                  Coba lagi
-                </Button>
+                {/* Id tidak valid bukan kegagalan jaringan: tidak ada yang bisa
+                    dicoba ulang, jadi tombolnya tidak ditampilkan. */}
+                {idValid && (
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    onClick={muatUlang}
+                    className='rounded-xl'
+                  >
+                    Coba lagi
+                  </Button>
+                )}
                 <Button
                   variant='ghost'
                   size='sm'
@@ -241,7 +272,7 @@ export function MenuDetailPage() {
           </Card>
         )}
 
-        {!sedangMemuat && !pesanGalat && menu && (
+        {!loading && !pesanGalat && menu && (
           <div className='grid gap-6 md:grid-cols-[260px_1fr]'>
             {/* Foto & status */}
             <Card className='mx-auto w-full max-w-[260px] border-none shadow-sm md:mx-0 md:max-w-none'>

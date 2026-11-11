@@ -82,6 +82,48 @@ describe('MenuDetailPage', () => {
     await expect.element(screen.getByText(/tidak valid/i)).toBeInTheDocument()
     // Tidak menembak GET /api/katalog/menu/NaN
     expect(spy).not.toHaveBeenCalled()
+    // Segarkan tidak berputar & tidak bisa diklik, Coba lagi tidak ditawarkan
+    await expect
+      .element(screen.getByRole('button', { name: /Segarkan/i }))
+      .toBeDisabled()
+    await expect
+      .element(screen.getByRole('button', { name: /Coba lagi/i }))
+      .not.toBeInTheDocument()
+  })
+
+  it('membuang data menu lama saat pindah /menu/4 ke /menu/5', async () => {
+    const menuLima: MenuItem = {
+      ...menuContoh,
+      id: 5,
+      nama: 'Teh Botol',
+      hargaJual: 5000,
+    }
+    let selesaikanLima: (m: MenuItem) => void = () => {}
+    const tundaLima = new Promise<MenuItem>((resolve) => {
+      selesaikanLima = resolve
+    })
+    vi.spyOn(katalogApi, 'getMenuDetail').mockImplementation(
+      (id: number) => (id === 5 ? tundaLima : Promise.resolve(menuContoh))
+    )
+
+    const screen = await renderHalaman()
+    await expect.element(screen.getByText('Air Mineral')).toBeInTheDocument()
+
+    // Pindah rute di sisi klien; respons menu 5 belum datang.
+    route.menuId = '5'
+    await screen.rerender(
+      <SidebarProvider>
+        <MenuDetailPage />
+      </SidebarProvider>
+    )
+
+    // State lama harus sudah dibuang (komponen dipasang ulang lewat key).
+    await expect
+      .element(screen.getByText('Air Mineral'))
+      .not.toBeInTheDocument()
+
+    selesaikanLima(menuLima)
+    await expect.element(screen.getByText('Teh Botol')).toBeInTheDocument()
   })
 
   it('menampilkan peringatan dan menahan tombol Ubah saat kategori gagal dimuat', async () => {
