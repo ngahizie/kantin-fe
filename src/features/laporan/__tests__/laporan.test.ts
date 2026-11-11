@@ -43,6 +43,27 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(data.selisih).not.toBe(0)
     })
 
+    it('melempar galat saat mode live jika endpoint rekonsiliasi gagal atau kosong (tanpa dummy Seimbang)', async () => {
+      vi.stubEnv('VITE_USE_MOCK', 'false')
+      const getSpy = vi
+        .spyOn(apiClient, 'get')
+        .mockRejectedValueOnce(new Error('Network error'))
+
+      try {
+        await expect(laporanApi.getRekonsiliasi()).rejects.toThrow(
+          'Network error'
+        )
+
+        getSpy.mockResolvedValueOnce({
+          data: { code: 200, status: 'SUCCESS', data: null },
+        })
+        await expect(laporanApi.getRekonsiliasi()).rejects.toThrow()
+      } finally {
+        getSpy.mockRestore()
+        vi.unstubAllEnvs()
+      }
+    })
+
     it('dapat mengekspor laporan rekonsiliasi ke format Excel (.xlsx)', () => {
       const mockRekonsiliasi = {
         topupBersih: 3500000,

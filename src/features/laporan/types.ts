@@ -10,6 +10,7 @@ export interface LaporanFilterParams {
   kategoriId?: number
   titikKasirId?: number
   search?: string
+  batas?: number
   simulasiSelisih?: boolean
 }
 
