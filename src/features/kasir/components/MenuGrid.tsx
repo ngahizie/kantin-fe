@@ -25,18 +25,18 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
+      <div className='grid grid-cols-2 auto-rows-fr gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
         {Array.from({ length: 8 }).map((_, idx) => (
           <Card
             key={idx}
             className='flex h-full flex-col overflow-hidden rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-0 gap-0 shadow-none'
           >
             <Skeleton className='aspect-4/3 w-full shrink-0 rounded-none bg-slate-200/70 dark:bg-slate-800/80' />
-            <div className='px-3.5 pt-3'>
+            <div className='min-h-[calc(0.75rem+2.75em)] px-3.5 pt-3 text-sm leading-snug'>
               <Skeleton className='h-5 w-3/4 bg-slate-200/70 dark:bg-slate-800/80' />
             </div>
-            <div className='mt-auto flex items-baseline justify-between gap-2 px-3.5 pt-2.5 pb-3.5'>
-              <Skeleton className='h-5 w-20 bg-slate-200/70 dark:bg-slate-800/80' />
+            <div className='mt-auto flex items-baseline justify-between gap-2 px-3.5 pt-2 pb-3.5'>
+              <Skeleton className='h-6 w-20 sm:h-7 bg-slate-200/70 dark:bg-slate-800/80' />
               <Skeleton className='h-3.5 w-12 bg-slate-200/70 dark:bg-slate-800/80' />
             </div>
           </Card>
@@ -74,7 +74,7 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
   }
 
   return (
-    <div className='grid grid-cols-2 gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
+    <div className='grid grid-cols-2 auto-rows-fr gap-3 p-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4'>
       {menus.map((menu) => (
         <MenuItemCard
           key={menu.id}

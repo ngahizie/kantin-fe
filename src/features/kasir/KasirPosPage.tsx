@@ -548,7 +548,7 @@ export const KasirPosPage: React.FC = () => {
 
       <div className='flex flex-1 overflow-hidden'>
         {/* Sisi Kiri: Katalog POS (Pencarian, Filter Kategori, Grid Menu) */}
-        <div className='flex flex-1 flex-col overflow-hidden'>
+        <div className='flex flex-1 min-w-0 flex-col overflow-hidden'>
           {/* Top Control Bar: Search & Status */}
           <div className='flex flex-col gap-2.5 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none sm:p-4'>
             <div className='flex items-center gap-2'>
@@ -696,7 +696,7 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Area Scrollable Katalog Menu */}
-        <div className='flex-1 overflow-y-auto bg-[#FDFCF8] dark:bg-[#050510]'>
+        <div className='flex-1 min-w-0 overflow-y-auto [scrollbar-gutter:stable] bg-[#FDFCF8] dark:bg-[#050510]'>
           <MenuGrid
             menus={filteredMenus}
             loading={loading}
