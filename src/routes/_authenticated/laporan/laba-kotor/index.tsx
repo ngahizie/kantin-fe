@@ -1,11 +1,15 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { LaporanLabaKotorPage } from '@/features/laporan'
+import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/_authenticated/laporan/laba-kotor/')({
   beforeLoad: () => {
-    // Halaman Analisis Laba Kotor telah disatukan ke Laporan Penjualan & Laba Kotor
-    throw redirect({
-      to: '/laporan/penjualan',
-    })
+    const { hasRole } = useAuthStore.getState().auth
+    if (!hasRole(['pengelola', 'bendahara', 'kepsek', 'admin'])) {
+      throw redirect({
+        to: '/403',
+      })
+    }
   },
-  component: () => null,
+  component: LaporanLabaKotorPage,
 })

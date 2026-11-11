@@ -55,18 +55,9 @@ export function StudentSearchCard({
     const targetUid = (uidToFind || rfidInput).trim()
     if (!targetUid) return
 
-    const targetClean = targetUid.replace(/^uid-/i, '').toLowerCase()
-    const found = students.find((s) => {
-      const sUid = (s.uid || '').toLowerCase()
-      const sNis = (s.nis || '').toLowerCase()
-      const sUidClean = sUid.replace(/^uid-/i, '')
-      return (
-        sUid === targetUid.toLowerCase() ||
-        sNis === targetUid.toLowerCase() ||
-        sUidClean === targetClean ||
-        sNis === targetClean
-      )
-    })
+    const found = students.find(
+      (s) => (s.uid || '').toLowerCase() === targetUid.toLowerCase()
+    )
     if (found) {
       onSelectStudent(found)
       setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
