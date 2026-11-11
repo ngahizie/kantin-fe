@@ -18,6 +18,7 @@ export interface MenuItem {
   id: number
   kategoriId: number | null
   nama: string
+  kodeBarcode?: string | null
   hargaJual: number
   satuan: SatuanType | string
   fotoUrl?: string | null
@@ -44,6 +45,12 @@ export const menuFormSchema = z.object({
     .trim()
     .min(1, 'Nama menu wajib diisi')
     .max(150, 'Nama menu maksimal 150 karakter'),
+  kodeBarcode: z
+    .string()
+    .trim()
+    .max(64, 'Kode barcode maksimal 64 karakter')
+    .optional()
+    .or(z.literal('')),
   kategoriId: z.number().min(1, 'Pilih kategori menu'),
   hargaJual: z
     .number()
@@ -62,9 +69,13 @@ export const menuFormSchema = z.object({
 
 export type MenuFormValues = z.infer<typeof menuFormSchema>
 
-export type MenuUpdatePayload = Omit<MenuFormValues, 'kategoriId' | 'satuan'> & {
+export type MenuUpdatePayload = Omit<
+  MenuFormValues,
+  'kategoriId' | 'satuan' | 'kodeBarcode'
+> & {
   kategoriId?: number | null
   satuan?: SatuanType | string
+  kodeBarcode?: string | null
 }
 
 export interface UploadResponseData {

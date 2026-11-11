@@ -3,6 +3,7 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   AlertTriangle,
   ArrowLeft,
+  Barcode,
   Boxes,
   Image as ImageIcon,
   Package,
@@ -334,6 +335,12 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                   <CardTitle className='text-xl font-bold tracking-tight'>
                     {menu.nama}
                   </CardTitle>
+                  {menu.kodeBarcode && (
+                    <div className='mt-1 flex items-center gap-1.5 text-xs text-muted-foreground font-mono tabular-nums'>
+                      <Barcode className='size-3.5 shrink-0 opacity-70' />
+                      <span>{menu.kodeBarcode}</span>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className='space-y-5'>
                   <div className='flex items-center gap-2'>

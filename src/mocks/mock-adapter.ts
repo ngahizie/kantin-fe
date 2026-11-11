@@ -620,6 +620,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
                 kategoriNama: kat?.nama || item.kategori_nama || 'Menu',
                 kategori_nama: kat?.nama || item.kategori_nama || 'Menu',
                 nama: item.nama,
+                kodeBarcode: item.kode_barcode ?? null,
+                kode_barcode: item.kode_barcode ?? null,
                 hargaJual: item.harga_jual,
                 harga_jual: item.harga_jual,
                 satuan: item.satuan ? item.satuan.toUpperCase() : 'PCS',
@@ -646,6 +648,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             kategoriNama: kat?.nama || m.kategori_nama || 'Menu',
             kategori_nama: kat?.nama || m.kategori_nama || 'Menu',
             nama: m.nama,
+            kodeBarcode: m.kode_barcode ?? null,
+            kode_barcode: m.kode_barcode ?? null,
             hargaJual: m.harga_jual,
             harga_jual: m.harga_jual,
             satuan: m.satuan ? m.satuan.toUpperCase() : 'PCS',
@@ -670,6 +674,23 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
 
       if (method === 'post') {
+        const rawBarcode =
+          payload.kodeBarcode !== undefined
+            ? String(payload.kodeBarcode ?? '').trim()
+            : ''
+        const normalizedBarcode = rawBarcode || null
+        if (
+          normalizedBarcode &&
+          menuList.some((m) => m.kode_barcode === normalizedBarcode)
+        ) {
+          return {
+            status: 409,
+            data: {
+              code: 409,
+              message: `Kode barcode '${normalizedBarcode}' sudah digunakan oleh menu lain`,
+            },
+          }
+        }
         const nextId =
           menuList.length > 0 ? Math.max(...menuList.map((m) => m.id)) + 1 : 1
         const kat = kategoriList.find(
@@ -678,6 +699,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         const newItem: MenuItemMock = {
           id: nextId,
           nama: String(payload.nama || ''),
+          kode_barcode: normalizedBarcode,
           kategori_id: Number(payload.kategoriId) || 1,
           kategori_nama: kat ? kat.nama : 'Umum',
           harga_jual: Number(payload.hargaJual) || 0,
@@ -699,6 +721,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               id: newItem.id,
               kategoriId: newItem.kategori_id,
               nama: newItem.nama,
+              kodeBarcode: newItem.kode_barcode ?? null,
               hargaJual: newItem.harga_jual,
               satuan: newItem.satuan,
               fotoUrl: newItem.foto_url || null,
@@ -714,12 +737,32 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         const idx = menuList.findIndex((m) => m.id === targetId)
         if (idx === -1)
           return { status: 404, data: { message: 'Menu tidak ditemukan' } }
+        let nextBarcode = menuList[idx].kode_barcode ?? null
+        if (payload.kodeBarcode !== undefined && payload.kodeBarcode !== null) {
+          const trimmed = String(payload.kodeBarcode).trim()
+          nextBarcode = trimmed || null
+          if (
+            nextBarcode &&
+            menuList.some(
+              (m) => m.id !== targetId && m.kode_barcode === nextBarcode
+            )
+          ) {
+            return {
+              status: 409,
+              data: {
+                code: 409,
+                message: `Kode barcode '${nextBarcode}' sudah digunakan oleh menu lain`,
+              },
+            }
+          }
+        }
         const kat = kategoriList.find(
           (k) => k.id === Number(payload.kategoriId)
         )
         menuList[idx] = {
           ...menuList[idx],
           nama: String(payload.nama || menuList[idx].nama),
+          kode_barcode: nextBarcode,
           kategori_id: Number(payload.kategoriId) || menuList[idx].kategori_id,
           kategori_nama: kat ? kat.nama : menuList[idx].kategori_nama,
           harga_jual:
@@ -750,6 +793,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               id: menuList[idx].id,
               kategoriId: menuList[idx].kategori_id,
               nama: menuList[idx].nama,
+              kodeBarcode: menuList[idx].kode_barcode ?? null,
               hargaJual: menuList[idx].harga_jual,
               satuan: menuList[idx].satuan,
               fotoUrl: menuList[idx].foto_url || null,

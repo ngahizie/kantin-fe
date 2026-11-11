@@ -19,6 +19,9 @@ export type TableToolbarFilter = {
   selectedValues?: Set<string> | string[]
   onSelect?: (values: string[]) => void
   isSingleSelect?: boolean
+  allLabel?: string
+  searchPlaceholder?: string
+  showSearch?: boolean
 }
 
 export type TableToolbarProps = {
@@ -73,6 +76,9 @@ export function TableToolbar({
             selectedValues={filter.selectedValues}
             onSelect={filter.onSelect}
             isSingleSelect={filter.isSingleSelect}
+            allLabel={filter.allLabel}
+            searchPlaceholder={filter.searchPlaceholder}
+            showSearch={filter.showSearch}
           />
         ))}
         {isFiltered && onReset && (

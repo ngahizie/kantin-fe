@@ -6,6 +6,7 @@ import {
   Save,
   Upload,
   Image as ImageIcon,
+  Barcode,
   X,
 } from 'lucide-react'
 import {
@@ -87,6 +88,7 @@ export function MenuFormModal({
     resolver: zodResolver(menuFormSchema),
     defaultValues: {
       nama: '',
+      kodeBarcode: '',
       kategoriId: defaultKategoriId,
       hargaJual: 0,
       satuan: 'PCS',
@@ -106,6 +108,7 @@ export function MenuFormModal({
       if (selectedMenu) {
         form.reset({
           nama: selectedMenu.nama,
+          kodeBarcode: selectedMenu.kodeBarcode || '',
           kategoriId: selectedMenu.kategoriId || defaultKategoriId,
           hargaJual: selectedMenu.hargaJual,
           satuan: (selectedMenu.satuan?.toUpperCase() as SatuanType) || 'PCS',
@@ -116,6 +119,7 @@ export function MenuFormModal({
       } else {
         form.reset({
           nama: '',
+          kodeBarcode: '',
           kategoriId: defaultKategoriId,
           hargaJual: 0,
           satuan: 'PCS',
@@ -171,6 +175,7 @@ export function MenuFormModal({
       // Pastikan harga jual murni integer rupiah
       const payload: MenuFormValues = {
         ...values,
+        kodeBarcode: (values.kodeBarcode ?? '').trim(),
         hargaJual: Math.round(Number(values.hargaJual)),
         stokMinimum: Math.round(Number(values.stokMinimum)),
         aktif: Boolean(values.aktif),
@@ -188,6 +193,9 @@ export function MenuFormModal({
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
       const message = error.response?.data?.message || error.message || 'Gagal menyimpan menu'
+      if (message.toLowerCase().includes('barcode')) {
+        form.setError('kodeBarcode', { message })
+      }
       toast.error(message)
     }
   }
@@ -197,11 +205,11 @@ export function MenuFormModal({
       <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg bg-card'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
-          <DialogDescription className='text-xs text-muted-foreground'>
-            {isEditing
-              ? 'Perbarui detail nama, kategori, harga jual rupiah, dan batas stok minimum.'
-              : 'Lengkapi informasi menu baru untuk ditampilkan pada kasir POS.'}
-          </DialogDescription>
+            <DialogDescription className='text-xs text-muted-foreground'>
+              {isEditing
+                ? 'Perbarui detail nama, kode barcode, kategori, harga jual rupiah, dan batas stok minimum.'
+                : 'Lengkapi informasi menu baru untuk ditampilkan pada kasir POS.'}
+            </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -309,6 +317,38 @@ export function MenuFormModal({
                       className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Kode Barcode (Opsional) */}
+            <FormField
+              control={form.control}
+              name='kodeBarcode'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='text-xs font-semibold'>Kode Barcode (Opsional)</FormLabel>
+                  <FormControl>
+                    <div className='relative'>
+                      <Barcode className='pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+                      <Input
+                        placeholder='Scan atau ketik kode barcode produk (mis. 8996001300112)'
+                        {...field}
+                        value={field.value ?? ''}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className='h-10 pl-9 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription className='text-xs'>
+                    Kosongkan jika menu tidak memiliki barcode kemasan.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

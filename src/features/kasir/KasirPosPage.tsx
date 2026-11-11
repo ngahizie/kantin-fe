@@ -38,6 +38,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import { matchesMenuSearchQuery } from '@/features/katalog/menu-utils'
 import type { MenuItem, KategoriItem } from '@/features/katalog/types'
 import {
   kasirApi,
@@ -309,9 +310,7 @@ export const KasirPosPage: React.FC = () => {
       }
 
       if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim()
-        const matchNama = item.nama.toLowerCase().includes(query)
-        return matchNama
+        return matchesMenuSearchQuery(item, searchQuery)
       }
 
       return true
@@ -584,7 +583,7 @@ export const KasirPosPage: React.FC = () => {
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Cari menu makanan atau minuman...'
+                  placeholder='Cari nama menu atau scan barcode...'
                   className='h-10 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 pr-10 pl-9 text-sm text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 focus-visible:ring-0 rounded-xl shadow-none'
                 />
                 {searchQuery && (

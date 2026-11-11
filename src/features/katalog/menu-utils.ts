@@ -1,5 +1,7 @@
 import type { MenuItem } from './types'
 
+export const MENU_AUTO_REFRESH_INTERVAL_MS = 30_000
+
 /**
  * Mengurutkan daftar menu dengan item terbaru (ID terbesar) berada di paling atas,
  * lalu diurutkan alfabetis jika ID sama.
@@ -10,5 +12,43 @@ export function sortMenusNewestFirst(menus: MenuItem[]): MenuItem[] {
     if (idDiff !== 0) return idDiff
     return (a.nama ?? '').localeCompare(b.nama ?? '')
   })
+}
+
+export function shouldPauseMenuAutoRefresh(params: {
+  autoRefreshEnabled?: boolean
+  isModalOpen: boolean
+  hasDeleteTarget: boolean
+  isDeleting: boolean
+  togglingId: number | null
+  isDocumentHidden: boolean
+}): boolean {
+  const {
+    autoRefreshEnabled = true,
+    isModalOpen,
+    hasDeleteTarget,
+    isDeleting,
+    togglingId,
+    isDocumentHidden,
+  } = params
+
+  return (
+    !autoRefreshEnabled ||
+    isModalOpen ||
+    hasDeleteTarget ||
+    isDeleting ||
+    togglingId !== null ||
+    isDocumentHidden
+  )
+}
+
+export function matchesMenuSearchQuery(
+  item: Pick<MenuItem, 'nama' | 'kodeBarcode'>,
+  rawQuery: string
+): boolean {
+  const query = (rawQuery || '').trim().toLowerCase()
+  if (!query) return true
+  const nama = (item?.nama ?? '').toLowerCase()
+  const barcode = (item?.kodeBarcode ?? '').toLowerCase()
+  return nama.includes(query) || barcode.includes(query)
 }
 
