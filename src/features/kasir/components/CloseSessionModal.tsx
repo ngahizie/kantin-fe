@@ -429,7 +429,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Total Bruto */}
+              {/* Total Penjualan Kotor */}
               <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none col-span-2 sm:col-span-1'>
                 <CardContent className='p-2.5'>
                   <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
@@ -437,7 +437,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                       className='h-3 w-3 text-slate-500 dark:text-slate-400'
                       aria-hidden='true'
                     />{' '}
-                    Total Bruto
+                    Penjualan Kotor
                   </span>
                   <span className='text-xs font-semibold text-slate-800 dark:text-white tabular-nums block'>
                     {formatRupiah(totalBruto)}
@@ -476,7 +476,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </span>
                 {totalVoid > 0 && (
                   <span className='text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block'>
-                    (Bruto {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
+                    (Kotor {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
                   </span>
                 )}
               </div>

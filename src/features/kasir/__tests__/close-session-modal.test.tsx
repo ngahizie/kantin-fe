@@ -116,9 +116,11 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
       .toBeInTheDocument()
     await expect.element(screen.getByText('Transaksi Refund')).toBeInTheDocument()
     await expect.element(screen.getByText(/Transaksi Void/i)).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Penjualan Kotor')).toBeInTheDocument()
+    await expect.element(screen.getByText(/Bruto/i)).not.toBeInTheDocument()
     await expect
       .element(
-        screen.getByText(/\(Bruto Rp\s+213\.000 - Refund Rp\s+15\.000\)/)
+        screen.getByText(/\(Kotor Rp\s+213\.000 - Refund Rp\s+15\.000\)/)
       )
       .toBeInTheDocument()
     await expect.element(screen.getByText(/- Void Rp/i)).not.toBeInTheDocument()
