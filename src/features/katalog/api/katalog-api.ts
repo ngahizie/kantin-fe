@@ -64,6 +64,7 @@ export const katalogApi = {
   async createMenu(data: MenuFormValues): Promise<MenuItem> {
     const res = await apiClient.post<ApiResponse<MenuItem>>('/api/katalog/menu', {
       nama: data.nama,
+      kodeBarcode: data.kodeBarcode?.trim() || null,
       kategoriId: data.kategoriId,
       hargaJual: data.hargaJual,
       satuan: data.satuan,
@@ -76,6 +77,12 @@ export const katalogApi = {
   async updateMenu(id: number, data: MenuFormValues | MenuUpdatePayload): Promise<MenuItem> {
     const res = await apiClient.put<ApiResponse<MenuItem>>(`/api/katalog/menu/${id}`, {
       nama: data.nama,
+      ...(data.kodeBarcode !== undefined
+        ? {
+            kodeBarcode:
+              data.kodeBarcode === null ? '' : String(data.kodeBarcode).trim(),
+          }
+        : {}),
       kategoriId: data.kategoriId ?? null,
       hargaJual: data.hargaJual,
       satuan: data.satuan || 'PCS',

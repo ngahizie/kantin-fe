@@ -5,6 +5,7 @@
 export interface MenuItemMock {
   id: number
   nama: string
+  kode_barcode?: string | null
   kategori_id: number
   kategori_nama: string
   harga_jual: number
@@ -167,6 +168,7 @@ export const MOCK_MENU: MenuItemMock[] = [
   {
     id: 5,
     nama: 'Roti Cokelat Keju',
+    kode_barcode: '8992753105013',
     kategori_id: 2,
     kategori_nama: 'Snack & Roti',
     harga_jual: 5000,
@@ -235,6 +237,7 @@ export const MOCK_MENU: MenuItemMock[] = [
   {
     id: 10,
     nama: 'Air Mineral 600ml',
+    kode_barcode: '8992761135017',
     kategori_id: 3,
     kategori_nama: 'Minuman Dingin',
     harga_jual: 4000,
@@ -262,6 +265,7 @@ export const MOCK_MENU: MenuItemMock[] = [
   {
     id: 12,
     nama: 'Susu UHT Cokelat',
+    kode_barcode: '8998009010012',
     kategori_id: 3,
     kategori_nama: 'Minuman Dingin',
     harga_jual: 6000,

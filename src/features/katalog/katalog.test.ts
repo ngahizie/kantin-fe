@@ -7,7 +7,12 @@ import {
   menuFormSchema,
   type MenuItem,
 } from './types'
-import { sortMenusNewestFirst } from './menu-utils'
+import {
+  MENU_AUTO_REFRESH_INTERVAL_MS,
+  matchesMenuSearchQuery,
+  shouldPauseMenuAutoRefresh,
+  sortMenusNewestFirst,
+} from './menu-utils'
 
 describe('Katalog Kategori Zod Validation Schema', () => {
   it('berhasil memvalidasi nama kategori yang valid', () => {
@@ -313,5 +318,125 @@ describe('Katalog Menu API Toggle Status & Hapus Menu', () => {
     await katalogApi.deleteMenu(created.id)
     const listAfterDelete = await katalogApi.getMenuList(undefined, false)
     expect(listAfterDelete.some((m) => m.id === created.id)).toBe(false)
+  })
+})
+
+describe('Katalog Menu Auto-Refresh Guard & Formatting', () => {
+  it('menjadwalkan auto-refresh tiap 30 detik dan hanya berjalan saat aktif & tidak ada dialog/aksi', () => {
+    expect(MENU_AUTO_REFRESH_INTERVAL_MS).toBe(30_000)
+
+    const baseState = {
+      autoRefreshEnabled: true,
+      isModalOpen: false,
+      hasDeleteTarget: false,
+      isDeleting: false,
+      togglingId: null,
+      isDocumentHidden: false,
+    }
+
+    expect(shouldPauseMenuAutoRefresh(baseState)).toBe(false)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, autoRefreshEnabled: false })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isModalOpen: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, hasDeleteTarget: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isDeleting: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, togglingId: 12 })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isDocumentHidden: true })).toBe(true)
+  })
+})
+
+describe('Katalog Menu Kode Barcode — Validasi, Pencarian, & API', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('menerima kodeBarcode opsional pada schema form dan menolak bila > 64 karakter', () => {
+    const valid = menuFormSchema.safeParse({
+      nama: 'Teh Botol',
+      kodeBarcode: ' 8996001300112 ',
+      kategoriId: 1,
+      hargaJual: 4500,
+      satuan: 'BOTOL',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(valid.success).toBe(true)
+    if (valid.success) {
+      expect(valid.data.kodeBarcode).toBe('8996001300112')
+    }
+
+    const empty = menuFormSchema.safeParse({
+      nama: 'Nasi Goreng',
+      kodeBarcode: '',
+      kategoriId: 1,
+      hargaJual: 15000,
+      satuan: 'PORSI',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(empty.success).toBe(true)
+
+    const tooLong = menuFormSchema.safeParse({
+      nama: 'Teh Botol',
+      kodeBarcode: 'B'.repeat(65),
+      kategoriId: 1,
+      hargaJual: 4500,
+      satuan: 'BOTOL',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(tooLong.success).toBe(false)
+  })
+
+  it('mencocokkan pencarian berdasarkan nama menu maupun kode barcode', () => {
+    const item = { nama: 'Teh Botol Sosro', kodeBarcode: '8996001300112' }
+    expect(matchesMenuSearchQuery(item, 'teh botol')).toBe(true)
+    expect(matchesMenuSearchQuery(item, '8996001300112')).toBe(true)
+    expect(matchesMenuSearchQuery(item, '1300112')).toBe(true)
+    expect(matchesMenuSearchQuery({ nama: 'Gorengan', kodeBarcode: null }, '8996')).toBe(false)
+    expect(matchesMenuSearchQuery({ nama: 'Gorengan', kodeBarcode: null }, 'goreng')).toBe(true)
+  })
+
+  it('menyimpan, menolak duplikat, dan mengosongkan kodeBarcode lewat katalogApi', async () => {
+    const created = await katalogApi.createMenu({
+      nama: 'Susu Kotak Uji',
+      kodeBarcode: '8990001112223',
+      kategoriId: 1,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(created.kodeBarcode).toBe('8990001112223')
+
+    await expect(
+      katalogApi.createMenu({
+        nama: 'Susu Duplikat',
+        kodeBarcode: '8990001112223',
+        kategoriId: 1,
+        hargaJual: 5500,
+        satuan: 'PCS',
+        stokMinimum: 5,
+        fotoUrl: '',
+        aktif: true,
+      })
+    ).rejects.toThrow()
+
+    const cleared = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kodeBarcode: '',
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(cleared.kodeBarcode).toBeNull()
+
+    await katalogApi.deleteMenu(created.id)
   })
 })

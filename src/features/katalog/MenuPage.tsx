@@ -1,5 +1,5 @@
 import { TableToolbar } from '@/components/data-table'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   UtensilsCrossed,
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Eye,
   Image as ImageIcon,
+  Barcode,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -45,7 +46,12 @@ import { toast } from 'sonner'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { katalogApi } from './api/katalog-api'
 import { MenuFormModal } from './MenuFormModal'
-import { sortMenusNewestFirst } from './menu-utils'
+import {
+  MENU_AUTO_REFRESH_INTERVAL_MS,
+  matchesMenuSearchQuery,
+  shouldPauseMenuAutoRefresh,
+  sortMenusNewestFirst,
+} from './menu-utils'
 import type { MenuItem, KategoriItem } from './types'
 
 const PAGE_SIZE = 10
@@ -108,50 +114,134 @@ export function MenuPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [activeDeleteTarget, setActiveDeleteTarget] = useState<MenuItem | null>(null)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+
+  const [isDocumentHidden, setIsDocumentHidden] = useState(() =>
+    typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
+  )
+
+  const isMountedRef = useRef(true)
+  const inFlightCountRef = useRef(0)
+  const activeSyncIdRef = useRef(0)
+  const mutationEpochRef = useRef(0)
+  const lastSyncedAtRef = useRef<Date | null>(null)
+
   const handleDeleteClick = (item: MenuItem) => {
     setDeleteTarget(item)
     setActiveDeleteTarget(item)
   }
 
-  
-  // Load menu and kategori data
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const { menus, categories } = await fetchKatalogData()
+  const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
+    isModalOpen,
+    hasDeleteTarget: Boolean(deleteTarget),
+    isDeleting,
+    togglingId,
+    isDocumentHidden,
+  })
+
+  const commitKatalogData = useCallback(
+    (menus: MenuItem[], categories: KategoriItem[]) => {
       setMenuList(menus)
       setKategoriList(categories)
-    } catch (err: unknown) {
-      const error = err as { message?: string }
-      toast.error(error.message || 'Gagal memuat data katalog menu')
-    } finally {
-      setLoading(false)
-    }
-  }
+      lastSyncedAtRef.current = new Date()
+    },
+    []
+  )
 
-  useEffect(() => {
-    let isMounted = true
-    const init = async () => {
+  // Sinkronisasi latar belakang otomatis tanpa mengganggu state tabel/form
+  const syncKatalog = useCallback(
+    async (force = false) => {
+      if (!force && inFlightCountRef.current > 0) return
+
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
+      const requestEpoch = mutationEpochRef.current
+
       try {
         const { menus, categories } = await fetchKatalogData()
-        if (isMounted) {
-          setMenuList(menus)
-          setKategoriList(categories)
-          setLoading(false)
+        if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
+        if (!force && requestEpoch !== mutationEpochRef.current) return
+
+        commitKatalogData(menus, categories)
+      } catch {
+        // Abaikan kegagalan background polling agar tidak mengganggu antarmuka
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+      }
+    },
+    [commitKatalogData]
+  )
+
+  useEffect(() => {
+    isMountedRef.current = true
+    const init = async () => {
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
+      try {
+        const { menus, categories } = await fetchKatalogData()
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
+          commitKatalogData(menus, categories)
         }
       } catch (err: unknown) {
-        if (isMounted) {
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           const error = err as { message?: string }
           toast.error(error.message || 'Gagal memuat data katalog menu')
+        }
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+        if (isMountedRef.current && inFlightCountRef.current === 0) {
           setLoading(false)
         }
       }
     }
     void init()
     return () => {
-      isMounted = false
+      isMountedRef.current = false
     }
-  }, [])
+  }, [commitKatalogData])
+
+  // Pantau visibilitas tab agar auto-refresh berhenti saat tab tersembunyi
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const hidden = document.visibilityState === 'hidden'
+      setIsDocumentHidden(hidden)
+
+      if (hidden) return
+
+      const pausedWithoutVisibility = shouldPauseMenuAutoRefresh({
+        isModalOpen,
+        hasDeleteTarget: Boolean(deleteTarget),
+        isDeleting,
+        togglingId,
+        isDocumentHidden: false,
+      })
+      if (pausedWithoutVisibility) return
+
+      const elapsedMs = lastSyncedAtRef.current
+        ? Date.now() - lastSyncedAtRef.current.getTime()
+        : Number.POSITIVE_INFINITY
+      if (elapsedMs >= MENU_AUTO_REFRESH_INTERVAL_MS) {
+        void syncKatalog()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isModalOpen, deleteTarget, isDeleting, togglingId, syncKatalog])
+
+  // Polling otomatis setiap 30 detik selalu aktif selama tidak dijeda
+  useEffect(() => {
+    if (isAutoRefreshPaused) return
+
+    const timer = window.setInterval(() => {
+      void syncKatalog()
+    }, MENU_AUTO_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [isAutoRefreshPaused, syncKatalog])
 
   // Map kategoriId ke nama kategori
   const kategoriMap = useMemo(() => {
@@ -174,9 +264,8 @@ export function MenuPage() {
   // Filter data sesuai kriteria
   const filteredMenu = useMemo(() => {
     return menuList.filter((item) => {
-      // 1. Search Query
-      const query = (searchQuery || '').trim().toLowerCase()
-      const matchSearch = !query || (item?.nama ?? '').toLowerCase().includes(query)
+      // 1. Search Query (nama menu atau kode barcode)
+      const matchSearch = matchesMenuSearchQuery(item, searchQuery)
 
       // 2. Kategori Filter
       const matchKategori =
@@ -215,18 +304,21 @@ export function MenuPage() {
   }
 
   const handleFormSuccess = () => {
+    mutationEpochRef.current += 1
     if (!selectedMenu) {
       setCurrentPage(1)
     }
-    void loadData()
+    void syncKatalog(true)
   }
 
   const handleToggleAktif = async (item: MenuItem) => {
     const nextAktif = !item.aktif
+    mutationEpochRef.current += 1
     try {
       setTogglingId(item.id)
       const updated = await katalogApi.updateMenu(item.id, {
         nama: item.nama,
+        kodeBarcode: item.kodeBarcode ?? '',
         kategoriId: item.kategoriId ?? null,
         hargaJual: item.hargaJual,
         satuan: item.satuan || 'PCS',
@@ -234,6 +326,7 @@ export function MenuPage() {
         fotoUrl: item.fotoUrl || '',
         aktif: nextAktif,
       })
+      mutationEpochRef.current += 1
       setMenuList((prev) =>
         prev.map((m) => (m.id === item.id ? { ...m, ...updated, aktif: nextAktif } : m))
       )
@@ -253,12 +346,14 @@ export function MenuPage() {
   const confirmDelete = async () => {
     const target = activeDeleteTarget
     if (!target) return
+    mutationEpochRef.current += 1
     try {
       setIsDeleting(true)
       await katalogApi.deleteMenu(target.id)
+      mutationEpochRef.current += 1
       toast.success(`Menu "${target.nama}" berhasil dihapus`)
       setDeleteTarget(null)
-      await loadData()
+      await syncKatalog(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
       const message = error.response?.data?.message || error.message || 'Gagal menghapus menu'
@@ -392,7 +487,7 @@ export function MenuPage() {
         <Card className={`${CARD_SURFACE_CLASS} gap-0 py-0 overflow-hidden`}>
           <div className='p-4 has-border border-b border-slate-200 dark:border-slate-800'>
             <TableToolbar
-              searchPlaceholder='Cari nama menu...'
+              searchPlaceholder='Cari nama menu atau barcode...'
               searchValue={searchQuery}
               onSearchChange={(val: string) => {
                 setSearchQuery(val)
@@ -425,6 +520,7 @@ export function MenuPage() {
                     setCurrentPage(1)
                   },
                   isSingleSelect: true,
+                  showSearch: false,
                 },
               ]}
               isFiltered={Boolean(searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all')}
@@ -519,7 +615,12 @@ export function MenuPage() {
                         {/* Nama Menu */}
                         <TableCell className='border-none py-3.5 ps-2'>
                           <div className='font-semibold text-foreground text-sm'>{item.nama}</div>
-                          <div className='text-[11px] text-muted-foreground tabular-nums'>ID: #{item.id}</div>
+                          {item.kodeBarcode && (
+                            <div className='mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono tabular-nums'>
+                              <Barcode className='size-3 shrink-0 opacity-70' />
+                              <span>{item.kodeBarcode}</span>
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* Kategori */}
