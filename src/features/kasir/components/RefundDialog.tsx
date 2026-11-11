@@ -38,6 +38,13 @@ export interface RefundDialogProps {
   onSuccess?: () => void
 }
 
+function cleanRefundErrorMessage(message: string): string {
+  return message
+    .replace(/\s*\((?:PRD|BE)[^)]*\)/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 function validateKodeStruk(value: string): string | null {
   const trimmed = value.trim()
   if (!trimmed) {
@@ -83,7 +90,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
   const lainnyaInputId = useId()
   const lainnyaHintId = useId()
   const lainnyaErrorId = useId()
-  const submitErrorId = useId()
 
   const [kodeStruk, setKodeStruk] = useState('')
   const [selectedAlasan, setSelectedAlasan] = useState<AlasanVoidType>(
@@ -97,7 +103,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
 
   const [kodeErrorMsg, setKodeErrorMsg] = useState<string | null>(null)
   const [lainnyaErrorMsg, setLainnyaErrorMsg] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const [liveAnnouncement, setLiveAnnouncement] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -138,7 +143,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
     if (isSubmitting) return
 
     setHasSubmitted(true)
-    setSubmitError(null)
     clearAnnouncement()
 
     const kodeErr = validateKodeStruk(kodeStruk)
@@ -176,12 +180,17 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       onSuccess?.()
     } catch (err: unknown) {
       playError()
-      const msg = getErrorMessage(err, 'Gagal memproses refund transaksi')
-      setSubmitError(msg)
+      const rawMsg = getErrorMessage(err, 'Gagal memproses refund transaksi')
+      const msg =
+        cleanRefundErrorMessage(rawMsg) || 'Gagal memproses refund transaksi'
 
       if (msg.toLowerCase().includes('kode struk')) {
+        const alreadyFocused = document.activeElement === kodeStrukRef.current
         setKodeErrorMsg(msg)
         kodeStrukRef.current?.focus()
+        if (alreadyFocused) {
+          scheduleAnnouncement(`Kode Struk: ${msg}`, 100)
+        }
       } else {
         scheduleAnnouncement(msg, 100)
       }
@@ -308,7 +317,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
             const val = e.target.value
             setKodeStruk(val)
             setKodeTouched(true)
-            setSubmitError(null)
             if (kodeErrorMsg && validateKodeStruk(val) === null) {
               setKodeErrorMsg(null)
               clearAnnouncement()
@@ -377,7 +385,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
                   checked={isChecked}
                   onChange={() => {
                     setSelectedAlasan(alasan)
-                    setSubmitError(null)
                     if (alasan !== 'Lainnya') {
                       setLainnyaErrorMsg(null)
                       setLainnyaTouched(false)
@@ -437,7 +444,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
                 const val = e.target.value
                 setKeteranganLainnya(val)
                 setLainnyaTouched(true)
-                setSubmitError(null)
                 if (
                   lainnyaErrorMsg &&
                   validateKeteranganLainnya('Lainnya', val) === null
@@ -482,21 +488,6 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
           </div>
         )}
       </fieldset>
-
-      {/* Banner Error Server saat Submit */}
-      {submitError && (
-        <div
-          id={submitErrorId}
-          className='flex items-start gap-2 rounded-xl has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs text-rose-700 dark:text-rose-300'
-        >
-          <AlertCircle
-            role='img'
-            aria-label='Error'
-            className='h-4 w-4 shrink-0 mt-0.5'
-          />
-          <span>{submitError}</span>
-        </div>
-      )}
 
       <DialogFooter className='gap-2 sm:gap-2.5 pt-2'>
         <Button
