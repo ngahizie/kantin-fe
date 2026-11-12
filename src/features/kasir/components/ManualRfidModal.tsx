@@ -49,16 +49,15 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
     enabled: open,
   })
 
-  // Deteksi otomatis saat kartu di-scan (misal UID 8-16 digit desimal/hex atau kartu tamu)
+  // Deteksi otomatis saat kartu di-scan (UID 8-16 digit desimal atau hex)
   useEffect(() => {
     const trimmed = uidInput.trim()
     if (!trimmed) return
 
-    // Pola kartu RFID: 8-16 digit desimal (Mifare), 8-16 hex chars, atau nomor kartu tamu KT-xx
+    // Pola kartu RFID: 8-16 digit desimal (Mifare) atau 8-16 hex chars
     const isCompletedUid =
       /^\d{8,16}$/.test(trimmed) ||
-      /^[0-9a-fA-F]{8,16}$/.test(trimmed) ||
-      /^KT-\d+$/i.test(trimmed)
+      /^[0-9a-fA-F]{8,16}$/.test(trimmed)
 
     if (!isCompletedUid) return
 

@@ -21,9 +21,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth-store'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
-import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
+import { type KartuSiswaMock } from '@/types/kantin'
 import type { SiswaNonaktifMock, RefundSlipData } from './types'
 
 interface PindahSaldoModalProps {
@@ -62,7 +63,7 @@ function PindahSaldoFormContent({
   onOpenChange: (open: boolean) => void
   onTransferSuccess: (siswaAsalId: number, slipData: RefundSlipData) => void
 }) {
-  const [activeStudents, setActiveStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
+  const [activeStudents, setActiveStudents] = useState<KartuSiswaMock[]>([])
   const [selectedDestination, setSelectedDestination] = useState<KartuSiswaMock | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [beritaAcara, setBeritaAcara] = useState(
@@ -71,43 +72,86 @@ function PindahSaldoFormContent({
   const [agreement, setAgreement] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Load active students from API / mock
+  // Load active students from API
   useEffect(() => {
     let isMounted = true
     const loadStudents = async () => {
       try {
-        const res = await apiClient.get('/api/saldo/refund/kandidat', {
-          params: { hanyaTidakAktif: false },
-        })
-        if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          const rawData = res.data.data as Record<string, unknown>[]
-          const isRich = rawData.some((item) => item.nama && item.nis)
-          if (isRich) {
-            setActiveStudents(rawData as unknown as KartuSiswaMock[])
-          } else {
-            // Gabungkan saldo riil BE dengan master data siswa aktif
-            const saldoMap = new Map<number, number>()
-            for (const item of rawData) {
-              const sid = Number(
-                item.subjekId ?? item.subjek_id ?? item.siswa_id
-              )
-              if (sid) {
-                saldoMap.set(sid, Number(item.saldo ?? 0))
-              }
-            }
-            setActiveStudents(
-              MOCK_SISWA.map((siswa) => ({
-                ...siswa,
-                saldo: saldoMap.has(siswa.siswa_id)
-                  ? (saldoMap.get(siswa.siswa_id) ?? siswa.saldo)
-                  : siswa.saldo,
-              }))
-            )
+        const [kandidatRes, siswaRes] = await Promise.allSettled([
+          apiClient.get('/api/saldo/refund/kandidat', {
+            params: { hanyaTidakAktif: false },
+          }),
+          apiClient.get('/api/siswa', { params: { batas: 50 } }),
+        ])
+
+        if (!isMounted) return
+
+        const siswaInfoMap = new Map<number, Record<string, unknown>>()
+        if (
+          siswaRes.status === 'fulfilled' &&
+          Array.isArray(siswaRes.value.data?.data)
+        ) {
+          for (const raw of siswaRes.value.data.data as Record<string, unknown>[]) {
+            const sid = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
+            if (sid > 0) siswaInfoMap.set(sid, raw)
           }
         }
+
+        const rawKandidat =
+          kandidatRes.status === 'fulfilled' &&
+          Array.isArray(kandidatRes.value.data?.data)
+            ? (kandidatRes.value.data.data as Record<string, unknown>[])
+            : []
+
+        const isRich = rawKandidat.some((item) => item.nama && item.nis && item.uid)
+        if (isRich) {
+          setActiveStudents(rawKandidat as unknown as KartuSiswaMock[])
+          return
+        }
+
+        const mapped: KartuSiswaMock[] = []
+        const seenIds = new Set<number>()
+        for (const item of rawKandidat) {
+          const sid = Number(item.siswaId ?? item.siswa_id ?? 0)
+          if (!sid) continue
+          seenIds.add(sid)
+          const info = siswaInfoMap.get(sid)
+          const nis = String(item.nis ?? info?.nis ?? '')
+          mapped.push({
+            uid: String(info?.uid ?? info?.rfidUid ?? (nis ? `UID-${nis}` : `UID-${sid}`)),
+            siswa_id: sid,
+            nis,
+            nama: String(item.nama ?? info?.nama ?? `Siswa #${sid}`),
+            kelas: String(item.kelas ?? info?.kelas ?? '-'),
+            foto_url: String(info?.fotoUrl ?? info?.foto_url ?? ''),
+            saldo: Number(item.saldo ?? info?.saldo ?? 0),
+            limit_harian: 0,
+            belanja_hari_ini: 0,
+            is_blocked: Boolean(info?.diblokir ?? item.tidakAktif),
+          })
+        }
+
+        for (const [sid, info] of siswaInfoMap.entries()) {
+          if (seenIds.has(sid) || info.tidakAktif || info.tidak_aktif) continue
+          const nis = String(info.nis ?? '')
+          mapped.push({
+            uid: String(info.uid ?? info.rfidUid ?? (nis ? `UID-${nis}` : `UID-${sid}`)),
+            siswa_id: sid,
+            nis,
+            nama: String(info.nama ?? `Siswa #${sid}`),
+            kelas: String(info.kelas ?? '-'),
+            foto_url: String(info.fotoUrl ?? info.foto_url ?? ''),
+            saldo: Number(info.saldo ?? 0),
+            limit_harian: 0,
+            belanja_hari_ini: 0,
+            is_blocked: Boolean(info.diblokir),
+          })
+        }
+
+        setActiveStudents(mapped)
       } catch {
         if (isMounted) {
-          setActiveStudents(MOCK_SISWA)
+          setActiveStudents([])
         }
       }
     }
@@ -172,11 +216,14 @@ function PindahSaldoFormContent({
     try {
       await apiClient.post('/api/saldo/pindah-saldo', payload)
 
+      const currentUser = useAuthStore.getState().auth.user
+      const petugasNama = currentUser?.nama || 'Petugas TU / Bendahara'
+
       const slipData: RefundSlipData = {
         type: 'TRANSFER_SAUDARA',
         ref_no: refNo,
         waktu: new Date().toISOString(),
-        petugas_nama: 'Wibisana Bama (Petugas TU/Bendahara)',
+        petugas_nama: petugasNama,
         siswa_asal: {
           siswa_id: siswaAsal.siswa_id,
           nis: siswaAsal.nis,

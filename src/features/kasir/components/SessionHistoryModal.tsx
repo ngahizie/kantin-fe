@@ -4,12 +4,12 @@ import {
   Receipt,
   RotateCcw,
   Search,
-  User,
   Clock,
   ShoppingBag,
   Loader2,
   X,
 } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Sheet,
   SheetContent,
@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatRupiah, formatDateTime } from '@/lib/formatters'
+import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
 import RefundDialog from './RefundDialog'
 import type { TransaksiSesiItem } from '../api/kasir-api'
 
@@ -96,9 +96,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           .toLowerCase()
           .includes(query)
         const matchNis = (trx.pembeliNis || '').toLowerCase().includes(query)
-        const matchTipe = (
-          trx.pembeliTipe === 'SISWA' ? 'siswa' : 'kartu tamu'
-        ).includes(query)
+        const matchTipe = 'siswa'.includes(query)
         const matchItem = trx.items.some((it) =>
           it.namaMenu.toLowerCase().includes(query)
         )
@@ -305,25 +303,36 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
 
                       {/* Baris Tengah: Data Pembeli & Total */}
                       <div className='flex items-start justify-between gap-2 text-xs'>
-                        <div className='space-y-0.5'>
-                          <div className='flex items-center gap-1.5'>
-                            <User className='h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0' />
-                            <strong className='text-slate-800 dark:text-white text-sm'>
-                              {trx.pembeliNama}
-                            </strong>
-                            <Badge
-                              variant='secondary'
-                              className='rounded-full text-[9px] py-0 px-2 font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-none'
-                            >
-                              {trx.pembeliTipe === 'SISWA' ? 'Siswa' : 'Tamu'}
-                            </Badge>
-                          </div>
-                          {trx.pembeliKelas && (
-                            <span className='text-[11px] text-slate-500 dark:text-slate-400 block pl-5'>
-                              Kelas: {trx.pembeliKelas}{' '}
-                              {trx.pembeliNis ? `• NIS: ${trx.pembeliNis}` : ''}
+                        <div className='flex items-center gap-2.5 min-w-0'>
+                          <Avatar className='h-8 w-8 shrink-0 rounded-full has-border !border !border-slate-200 dark:!border-slate-700 bg-slate-100 dark:bg-slate-800'>
+                            {trx.pembeliFotoUrl && (
+                              <AvatarImage
+                                src={trx.pembeliFotoUrl}
+                                alt={trx.pembeliNama}
+                                className='object-cover'
+                              />
+                            )}
+                            <AvatarFallback className='text-[11px] font-semibold text-slate-700 dark:text-slate-200'>
+                              {getInitials(trx.pembeliNama)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className='space-y-0.5 min-w-0'>
+                            <div className='flex items-center gap-1.5'>
+                              <strong className='truncate text-slate-800 dark:text-white text-sm'>
+                                {trx.pembeliNama}
+                              </strong>
+                              <Badge
+                                variant='secondary'
+                                className='rounded-full text-[9px] py-0 px-2 font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-none'
+                              >
+                                Siswa
+                              </Badge>
+                            </div>
+                            <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
+                              {trx.pembeliKelas ? `Kelas: ${trx.pembeliKelas} • ` : ''}
+                              NIS: {trx.pembeliNis || '-'}
                             </span>
-                          )}
+                          </div>
                         </div>
 
                         <div className='text-right'>

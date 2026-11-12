@@ -24,16 +24,18 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import apiClient from '@/lib/api-client'
+import { useAuthStore } from '@/stores/auth-store'
 import { TableToolbar } from '@/components/data-table'
 import { formatRupiah } from '@/lib/formatters'
-import { MOCK_SISWA_NONAKTIF, type SiswaNonaktifMock } from '@/mocks/mock-data'
+import { type SiswaNonaktifMock } from '@/types/kantin'
 import { RefundOrangTuaModal } from './RefundOrangTuaModal'
 import { PindahSaldoModal } from './PindahSaldoModal'
 import { SlipRefundModal } from './SlipRefundModal'
 import type { RefundSlipData } from './types'
 
 export function RefundSiswaKeluarPage() {
-  const [students, setStudents] = useState<SiswaNonaktifMock[]>(MOCK_SISWA_NONAKTIF)
+  const { auth } = useAuthStore()
+  const [students, setStudents] = useState<SiswaNonaktifMock[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [activeTab, setActiveTab] = useState('pending')
@@ -52,49 +54,88 @@ export function RefundSiswaKeluarPage() {
     let isMounted = true
     const loadInitialData = async () => {
       try {
-        const res = await apiClient.get('/api/saldo/refund/kandidat', {
-          params: { hanyaTidakAktif: true },
-        })
-        if (isMounted && res.data?.data && Array.isArray(res.data.data)) {
-          const rawItems = res.data.data as Record<string, unknown>[]
-          const isRichStudent = rawItems.some((item) => item.nama && item.nis)
+        const [kandidatRes, siswaRes] = await Promise.allSettled([
+          apiClient.get('/api/saldo/refund/kandidat', {
+            params: { hanyaTidakAktif: true },
+          }),
+          apiClient.get('/api/siswa', { params: { batas: 50 } }),
+        ])
+        if (!isMounted) return
+
+        const siswaInfoMap = new Map<number, Record<string, unknown>>()
+        if (
+          siswaRes.status === 'fulfilled' &&
+          Array.isArray(siswaRes.value.data?.data)
+        ) {
+          for (const raw of siswaRes.value.data.data as Record<string, unknown>[]) {
+            const sid = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
+            if (sid > 0) siswaInfoMap.set(sid, raw)
+          }
+        }
+
+        if (
+          kandidatRes.status === 'fulfilled' &&
+          Array.isArray(kandidatRes.value.data?.data)
+        ) {
+          const rawItems = kandidatRes.value.data.data as Record<string, unknown>[]
+          const isRichStudent = rawItems.some(
+            (item) => item.nama && item.nis && item.kelas_terakhir
+          )
           if (isRichStudent) {
             setStudents(rawItems as unknown as SiswaNonaktifMock[])
           } else {
-            // Format BE: [{ subjekId, saldo, tidakAktif }]
-            const kandidatMap = new Map<
-              number,
-              { saldo: number; tidakAktif?: boolean }
-            >()
-            for (const item of rawItems) {
-              const sid = Number(
-                item.subjekId ?? item.subjek_id ?? item.siswa_id
-              )
-              if (sid) {
-                kandidatMap.set(sid, {
-                  saldo: Number(item.saldo ?? 0),
-                  tidakAktif: item.tidakAktif as boolean | undefined,
-                })
+            const mapped: SiswaNonaktifMock[] = rawItems.map((item) => {
+              const sid = Number(item.siswaId ?? item.siswa_id ?? 0)
+              const info = siswaInfoMap.get(sid)
+              const saldoVal = Number(item.saldo ?? 0)
+              const rawStatus = String(
+                item.status_siswa ?? item.statusSiswa ?? 'KELUAR'
+              ).toUpperCase()
+              const statusSiswa: 'LULUS' | 'PINDAH' | 'KELUAR' =
+                rawStatus === 'LULUS' || rawStatus === 'PINDAH'
+                  ? rawStatus
+                  : 'KELUAR'
+              return {
+                siswa_id: sid,
+                nis: String(item.nis ?? info?.nis ?? '-'),
+                nama: String(item.nama ?? info?.nama ?? `Siswa #${sid}`),
+                kelas_terakhir: String(
+                  item.kelas ?? item.kelas_terakhir ?? info?.kelas ?? '-'
+                ),
+                foto_url: String(
+                  item.fotoUrl ?? item.foto_url ?? info?.fotoUrl ?? ''
+                ),
+                saldo: saldoVal,
+                status_siswa: statusSiswa,
+                tanggal_nonaktif: String(
+                  item.tanggal_nonaktif ?? new Date().toISOString().slice(0, 10)
+                ),
+                alasan_nonaktif: String(
+                  item.alasan_nonaktif ?? 'Siswa nonaktif'
+                ),
+                rfid_uid: String(
+                  item.rfid_uid ?? info?.rfidUid ?? (item.nis ? `UID-${item.nis}` : `UID-${sid}`)
+                ),
+                is_card_blocked: true,
+                nama_ortu: String(
+                  item.nama_ortu ?? item.namaOrangTua ?? info?.namaOrangTua ?? '-'
+                ),
+                kontak_ortu: String(
+                  item.kontak_ortu ??
+                    item.teleponOrangTua ??
+                    info?.teleponOrangTua ??
+                    '-'
+                ),
+                is_refunded: saldoVal === 0,
               }
-            }
-
-            setStudents((prev) =>
-              prev.map((siswa) => {
-                const live = kandidatMap.get(siswa.siswa_id)
-                if (live) {
-                  return {
-                    ...siswa,
-                    saldo: live.saldo,
-                    is_refunded: live.saldo === 0,
-                  }
-                }
-                return siswa
-              })
-            )
+            })
+            setStudents(mapped)
           }
         }
       } catch {
-        // Fallback memakai data profil lokal
+        if (isMounted) {
+          setStudents([])
+        }
       }
     }
     void loadInitialData()
@@ -217,7 +258,7 @@ export function RefundSiswaKeluarPage() {
       type: isTrf ? 'TRANSFER_SAUDARA' : 'REFUND_ORTU',
       ref_no: info?.referensi_id || `SLIP-${s.nis}-SELESAI`,
       waktu: info?.tanggal || s.tanggal_nonaktif,
-      petugas_nama: 'Wibisana Bama (Petugas TU/Bendahara)',
+      petugas_nama: auth.user?.nama || 'Petugas TU / Bendahara',
       siswa_asal: {
         siswa_id: s.siswa_id,
         nis: s.nis,

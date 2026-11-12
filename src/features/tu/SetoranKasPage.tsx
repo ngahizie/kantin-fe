@@ -1,7 +1,6 @@
 import { TableToolbar } from '@/components/data-table'
 import { ExportButton } from '@/components/export-button'
 import { useState, useEffect, useMemo } from 'react'
-import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
   CheckCircle2,
   AlertTriangle,
@@ -27,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -42,6 +40,12 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import {
+  LaporanDateFilter,
+  getDefaultDateFilter,
+  formatYmd,
+} from '@/features/laporan/components'
+import type { LaporanFilterParams } from '@/features/laporan/types'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import {
   type SetoranKasItem,
@@ -56,19 +60,46 @@ import {
   applyStoredSetoranConfirmations,
 } from './saldo-storage'
 
-const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+const isSetoranConfirmed = (status: string) =>
+  status === 'TERKONFIRMASI' || status === 'DIKONFIRMASI'
+
+const isSetoranWaiting = (status: string) =>
+  status === 'MENUNGGU_KONFIRMASI' || status === 'MENUNGGU'
+
+function resolveFilterDates(params: LaporanFilterParams): string[] {
+  if (params.tanggal) return [params.tanggal]
+  if (params.dari && params.sampai) {
+    const startYmd = params.dari.slice(0, 10)
+    const endYmd = params.sampai.slice(0, 10)
+    const [sy, sm, sd] = startYmd.split('-').map(Number)
+    const [ey, em, ed] = endYmd.split('-').map(Number)
+    if (sy && sm && sd && ey && em && ed) {
+      const cursor = new Date(sy, sm - 1, sd)
+      const end = new Date(ey, em - 1, ed)
+      const dates: string[] = []
+      while (cursor < end && dates.length < 62) {
+        dates.push(formatYmd(cursor))
+        cursor.setDate(cursor.getDate() + 1)
+      }
+      if (dates.length > 0) return dates
+    }
+  }
+  return [formatYmd(new Date())]
+}
 
 export function SetoranKasPage() {
   const { auth } = useAuthStore()
   const isBendaharaOrAdmin = auth.hasRole(['admin', 'bendahara'])
 
-  const todayStr = new Date().toLocaleDateString('en-CA')
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [setoranList, setSetoranList] = useState<SetoranKasItem[]>(() =>
-    useMock ? MOCK_SETORAN_KAS : []
-  )
+  const [setoranList, setSetoranList] = useState<SetoranKasItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   // State modal konfirmasi
@@ -88,6 +119,10 @@ export function SetoranKasPage() {
 
   useEffect(() => {
     let isMounted = true
+    const targetDates = resolveFilterDates(dateFilterParams)
+    const defaultFallbackDate =
+      dateFilterParams.tanggal || targetDates[0] || formatYmd(new Date())
+
     const load = async () => {
       setIsLoading(true)
       try {
@@ -95,23 +130,29 @@ export function SetoranKasPage() {
 
         try {
           const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
-            params: { tanggal: selectedDate },
+            params: dateFilterParams,
           })
           const rawItems = res.data?.data
           if (Array.isArray(rawItems) && rawItems.length > 0) {
             items = rawItems.map((item: RawRekapTu) =>
-              mapRekapSetoranTuItem(item, selectedDate)
+              mapRekapSetoranTuItem(
+                item,
+                typeof item.tanggal === 'string' && item.tanggal
+                  ? item.tanggal
+                  : defaultFallbackDate
+              )
             )
           }
         } catch {
           // Abaikan jika live query rekap backend mengembalikan error atau 404
         }
 
-        // Ambil transaksi top-up lokal untuk tanggal yang dipilih agar mutasi top-up
-        // terbaru (termasuk pada akun TU sekolah 2 / multi-tenant) selalu terangkum di rekapitulasi setoran kas TU
-        const localTxs = getStoredTopupTransactions(selectedDate)
+        // Ambil transaksi top-up lokal untuk setiap tanggal pada periode yang dipilih agar mutasi top-up
+        // terbaru selalu terangkum di rekapitulasi setoran kas TU
+        for (const tgl of targetDates) {
+          const localTxs = getStoredTopupTransactions(tgl)
+          if (localTxs.length === 0) continue
 
-        if (localTxs.length > 0) {
           const groupedByPetugas = new Map<number, TransaksiTopupDetail[]>()
           for (const tx of localTxs) {
             const pId =
@@ -123,14 +164,14 @@ export function SetoranKasPage() {
           }
 
           for (const [pId, txs] of groupedByPetugas.entries()) {
-            const existingIdx = items.findIndex((it) => it.petugas_id === pId)
-            const totalSiswa = txs
-              .filter((t) => t.subjek_tipe === 'SISWA')
-              .reduce((sum, t) => sum + (t.nominal || 0), 0)
-            const totalTamu = txs
-              .filter((t) => t.subjek_tipe === 'KARTU_TAMU')
-              .reduce((sum, t) => sum + (t.nominal || 0), 0)
-            const totalSistem = totalSiswa + totalTamu
+            const existingIdx = items.findIndex(
+              (it) => it.petugas_id === pId && it.tanggal === tgl
+            )
+            const totalSiswa = txs.reduce(
+              (sum, t) => sum + (t.nominal || 0),
+              0
+            )
+            const totalSistem = totalSiswa
 
             if (existingIdx >= 0) {
               const existing = items[existingIdx]
@@ -140,10 +181,6 @@ export function SetoranKasPage() {
                 total_topup_siswa: Math.max(
                   existing.total_topup_siswa,
                   totalSiswa
-                ),
-                total_topup_kartu_tamu: Math.max(
-                  existing.total_topup_kartu_tamu,
-                  totalTamu
                 ),
                 total_sistem: Math.max(existing.total_sistem, totalSistem),
                 rincian_transaksi:
@@ -162,14 +199,13 @@ export function SetoranKasPage() {
               const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
 
               items.push({
-                id: `SETOR-${selectedDate.replace(/-/g, '')}-${pId}`,
-                tanggal: selectedDate,
+                id: `SETOR-${tgl.replace(/-/g, '')}-${pId}`,
+                tanggal: tgl,
                 petugas_id: pId,
                 petugas_nama: petugasNama,
                 petugas_nip: petugasNip,
                 total_transaksi: txs.length,
                 total_topup_siswa: totalSiswa,
-                total_topup_kartu_tamu: totalTamu,
                 total_sistem: totalSistem,
                 uang_fisik: null,
                 selisih: null,
@@ -180,16 +216,14 @@ export function SetoranKasPage() {
           }
         }
 
+        // Urutkan terbaru lebih dulu untuk mode rentang
+        items.sort((a, b) => {
+          if (a.tanggal !== b.tanggal) return b.tanggal.localeCompare(a.tanggal)
+          return a.petugas_id - b.petugas_id
+        })
+
         // Terapkan data konfirmasi yang tersimpan di storage lokal jika ada
         items = applyStoredSetoranConfirmations(items)
-
-        // Fallback jika sama sekali tidak ada data dan flag useMock aktif
-        if (items.length === 0 && useMock) {
-          const filteredMock = MOCK_SETORAN_KAS.filter(
-            (s) => s.tanggal === selectedDate
-          )
-          items = filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-        }
 
         if (isMounted) {
           setSetoranList(items)
@@ -206,7 +240,7 @@ export function SetoranKasPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedDate, auth.user])
+  }, [dateFilterParams, auth.user])
 
   // Handle successful confirmation from modal
   const handleConfirmSuccess = (updatedItem: SetoranKasItem) => {
@@ -227,9 +261,9 @@ export function SetoranKasPage() {
 
       let matchStatus = true
       if (statusFilter === 'MENUNGGU_KONFIRMASI') {
-        matchStatus = item.status === 'MENUNGGU_KONFIRMASI'
+        matchStatus = isSetoranWaiting(item.status)
       } else if (statusFilter === 'TERKONFIRMASI') {
-        matchStatus = item.status === 'TERKONFIRMASI'
+        matchStatus = isSetoranConfirmed(item.status)
       } else if (statusFilter === 'SELISIH') {
         matchStatus = item.selisih !== null && item.selisih !== 0
       }
@@ -252,7 +286,7 @@ export function SetoranKasPage() {
   }, [filteredList])
 
   const totalPetugasSelesai = useMemo(() => {
-    return filteredList.filter((i) => i.status === 'TERKONFIRMASI').length
+    return filteredList.filter((i) => isSetoranConfirmed(i.status)).length
   }, [filteredList])
 
   // Export to CSV
@@ -268,7 +302,6 @@ export function SetoranKasPage() {
       'NIP',
       'Jumlah Transaksi',
       'Topup Siswa (Rp)',
-      'Topup Kartu Tamu (Rp)',
       'Total Sistem (Rp)',
       'Uang Fisik (Rp)',
       'Selisih (Rp)',
@@ -285,7 +318,6 @@ export function SetoranKasPage() {
       item.petugas_nip || '-',
       item.total_transaksi,
       item.total_topup_siswa,
-      item.total_topup_kartu_tamu,
       item.total_sistem,
       item.uang_fisik !== null ? item.uang_fisik : '-',
       item.selisih !== null ? item.selisih : '-',
@@ -299,10 +331,13 @@ export function SetoranKasPage() {
       'data:text/csv;charset=utf-8,' +
       [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
 
+    const fileSlug =
+      dateFilterParams.tanggal ||
+      `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${selectedDate}.csv`)
+    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${fileSlug}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -322,17 +357,20 @@ export function SetoranKasPage() {
         petugas: item.petugas_nama,
         trx: item.total_transaksi,
         topupSiswa: formatRupiah(item.total_topup_siswa),
-        topupTamu: formatRupiah(item.total_topup_kartu_tamu),
         totalSistem: formatRupiah(item.total_sistem),
         uangFisik: item.uang_fisik !== null ? formatRupiah(item.uang_fisik) : '-',
         selisih: item.selisih !== null ? formatRupiah(item.selisih) : '-',
         status: item.status,
       }))
 
+      const fileSlug =
+        dateFilterParams.tanggal ||
+        `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
+
       exportTableToPdf({
-        filename: `Rekap_Setoran_Kas_TU_${selectedDate}`,
+        filename: `Rekap_Setoran_Kas_TU_${fileSlug}`,
         title: 'REKAPITULASI & SETORAN KAS TU KANTIN SKOOLIA',
-        subtitle: `Tanggal Periode: ${selectedDate}`,
+        subtitle: `Periode: ${dateFilterLabel}`,
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Setoran Sistem': formatRupiah(totalPenerimaanSistem),
@@ -346,7 +384,6 @@ export function SetoranKasPage() {
           { header: 'Petugas TU', key: 'petugas' },
           { header: 'Trx', key: 'trx' },
           { header: 'Topup Siswa', key: 'topupSiswa' },
-          { header: 'Topup Tamu', key: 'topupTamu' },
           { header: 'Total Sistem', key: 'totalSistem' },
           { header: 'Uang Fisik', key: 'uangFisik' },
           { header: 'Selisih', key: 'selisih' },
@@ -375,10 +412,25 @@ export function SetoranKasPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Setoran Kas TU Harian
-          </h1>
+        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Setoran Kas TU Harian
+            </h1>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Periode: <strong className='text-foreground'>{dateFilterLabel}</strong>
+            </p>
+          </div>
+
+          <div className='flex flex-wrap items-center gap-2.5'>
+            <LaporanDateFilter
+              initialPreset='TODAY'
+              onChange={(params, label) => {
+                setDateFilterParams(params)
+                setDateFilterLabel(label)
+              }}
+            />
+          </div>
         </div>
 
         {/* Top KPI Cards */}
@@ -460,14 +512,6 @@ export function SetoranKasPage() {
 
         {/* Filter Bar */}
         <TableToolbar
-          extraLeft={
-            <Input
-              type='date'
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className='h-8 w-[155px] px-2.5 text-xs font-medium bg-background'
-            />
-          }
           searchPlaceholder='Cari nama petugas atau No. Setoran...'
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
@@ -505,7 +549,7 @@ export function SetoranKasPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <CardTitle className='text-base font-semibold'>
-                  Daftar Rekapitulasi Kas TU Per Petugas ({selectedDate})
+                  Daftar Rekapitulasi Kas TU Per Petugas ({dateFilterLabel})
                 </CardTitle>
                 <CardDescription className='mt-0.5 text-xs'>
                   Rincian setoran uang tunai dari seluruh titik loket TU
@@ -612,7 +656,7 @@ export function SetoranKasPage() {
                               {item.total_transaksi} Transaksi
                             </div>
                             <div className='text-[11px] text-muted-foreground'>
-                              Siswa: {formatRupiah(item.total_topup_siswa)} | Tamu: {formatRupiah(item.total_topup_kartu_tamu)}
+                              Topup Siswa: {formatRupiah(item.total_topup_siswa)}
                             </div>
                           </TableCell>
 
@@ -659,7 +703,7 @@ export function SetoranKasPage() {
                           </TableCell>
 
                           <TableCell className='text-center'>
-                            {item.status === 'TERKONFIRMASI' ? (
+                            {isSetoranConfirmed(item.status) ? (
                               <Badge
                                 className='gap-1 border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
                               >
@@ -677,7 +721,7 @@ export function SetoranKasPage() {
                           </TableCell>
 
                           <TableCell>
-                            {item.status === 'TERKONFIRMASI' ? (
+                            {isSetoranConfirmed(item.status) ? (
                               <div className='text-xs'>
                                 <div className='font-medium text-foreground'>
                                   {item.bendahara_nama}
@@ -709,7 +753,7 @@ export function SetoranKasPage() {
                             <div className='flex items-center justify-end gap-1.5'>
                               {/* Tombol Konfirmasi Bendahara */}
                               {isBendaharaOrAdmin &&
-                                item.status === 'MENUNGGU_KONFIRMASI' && (
+                                isSetoranWaiting(item.status) && (
                                   <Button
                                     size='sm'
                                     onClick={() => {
@@ -725,7 +769,7 @@ export function SetoranKasPage() {
 
                               {/* Tombol Edit Konfirmasi jika sudah terkonfirmasi */}
                               {isBendaharaOrAdmin &&
-                                item.status === 'TERKONFIRMASI' && (
+                                isSetoranConfirmed(item.status) && (
                                   <Button
                                     variant='ghost'
                                     size='sm'
@@ -881,10 +925,10 @@ export function SetoranKasPage() {
                               </TableCell>
                               <TableCell className='text-xs'>
                                 <div className='font-medium text-foreground'>
-                                  {tx.subjek_nama}
+                                  {tx.siswa_nama}
                                 </div>
                                 <div className='text-[11px] text-muted-foreground'>
-                                  {tx.subjek_info}
+                                  {tx.siswa_info}
                                 </div>
                               </TableCell>
                               <TableCell className='text-xs text-muted-foreground'>

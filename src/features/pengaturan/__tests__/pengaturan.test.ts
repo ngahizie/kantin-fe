@@ -15,7 +15,8 @@ describe('Pengaturan Operasional Kantin Schema', () => {
     minTopup: 10000,
     maksTopup: 200000,
     batasSaldoSiswa: 500000,
-    batasSaldoKartuTamu: 200000,
+    kebijakanSaldoMengendap: 'REFUND' as const,
+    ambangHari: 90,
   }
 
   it('validasi sukses dengan data yang valid', () => {
@@ -171,7 +172,8 @@ describe('Zustand usePengaturanStore', () => {
       minTopup: 20000,
       maksTopup: 1000000,
       batasSaldoSiswa: 2000000,
-      batasSaldoKartuTamu: 500000,
+      kebijakanSaldoMengendap: 'PINDAH_SAUDARA',
+      ambangHari: 120,
     })
 
     expect(usePengaturanStore.getState().pengaturan.durasiFotoDetik).toBe(7)

@@ -17,10 +17,10 @@ const sampleSiswaReceipt: ReceiptData = {
   waktu: '2026-11-10T08:30:00Z',
   namaKantin: 'Kantin Sehat SKOOLIA',
   titikKasir: 'Kasir 1 - Kantin Utama',
-  pembeliTipe: 'SISWA',
   pembeliNama: 'Abizard',
   pembeliKelas: '8B',
   pembeliNis: '20260801',
+  pembeliFotoUrl: null,
   items: [
     {
       menuId: 1,
@@ -34,15 +34,15 @@ const sampleSiswaReceipt: ReceiptData = {
   saldoSisa: 49000,
 }
 
-const sampleTamuReceipt: ReceiptData = {
+const sampleFallbackReceipt: ReceiptData = {
   transaksiId: 5511,
   nomorStruk: null,
   waktu: '2026-11-10T09:15:00Z',
   namaKantin: 'Kantin Sehat SKOOLIA',
   titikKasir: 'Kasir 2',
-  pembeliTipe: 'KARTU_TAMU',
-  pembeliNama: 'Tamu Orang Tua',
-  pembeliNomorKartu: 'KT-004',
+  pembeliNama: 'Rafi Surya',
+  pembeliNis: null,
+  pembeliFotoUrl: null,
   items: [],
   namaItemFallback: ['2x Es Teh Manis'],
   total: 8000,
@@ -102,12 +102,12 @@ describe('ReceiptDialog (Cetak Struk)', () => {
     await expect.element(screen.getByText('Rp 49.000')).toBeInTheDocument()
   })
 
-  it('menampilkan detail Kartu Tamu dan fallback namaItem saat items kosong', async () => {
+  it('menampilkan fallback inisial avatar, NIS default (-), dan fallback namaItem saat items kosong', async () => {
     const screen = await render(
       <ReceiptDialog
         open={true}
         onOpenChange={vi.fn()}
-        receipt={sampleTamuReceipt}
+        receipt={sampleFallbackReceipt}
       />
     )
 
@@ -115,10 +115,11 @@ describe('ReceiptDialog (Cetak Struk)', () => {
       .element(screen.getByText('TRX-5511'))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByText('Tamu Orang Tua'))
+      .element(screen.getByText('Rafi Surya'))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('Kartu Tamu')).toBeInTheDocument()
-    await expect.element(screen.getByText('KT-004')).toBeInTheDocument()
+    await expect.element(screen.getByText('RS')).toBeInTheDocument()
+    await expect.element(screen.getByText('Siswa')).toBeInTheDocument()
+    await expect.element(screen.getByText('-', { exact: true })).toBeInTheDocument()
     await expect
       .element(screen.getByText('2x Es Teh Manis'))
       .toBeInTheDocument()
@@ -288,8 +289,6 @@ describe('Alur berurutan Transaksi Berhasil -> Cetak Struk di KasirPosPage', () 
       total: 7000,
       waktu: '2026-11-10T08:40:00Z',
       pembeli: {
-        tipe: 'SISWA',
-        subjekTipe: 'SISWA',
         nama: 'Abizard',
         kelas: '8B',
         nis: '20260801',
@@ -415,8 +414,6 @@ describe('Alur berurutan Transaksi Berhasil -> Cetak Struk di KasirPosPage', () 
       total: 4000,
       waktu: '2026-11-10T08:45:00Z',
       pembeli: {
-        tipe: 'SISWA',
-        subjekTipe: 'SISWA',
         nama: 'Rania Putri',
         kelas: '7A',
         sisa_saldo: 16000,

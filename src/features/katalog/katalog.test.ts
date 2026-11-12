@@ -6,10 +6,13 @@ import { katalogApi } from './api/katalog-api'
 import {
   kategoriFormSchema,
   menuFormSchema,
+  type KategoriItem,
   type MenuItem,
 } from './types'
 import {
+  getKategoriDeleteBlockedReason,
   matchesMenuSearchQuery,
+  mergeKategoriMenuCounts,
   shouldPauseMenuAutoRefresh,
   sortMenusNewestFirst,
 } from './menu-utils'
@@ -469,5 +472,82 @@ describe('Katalog Menu Kode Barcode — Validasi, Pencarian, & API', () => {
     expect(cleared.kodeBarcode).toBeNull()
 
     await katalogApi.deleteMenu(created.id)
+  })
+})
+
+describe('mergeKategoriMenuCounts', () => {
+  it('menghitung jumlah menu terkait per kategori saat BE tidak mengirim jumlahItem', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true },
+      { id: 2, nama: 'Minuman', urutan: 2, isActive: true },
+      { id: 3, nama: 'Snack', urutan: 3, isActive: false },
+    ]
+    const menus = [
+      { kategoriId: 1 },
+      { kategoriId: 1 },
+      { kategoriId: 2 },
+      { kategoriId: null },
+    ]
+
+    const result = mergeKategoriMenuCounts(kategoris, menus)
+    expect(result.map((k) => ({ id: k.id, jumlahItem: k.jumlahItem }))).toEqual([
+      { id: 1, jumlahItem: 2 },
+      { id: 2, jumlahItem: 1 },
+      { id: 3, jumlahItem: 0 },
+    ])
+  })
+
+  it('mempertahankan data kategori apa adanya bila daftar menu gagal dimuat (null)', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true, jumlahItem: 4 },
+    ]
+
+    expect(mergeKategoriMenuCounts(kategoris, null)).toEqual(kategoris)
+  })
+})
+
+describe('Validasi Hapus Kategori & API Hapus Kategori', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('memblokir penghapusan jika kategori masih memiliki menu terkait dan mengizinkan jika 0 menu', () => {
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Minuman', jumlahItem: 2 })
+    ).toContain('2 menu terkait')
+
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Kosong', jumlahItem: 0 })
+    ).toBeNull()
+
+    expect(getKategoriDeleteBlockedReason(null)).toBeNull()
+  })
+
+  it('menghapus kategori tanpa menu terkait dan menolak jika masih ada menu terkait', async () => {
+    const createdKat = await katalogApi.createKategori({
+      nama: 'Kategori Uji Hapus',
+      urutan: 99,
+      aktif: true,
+    })
+
+    const createdMenu = await katalogApi.createMenu({
+      nama: 'Menu Uji Keterkaitan',
+      kategoriId: createdKat.id,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 1,
+      fotoUrl: '',
+      aktif: false,
+    })
+
+    // Masih memiliki 1 menu terkait (meski nonaktif) -> harus ditolak
+    await expect(katalogApi.deleteKategori(createdKat.id)).rejects.toThrow()
+
+    // Setelah menu terkait dihapus -> kategori bisa dihapus dan hilang dari daftar
+    await katalogApi.deleteMenu(createdMenu.id)
+    await katalogApi.deleteKategori(createdKat.id)
+
+    const remaining = await katalogApi.getKategoriList(false)
+    expect(remaining.some((k) => k.id === createdKat.id)).toBe(false)
   })
 })

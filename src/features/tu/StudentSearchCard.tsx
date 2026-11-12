@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { type KartuSiswaMock, MOCK_KARTU_TAMU } from '@/mocks/mock-data'
-import apiClient from '@/lib/api-client'
+import { type KartuSiswaMock } from '@/types/kantin'
 import {
   Search,
   Radio,
@@ -51,7 +50,7 @@ export function StudentSearchCard({
   const [rfidInput, setRfidInput] = useState('')
   const [rfidFeedback, setRfidFeedback] = useState<string | null>(null)
 
-  const handleFindRfid = async (uidToFind?: string) => {
+  const handleFindRfid = (uidToFind?: string) => {
     const targetUid = (uidToFind || rfidInput).trim()
     if (!targetUid) return
 
@@ -63,44 +62,6 @@ export function StudentSearchCard({
       setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
       setRfidInput(found.uid)
       return
-    }
-
-    // Cek apakah UID ini milik Kartu Tamu
-    try {
-      const res = await apiClient.get('/api/kartu-tamu')
-      const ktList = (res.data?.data || []) as Array<{
-        rfidUid?: string
-        uid?: string
-        nomorKartu?: string
-        nomor_kartu?: string
-        labelPemegang?: string
-        label_pemegang?: string
-      }>
-      const foundKt = ktList.find(
-        (k) =>
-          (k.rfidUid || k.uid || '').toLowerCase() === targetUid.toLowerCase()
-      )
-      if (foundKt) {
-        const noKartu =
-          foundKt.nomorKartu || foundKt.nomor_kartu || 'Kartu Tamu'
-        const pemegang = foundKt.labelPemegang || foundKt.label_pemegang || ''
-        setRfidFeedback(
-          `RFID UID "${targetUid}" adalah ${noKartu}${
-            pemegang ? ` (${pemegang})` : ''
-          }. Halaman ini khusus untuk Siswa. Isi saldo kartu tamu dapat dilakukan di menu Kartu Tamu.`
-        )
-        return
-      }
-    } catch {
-      const foundMockKt = MOCK_KARTU_TAMU.find(
-        (k) => (k.uid || '').toLowerCase() === targetUid.toLowerCase()
-      )
-      if (foundMockKt) {
-        setRfidFeedback(
-          `RFID UID "${targetUid}" adalah Kartu Tamu ${foundMockKt.nomor_kartu}. Halaman ini khusus untuk Siswa. Isi saldo kartu tamu dapat dilakukan di menu Kartu Tamu.`
-        )
-        return
-      }
     }
 
     setRfidFeedback(`RFID UID "${targetUid}" tidak terdaftar di data siswa.`)

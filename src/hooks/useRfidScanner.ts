@@ -60,7 +60,7 @@ export function useRfidScanner({
         return false
       }
 
-      // Saat fokus berada di kolom input/teks, wajib mengandung angka (UID hex/desimal/KT-xxx)
+      // Saat fokus berada di kolom input/teks, wajib mengandung angka (UID hex/desimal)
       // agar kata pencarian menu (seperti "ayam", "nasi", "kopi") tidak pernah memicu scan.
       if (inEditable && !/\d/.test(buffer)) {
         return false
