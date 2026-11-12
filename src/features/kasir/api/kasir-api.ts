@@ -1,5 +1,4 @@
 import apiClient from '@/lib/api-client'
-import { getStoredSaldoOverrides } from '@/features/tu/saldo-storage'
 import type {
   TapTransaksiRequest,
   TapTransaksiData,
@@ -196,82 +195,81 @@ export const kasirApi = {
   },
 
   /**
-   * Cek saldo terkini siswa berdasarkan UID, NIS, atau Nama
+   * Cek saldo dan status kartu siswa berdasarkan UID kartu RFID
    */
-  async cekSaldo(query: string): Promise<InfoSaldoData> {
-    const q = query.trim()
-    const qUpper = q.toUpperCase()
+  async cekSaldo(rfidUid: string): Promise<InfoSaldoData> {
+    const uid = rfidUid.trim()
+    if (!uid) {
+      throw new Error('Nomor UID kartu RFID wajib diisi.')
+    }
 
-    interface RawSiswaItem {
-      id?: number
-      siswaId?: number
-      siswa_id?: number
-      nis?: string
-      nama?: string
-      kelas?: string
-      kelas_terakhir?: string
-      foto_url?: string
-      fotoUrl?: string
+    interface CekKartuResponse {
+      nomorKartu?: string | null
+      subjekTipe?: string | null
+      siswaId?: number | null
+      nama?: string | null
+      kelas?: string | null
+      fotoUrl?: string | null
       saldo?: number
-      tidakAktif?: boolean
-      is_blocked?: boolean
-      uid?: string
-      rfidUid?: string
-      rfid_uid?: string
+      belanjaHariIni?: number
+      limitHarian?: number | null
+      sisaLimit?: number | null
+      diblokir?: boolean
+      bisaBelanja?: boolean
+      waktuCek?: string | null
     }
 
-    const siswaRes = await apiClient.get<ApiResponse<RawSiswaItem[]>>('/api/siswa', {
-      params: { q, batas: 20 },
-      silent: true,
-      skipToast: true,
-    })
-    const siswaList = siswaRes.data?.data || []
-    const foundStudent = siswaList.find(
-      (s) =>
-        (s.rfidUid || s.rfid_uid || s.uid || '').toUpperCase() === qUpper ||
-        (s.nis || '').toUpperCase() === qUpper ||
-        (s.nama || '').toLowerCase().includes(q.toLowerCase())
-    )
-
-    if (foundStudent) {
-      const studentId = foundStudent.siswaId || foundStudent.siswa_id || foundStudent.id
-      let finalSaldo = Number(foundStudent.saldo || 0)
-
-      if (studentId) {
-        try {
-          const saldoRes = await apiClient.get<ApiResponse<{ saldo?: number }>>('/api/saldo', {
-            params: {
-              siswaId: studentId,
-            },
-            silent: true,
-            skipToast: true,
-          })
-          const liveSaldo = saldoRes.data?.data?.saldo
-          if (typeof liveSaldo === 'number' && liveSaldo >= 0) {
-            finalSaldo = liveSaldo
-          }
-        } catch {
-          // Gunakan saldo dari /api/siswa jika /api/saldo gagal
+    const res = await apiClient
+      .get<ApiResponse<CekKartuResponse>>(
+        `/api/kasir/kartu/${encodeURIComponent(uid)}`,
+        {
+          silent: true,
+          skipToast: true,
         }
-      }
+      )
+      .catch((err: unknown) => {
+        const axiosErr = err as {
+          response?: { status?: number; data?: { message?: string } }
+        }
+        const backendMsg = axiosErr.response?.data?.message
+        if (backendMsg) {
+          throw Object.assign(new Error(backendMsg), { cause: err })
+        }
+        if (axiosErr.response?.status === 404) {
+          throw Object.assign(
+            new Error('Kartu tidak dikenali. Periksa kembali nomor UID kartu.'),
+            { cause: err }
+          )
+        }
+        if (err instanceof Error) {
+          throw err
+        }
+        throw Object.assign(
+          new Error('Gagal memeriksa kartu. Periksa kembali nomor UID kartu.'),
+          { cause: err }
+        )
+      })
 
-      const overrides = getStoredSaldoOverrides()
-      if (studentId && overrides[studentId] !== undefined) {
-        finalSaldo = overrides[studentId]
-      }
-
-      return {
-        id: studentId,
-        nis: foundStudent.nis || null,
-        nama: foundStudent.nama || 'Siswa',
-        kelas: foundStudent.kelas || foundStudent.kelas_terakhir || null,
-        fotoUrl: foundStudent.fotoUrl || foundStudent.foto_url || null,
-        saldo: finalSaldo,
-        status: foundStudent.is_blocked ? 'BLOCKED' : 'ACTIVE',
-        uid: foundStudent.rfidUid || foundStudent.uid || foundStudent.rfid_uid || null,
-      }
+    const raw = res.data?.data
+    if (!raw) {
+      throw new Error('Kartu tidak dikenali. Periksa kembali nomor UID kartu.')
     }
 
-    throw new Error('Kartu atau siswa tidak ditemukan. Periksa kembali nomor UID atau NIS.')
+    return {
+      id: raw.siswaId ?? undefined,
+      nis: null,
+      nama: raw.nama || 'Siswa',
+      kelas: raw.kelas ?? null,
+      fotoUrl: raw.fotoUrl ?? null,
+      saldo: Number(raw.saldo ?? 0),
+      status: raw.diblokir ? 'BLOCKED' : 'ACTIVE',
+      uid: raw.nomorKartu || uid.toUpperCase(),
+      belanjaHariIni:
+        typeof raw.belanjaHariIni === 'number' ? raw.belanjaHariIni : undefined,
+      limitHarian: raw.limitHarian ?? null,
+      sisaLimit: raw.sisaLimit ?? null,
+      bisaBelanja:
+        typeof raw.bisaBelanja === 'boolean' ? raw.bisaBelanja : !raw.diblokir,
+    }
   },
 }

@@ -1644,6 +1644,57 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
+    // --- Kasir: Cek Kartu RFID & Saldo Terkini (GET /api/kasir/kartu/{rfidUid}) ---
+    if (url.includes('/api/kasir/kartu/') && method === 'get') {
+      const idx = url.indexOf('/api/kasir/kartu/')
+      const rawSeg = url.slice(idx + '/api/kasir/kartu/'.length).split('?')[0]
+      const uid = decodeURIComponent(rawSeg).trim()
+      if (!uid) {
+        return { status: 400, data: { message: 'UID kartu tidak boleh kosong' } }
+      }
+      const siswa = siswaList.find(
+        (s) => s.uid.toUpperCase() === uid.toUpperCase()
+      )
+      if (!siswa) {
+        return { status: 404, data: { message: 'Kartu tidak dikenali' } }
+      }
+      const hasLimit = Boolean(
+        siswa.limit_harian_enabled && (siswa.limit_harian ?? 0) > 0
+      )
+      const limitHarian = hasLimit ? (siswa.limit_harian ?? null) : null
+      const sisaLimit =
+        limitHarian !== null
+          ? Math.max(0, limitHarian - siswa.belanja_hari_ini)
+          : null
+      const bisaBelanja =
+        !siswa.is_blocked &&
+        (sisaLimit === null || sisaLimit > 0) &&
+        siswa.saldo > 0
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Informasi kartu berhasil dimuat',
+          data: {
+            nomorKartu: siswa.uid.toUpperCase(),
+            subjekTipe: 'SISWA',
+            siswaId: siswa.siswa_id,
+            nama: siswa.nama,
+            kelas: siswa.kelas,
+            fotoUrl: siswa.foto_url || null,
+            saldo: siswa.saldo,
+            belanjaHariIni: siswa.belanja_hari_ini,
+            limitHarian,
+            sisaLimit,
+            diblokir: siswa.is_blocked,
+            bisaBelanja,
+            waktuCek: new Date().toISOString(),
+          },
+        },
+      }
+    }
+
     // GET /api/kasir/transaksi/sesi-tutup or /api/kasir/transaksi or /api/transaksi/sesi-tutup or /api/v1/kasir/transaksi-lampau
     if (
       (url.includes('/api/kasir/transaksi/sesi-tutup') ||
@@ -1945,9 +1996,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
-    // GET /api/kontrol-kartu/SISWA/{siswaId} or /api/kontrol-kartu/{siswaId}
+    // GET /api/kontrol-kartu/{siswaId}
     if (url.includes('/api/kontrol-kartu/') && method === 'get') {
-      const match = url.match(/\/api\/kontrol-kartu\/(?:SISWA\/)?(\d+)/i)
+      const match = url.match(/\/api\/kontrol-kartu\/(\d+)/i)
       if (match) {
         const siswaId = Number(match[1])
         const siswa = siswaList.find((s) => s.siswa_id === siswaId)

@@ -92,7 +92,7 @@ export function KoreksiBendaharaPage() {
 
   const executeFetch = useCallback(async () => {
     const [resSiswa, resKoreksi, resTx] = await Promise.allSettled([
-      apiClient.get('/api/siswa', { params: { batas: 200 } }),
+      apiClient.get('/api/siswa', { params: { batas: 50 } }),
       apiClient.get('/api/saldo/koreksi'),
       canAccessSesiTutup
         ? apiClient.get('/api/kasir/transaksi', {

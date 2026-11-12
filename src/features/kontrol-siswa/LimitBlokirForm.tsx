@@ -86,7 +86,7 @@ function LimitBlokirFormContent({
       setIsLoadingStatus(true)
       try {
         const res = await apiClient.get(
-          `/api/kontrol-kartu/SISWA/${student.siswa_id}`
+          `/api/kontrol-kartu/${student.siswa_id}`
         )
         if (isMounted && res.data?.data) {
           const kontrol = res.data.data

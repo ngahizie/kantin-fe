@@ -58,7 +58,7 @@ export function RefundSiswaKeluarPage() {
           apiClient.get('/api/saldo/refund/kandidat', {
             params: { hanyaTidakAktif: true },
           }),
-          apiClient.get('/api/siswa', { params: { batas: 200 } }),
+          apiClient.get('/api/siswa', { params: { batas: 50 } }),
         ])
         if (!isMounted) return
 

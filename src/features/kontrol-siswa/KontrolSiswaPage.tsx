@@ -90,7 +90,7 @@ export function KontrolSiswaPage() {
       setIsLoading(true)
       try {
         const siswaRes = await apiClient.get('/api/siswa', {
-          params: { batas: 200 },
+          params: { batas: 50 },
         })
         const rawList = Array.isArray(siswaRes.data?.data)
           ? (siswaRes.data.data as RawInfoSiswaItem[])

@@ -49,7 +49,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     } catch (err: unknown) {
       const errObj = err as { message?: string }
       setErrorMessage(
-        errObj.message || 'Gagal mengecek saldo. Kartu atau siswa tidak ditemukan.'
+        errObj.message || 'Gagal mengecek saldo. Kartu tidak dikenali.'
       )
     } finally {
       isSearchingRef.current = false
@@ -69,17 +69,13 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     enabled: open,
   })
 
-  // Deteksi otomatis saat kartu di-scan (misal UID 8-16 digit desimal/hex)
+  // Deteksi otomatis saat kartu di-scan (UID 8-16 digit desimal/hex)
   useEffect(() => {
     const trimmed = searchInput.trim()
     if (!trimmed) return
 
-    // Jika data hasil saat ini sudah sesuai dengan query ini, jangan cek ulang
-    if (
-      result &&
-      (result.uid?.toLowerCase() === trimmed.toLowerCase() ||
-        result.nis?.toLowerCase() === trimmed.toLowerCase())
-    ) {
+    // Jika data hasil saat ini sudah sesuai dengan UID ini, jangan cek ulang
+    if (result && result.uid?.toLowerCase() === trimmed.toLowerCase()) {
       return
     }
 
@@ -91,15 +87,12 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     const isCompletedUid =
       /^\d{8,16}$/.test(trimmed) || /^[0-9a-fA-F]{8,16}$/.test(trimmed)
 
-    // Jika UID lengkap dari scan kartu, eksekusi hampir instan (60ms) tanpa perlu klik tombol
-    // Jika input manual (nama atau NIS), debounce 350ms
-    const delay = isCompletedUid ? 60 : 350
-
-    if (trimmed.length < 3) return
+    // Hanya auto-eksekusi saat pola UID lengkap terbaca dari scanner/input
+    if (!isCompletedUid) return
 
     const timer = setTimeout(() => {
       executeSearch(trimmed)
-    }, delay)
+    }, 60)
 
     return () => clearTimeout(timer)
   }, [searchInput, result, errorMessage, executeSearch])
@@ -149,7 +142,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
             </DialogTitle>
           </div>
           <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
-            Masukkan nomor UID kartu, NIS, atau nama siswa untuk memeriksa sisa saldo terkini.
+            Tap kartu RFID atau masukkan nomor UID kartu untuk memeriksa saldo dan status kartu terkini.
           </DialogDescription>
         </DialogHeader>
 
@@ -164,7 +157,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onFocus={(e) => e.target.select()}
-                  placeholder='Tap kartu atau ketik UID / NIS...'
+                  placeholder='Tap kartu atau ketik UID kartu RFID...'
                   disabled={loading}
                   autoFocus
                   className='text-sm font-semibold tracking-wider uppercase has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 pl-9 shadow-none focus-visible:ring-0 rounded-xl'
@@ -223,12 +216,24 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                   >
                     Siswa
                   </Badge>
+                  {result.status === 'BLOCKED' && (
+                    <Badge
+                      variant='destructive'
+                      className='px-2 py-0 text-[10px] font-semibold uppercase tracking-wider rounded-full shadow-none'
+                    >
+                      Diblokir
+                    </Badge>
+                  )}
                 </div>
 
                 <div className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
                   <span>
-                    NIS: <strong className='text-slate-800 dark:text-white'>{result.nis || '-'}</strong> • Kelas:{' '}
-                    <strong className='text-slate-800 dark:text-white'>{result.kelas || '-'}</strong>
+                    {result.nis ? (
+                      <>
+                        NIS: <strong className='text-slate-800 dark:text-white'>{result.nis}</strong> •{' '}
+                      </>
+                    ) : null}
+                    Kelas: <strong className='text-slate-800 dark:text-white'>{result.kelas || '-'}</strong>
                   </span>
                 </div>
 

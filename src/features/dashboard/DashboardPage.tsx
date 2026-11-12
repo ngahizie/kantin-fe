@@ -110,7 +110,6 @@ interface RecentTransactionDisplayItem {
   identitas?: string
   item: string
   total: number
-  metodeBayar?: 'SALDO' | 'TUNAI' | string | null
   status: string
 }
 
@@ -317,7 +316,6 @@ export function DashboardPage() {
                 (trx.siswaId ? `Siswa #${trx.siswaId}` : 'Pelanggan Tunai'),
               item: itemSummary,
               total: Number(trx.nominal ?? 0),
-              metodeBayar: trx.metodeBayar ?? null,
               status: trx.jenis === 'VOID' ? 'REFUND' : 'SUKSES',
             }
           })

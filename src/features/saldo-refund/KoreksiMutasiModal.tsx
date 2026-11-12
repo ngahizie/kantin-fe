@@ -518,7 +518,7 @@ export function KoreksiMutasiModal({
     let isMounted = true
     const loadStudents = async () => {
       try {
-        const res = await apiClient.get('/api/siswa', { params: { batas: 200 } })
+        const res = await apiClient.get('/api/siswa', { params: { batas: 50 } })
         if (isMounted && Array.isArray(res.data?.data)) {
           const mapped: KartuSiswaMock[] = (
             res.data.data as Record<string, unknown>[]

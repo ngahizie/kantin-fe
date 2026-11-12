@@ -181,79 +181,79 @@ describe('Integrasi Keranjang Kasir POS & Aturan Stok', () => {
 describe('Fitur Cek Saldo Siswa', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    localStorage.clear()
   })
 
-  it('berhasil menemukan data siswa dan sisa saldo berdasarkan RFID UID', async () => {
-    const getSpy = vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
-      if (url === '/api/siswa') {
-        return {
-          data: {
-            data: [
-              {
-                siswaId: 1,
-                nis: '2026001',
-                nama: 'Budi Santoso',
-                kelas: 'X IPA 1',
-                rfidUid: '04A1B2C3D4',
-                saldo: 50000,
-              },
-            ],
-          },
-        }
-      }
-      if (url === '/api/saldo') {
-        return { data: { data: { saldo: 55000 } } }
-      }
-      throw new Error(`Unexpected URL: ${url}`)
+  it('berhasil mengambil data kartu dan saldo langsung dari GET /api/kasir/kartu/{rfidUid} tanpa override lokal', async () => {
+    localStorage.setItem('kantin_saldo_overrides', JSON.stringify({ 1: 999999 }))
+    const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        data: {
+          nomorKartu: '04A1B2C3D4',
+          subjekTipe: 'SISWA',
+          siswaId: 1,
+          nama: 'Budi Santoso',
+          kelas: 'X IPA 1',
+          fotoUrl: null,
+          saldo: 55000,
+          belanjaHariIni: 5000,
+          limitHarian: 25000,
+          sisaLimit: 20000,
+          diblokir: false,
+          bisaBelanja: true,
+        },
+      },
     })
 
-    const res = await kasirApi.cekSaldo('04A1B2C3D4')
+    const res = await kasirApi.cekSaldo('04a1b2c3d4')
+    expect(getSpy).toHaveBeenCalledWith(
+      '/api/kasir/kartu/04a1b2c3d4',
+      expect.objectContaining({ silent: true, skipToast: true })
+    )
+    expect(res.id).toBe(1)
+    expect(res.uid).toBe('04A1B2C3D4')
     expect(res.nama).toBe('Budi Santoso')
-    expect(res.nis).toBe('2026001')
     expect(res.kelas).toBe('X IPA 1')
     expect(res.saldo).toBe(55000)
     expect(res.status).toBe('ACTIVE')
-    expect(getSpy).toHaveBeenCalledWith(
-      '/api/saldo',
-      expect.objectContaining({ params: { siswaId: 1 } })
-    )
+    expect(res.limitHarian).toBe(25000)
+    expect(res.sisaLimit).toBe(20000)
+    expect(res.bisaBelanja).toBe(true)
   })
 
-  it('berhasil menemukan data siswa dan sisa saldo berdasarkan NIS', async () => {
-    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
-      if (url === '/api/siswa') {
-        return {
-          data: {
-            data: [
-              {
-                siswaId: 2,
-                nis: '2026002',
-                nama: 'Siti Rahmawati',
-                kelas: 'XI IPS 2',
-                saldo: 75000,
-              },
-            ],
-          },
-        }
-      }
-      if (url === '/api/saldo') {
-        return { data: { data: { saldo: 75000 } } }
-      }
-      throw new Error(`Unexpected URL: ${url}`)
+  it('memetakan status BLOCKED ketika field diblokir bernilai true', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        data: {
+          nomorKartu: '04FFEE1122',
+          subjekTipe: 'SISWA',
+          siswaId: 2,
+          nama: 'Siti Rahmawati',
+          kelas: 'XI IPS 2',
+          saldo: 75000,
+          diblokir: true,
+          bisaBelanja: false,
+        },
+      },
     })
 
-    const res = await kasirApi.cekSaldo('2026002')
+    const res = await kasirApi.cekSaldo('04FFEE1122')
     expect(res.nama).toBe('Siti Rahmawati')
-    expect(res.nis).toBe('2026002')
-    expect(res.kelas).toBe('XI IPS 2')
+    expect(res.status).toBe('BLOCKED')
+    expect(res.bisaBelanja).toBe(false)
     expect(res.saldo).toBe(75000)
   })
 
-  it('menolak pencarian dengan melempar error saat UID atau NIS siswa tidak terdaftar', async () => {
-    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { data: [] } })
+  it('melempar pesan error backend saat kartu tidak dikenali (404)', async () => {
+    vi.spyOn(apiClient, 'get').mockRejectedValue({
+      response: {
+        status: 404,
+        data: { message: 'Kartu tidak dikenali' },
+      },
+    })
 
     await expect(kasirApi.cekSaldo('INVALID_UID_99999')).rejects.toThrow(
-      'Kartu atau siswa tidak ditemukan'
+      'Kartu tidak dikenali'
     )
   })
 })

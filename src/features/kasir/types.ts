@@ -149,5 +149,9 @@ export interface InfoSaldoData {
   saldo: number
   status?: string | null
   uid?: string | null
+  belanjaHariIni?: number
+  limitHarian?: number | null
+  sisaLimit?: number | null
+  bisaBelanja?: boolean
 }
 
