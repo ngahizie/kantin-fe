@@ -166,16 +166,16 @@ function BarangRusakFormContent({
 
         {/* Current Stock Preview */}
         {selectedMenu && (
-          <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/40 border border-border/70 text-xs">
+          <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-muted/40 border border-border text-xs">
             <div>
               <span className="text-muted-foreground">Stok Berjalan:</span>
-              <div className="font-semibold text-sm">
+              <div className="font-semibold text-sm tabular-nums">
                 {stokSistem} {selectedMenu.satuan || 'PCS'}
               </div>
             </div>
             <div>
               <span className="text-muted-foreground">HPP per Unit:</span>
-              <div className="font-semibold text-sm text-foreground">
+              <div className="font-semibold text-sm text-foreground tabular-nums">
                 Rp {hpp.toLocaleString('id-ID')}
               </div>
             </div>
@@ -189,7 +189,7 @@ function BarangRusakFormContent({
               Jumlah Rusak / Basi <span className="text-destructive">*</span>
             </label>
             {selectedMenu && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground tabular-nums">
                 Maksimal: {stokSistem}
               </span>
             )}
@@ -204,11 +204,11 @@ function BarangRusakFormContent({
               setQtyRusak(val === '' ? '' : parseInt(val, 10))
             }}
             placeholder="Jumlah item yang rusak"
-            className="text-sm font-semibold"
+            className="text-sm font-semibold tabular-nums"
             disabled={!selectedMenu || stokSistem <= 0}
           />
           {selectedMenu && stokSistem <= 0 && (
-            <p className="text-[11px] text-amber-500 flex items-center gap-1">
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
               Stok menu ini sudah 0, tidak ada barang yang dapat dikurangi.
             </p>
@@ -217,11 +217,11 @@ function BarangRusakFormContent({
 
         {/* 3. Estimasi Kerugian */}
         {selectedMenu && qty > 0 && (
-          <div className="flex justify-between items-center p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-xs">
+          <div className="flex justify-between items-center p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs">
             <span className="font-medium text-destructive">
               Estimasi Nilai Kerugian:
             </span>
-            <span className="font-bold text-destructive font-mono text-sm">
+            <span className="font-bold text-destructive font-mono text-sm tabular-nums">
               Rp {totalKerugian.toLocaleString('id-ID')}
             </span>
           </div>

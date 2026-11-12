@@ -3,26 +3,25 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   Store,
   Plus,
-  Search,
-  RefreshCw,
+  Loader2,
   Edit2,
   Trash2,
   MonitorCheck,
   AlertTriangle,
+  PowerOff,
+  CheckCircle2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { TableToolbar } from '@/components/data-table'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -34,13 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -207,340 +199,327 @@ export const TitikKasirPage: React.FC = () => {
 
   return (
     <>
-      <Header>
-        <div className='flex w-full items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
-              Pengaturan Kantin
-            </span>
-            <span className='text-muted-foreground text-xs'>/</span>
-            <span className='text-xs font-medium'>Manajemen Titik Kasir</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+      <Header fixed>
+        <HeaderBreadcrumb section='Pengaturan Kantin' title='Manajemen Titik Kasir' />
+        <HeaderActions />
       </Header>
 
-      <Main fixed>
-        <div className='flex flex-1 flex-col overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6'>
-          {/* Header Title & Nav Tabs */}
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
-                Manajemen Titik Kasir
-              </h1>
-            </div>
-
-            {/* Quick Action Button */}
-            <div className='flex items-center gap-2'>
-              <Button
-                type='button'
-                onClick={handleOpenCreate}
-                className='h-9 gap-1.5 text-xs font-semibold'
-              >
-                <Plus className='h-4 w-4' />
-                <span>Tambah Titik Kasir</span>
-              </Button>
-            </div>
+      <Main className='space-y-6'>
+        {/* Header Title & Action */}
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Manajemen Titik Kasir
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Kelola daftar perangkat titik kasir, kode registrasi, dan status operasional.
+            </p>
           </div>
 
-          {/* Metric KPI Cards */}
-          <div className='grid gap-4 grid-cols-2 md:grid-cols-4'>
-            <Card className='border-0'>
-              <CardHeader className='pb-2 pt-4 px-4'>
-                <CardDescription className='text-xs font-medium'>
-                  Total Perangkat
-                </CardDescription>
-                <CardTitle className='text-2xl font-bold font-mono'>
-                  {totalCount}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='px-4 pb-3 text-[11px] text-muted-foreground'>
-                <span>Titik kasir terdaftar</span>
-              </CardContent>
-            </Card>
+          <div className='flex items-center gap-2'>
+            <Button
+              type='button'
+              onClick={handleOpenCreate}
+              className='h-9 gap-1.5 text-xs font-semibold'
+            >
+              <Plus className='h-4 w-4' />
+              <span>Tambah Titik Kasir</span>
+            </Button>
+          </div>
+        </div>
 
-            <Card className='border-0'>
-              <CardHeader className='pb-2 pt-4 px-4'>
-                <CardDescription className='text-xs font-medium'>
-                  Titik Kasir Aktif
-                </CardDescription>
-                <CardTitle className='text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400'>
-                  {activeCount}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='px-4 pb-3 text-[11px] text-muted-foreground'>
-                <span>Dapat dipilih di POS</span>
-              </CardContent>
-            </Card>
+        {/* Metric KPI Cards */}
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Total Perangkat
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground'>
+                <Store className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                {totalCount}
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Titik kasir terdaftar
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card className='border-0'>
-              <CardHeader className='pb-2 pt-4 px-4'>
-                <CardDescription className='text-xs font-medium'>
-                  Nonaktif / Perawatan
-                </CardDescription>
-                <CardTitle className='text-2xl font-bold font-mono text-muted-foreground'>
-                  {inactiveCount}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='px-4 pb-3 text-[11px] text-muted-foreground'>
-                <span>Sementara dimatikan</span>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Titik Kasir Aktif
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <CheckCircle2 className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
+                {activeCount}
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Dapat dipilih di POS
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card className='border-0'>
-              <CardHeader className='pb-2 pt-4 px-4'>
-                <CardDescription className='text-xs font-medium'>
-                  Kasir POS Aktif
-                </CardDescription>
-                <CardTitle className='text-sm font-bold truncate text-foreground'>
-                  {currentPos ? currentPos.nama : 'Belum dipilih'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='px-4 pb-3 text-[11px] text-muted-foreground flex items-center justify-between'>
-                <span className='font-mono font-semibold text-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Nonaktif / Perawatan
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground'>
+                <PowerOff className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
+                {inactiveCount}
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Sementara dimatikan
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Kasir POS Aktif
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'>
+                <MonitorCheck className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-lg font-bold tracking-tight text-foreground truncate'>
+                {currentPos ? currentPos.nama : 'Belum dipilih'}
+              </div>
+              <div className='flex items-center justify-between gap-2 mt-1'>
+                <span className='font-mono text-xs text-muted-foreground tabular-nums'>
                   {currentPos ? currentPos.kode : '-'}
                 </span>
                 <Button
-                  variant='ghost'
+                  variant='link'
                   size='sm'
                   onClick={() => navigate({ to: '/kasir' })}
-                  className='h-6 px-1.5 text-[10px] text-primary hover:text-primary'
+                  className='h-auto p-0 text-xs text-primary'
                 >
                   Buka POS
                 </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Card: Tabel Titik Kasir */}
-          <Card>
-            <CardHeader className='border-b bg-card/50 pb-4'>
-              <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-                <div>
-                  <CardTitle className='text-base font-bold'>
-                    Daftar Perangkat Titik Kasir
-                  </CardTitle>
-                  <CardDescription className='text-xs'>
-                    Tabel daftar titik kasir, kode registrasi perangkat, dan status
-                    keaktifannya.
-                  </CardDescription>
-                </div>
-
-                {/* Toolbar Filters */}
-                <div className='flex items-center gap-2'>
-                  <div className='relative w-full sm:w-56'>
-                    <Search className='absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground' />
-                    <Input
-                      placeholder='Cari nama atau kode...'
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className='h-8 pl-8 text-xs'
-                    />
-                  </div>
-
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(val) =>
-                      setStatusFilter(val as 'ALL' | 'AKTIF' | 'NONAKTIF')
-                    }
-                  >
-                    <SelectTrigger className='h-8 w-28 text-xs'>
-                      <SelectValue placeholder='Status' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='ALL' className='text-xs'>
-                        Semua Status
-                      </SelectItem>
-                      <SelectItem value='AKTIF' className='text-xs'>
-                        Hanya Aktif
-                      </SelectItem>
-                      <SelectItem value='NONAKTIF' className='text-xs'>
-                        Hanya Nonaktif
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className='p-0'>
-              <div className='overflow-x-auto'>
-                <Table>
-                  <TableHeader>
-                    <TableRow className='bg-muted/30'>
-                      <TableHead className='w-12 text-center text-xs'>ID</TableHead>
-                      <TableHead className='text-xs font-semibold'>
-                        Nama Titik Kasir
-                      </TableHead>
-                      <TableHead className='text-xs font-semibold'>
-                        Kode Perangkat
-                      </TableHead>
-                      <TableHead className='text-xs font-semibold text-center'>
-                        Status Operasional
-                      </TableHead>
-                      <TableHead className='text-xs font-semibold'>
-                        Status di POS Klien
-                      </TableHead>
-                      <TableHead className='text-xs font-semibold text-right'>
-                        Aksi
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className='h-32 text-center text-xs text-muted-foreground'
-                        >
-                          <div className='flex items-center justify-center gap-2'>
-                            <RefreshCw className='h-4 w-4 animate-spin text-primary' />
-                            <span>Memuat data titik kasir...</span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredList.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className='h-32 text-center text-xs text-muted-foreground'
-                        >
-                          <div className='flex flex-col items-center justify-center gap-1.5'>
-                            <Store className='h-6 w-6 text-muted-foreground/60' />
-                            <span>Tidak ada data titik kasir yang sesuai</span>
-                            {searchQuery && (
-                              <Button
-                                variant='link'
-                                size='sm'
-                                onClick={() => {
-                                  setSearchQuery('')
-                                  setStatusFilter('ALL')
-                                }}
-                                className='h-auto p-0 text-xs'
-                              >
-                                Bersihkan filter pencarian
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredList.map((item) => {
-                        const isCurrentActivePos = item.id === activeTitikKasirId
-
-                        return (
-                          <TableRow key={item.id} className='hover:bg-muted/40'>
-                            <TableCell className='text-center font-mono text-xs text-muted-foreground'>
-                              #{item.id}
-                            </TableCell>
-
-                            <TableCell>
-                              <div className='flex items-center gap-2'>
-                                <div className='flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground'>
-                                  <Store className='h-4 w-4' />
-                                </div>
-                                <div>
-                                  <p className='text-sm font-semibold text-foreground'>
-                                    {item.nama}
-                                  </p>
-                                  <p className='text-[11px] text-muted-foreground'>
-                                    ID Tenant: {item.sekolahId}
-                                  </p>
-                                </div>
-                              </div>
-                            </TableCell>
-
-                            <TableCell>
-                              <Badge
-                                variant='secondary'
-                                className='border-0 bg-muted/80 font-mono text-xs font-semibold text-foreground'
-                              >
-                                {item.kode}
-                              </Badge>
-                            </TableCell>
-
-                            <TableCell className='text-center'>
-                              <div className='flex items-center justify-center gap-2'>
-                                <Switch
-                                  checked={item.aktif}
-                                  onCheckedChange={() => handleToggleAktif(item)}
-                                  title={`Klik untuk ${item.aktif ? 'menonaktifkan' : 'mengaktifkan'}`}
-                                />
-                                <Badge
-                                  variant={item.aktif ? 'default' : 'secondary'}
-                                  className={
-                                    item.aktif
-                                      ? 'bg-emerald-600 hover:bg-emerald-600 text-[10px]'
-                                      : 'text-[10px]'
-                                  }
-                                >
-                                  {item.aktif ? 'Aktif' : 'Nonaktif'}
-                                </Badge>
-                              </div>
-                            </TableCell>
-
-                            <TableCell>
-                              {isCurrentActivePos ? (
-                                <Badge
-                                  variant='default'
-                                  className='gap-1 border-0 bg-primary/10 text-primary hover:bg-primary/10 text-[11px]'
-                                >
-                                  <MonitorCheck className='h-3 w-3 text-primary' />
-                                  <span>Sedang Dipakai</span>
-                                </Badge>
-                              ) : item.aktif ? (
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() => handleSelectForPos(item)}
-                                  className='h-7 text-xs text-muted-foreground hover:text-foreground'
-                                >
-                                  Pilih untuk POS
-                                </Button>
-                              ) : (
-                                <span className='text-xs text-muted-foreground'>
-                                  -
-                                </span>
-                              )}
-                            </TableCell>
-
-                            <TableCell className='text-right'>
-                              <div className='flex items-center justify-end gap-1'>
-                                <Button
-                                  type='button'
-                                  variant='ghost'
-                                  size='icon'
-                                  onClick={() => handleOpenEdit(item)}
-                                  className='h-7 w-7'
-                                  title='Edit titik kasir'
-                                >
-                                  <Edit2 className='h-3.5 w-3.5' />
-                                </Button>
-                                <Button
-                                  type='button'
-                                  variant='ghost'
-                                  size='icon'
-                                  onClick={() => setDeletingItem(item)}
-                                  className='h-7 w-7 text-destructive hover:bg-destructive/10'
-                                  title='Hapus titik kasir'
-                                >
-                                  <Trash2 className='h-3.5 w-3.5' />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })
-                    )}
-                  </TableBody>
-                </Table>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Toolbar Pencarian & Filter */}
+        <TableToolbar
+          searchPlaceholder='Cari nama atau kode titik kasir...'
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filters={[
+            {
+              title: 'Status',
+              options: [
+                { label: 'Hanya Aktif', value: 'AKTIF' },
+                { label: 'Hanya Nonaktif', value: 'NONAKTIF' },
+              ],
+              selectedValues: statusFilter !== 'ALL' ? [statusFilter] : [],
+              onSelect: (vals) =>
+                setStatusFilter((vals[0] as 'AKTIF' | 'NONAKTIF') || 'ALL'),
+              isSingleSelect: true,
+            },
+          ]}
+          isFiltered={Boolean(searchQuery || statusFilter !== 'ALL')}
+          onReset={() => {
+            setSearchQuery('')
+            setStatusFilter('ALL')
+          }}
+        />
+
+        {/* Main Card: Tabel Titik Kasir */}
+        <Card className='p-0 gap-0 overflow-hidden'>
+          <CardContent className='p-0'>
+            <div className='overflow-x-auto'>
+              <Table>
+                <TableHeader className='bg-muted/50'>
+                  <TableRow className='border-b border-border hover:bg-transparent'>
+                    <TableHead className='w-16 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      ID
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Nama Titik Kasir
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Kode Perangkat
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center'>
+                      Status Operasional
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Status di POS Klien
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right'>
+                      Aksi
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className='h-32 text-center text-xs text-muted-foreground'
+                      >
+                        <div className='flex items-center justify-center gap-2'>
+                          <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                          <span>Memuat data titik kasir...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredList.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className='h-32 text-center text-xs text-muted-foreground'
+                      >
+                        <div className='flex flex-col items-center justify-center gap-1.5'>
+                          <Store className='h-6 w-6 text-muted-foreground/60' />
+                          <span>Tidak ada data titik kasir yang sesuai</span>
+                          {(searchQuery || statusFilter !== 'ALL') && (
+                            <Button
+                              variant='link'
+                              size='sm'
+                              onClick={() => {
+                                setSearchQuery('')
+                                setStatusFilter('ALL')
+                              }}
+                              className='h-auto p-0 text-xs'
+                            >
+                              Bersihkan filter pencarian
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredList.map((item) => {
+                      const isCurrentActivePos = item.id === activeTitikKasirId
+
+                      return (
+                        <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/40'>
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
+                            #{item.id}
+                          </TableCell>
+
+                          <TableCell>
+                            <div className='flex items-center gap-2.5'>
+                              <div className='flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-foreground'>
+                                <Store className='h-4 w-4' />
+                              </div>
+                              <div>
+                                <p className='text-sm font-semibold text-foreground'>
+                                  {item.nama}
+                                </p>
+                                <p className='text-[11px] text-muted-foreground tabular-nums'>
+                                  ID Tenant: {item.sekolahId}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <Badge
+                              variant='outline'
+                              className='rounded-full border px-2.5 py-0.5 font-mono text-xs font-medium text-foreground bg-muted/50 border-border tabular-nums'
+                            >
+                              {item.kode}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className='text-center'>
+                            <div className='flex items-center justify-center gap-2'>
+                              <Switch
+                                checked={item.aktif}
+                                onCheckedChange={() => handleToggleAktif(item)}
+                                title={`Klik untuk ${item.aktif ? 'menonaktifkan' : 'mengaktifkan'}`}
+                              />
+                              <Badge
+                                variant='outline'
+                                className={
+                                  item.aktif
+                                    ? 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
+                                    : 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground bg-muted/50 border-border'
+                                }
+                              >
+                                {item.aktif ? 'Aktif' : 'Nonaktif'}
+                              </Badge>
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            {isCurrentActivePos ? (
+                              <Badge
+                                variant='outline'
+                                className='gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-900/60'
+                              >
+                                <MonitorCheck className='h-3 w-3' />
+                                <span>Sedang Dipakai</span>
+                              </Badge>
+                            ) : item.aktif ? (
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() => handleSelectForPos(item)}
+                                className='h-7 text-xs'
+                              >
+                                Pilih untuk POS
+                              </Button>
+                            ) : (
+                              <span className='text-xs text-muted-foreground'>
+                                -
+                              </span>
+                            )}
+                          </TableCell>
+
+                          <TableCell className='text-right'>
+                            <div className='flex items-center justify-end gap-1'>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => handleOpenEdit(item)}
+                                className='h-8 w-8'
+                                title='Ubah titik kasir'
+                              >
+                                <Edit2 className='h-3.5 w-3.5' />
+                              </Button>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => setDeletingItem(item)}
+                                className='h-8 w-8 text-destructive hover:bg-destructive/10'
+                                title='Hapus titik kasir'
+                              >
+                                <Trash2 className='h-3.5 w-3.5' />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </Main>
 
       {/* Modal Formulir Create / Edit Titik Kasir */}

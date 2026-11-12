@@ -26,7 +26,7 @@ export function UsersDeleteDialog({
     if (value.trim() !== currentRow.username) return
 
     onOpenChange(false)
-    showSubmittedData(currentRow, 'The following user has been deleted:')
+    showSubmittedData(currentRow, 'Pengguna berikut telah dihapus:')
   }
 
   return (
@@ -41,7 +41,7 @@ export function UsersDeleteDialog({
             className='me-1 inline-block stroke-destructive'
             size={18}
           />{' '}
-          Delete User
+          Hapus Pengguna
         </span>
       }
       desc={
@@ -54,35 +54,36 @@ export function UsersDeleteDialog({
           className='space-y-4'
         >
           <p className='mb-2'>
-            Are you sure you want to delete{' '}
+            Apakah Anda yakin ingin menghapus{' '}
             <span className='font-bold'>{currentRow.username}</span>?
             <br />
-            This action will permanently remove the user with the role of{' '}
+            Tindakan ini akan menghapus permanen pengguna dengan peran{' '}
             <span className='font-bold'>
               {currentRow.role.toUpperCase()}
             </span>{' '}
-            from the system. This cannot be undone.
+            dari sistem dan tidak dapat dibatalkan.
           </p>
 
-          <Label className='my-2'>
-            Username:
+          <Label className='my-2 flex flex-col items-start gap-1.5'>
+            <span>Username:</span>
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder='Enter username to confirm deletion.'
+              placeholder='Masukkan username untuk konfirmasi penghapusan.'
               autoFocus
             />
           </Label>
 
           <Alert variant='destructive'>
-            <AlertTitle>Warning!</AlertTitle>
+            <AlertTitle>Peringatan!</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              Harap berhati-hati, tindakan ini tidak dapat dikembalikan.
             </AlertDescription>
           </Alert>
         </form>
       }
-      confirmText='Delete'
+      cancelBtnText='Batal'
+      confirmText='Hapus'
       destructive
     />
   )

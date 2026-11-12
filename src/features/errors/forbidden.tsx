@@ -5,19 +5,18 @@ export function ForbiddenError() {
   const navigate = useNavigate()
   const { history } = useRouter()
   return (
-    <div className='h-svh'>
-      <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2'>
-        <h1 className='text-[7rem] leading-tight font-bold'>403</h1>
-        <span className='font-medium'>Access Forbidden</span>
-        <p className='text-center text-muted-foreground'>
-          You don't have necessary permission <br />
-          to view this resource.
+    <div className='h-svh bg-background text-foreground'>
+      <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center'>
+        <h1 className='text-[7rem] leading-tight font-bold tabular-nums'>403</h1>
+        <span className='font-semibold text-lg'>Akses Ditolak</span>
+        <p className='text-center text-sm text-muted-foreground max-w-md'>
+          Anda tidak memiliki izin yang diperlukan untuk mengakses halaman ini.
         </p>
-        <div className='mt-6 flex gap-4'>
+        <div className='mt-6 flex gap-3'>
           <Button variant='outline' onClick={() => history.go(-1)}>
-            Go Back
+            Kembali
           </Button>
-          <Button onClick={() => navigate({ to: '/' })}>Back to Home</Button>
+          <Button onClick={() => navigate({ to: '/' })}>Kembali ke Beranda</Button>
         </div>
       </div>
     </div>

@@ -163,13 +163,13 @@ function KonfirmasiSetoranFormContent({
   return (
     <form onSubmit={handleSubmit} className='space-y-4 py-2'>
       {/* Ringkasan Setoran dari Sistem */}
-      <div className='space-y-3 rounded-lg border bg-muted/40 p-3.5 text-sm'>
-        <div className='flex items-center justify-between border-b pb-2'>
+      <div className='space-y-3 rounded-xl border border-border bg-muted/30 p-3.5 text-sm'>
+        <div className='flex items-center justify-between border-b border-border pb-2'>
           <div className='flex items-center gap-1.5 text-muted-foreground'>
             <Receipt className='h-4 w-4' />
             <span className='font-medium'>No. Setoran:</span>
           </div>
-          <span className='font-mono font-semibold'>{setoran.id}</span>
+          <span className='font-mono font-semibold tabular-nums'>{setoran.id}</span>
         </div>
 
         <div className='grid grid-cols-2 gap-2 text-xs'>
@@ -181,7 +181,7 @@ function KonfirmasiSetoranFormContent({
           </div>
           <div>
             <span className='block text-muted-foreground'>Tanggal Rekap:</span>
-            <span className='font-medium text-foreground'>
+            <span className='font-medium text-foreground tabular-nums'>
               {setoran.tanggal}
             </span>
           </div>
@@ -189,14 +189,14 @@ function KonfirmasiSetoranFormContent({
             <span className='block text-muted-foreground'>
               Jml Transaksi Top-up:
             </span>
-            <span className='font-medium text-foreground'>
+            <span className='font-medium text-foreground tabular-nums'>
               {setoran.total_transaksi} Transaksi (Siswa:{' '}
               {formatRupiah(setoran.total_topup_siswa)})
             </span>
           </div>
         </div>
 
-        <div className='flex items-center justify-between rounded-md border bg-background p-2.5'>
+        <div className='flex items-center justify-between rounded-lg border border-border bg-card p-2.5'>
           <div>
             <span className='text-xs font-medium text-muted-foreground'>
               Total Catatan Penerimaan (Sistem)
@@ -205,7 +205,7 @@ function KonfirmasiSetoranFormContent({
               Cocokkan dengan uang tunai yang diterima
             </p>
           </div>
-          <span className='font-mono text-lg font-bold text-primary'>
+          <span className='font-mono text-lg font-bold text-primary tabular-nums'>
             {formatRupiah(totalSistem)}
           </span>
         </div>
@@ -233,7 +233,7 @@ function KonfirmasiSetoranFormContent({
         </div>
 
         <div className='relative'>
-          <span className='absolute top-2.5 left-3 text-sm font-medium text-muted-foreground'>
+          <span className='absolute top-1/2 left-3 -translate-y-1/2 text-sm font-medium text-muted-foreground'>
             Rp
           </span>
           <Input
@@ -244,7 +244,7 @@ function KonfirmasiSetoranFormContent({
             value={uangFisikStr}
             onChange={(e) => setUangFisikStr(e.target.value)}
             placeholder='Masukkan total uang fisik disetor'
-            className='pl-10 font-mono text-base font-semibold'
+            className='pl-10 font-mono text-sm font-semibold tabular-nums'
             required
           />
         </div>
@@ -252,8 +252,8 @@ function KonfirmasiSetoranFormContent({
 
       {/* Kalkulator Pecahan Uang Interaktif */}
       {showCalculator && (
-        <div className='animate-in space-y-2 rounded-lg border border-dashed bg-muted/20 p-3 fade-in-50'>
-          <div className='flex items-center justify-between border-b pb-1 text-xs font-semibold text-muted-foreground'>
+        <div className='animate-in space-y-2 rounded-xl border border-dashed border-border bg-muted/20 p-3 fade-in-50'>
+          <div className='flex items-center justify-between border-b border-border pb-1 text-xs font-semibold text-muted-foreground'>
             <span className='flex items-center gap-1'>
               <Coins className='h-3.5 w-3.5 text-amber-500' />
               Hitung Lembar & Koin Fisik:
@@ -275,7 +275,7 @@ function KonfirmasiSetoranFormContent({
           <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
             {PECAHAN_UANG.map((pec) => (
               <div key={pec.value} className='space-y-1'>
-                <Label className='font-mono text-[11px] text-muted-foreground'>
+                <Label className='font-mono text-[11px] text-muted-foreground tabular-nums'>
                   {pec.label}
                 </Label>
                 <Input
@@ -286,7 +286,7 @@ function KonfirmasiSetoranFormContent({
                     handlePecahanChange(pec.value, e.target.value)
                   }
                   placeholder='0 lbr'
-                  className='h-8 font-mono text-xs'
+                  className='h-8 font-mono text-xs tabular-nums'
                 />
               </div>
             ))}
@@ -302,21 +302,24 @@ function KonfirmasiSetoranFormContent({
           </span>
           {selisih === 0 ? (
             <Badge
-              className='gap-1 border-0 bg-emerald-500/15 text-xs font-medium text-emerald-700 dark:text-emerald-400'
+              variant='outline'
+              className='gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
             >
               <CheckCircle2 className='h-3.5 w-3.5' />
               Jumlah Uang Pas (Cocok)
             </Badge>
           ) : selisih < 0 ? (
             <Badge
-              className='gap-1 border-0 bg-destructive/15 text-xs font-medium text-destructive'
+              variant='outline'
+              className='gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 tabular-nums dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
             >
               <AlertTriangle className='h-3.5 w-3.5' />
               Uang Kurang (-{formatRupiah(Math.abs(selisih))})
             </Badge>
           ) : (
             <Badge
-              className='gap-1 border-0 bg-blue-500/15 text-xs font-medium text-blue-700 dark:text-blue-400'
+              variant='outline'
+              className='gap-1 rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
             >
               <Info className='h-3.5 w-3.5' />
               Uang Lebih (+{formatRupiah(selisih)})
@@ -324,11 +327,11 @@ function KonfirmasiSetoranFormContent({
           )}
         </div>
 
-        <div className='flex items-center justify-between border-t border-border pt-1 text-xs'>
-          <span className='text-muted-foreground'>
+        <div className='flex items-center justify-between border-t border-border pt-1.5 text-xs'>
+          <span className='text-muted-foreground tabular-nums'>
             Catatan Sistem: {formatRupiah(totalSistem)}
           </span>
-          <span className='font-mono text-muted-foreground'>
+          <span className='font-mono text-muted-foreground tabular-nums'>
             Selisih: {selisih > 0 ? '+' : ''}{formatRupiah(selisih)}
           </span>
         </div>
@@ -336,10 +339,7 @@ function KonfirmasiSetoranFormContent({
 
       {/* Peringatan & Catatan jika Ada Selisih */}
       {hasSelisih ? (
-        <Alert
-          variant='destructive'
-          className='border-0 bg-amber-500/15 text-amber-900 dark:text-amber-300'
-        >
+        <Alert className='border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200'>
           <AlertTriangle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
           <AlertTitle className='text-xs font-semibold'>
             Perhatian: Terdapat Selisih Uang
@@ -351,7 +351,7 @@ function KonfirmasiSetoranFormContent({
           </AlertDescription>
         </Alert>
       ) : (
-        <Alert className='border-0 bg-emerald-500/15 py-2 text-emerald-900 dark:text-emerald-300'>
+        <Alert className='border-emerald-200 bg-emerald-50 py-2.5 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200'>
           <ShieldCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
           <AlertDescription className='text-xs'>
             Jumlah uang tunai telah sesuai 100% dengan catatan penerimaan
@@ -395,14 +395,13 @@ function KonfirmasiSetoranFormContent({
           variant='outline'
           onClick={onCancel}
           disabled={isSubmitting}
-          className='text-xs'
         >
           Batal
         </Button>
         <Button
           type='submit'
           disabled={isSubmitting || (hasSelisih && !catatan.trim())}
-          className='gap-1.5 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
+          className='gap-1.5'
         >
           <CheckCircle2 className='h-4 w-4' />
           {isSubmitting ? 'Menyimpan...' : 'Simpan & Terima Setoran'}

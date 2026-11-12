@@ -116,17 +116,17 @@ export function ProfileDropdown() {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-64 border-0' align='end' forceMount>
+        <DropdownMenuContent className='w-64' align='end' forceMount>
           <DropdownMenuLabel className='font-normal'>
-            <div className='flex flex-col gap-1.5'>
+            <div className='flex flex-col gap-1'>
               <p
-                className='text-sm leading-none font-semibold text-foreground truncate'
+                className='text-sm leading-snug font-semibold text-foreground truncate'
                 title={user?.nama ? `${displayUsername} (${user.nama})` : displayUsername}
               >
                 {displayUsername}
               </p>
               <p
-                className='text-xs leading-none text-muted-foreground truncate'
+                className='text-xs leading-snug text-muted-foreground truncate'
                 title={userRole}
               >
                 {userRole}

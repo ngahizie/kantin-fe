@@ -225,18 +225,18 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       </div>
 
       {/* Detail Ringkas Transaksi Terpilih */}
-      <div className='space-y-2 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 text-xs shadow-none'>
+      <div className='space-y-2 rounded-xl border border-border bg-muted/40 p-3 text-xs'>
         <div className='flex items-center justify-between gap-2'>
-          <span className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+          <span className='flex items-center gap-1.5 text-muted-foreground'>
             <User className='h-3.5 w-3.5' /> Pembeli
           </span>
           <div className='flex items-center gap-1.5'>
-            <span className='font-semibold text-slate-800 dark:text-white'>
+            <span className='font-semibold text-foreground'>
               {transaction.pembeliNama}
             </span>
             <Badge
-              variant='secondary'
-              className='rounded-full bg-slate-200/80 dark:bg-slate-800 px-2 py-0 text-[10px] font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 shadow-none'
+              variant='outline'
+              className='rounded-full border border-border bg-muted/60 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-foreground'
             >
               Siswa
             </Badge>
@@ -244,20 +244,20 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
         </div>
 
         <div className='flex items-center justify-between gap-2'>
-          <span className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+          <span className='flex items-center gap-1.5 text-muted-foreground'>
             <Clock className='h-3.5 w-3.5' /> Waktu Transaksi
           </span>
-          <span className='text-slate-700 dark:text-slate-300 tabular-nums'>
+          <span className='tabular-nums text-foreground'>
             {formatDateTime(transaction.waktu)}
           </span>
         </div>
 
         {transaction.items.length > 0 && (
           <div className='flex items-start justify-between gap-3'>
-            <span className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400 shrink-0'>
+            <span className='flex shrink-0 items-center gap-1.5 text-muted-foreground'>
               <ShoppingBag className='h-3.5 w-3.5' /> Item
             </span>
-            <span className='text-right text-[11px] text-slate-700 dark:text-slate-300 line-clamp-2'>
+            <span className='line-clamp-2 text-right text-[11px] text-foreground'>
               {transaction.items
                 .map((it) => `${it.qty}x ${it.namaMenu}`)
                 .join(', ')}
@@ -265,12 +265,12 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
           </div>
         )}
 
-        <div className='flex items-center justify-between has-border !border-t !border-slate-200 dark:!border-slate-800 pt-2'>
-          <span className='flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200'>
-            <Coins className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />{' '}
+        <div className='flex items-center justify-between border-t border-border pt-2'>
+          <span className='flex items-center gap-1.5 font-semibold text-foreground'>
+            <Coins className='h-3.5 w-3.5 text-primary' />{' '}
             Total Tagihan
           </span>
-          <span className='text-sm font-bold text-blue-600 dark:text-blue-400 tabular-nums'>
+          <span className='text-sm font-bold tabular-nums text-primary'>
             {formatRupiah(transaction.total)}
           </span>
         </div>
@@ -280,16 +280,16 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       <div className='space-y-1.5'>
         <label
           htmlFor={kodeInputId}
-          className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
+          className='block text-xs font-semibold text-foreground'
         >
           Kode Struk{' '}
-          <span aria-hidden='true' className='text-rose-600 dark:text-rose-400'>
+          <span aria-hidden='true' className='text-destructive'>
             *
           </span>
         </label>
         <p
           id={kodeHintId}
-          className='text-[11px] text-slate-500 dark:text-slate-400'
+          className='text-[11px] text-muted-foreground'
         >
           Ketik atau pindai kode struk bukti pembayaran (contoh:
           TRX-20261110-123).
@@ -330,10 +330,10 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
               scheduleAnnouncement(`Kode Struk: ${err}`)
             }
           }}
-          className={`h-11 text-sm font-medium tracking-wide has-border !border rounded-xl shadow-none focus-visible:ring-0 ${
+          className={`h-10 text-sm font-medium tracking-wide ${
             showKodeError
-              ? '!border-rose-500 dark:!border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 text-slate-800 dark:text-white'
-              : '!border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400'
+              ? 'border-destructive bg-destructive/5'
+              : ''
           }`}
         />
         <div className='min-h-5 pt-0.5'>
@@ -341,13 +341,13 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
             id={kodeErrorId}
             aria-hidden={showKodeError ? undefined : true}
             style={showKodeError ? undefined : { visibility: 'hidden' }}
-            className='m-0 flex items-start gap-1.5 text-xs leading-5 font-medium text-rose-600 dark:text-rose-400'
+            className='m-0 flex items-start gap-1.5 text-xs leading-5 font-medium text-destructive'
           >
             <AlertCircle
               role={showKodeError ? 'img' : undefined}
               aria-label={showKodeError ? 'Error' : undefined}
               aria-hidden={showKodeError ? undefined : true}
-              className='h-3.5 w-3.5 shrink-0 mt-0.5'
+              className='mt-0.5 h-3.5 w-3.5 shrink-0'
             />
             <span>{kodeErrorMsg ?? '\u00A0'}</span>
           </p>
@@ -355,10 +355,10 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       </div>
 
       {/* Pilihan Alasan Refund Wajib */}
-      <fieldset className='space-y-2 border-0 p-0 m-0'>
-        <legend className='mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300'>
+      <fieldset className='m-0 space-y-2 border-0 p-0'>
+        <legend className='mb-1.5 block text-xs font-semibold text-foreground'>
           Alasan Refund{' '}
-          <span aria-hidden='true' className='text-rose-600 dark:text-rose-400'>
+          <span aria-hidden='true' className='text-destructive'>
             *
           </span>
         </legend>
@@ -371,10 +371,10 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
             return (
               <div
                 key={alasan}
-                className={`flex min-h-12 items-center gap-3 rounded-xl has-border !border px-3.5 text-xs transition-colors ${
+                className={`flex min-h-12 items-center gap-3 rounded-xl border px-3.5 text-xs transition-colors ${
                   isChecked
-                    ? '!border-blue-300 dark:!border-blue-800/70 bg-blue-50/70 dark:bg-blue-950/30 font-semibold text-slate-800 dark:text-white'
-                    : '!border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'border-primary/40 bg-primary/10 font-semibold text-foreground'
+                    : 'border-border bg-muted/40 text-muted-foreground hover:bg-muted/70'
                 }`}
               >
                 <input
@@ -391,7 +391,7 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
                       clearAnnouncement()
                     }
                   }}
-                  className='h-4 w-4 shrink-0 cursor-pointer accent-blue-600'
+                  className='h-4 w-4 shrink-0 cursor-pointer accent-primary'
                 />
                 <label
                   htmlFor={radioId}
@@ -408,19 +408,19 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
           <div className='space-y-1.5 pt-1'>
             <label
               htmlFor={lainnyaInputId}
-              className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
+              className='block text-xs font-semibold text-foreground'
             >
               Detail Alasan Refund{' '}
               <span
                 aria-hidden='true'
-                className='text-rose-600 dark:text-rose-400'
+                className='text-destructive'
               >
                 *
               </span>
             </label>
             <p
               id={lainnyaHintId}
-              className='text-[11px] text-slate-500 dark:text-slate-400'
+              className='text-[11px] text-muted-foreground'
             >
               Tuliskan alasan pembatalan (minimal 3 karakter, maksimal 255 karakter).
             </p>
@@ -463,10 +463,10 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
                   scheduleAnnouncement(`Detail Alasan Refund: ${err}`)
                 }
               }}
-              className={`text-xs has-border !border rounded-xl shadow-none focus-visible:ring-0 ${
+              className={`text-xs ${
                 showLainnyaError
-                  ? '!border-rose-500 dark:!border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 text-slate-800 dark:text-white'
-                  : '!border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400'
+                  ? 'border-destructive bg-destructive/5'
+                  : ''
               }`}
             />
             <div className='min-h-5 pt-0.5'>
@@ -474,13 +474,13 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
                 id={lainnyaErrorId}
                 aria-hidden={showLainnyaError ? undefined : true}
                 style={showLainnyaError ? undefined : { visibility: 'hidden' }}
-                className='m-0 flex items-start gap-1.5 text-xs leading-5 font-medium text-rose-600 dark:text-rose-400'
+                className='m-0 flex items-start gap-1.5 text-xs leading-5 font-medium text-destructive'
               >
                 <AlertCircle
                   role={showLainnyaError ? 'img' : undefined}
                   aria-label={showLainnyaError ? 'Error' : undefined}
                   aria-hidden={showLainnyaError ? undefined : true}
-                  className='h-3.5 w-3.5 shrink-0 mt-0.5'
+                  className='mt-0.5 h-3.5 w-3.5 shrink-0'
                 />
                 <span>{lainnyaErrorMsg ?? '\u00A0'}</span>
               </p>
@@ -489,14 +489,14 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
         )}
       </fieldset>
 
-      <DialogFooter className='gap-2 sm:gap-2.5 pt-2'>
+      <DialogFooter className='gap-2 pt-2 sm:gap-2.5'>
         <Button
           type='button'
-          variant='secondary'
+          variant='outline'
           size='sm'
           onClick={onClose}
           disabled={isSubmitting}
-          className='h-10 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
+          className='h-9'
         >
           Batal
         </Button>
@@ -505,7 +505,7 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
           variant='destructive'
           size='sm'
           disabled={isSubmitting}
-          className='h-10 gap-1.5 font-semibold !bg-rose-600 hover:!bg-rose-500 !text-white rounded-xl shadow-none'
+          className='h-9 gap-1.5 font-semibold'
         >
           {isSubmitting ? (
             <>
@@ -544,17 +544,17 @@ export const RefundDialog: React.FC<RefundDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none select-none'>
+      <DialogContent className='max-w-md max-h-[90vh] overflow-y-auto select-none sm:max-w-lg'>
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10 text-destructive'>
               <RotateCcw className='h-5 w-5' />
             </div>
             <div>
-              <DialogTitle className='text-lg font-bold text-slate-800 dark:text-white'>
+              <DialogTitle className='text-lg font-bold text-foreground'>
                 Refund Transaksi Kasir
               </DialogTitle>
-              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+              <DialogDescription className='text-xs text-muted-foreground'>
                 Batalkan transaksi terpilih dengan memasukkan kode struk dan alasan refund.
               </DialogDescription>
             </div>

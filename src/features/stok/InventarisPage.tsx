@@ -4,12 +4,18 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   History,
   PackagePlus,
+  Wallet,
+  Package,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Loader2,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -19,9 +25,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
@@ -292,28 +297,20 @@ export function InventarisPage() {
   return (
     <>
       <Header fixed>
-        <div className='flex w-full items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
-              Manajemen Stok
-            </span>
-            <span className='text-muted-foreground text-xs'>/</span>
-            <span className='text-xs font-medium'>Laporan Inventaris</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Manajemen Stok' title='Laporan Inventaris' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
         {/* Header Title & Top Navigation */}
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
               Laporan Inventaris & Valuasi Persediaan
             </h1>
+            <p className='text-sm text-muted-foreground'>
+              Pantau jumlah stok berjalan, batas minimum, HPP rata-rata, dan total nilai aset persediaan.
+            </p>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
             <ExportButton
@@ -323,9 +320,9 @@ export function InventarisPage() {
               data-testid='btn-inventaris-export'
             />
 
-            <Button size='sm' asChild className='gap-1.5'>
+            <Button size='sm' asChild className='gap-1.5 font-semibold'>
               <Link to='/stok/kartu'>
-                <History className='h-4 w-4' />
+                <History className='size-4' />
                 <span>Buka Kartu Stok</span>
               </Link>
             </Button>
@@ -333,91 +330,116 @@ export function InventarisPage() {
         </div>
 
         {/* KPI Summary Cards */}
-        <div className='grid grid-cols-2 md:grid-cols-5 gap-3.5'>
+        <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
           {/* 1. Total Nilai Persediaan (Aset) */}
-          <Card className='col-span-2 md:col-span-1 border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium'>
+          <Card className='col-span-2 md:col-span-1'>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Nilai Aset
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold font-mono text-foreground'>
-                {formatRupiah(kpiData.totalNilai)}
               </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'>
+                <Wallet className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
-              Valuasi stok berjalan × HPP
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                {formatRupiah(kpiData.totalNilai)}
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Valuasi stok berjalan × HPP
+              </p>
             </CardContent>
           </Card>
 
           {/* 2. Total SKU & Unit */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total SKU Terdaftar
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'>
+                <Package className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {formatNumber(kpiData.totalSku)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
                   item
                 </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
-              Akumulasi: {formatNumber(kpiData.totalUnit)} unit fisik
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground tabular-nums'>
+                Akumulasi: {formatNumber(kpiData.totalUnit)} unit fisik
+              </p>
             </CardContent>
           </Card>
 
           {/* 3. Stok Aman */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium text-emerald-600 dark:text-emerald-400'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Stok Aman
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <CheckCircle2 className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatNumber(kpiData.countAman)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
                   SKU
                 </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
-              Di atas batas minimum
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Di atas batas minimum
+              </p>
             </CardContent>
           </Card>
 
           {/* 4. Stok Menipis */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium text-amber-600 dark:text-amber-400'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Stok Menipis
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-amber-600 dark:text-amber-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'>
+                <AlertTriangle className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
                 {formatNumber(kpiData.countMenipis)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
                   SKU
                 </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
-              Perlu segera restock
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Perlu segera restock
+              </p>
             </CardContent>
           </Card>
 
           {/* 5. Stok Habis */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium text-rose-600 dark:text-rose-400'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Stok Habis
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-rose-600 dark:text-rose-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+                <XCircle className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums'>
                 {formatNumber(kpiData.countHabis)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
                   SKU
                 </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
-              Persediaan 0 unit
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Persediaan 0 unit
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -473,47 +495,47 @@ export function InventarisPage() {
         />
 
         {/* Data Table */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+        <Card className='gap-0 py-0 overflow-hidden'>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
-                <TableHeader className='bg-muted/50'>
-                  <TableRow>
-                    <TableHead className='w-12 text-center'>#</TableHead>
-                    <TableHead>Nama Menu / Barang</TableHead>
-                    <TableHead className='w-32'>Kategori</TableHead>
-                    <TableHead className='w-28 text-center'>Status</TableHead>
-                    <TableHead className='text-right w-28'>
+                <TableHeader>
+                  <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                    <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Nama Menu / Barang</TableHead>
+                    <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Kategori</TableHead>
+                    <TableHead className='w-28 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Status</TableHead>
+                    <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                       Stok Saat Ini
                     </TableHead>
-                    <TableHead className='text-right w-28'>Batas Min</TableHead>
-                    <TableHead className='text-right w-36'>
+                    <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Batas Min</TableHead>
+                    <TableHead className='text-right w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                       HPP Terakhir
                     </TableHead>
-                    <TableHead className='text-right w-44 font-semibold'>
+                    <TableHead className='text-right w-44 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                       Nilai Persediaan
                     </TableHead>
-                    <TableHead className='text-center w-36'>Aksi</TableHead>
+                    <TableHead className='text-center w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow>
+                    <TableRow className='hover:bg-transparent border-b-0'>
                       <TableCell
                         colSpan={9}
                         className='h-32 text-center text-muted-foreground'
                       >
                         <div className='flex flex-col items-center justify-center gap-2'>
-                          <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-                          <span>Memuat tabel inventaris persediaan...</span>
+                          <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                          <span className='text-xs'>Memuat tabel inventaris persediaan...</span>
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredAndSortedList.length === 0 ? (
-                    <TableRow>
+                    <TableRow className='hover:bg-transparent border-b-0'>
                       <TableCell
                         colSpan={9}
-                        className='h-32 text-center text-muted-foreground'
+                        className='h-32 text-center text-xs text-muted-foreground'
                       >
                         Tidak ada barang yang cocok dengan kriteria filter.
                       </TableCell>
@@ -534,8 +556,8 @@ export function InventarisPage() {
                         : '-'
 
                       return (
-                        <TableRow key={item.menuId} className='hover:bg-muted/40'>
-                          <TableCell className='text-center text-xs text-muted-foreground'>
+                        <TableRow key={item.menuId} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                             {idx + 1}
                           </TableCell>
                           <TableCell>
@@ -543,7 +565,7 @@ export function InventarisPage() {
                               <span className='font-semibold text-foreground text-sm'>
                                 {item.namaMenu || item.nama}
                               </span>
-                              <span className='text-[11px] text-muted-foreground'>
+                              <span className='text-[11px] text-muted-foreground tabular-nums'>
                                 SKU #{item.menuId}
                               </span>
                             </div>
@@ -553,19 +575,13 @@ export function InventarisPage() {
                           </TableCell>
                           <TableCell className='text-center'>
                             <Badge
-                              variant={
+                              variant='outline'
+                              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 status === 'AMAN'
-                                  ? 'secondary'
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                   : status === 'MENIPIS'
-                                  ? 'secondary'
-                                  : 'destructive'
-                              }
-                              className={`text-[11px] font-semibold border-0 ${
-                                status === 'AMAN'
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                  : status === 'MENIPIS'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                  : ''
+                                  ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                                  : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
                               }`}
                             >
                               {status === 'AMAN'
@@ -575,19 +591,19 @@ export function InventarisPage() {
                                 : 'Habis'}
                             </Badge>
                           </TableCell>
-                          <TableCell className='text-right font-mono font-bold text-sm'>
+                          <TableCell className='text-right font-mono font-bold text-sm tabular-nums'>
                             {formatNumber(stok)}{' '}
                             <span className='text-xs font-normal text-muted-foreground'>
                               unit
                             </span>
                           </TableCell>
-                          <TableCell className='text-right font-mono text-xs text-muted-foreground'>
+                          <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
                             {formatNumber(min)}
                           </TableCell>
-                          <TableCell className='text-right font-mono text-sm text-foreground'>
+                          <TableCell className='text-right font-mono text-sm text-foreground tabular-nums'>
                             {formatRupiah(hpp)}
                           </TableCell>
-                          <TableCell className='text-right font-mono font-bold text-sm text-primary'>
+                          <TableCell className='text-right font-mono font-bold text-sm text-primary tabular-nums'>
                             {formatRupiah(totalNilai)}
                           </TableCell>
                           <TableCell className='text-center'>
@@ -629,8 +645,8 @@ export function InventarisPage() {
             </div>
 
             {/* Bottom Accumulation Footer */}
-            <div className='flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/30 border-t text-xs text-muted-foreground gap-2'>
-              <div>
+            <div className='flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/30 border-t border-border text-xs text-muted-foreground gap-2'>
+              <div className='tabular-nums'>
                 Menampilkan{' '}
                 <strong className='text-foreground'>
                   {filteredAndSortedList.length}
@@ -640,13 +656,13 @@ export function InventarisPage() {
               <div className='flex items-center gap-6'>
                 <span>
                   Total Fisik Terfilter:{' '}
-                  <strong className='text-foreground font-mono text-sm'>
+                  <strong className='text-foreground font-mono text-sm tabular-nums'>
                     {formatNumber(filteredSummary.totalUnit)} unit
                   </strong>
                 </span>
                 <span>
                   Total Nilai Terfilter:{' '}
-                  <strong className='text-primary font-mono text-sm font-bold'>
+                  <strong className='text-primary font-mono text-sm font-bold tabular-nums'>
                     {formatRupiah(filteredSummary.totalNilai)}
                   </strong>
                 </span>

@@ -97,7 +97,7 @@ export function KategoriFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md border-none rounded-2xl shadow-none bg-card'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
             {isEditing ? 'Ubah Kategori Menu' : 'Tambah Kategori Baru'}
@@ -125,7 +125,6 @@ export function KategoriFormModal({
                       {...field}
                       disabled={isSubmitting}
                       autoFocus
-                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                     />
                   </FormControl>
                   <FormDescription className='text-xs'>
@@ -150,7 +149,7 @@ export function KategoriFormModal({
                       value={field.value}
                       onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                       disabled={isSubmitting}
-                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm tabular-nums'
+                      className='tabular-nums'
                     />
                   </FormControl>
                   <FormDescription className='text-xs'>
@@ -164,17 +163,16 @@ export function KategoriFormModal({
             <DialogFooter className='pt-2 sm:justify-end gap-2'>
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
-                className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
               >
                 Batal
               </Button>
               <Button
                 type='submit'
                 disabled={isSubmitting}
-                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+                className='gap-1.5 font-semibold'
               >
                 {isSubmitting ? (
                   <>

@@ -2,8 +2,10 @@ import { useMemo } from 'react'
 import {
   Trash2,
   Calendar,
+  PackageX,
+  Wallet,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RiwayatOpnameTable } from './components/RiwayatOpnameTable'
 import type { RiwayatStokItem } from './types'
 
@@ -44,49 +46,58 @@ export function BarangRusakPage({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground min-w-0 truncate">
               Frekuensi Kejadian Rusak
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold">
-              {stats.totalKejadian} kali
             </CardTitle>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+              <Trash2 className="size-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
+              {stats.totalKejadian} kali
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
               Total catatan mutasi BARANG_RUSAK
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground min-w-0 truncate">
               Total Fisik Dibuang / Rusak
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold">
-              {stats.totalUnit} unit
             </CardTitle>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300">
+              <PackageX className="size-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
+              {stats.totalUnit} unit
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
               Akumulasi qty terbuang
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground min-w-0 truncate">
               Total Beban Kerugian Finansial
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold text-destructive font-mono">
-              Rp {stats.totalKerugian.toLocaleString('id-ID')}
             </CardTitle>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+              <Wallet className="size-4" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold tracking-tight text-destructive font-mono tabular-nums">
+              Rp {stats.totalKerugian.toLocaleString('id-ID')}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
               Beban kerugian HPP makanan rusak
             </p>
           </CardContent>

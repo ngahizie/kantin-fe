@@ -157,13 +157,12 @@ export function UserAuthForm({
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Username</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
                   <Input
                     placeholder='Masukkan username'
                     autoComplete='username'
                     disabled={isLoading}
-                    className='h-11 rounded-xl !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -177,13 +176,12 @@ export function UserAuthForm({
             name='password'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-sm font-semibold text-slate-700 dark:text-slate-300'>Password</FormLabel>
+                <FormLabel>Kata Sandi</FormLabel>
                 <FormControl>
                   <PasswordInput
-                    placeholder='Masukkan password'
+                    placeholder='Masukkan kata sandi'
                     autoComplete='current-password'
                     disabled={isLoading}
-                    className='h-11 rounded-xl !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none'
                     {...field}
                   />
                 </FormControl>
@@ -194,10 +192,10 @@ export function UserAuthForm({
 
           <Button
             type='submit'
-            className='mt-2 w-full h-12 text-base font-bold !bg-blue-600 hover:!bg-blue-500 !text-white shadow-none rounded-[32px] transition-colors cursor-pointer flex items-center justify-center gap-2'
+            className='mt-2 w-full h-10 font-semibold'
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className='animate-spin' /> : <LogIn className='size-5' />}
+            {isLoading ? <Loader2 className='size-4 animate-spin' /> : <LogIn className='size-4' />}
             Masuk
           </Button>
         </form>

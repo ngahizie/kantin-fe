@@ -11,6 +11,7 @@ import {
   User,
   Coins,
   Inbox,
+  Loader2,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -34,7 +35,7 @@ interface MutationMeta {
 
 function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
   const commonBadgeClass =
-    'bg-black/5 text-black dark:bg-white/10 dark:text-white border-0'
+    'rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-foreground'
 
   switch (jenis) {
     case 'BARANG_MASUK':
@@ -44,7 +45,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: ArrowDownLeft,
         iconClass:
-          'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400',
+          'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300',
         sign: '+',
         isMasuk: true,
       }
@@ -55,7 +56,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: RotateCcw,
         iconClass:
-          'bg-amber-50 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400',
+          'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300',
         sign: '-',
         isMasuk: false,
       }
@@ -66,18 +67,18 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: ShoppingCart,
         iconClass:
-          'bg-blue-50 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400',
+          'border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300',
         sign: '-',
         isMasuk: false,
       }
     case 'PENJUALAN_VOID':
       return {
-        label: 'Void Penjualan',
+        label: 'Refund / Void Penjualan',
         badgeVariant: 'outline',
         badgeClass: commonBadgeClass,
         icon: RotateCcw,
         iconClass:
-          'bg-purple-50 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400',
+          'border border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300',
         sign: '+',
         isMasuk: true,
       }
@@ -88,7 +89,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: PlusCircle,
         iconClass:
-          'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400',
+          'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300',
         sign: '+',
         isMasuk: true,
       }
@@ -99,7 +100,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: MinusCircle,
         iconClass:
-          'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400',
+          'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300',
         sign: '-',
         isMasuk: false,
       }
@@ -110,7 +111,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeClass: commonBadgeClass,
         icon: Trash2,
         iconClass:
-          'bg-red-50 text-red-600 dark:bg-red-950/80 dark:text-red-400',
+          'border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300',
         sign: '-',
         isMasuk: false,
       }
@@ -120,7 +121,7 @@ function getMutationMeta(jenis: JenisMutasiStok): MutationMeta {
         badgeVariant: 'secondary',
         badgeClass: commonBadgeClass,
         icon: ArrowUpRight,
-        iconClass: 'bg-muted text-muted-foreground',
+        iconClass: 'border border-border bg-muted text-muted-foreground',
         sign: '-',
         isMasuk: false,
       }
@@ -134,7 +135,7 @@ export function KartuStokTimeline({
   if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center py-16 text-center text-muted-foreground'>
-        <div className='h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mb-3' />
+        <Loader2 className='size-6 animate-spin text-muted-foreground mb-3' />
         <p className='text-sm'>Memuat linimasa mutasi kartu stok...</p>
       </div>
     )
@@ -176,21 +177,21 @@ export function KartuStokTimeline({
           <div key={item.id ?? index} className='relative flex items-start gap-3.5 sm:gap-4 group'>
             {/* Dot / Icon marker on vertical line */}
             <div
-              className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 ${meta.iconClass}`}
+              className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${meta.iconClass}`}
             >
               <IconComponent className='h-4 w-4' />
             </div>
 
             {/* Card Content */}
             <div className='flex-1 min-w-0'>
-              <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+              <Card>
                 <CardContent className='p-4 sm:p-5'>
                   {/* Header: [Badge] • #ID_TRANSAKSI             TANGGAL & WAKTU */}
-                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b pb-3 mb-3'>
+                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border pb-3 mb-3'>
                     <div className='flex flex-wrap items-center gap-2'>
                       <Badge
                         variant='outline'
-                        className={`font-medium px-2 py-0.5 text-xs rounded-md border-0 ${meta.badgeClass}`}
+                        className={meta.badgeClass}
                       >
                         {meta.label}
                       </Badge>
@@ -200,7 +201,7 @@ export function KartuStokTimeline({
                       </span>
                     </div>
 
-                    <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                    <div className='flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums'>
                       <Calendar className='h-3.5 w-3.5 text-muted-foreground/70' />
                       <span>{formatDateTime(item.waktu)}</span>
                     </div>
@@ -209,12 +210,12 @@ export function KartuStokTimeline({
                   {/* Body: 4 Flat Stat Columns */}
                   <div className='grid grid-cols-2 sm:grid-cols-4 gap-y-3 sm:gap-y-0 py-1'>
                     {/* PERUBAHAN QTY */}
-                    <div className='sm:pr-4 sm:border-r border-border/60'>
+                    <div className='sm:pr-4 sm:border-r border-border'>
                       <span className='text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-1'>
                         PERUBAHAN QTY
                       </span>
                       <span
-                        className={`text-base font-bold font-mono block ${
+                        className={`text-base font-bold font-mono tabular-nums block ${
                           meta.isMasuk
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : 'text-rose-600 dark:text-rose-400'
@@ -226,21 +227,21 @@ export function KartuStokTimeline({
                     </div>
 
                     {/* SALDO AKHIR */}
-                    <div className='sm:px-4 sm:border-r border-border/60'>
+                    <div className='sm:px-4 sm:border-r border-border'>
                       <span className='text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-1'>
                         SALDO AKHIR
                       </span>
-                      <span className='text-base font-bold font-mono text-foreground block'>
+                      <span className='text-base font-bold font-mono tabular-nums text-foreground block'>
                         {formatNumber(item.stokSetelah)} unit
                       </span>
                     </div>
 
                     {/* SNAPSHOT HPP */}
-                    <div className='sm:px-4 sm:border-r border-border/60'>
+                    <div className='sm:px-4 sm:border-r border-border'>
                       <span className='text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-1'>
                         SNAPSHOT HPP
                       </span>
-                      <span className='text-base font-bold font-mono text-foreground block'>
+                      <span className='text-base font-bold font-mono tabular-nums text-foreground block'>
                         {formatRupiah(item.hppSnapshot)}
                       </span>
                     </div>
@@ -259,18 +260,18 @@ export function KartuStokTimeline({
 
                   {/* Harga Beli & Nilai Mutasi jika Barang Masuk */}
                   {item.jenis === 'BARANG_MASUK' && item.hargaBeliSatuan && (
-                    <div className='mt-3 pt-3 border-t flex flex-wrap items-center gap-4 text-xs text-muted-foreground'>
+                    <div className='mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-4 text-xs text-muted-foreground'>
                       <span className='inline-flex items-center gap-1'>
-                        <Coins className='h-3.5 w-3.5 text-emerald-500' />
+                        <Coins className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
                         Harga Beli Satuan:{' '}
-                        <strong className='text-foreground font-mono'>
+                        <strong className='text-foreground font-mono tabular-nums'>
                           {formatRupiah(item.hargaBeliSatuan)}
                         </strong>
                       </span>
                       {item.totalNilai && (
                         <span>
                           Total Faktur:{' '}
-                          <strong className='text-foreground font-mono'>
+                          <strong className='text-foreground font-mono tabular-nums'>
                             {formatRupiah(item.totalNilai)}
                           </strong>
                         </span>
@@ -280,7 +281,7 @@ export function KartuStokTimeline({
 
                   {/* Alasan / Catatan jika ada */}
                   {item.alasan && (
-                    <div className='mt-3 pt-2.5 border-t text-xs'>
+                    <div className='mt-3 pt-2.5 border-t border-border text-xs'>
                       <span className='text-muted-foreground font-medium'>
                         Catatan / Alasan:{' '}
                       </span>

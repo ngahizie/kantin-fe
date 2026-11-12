@@ -40,18 +40,16 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       aria-disabled={isHabis}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`relative flex h-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#0a0a0a] p-0 gap-0 shadow-none select-none transition-all duration-150 ${
-        cartQty > 0
-          ? 'has-border !border !border-blue-500/70 dark:!border-blue-500/60'
-          : 'has-border !border !border-slate-200 dark:!border-slate-800'
+      className={`relative flex h-full flex-col gap-0 overflow-hidden rounded-xl p-0 select-none transition-all duration-150 ${
+        cartQty > 0 ? 'border-primary/70 ring-1 ring-primary/20' : ''
       } ${
         isHabis
           ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/60 hover:!border-blue-300 dark:hover:!border-blue-800 active:scale-[0.98]'
+          : 'cursor-pointer hover:border-primary/50 hover:bg-accent/30 active:scale-[0.98]'
       }`}
     >
       {/* Gambar & Badge Keranjang */}
-      <div className='relative aspect-4/3 w-full shrink-0 overflow-hidden bg-slate-50/70 dark:bg-slate-900/60'>
+      <div className='relative aspect-4/3 w-full shrink-0 overflow-hidden bg-muted/50'>
         {menu.fotoUrl && !imageError ? (
           <img
             src={menu.fotoUrl}
@@ -63,7 +61,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
             loading='lazy'
           />
         ) : (
-          <div className='flex h-full w-full items-center justify-center text-slate-400 dark:text-slate-600'>
+          <div className='flex h-full w-full items-center justify-center text-muted-foreground/50'>
             <Utensils className='h-12 w-12 stroke-[1.5]' />
           </div>
         )}
@@ -71,7 +69,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         {/* Badge Jumlah di Keranjang di Pojok Kanan Atas */}
         {cartQty > 0 && (
           <div className='absolute top-2.5 right-2.5 animate-in duration-200 zoom-in-75'>
-            <Badge className='rounded-full !bg-blue-600 !text-white font-semibold text-xs px-2.5 py-0.5 shadow-none'>
+            <Badge className='rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums text-primary-foreground shadow-xs'>
               {cartQty}x di keranjang
             </Badge>
           </div>
@@ -80,7 +78,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
       {/* Nama Menu */}
       <h4
-        className='min-h-[calc(0.75rem+2.75em)] px-3.5 pt-3 text-sm leading-snug font-semibold tracking-tight text-slate-800 dark:text-white line-clamp-2 [overflow-wrap:anywhere]'
+        className='min-h-[calc(0.75rem+2.75em)] px-3.5 pt-3 text-sm leading-snug font-semibold tracking-tight text-foreground line-clamp-2 [overflow-wrap:anywhere]'
         title={menu.nama}
       >
         {menu.nama}
@@ -88,10 +86,10 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
       {/* Footer Harga & Satuan */}
       <footer className='mt-auto flex items-baseline justify-between gap-2 whitespace-nowrap px-3.5 pt-2 pb-3.5'>
-        <span className='shrink-0 text-base font-bold tracking-tight text-blue-600 dark:text-blue-400 tabular-nums sm:text-lg'>
+        <span className='shrink-0 text-base font-bold tracking-tight tabular-nums text-primary sm:text-lg'>
           {formatRupiah(menu.hargaJual)}
         </span>
-        <span className='min-w-0 truncate text-xs font-medium tracking-wide text-slate-500 dark:text-slate-400 uppercase'>
+        <span className='min-w-0 truncate text-xs font-medium tracking-wide text-muted-foreground uppercase'>
           /{menu.satuan || 'porsi'}
         </span>
       </footer>

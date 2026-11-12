@@ -6,14 +6,15 @@ import {
   CheckCircle2,
   UtensilsCrossed,
   DollarSign,
+  Users,
+  Loader2,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -256,78 +257,98 @@ export function KontrolSiswaPage() {
   return (
     <>
       <Header fixed>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Saldo & Pengawasan' title='Batasan Jajan Siswa' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Batasan Jajan Siswa & Perwalian
-          </h1>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Batasan Jajan Siswa & Perwalian
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Kelola batas jajan harian dan pantangan makanan siswa pemegang kartu RFID.
+            </p>
+          </div>
         </div>
 
         {/* KPI Cards Ringkasan */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2'>
-              <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Siswa Terdaftar
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground'>
+                <Users className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {students.length} Siswa
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Siswa aktif pemegang kartu RFID
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Siswa aktif pemegang kartu RFID
+              </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2'>
-              <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
-                Orang Tua Belum Pasang Aplikasi
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 flex items-center gap-2'>
-                <PhoneOff className='h-5 w-5 text-amber-600 dark:text-amber-400' />
-                <span>{nonAppCount} Siswa</span>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Ortu Belum Pasang Aplikasi
               </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'>
+                <PhoneOff className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Bantuan pengaturan dari pihak sekolah
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
+                {nonAppCount} Siswa
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Bantuan pengaturan dari pihak sekolah
+              </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2'>
-              <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Batas Jajan Harian Aktif
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-primary flex items-center gap-2'>
-                <DollarSign className='h-5 w-5 text-primary' />
-                <span>{limitActiveCount} Siswa</span>
               </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'>
+                <DollarSign className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Membatasi belanja harian siswa di kantin
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-primary tabular-nums'>
+                {limitActiveCount} Siswa
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Membatasi belanja harian siswa di kantin
+              </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2'>
-              <CardDescription className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Pantangan Makanan Aktif
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-destructive flex items-center gap-2'>
-                <UtensilsCrossed className='h-5 w-5 text-destructive' />
-                <span>{menuBlockCount} Siswa</span>
               </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+                <UtensilsCrossed className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='pt-0 text-[11px] text-muted-foreground'>
-              Pencegahan alergi atau pantangan jajanan
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-destructive tabular-nums'>
+                {menuBlockCount} Siswa
+              </div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Pencegahan alergi atau pantangan jajanan
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -369,26 +390,29 @@ export function KontrolSiswaPage() {
         />
 
         {/* Tabel Siswa */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+        <Card className='p-0 gap-0 overflow-hidden'>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
-                <TableHeader>
-                  <TableRow className='bg-muted/50 text-xs'>
-                    <TableHead className='w-12 text-center'>No.</TableHead>
-                    <TableHead className='w-[240px]'>Data Siswa</TableHead>
-                    <TableHead>Aplikasi Orang Tua</TableHead>
-                    <TableHead>Batas Jajan per Hari</TableHead>
-                    <TableHead>Pantangan Makanan</TableHead>
-                    <TableHead>Saldo Kartu</TableHead>
-                    <TableHead className='text-right w-[160px]'>Pengaturan</TableHead>
+                <TableHeader className='bg-muted/50'>
+                  <TableRow className='border-b border-border hover:bg-transparent'>
+                    <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                    <TableHead className='w-[240px] text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Data Siswa</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aplikasi Orang Tua</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Batas Jajan per Hari</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Pantangan Makanan</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Saldo Kartu</TableHead>
+                    <TableHead className='text-right w-[160px] text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Pengaturan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
                       <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
-                        Memuat data kontrol siswa...
+                        <div className='flex items-center justify-center gap-2'>
+                          <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                          <span>Memuat data kontrol siswa...</span>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredStudents.length === 0 ? (
@@ -408,8 +432,8 @@ export function KontrolSiswaPage() {
                       const hasRestrictions = blockedCatsCount > 0 || blockedItemsCount > 0
 
                       return (
-                        <TableRow key={siswa.siswa_id} className='text-xs hover:bg-muted/40'>
-                          <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                        <TableRow key={siswa.siswa_id} className='border-b border-border last:border-b-0 text-xs hover:bg-muted/40'>
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                             {idx + 1}
                           </TableCell>
                           {/* Data Siswa */}
@@ -429,12 +453,15 @@ export function KontrolSiswaPage() {
                                 <p className='font-bold text-foreground flex items-center gap-1.5'>
                                   {siswa.nama}
                                   {siswa.is_blocked && (
-                                    <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-[9px] py-0 font-medium'>
-                                      KARTU DIBLOKIR
+                                    <Badge
+                                      variant='outline'
+                                      className='rounded-full border px-2 py-0 text-[10px] font-medium text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-900/60'
+                                    >
+                                      Kartu Diblokir
                                     </Badge>
                                   )}
                                 </p>
-                                <p className='text-muted-foreground font-mono text-[11px]'>
+                                <p className='text-muted-foreground font-mono text-[11px] tabular-nums'>
                                   NIS: {siswa.nis || '-'} • {siswa.kelas}
                                 </p>
                                 <p className='text-[10px] text-muted-foreground'>
@@ -448,8 +475,8 @@ export function KontrolSiswaPage() {
                           <TableCell>
                             {siswa.parent_app_registered ? (
                               <Badge
-                                variant='secondary'
-                                className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] py-0.5 gap-1 font-medium'
+                                variant='outline'
+                                className='rounded-full border px-2.5 py-0.5 text-xs font-medium gap-1 text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
                               >
                                 <Smartphone className='h-3 w-3' />
                                 <span>Terhubung App</span>
@@ -457,8 +484,8 @@ export function KontrolSiswaPage() {
                             ) : (
                               <div className='space-y-0.5'>
                                 <Badge
-                                  variant='secondary'
-                                  className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0.5 gap-1 font-medium'
+                                  variant='outline'
+                                  className='rounded-full border px-2.5 py-0.5 text-xs font-medium gap-1 text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900/60'
                                 >
                                   <PhoneOff className='h-3 w-3' />
                                   <span>Belum Pakai App</span>
@@ -475,12 +502,12 @@ export function KontrolSiswaPage() {
                             {hasLimit ? (
                               <div className='space-y-1'>
                                 <Badge
-                                  variant='secondary'
-                                  className='border-0 bg-primary/15 text-primary text-[11px] py-0.5 font-mono font-medium'
+                                  variant='outline'
+                                  className='rounded-full border px-2.5 py-0.5 text-xs font-mono font-medium tabular-nums text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-900/60'
                                 >
                                   {formatRupiah(siswa.limit_harian)} / hari
                                 </Badge>
-                                <div className='text-[10px] text-muted-foreground'>
+                                <div className='text-[10px] text-muted-foreground tabular-nums'>
                                   Belanja hari ini: {formatRupiah(siswa.belanja_hari_ini)}
                                 </div>
                               </div>
@@ -499,16 +526,16 @@ export function KontrolSiswaPage() {
                                 <div className='flex flex-wrap gap-1'>
                                   {blockedCatsCount > 0 && (
                                     <Badge
-                                      variant='secondary'
-                                      className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0 font-medium'
+                                      variant='outline'
+                                      className='rounded-full border px-2 py-0.5 text-[10px] font-medium text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900/60'
                                     >
                                       {blockedCatsCount} Kategori Diblokir
                                     </Badge>
                                   )}
                                   {blockedItemsCount > 0 && (
                                     <Badge
-                                      variant='secondary'
-                                      className='border-0 bg-destructive/15 text-destructive text-[10px] py-0 px-1.5 font-medium'
+                                      variant='outline'
+                                      className='rounded-full border px-2 py-0.5 text-[10px] font-medium text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-900/60'
                                     >
                                       {blockedItemsCount} Item Spesifik
                                     </Badge>
@@ -529,7 +556,7 @@ export function KontrolSiswaPage() {
 
                           {/* Saldo Digital */}
                           <TableCell>
-                            <span className='font-mono font-bold text-foreground text-xs'>
+                            <span className='font-mono font-bold text-foreground text-xs tabular-nums'>
                               {formatRupiah(siswa.saldo)}
                             </span>
                           </TableCell>
@@ -539,12 +566,12 @@ export function KontrolSiswaPage() {
                             <div className='flex items-center justify-end'>
                               <Button
                                 size='sm'
-                                variant='secondary'
+                                variant='outline'
                                 onClick={() => {
                                   setSelectedStudent(siswa)
                                   setIsFormOpen(true)
                                 }}
-                                className='h-8 text-xs gap-1.5 border-0 bg-background/80 hover:bg-background dark:bg-background/40 shadow-none'
+                                className='h-8 text-xs gap-1.5'
                               >
                                 <Sliders className='h-3.5 w-3.5' />
                                 <span>Atur Limit & Blokir</span>

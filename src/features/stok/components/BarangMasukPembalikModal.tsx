@@ -130,38 +130,38 @@ function PembalikFormContent({
 
       <div className='space-y-4 py-4 text-xs'>
         {/* Box Ringkasan Transaksi Asal */}
-        <div className='space-y-2 rounded-lg border-0 bg-muted/60 dark:bg-muted/25 p-3'>
+        <div className='space-y-2 rounded-xl border border-border bg-muted/40 p-3'>
           <div className='flex items-center justify-between'>
             <span className='text-sm font-semibold text-foreground'>
               {mutasi.menuNama || `Menu #${mutasi.menuId}`}
             </span>
-            <Badge className='border-0 bg-muted/80 text-[10px] font-normal text-muted-foreground'>
+            <Badge variant='outline' className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground'>
               Bukti Asal: {mutasi.referensiId}
             </Badge>
           </div>
 
-          <div className='grid grid-cols-2 gap-2 border-t pt-1 text-[11px] text-muted-foreground'>
+          <div className='grid grid-cols-2 gap-2 border-t border-border pt-1.5 text-[11px] text-muted-foreground'>
             <div>
               Waktu Transaksi:{' '}
-              <span className='font-medium text-foreground'>
+              <span className='font-medium text-foreground tabular-nums'>
                 {formatDateTime(mutasi.waktu)}
               </span>
             </div>
             <div>
               Qty Masuk Asal:{' '}
-              <span className='font-medium text-foreground'>
+              <span className='font-medium text-foreground tabular-nums'>
                 {formatNumber(mutasi.qty)} unit
               </span>
             </div>
             <div>
               Harga Beli / Unit:{' '}
-              <span className='font-medium text-foreground'>
+              <span className='font-medium text-foreground tabular-nums'>
                 {formatRupiah(mutasi.hargaBeliSatuan)}
               </span>
             </div>
             <div>
               Sisa Dapat Dibalik:{' '}
-              <span className='font-bold text-destructive'>
+              <span className='font-bold text-destructive tabular-nums'>
                 {formatNumber(sisaMaks)} unit
               </span>
             </div>
@@ -245,32 +245,32 @@ function PembalikFormContent({
         </div>
 
         {/* Estimasi Dampak Pembalik */}
-        <div className='space-y-1 rounded-lg border-0 bg-destructive/10 p-3 text-xs'>
+        <div className='space-y-1 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs'>
           <p className='font-semibold text-destructive'>
             Estimasi Dampak terhadap Stok & HPP:
           </p>
           <div className='grid grid-cols-2 gap-2 pt-1 text-[11px]'>
             <div>
               Pengurangan Stok:{' '}
-              <span className='font-bold text-destructive'>
+              <span className='font-bold text-destructive tabular-nums'>
                 -{qtyBalik} unit
               </span>
             </div>
             <div>
               Estimasi Sisa Stok:{' '}
-              <span className='font-medium'>
+              <span className='font-medium tabular-nums'>
                 {formatNumber(estimasiStokBaru)} unit
               </span>
             </div>
             <div>
               Nilai Dikeluarkan:{' '}
-              <span className='font-medium'>
+              <span className='font-medium tabular-nums'>
                 {formatRupiah(qtyBalik * hargaBeliAsal)}
               </span>
             </div>
             <div>
               Estimasi HPP Baru:{' '}
-              <span className='font-bold text-primary'>
+              <span className='font-bold text-primary tabular-nums'>
                 {formatRupiah(estimasiHppBaru)}
               </span>
             </div>

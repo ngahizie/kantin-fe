@@ -2,9 +2,12 @@ import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   ArrowRight,
-  UserCheck,
   Ban,
   Info,
+  Loader2,
+  UserCheck,
+  Users,
+  Wallet,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -28,9 +31,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
@@ -284,23 +286,11 @@ export function LaporanSaldoMengendapPage() {
   return (
     <>
       <Header fixed>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Laporan Keuangan
-            </span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Total Saldo Siswa</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Laporan Keuangan' title='Total Saldo Siswa' />
+        <HeaderActions />
       </Header>
 
-      <Main>
-        <div className="space-y-6 pb-12">
+      <Main className="space-y-6">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -320,14 +310,17 @@ export function LaporanSaldoMengendapPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Saldo Siswa
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                  <Wallet className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -336,14 +329,17 @@ export function LaporanSaldoMengendapPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Jumlah Siswa Bersaldo
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Users className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -355,7 +351,7 @@ export function LaporanSaldoMengendapPage() {
 
           {/* TABLE SECTION */}
           {!canAccessSiswa ? (
-            <Card className="border-0 bg-muted/70 shadow-none dark:bg-muted/30">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Info className="h-5 w-5 text-muted-foreground" />
@@ -395,8 +391,8 @@ export function LaporanSaldoMengendapPage() {
                 }}
               />
 
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
+              <Card className="p-0 gap-0 overflow-hidden">
+                <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
                     Rincian Dana Titipan per Siswa
                   </CardTitle>
@@ -404,114 +400,114 @@ export function LaporanSaldoMengendapPage() {
                     Saldo berjalan setiap siswa yang dititipkan oleh orang tua murid dan dapat dicairkan saat lulus/keluar.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kelas</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Berjalan</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Limit Harian</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Belanja Hari Ini</TableHead>
+                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Kartu</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Orang Tua / Wali</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
                         <TableRow>
-                          <TableHead className="w-12 text-center">No.</TableHead>
-                          <TableHead>Siswa</TableHead>
-                          <TableHead>Kelas</TableHead>
-                          <TableHead className="text-right">Saldo Berjalan</TableHead>
-                          <TableHead className="text-right">Limit Harian</TableHead>
-                          <TableHead className="text-right">Belanja Hari Ini</TableHead>
-                          <TableHead className="text-center">Status Kartu</TableHead>
-                          <TableHead>Orang Tua / Wali</TableHead>
-                          <TableHead className="text-right">Aksi</TableHead>
+                          <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Memuat data saldo siswa...</span>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                              Memuat data saldo siswa...
+                      ) : filteredSiswa.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                            Tidak ada siswa yang sesuai pencarian.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredSiswa.map((siswa, idx) => (
+                          <TableRow key={siswa.siswaId} className="border-b border-border last:border-b-0">
+                            <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                              {idx + 1}
                             </TableCell>
-                          </TableRow>
-                        ) : filteredSiswa.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                              Tidak ada siswa yang sesuai pencarian.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredSiswa.map((siswa, idx) => (
-                            <TableRow key={siswa.siswaId}>
-                              <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <div className="font-semibold text-sm">{siswa.nama}</div>
-                                  <div className="font-mono text-xs text-muted-foreground">
-                                    NIS: {siswa.nis || '-'}
-                                  </div>
+                            <TableCell>
+                              <div>
+                                <div className="font-semibold text-sm">{siswa.nama}</div>
+                                <div className="font-mono text-xs text-muted-foreground tabular-nums">
+                                  NIS: {siswa.nis || '-'}
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">
-                                  {siswa.kelas}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                {siswa.kelas}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">
+                              {formatRupiah(siswa.saldo)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                              {siswa.limitHarian > 0 ? formatRupiah(siswa.limitHarian) : 'Tanpa Limit'}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                              {formatRupiah(siswa.belanjaHariIni)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {siswa.isBlocked ? (
+                                <Badge variant="outline" className="gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+                                  <Ban className="h-3 w-3" />
+                                  <span>Diblokir</span>
                                 </Badge>
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-emerald-600">
-                                {formatRupiah(siswa.saldo)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                {siswa.limitHarian > 0 ? formatRupiah(siswa.limitHarian) : 'Tanpa Limit'}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                {formatRupiah(siswa.belanjaHariIni)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {siswa.isBlocked ? (
-                                  <Badge variant="destructive" className="gap-1 text-xs">
-                                    <Ban className="h-3 w-3" />
-                                    <span>Diblokir</span>
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="secondary"
-                                    className="gap-1 text-xs bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-0"
-                                  >
-                                    <UserCheck className="h-3 w-3" />
-                                    <span>Aktif</span>
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-xs">
-                                  <div className="font-medium">{siswa.parentName}</div>
-                                  <div className="text-muted-foreground font-mono">
-                                    {siswa.parentPhone}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                  className="h-8 gap-1.5 text-xs font-semibold text-primary hover:text-primary"
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
                                 >
-                                  <Link
-                                    to="/laporan/riwayat-siswa"
-                                    search={{ siswaId: siswa.siswaId }}
-                                  >
-                                    <span>Riwayat</span>
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                  </Link>
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                                  <UserCheck className="h-3 w-3" />
+                                  <span>Aktif</span>
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-xs">
+                                <div className="font-medium">{siswa.parentName}</div>
+                                <div className="text-muted-foreground font-mono tabular-nums">
+                                  {siswa.parentPhone}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className="h-8 gap-1.5 text-xs font-semibold text-primary hover:text-primary"
+                              >
+                                <Link
+                                  to="/laporan/riwayat-siswa"
+                                  search={{ siswaId: siswa.siswaId }}
+                                >
+                                  <span>Riwayat</span>
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                </Link>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </div>
           )}
-        </div>
       </Main>
     </>
   )

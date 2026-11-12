@@ -137,10 +137,10 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
         data-receipt-printable
         data-print-active={open ? 'true' : 'false'}
         style={{ colorScheme: 'light' }}
-        className='rounded-2xl has-border !border !border-slate-200 bg-white p-4 text-slate-900 shadow-none select-text print:rounded-none print:!border-0 print:p-0'
+        className='rounded-xl border border-slate-200 bg-white p-4 text-slate-900 select-text print:rounded-none print:border-0 print:p-0'
       >
         {/* Header Kantin */}
-        <div className='has-border !border-b !border-dashed !border-slate-300 pb-3 text-center'>
+        <div className='border-b border-dashed border-slate-300 pb-3 text-center'>
           <h3 className='text-sm font-bold tracking-tight text-slate-900'>
             {receipt.namaKantin}
           </h3>
@@ -155,8 +155,8 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
         </div>
 
         {/* Blok Kode Struk & Tombol Salin */}
-        <div className='has-border !border-b !border-dashed !border-slate-300 py-3'>
-          <div className='rounded-xl has-border !border !border-slate-200 bg-slate-50 px-3 py-2.5'>
+        <div className='border-b border-dashed border-slate-300 py-3'>
+          <div className='rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5'>
             <div className='flex items-center justify-between gap-2'>
               <span className='text-[11px] font-medium text-slate-600'>
                 Kode Struk
@@ -185,7 +185,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
                     aria-label='Salin kode struk'
                     data-copied={copyState === 'copied' ? '' : undefined}
                     data-failed={copyState === 'failed' ? '' : undefined}
-                    className='inline-flex min-h-7 min-w-7 items-center justify-center rounded-lg has-border !border !border-slate-200 bg-white px-2 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900'
+                    className='inline-flex min-h-7 min-w-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900'
                   >
                     {copyState === 'copied' ? (
                       <Check
@@ -218,7 +218,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
             <div className='flex items-center justify-between gap-3'>
               <dt className='text-slate-600'>Pembeli</dt>
               <dd className='flex items-center justify-end gap-2 font-semibold text-slate-900 text-right'>
-                <Avatar className='h-6 w-6 shrink-0 rounded-full has-border !border !border-slate-200 bg-slate-100 text-slate-700'>
+                <Avatar className='h-6 w-6 shrink-0 rounded-full border border-slate-200 bg-slate-100 text-slate-700'>
                   {receipt.pembeliFotoUrl && (
                     <AvatarImage
                       src={receipt.pembeliFotoUrl}
@@ -254,7 +254,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
         {(receipt.items.length > 0 ||
           (receipt.namaItemFallback &&
             receipt.namaItemFallback.length > 0)) && (
-          <div className='has-border !border-b !border-dashed !border-slate-300 py-3'>
+          <div className='border-b border-dashed border-slate-300 py-3'>
             <p className='mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600'>
               Rincian Pembelian
             </p>
@@ -316,7 +316,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
         </div>
 
         {/* Catatan Footer Struk */}
-        <p className='mt-3 has-border !border-t !border-dashed !border-slate-300 pt-2.5 text-center text-[11px] leading-relaxed text-slate-600'>
+        <p className='mt-3 border-t border-dashed border-slate-300 pt-2.5 text-center text-[11px] leading-relaxed text-slate-600'>
           Simpan kode struk ini sebagai bukti pembayaran atau keperluan refund.
         </p>
       </div>
@@ -325,10 +325,10 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
       <DialogFooter className='gap-2 pt-2 sm:gap-2.5 print:hidden'>
         <Button
           type='button'
-          variant='secondary'
+          variant='outline'
           size='sm'
           onClick={onClose}
-          className='h-10 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
+          className='h-9'
         >
           Tutup
         </Button>
@@ -338,7 +338,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
           size='sm'
           autoFocus
           onClick={handlePrint}
-          className='h-10 gap-1.5 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
+          className='h-9 gap-1.5 font-semibold'
         >
           <Printer className='h-4 w-4' aria-hidden='true' />
           <span>Cetak Struk</span>
@@ -367,17 +367,17 @@ export const ReceiptDialog: React.FC<ReceiptDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md max-h-[90vh] overflow-y-auto p-6 select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
+      <DialogContent className='max-w-md max-h-[90vh] overflow-y-auto p-6 select-none'>
         <DialogHeader className='pb-1 text-left print:hidden'>
           <div className='flex items-center gap-2.5 pr-6'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary'>
               <Receipt className='h-5 w-5' aria-hidden='true' />
             </div>
             <div>
-              <DialogTitle className='text-lg font-bold tracking-tight text-slate-800 dark:text-white'>
+              <DialogTitle className='text-lg font-bold tracking-tight text-foreground'>
                 Cetak Struk
               </DialogTitle>
-              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+              <DialogDescription className='text-xs text-muted-foreground'>
                 Salin kode struk atau cetak bukti pembayaran untuk pembeli.
               </DialogDescription>
             </div>

@@ -82,9 +82,12 @@ describe('MenuDetailPage', () => {
     await expect.element(screen.getByText(/tidak valid/i)).toBeInTheDocument()
     // Tidak menembak GET /api/katalog/menu/NaN
     expect(spy).not.toHaveBeenCalled()
-    // Segarkan tidak berputar & tidak bisa diklik, Coba lagi tidak ditawarkan
+    // Tombol Ubah Menu tidak bisa diklik, tombol Segarkan & Coba lagi tidak ditawarkan
     await expect
       .element(screen.getByRole('button', { name: /Segarkan/i }))
+      .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: /Ubah Menu/i }))
       .toBeDisabled()
     await expect
       .element(screen.getByRole('button', { name: /Coba lagi/i }))

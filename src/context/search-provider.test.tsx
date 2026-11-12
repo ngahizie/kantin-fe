@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser'
 import { SearchProvider } from '@/context/search-provider'
 import { useRoleStore } from '@/stores/useRoleStore'
 
-const COMMAND_MENU_PLACEHOLDER = 'Type a command or search...'
+const COMMAND_MENU_PLACEHOLDER = 'Ketik perintah atau cari...'
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -138,7 +138,7 @@ describe('SearchProvider and CommandMenu', () => {
     )
 
     await expect
-      .element(screen.getByText('No results found.'))
+      .element(screen.getByText('Tidak ada hasil ditemukan.'))
       .toBeInTheDocument()
   })
 })

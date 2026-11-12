@@ -17,9 +17,9 @@ describe('UsersInviteDialog', () => {
 
     const title = getByRole('heading', {
       level: 2,
-      name: /Invite User/i,
+      name: /Undang Pengguna/i,
     })
-    const desc = getByText(/Invite new user to join your team/i)
+    const desc = getByText(/Undang pengguna baru untuk bergabung ke tim Anda/i)
 
     await expect.element(title).toBeInTheDocument()
     await expect.element(desc).toBeInTheDocument()
@@ -31,7 +31,7 @@ describe('UsersInviteDialog', () => {
       <UsersInviteDialog open onOpenChange={onOpenChange} />
     )
 
-    const closeButton = getByRole('button', { name: /Close/i })
+    const closeButton = getByRole('button', { name: /(Close|Tutup)/i })
     await userEvent.click(closeButton)
 
     expect(onOpenChange).toHaveBeenCalledOnce()
@@ -44,7 +44,7 @@ describe('UsersInviteDialog', () => {
       <UsersInviteDialog open onOpenChange={onOpenChange} />
     )
 
-    const cancelButton = getByRole('button', { name: /Cancel/i })
+    const cancelButton = getByRole('button', { name: /Batal/i })
     await userEvent.click(cancelButton)
 
     expect(onOpenChange).toHaveBeenCalledOnce()
@@ -57,10 +57,10 @@ describe('UsersInviteDialog', () => {
       <UsersInviteDialog open onOpenChange={onOpenChange} />
     )
 
-    const emailErrorMessage = getByText(/Please enter an email to invite./i)
-    const roleErrorMessage = getByText(/Role is required./i)
+    const emailErrorMessage = getByText(/Masukkan email yang akan diundang\./i)
+    const roleErrorMessage = getByText(/Peran wajib dipilih\./i)
 
-    const submitButton = getByRole('button', { name: /Invite/i })
+    const submitButton = getByRole('button', { name: /^Undang$/i })
     await userEvent.click(submitButton)
 
     await expect.element(emailErrorMessage).toBeInTheDocument()
@@ -69,7 +69,7 @@ describe('UsersInviteDialog', () => {
     const emailInput = getByRole('textbox', { name: /Email/i })
     await userEvent.fill(emailInput, 'test@example.com')
 
-    const roleSelect = getByRole('combobox', { name: /Role/i })
+    const roleSelect = getByRole('combobox', { name: /Peran/i })
     await userEvent.click(roleSelect)
     await userEvent.click(getByRole('option', { name: /Superadmin/i }))
 
@@ -99,25 +99,25 @@ describe('UsersInviteDialog', () => {
     const emailInput = getByRole('textbox', { name: /Email/i })
     await userEvent.fill(emailInput, EMAIL_VALUE)
 
-    const roleSelect = getByRole('combobox', { name: /Role/i })
+    const roleSelect = getByRole('combobox', { name: /Peran/i })
     await userEvent.click(roleSelect)
     await userEvent.click(getByRole('option', { name: ROLE_VALUE }))
 
-    const descInput = getByRole('textbox', { name: /Description/i })
+    const descInput = getByRole('textbox', { name: /Catatan/i })
     await userEvent.fill(descInput, DESC_VALUE)
 
     await expect.element(emailInput).toHaveValue(EMAIL_VALUE)
     await expect.element(roleSelect).toHaveTextContent(ROLE_VALUE)
     await expect.element(descInput).toHaveValue(DESC_VALUE)
 
-    const cancelButton = getByRole('button', { name: /Cancel/i })
+    const cancelButton = getByRole('button', { name: /Batal/i })
     await userEvent.click(cancelButton)
 
     const reopenButton = getByRole('button', { name: /Reopen/i })
     await userEvent.click(reopenButton)
 
     await expect.element(emailInput).toHaveValue('')
-    await expect.element(roleSelect).toHaveTextContent('Select a role')
+    await expect.element(roleSelect).toHaveTextContent('Pilih peran')
     await expect.element(descInput).toHaveValue('')
   })
 
@@ -134,14 +134,14 @@ describe('UsersInviteDialog', () => {
     const emailInput = getByRole('textbox', { name: /Email/i })
     await userEvent.fill(emailInput, EMAIL_VALUE)
 
-    const roleSelect = getByRole('combobox', { name: /Role/i })
+    const roleSelect = getByRole('combobox', { name: /Peran/i })
     await userEvent.click(roleSelect)
     await userEvent.click(getByRole('option', { name: ROLE_VALUE }))
 
-    const descInput = getByRole('textbox', { name: /Description/i })
+    const descInput = getByRole('textbox', { name: /Catatan/i })
     await userEvent.fill(descInput, DESC_VALUE)
 
-    const submitButton = getByRole('button', { name: /Invite/i })
+    const submitButton = getByRole('button', { name: /^Undang$/i })
     await userEvent.click(submitButton)
 
     expect(onOpenChange).toHaveBeenCalledOnce()

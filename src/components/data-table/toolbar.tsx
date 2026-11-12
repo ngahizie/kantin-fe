@@ -47,14 +47,14 @@ export function DataTableToolbar<TData>({
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
               }
-              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs bg-background'
+              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs'
             />
           ) : (
             <Input
               placeholder={searchPlaceholder}
               value={table.getState().globalFilter ?? ''}
               onChange={(event) => table.setGlobalFilter(event.target.value)}
-              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs bg-background'
+              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs'
             />
           )}
         </div>

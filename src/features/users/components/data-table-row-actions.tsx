@@ -28,7 +28,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             className='flex h-8 w-8 p-0 data-[state=open]:bg-muted'
           >
             <DotsHorizontalIcon className='h-4 w-4' />
-            <span className='sr-only'>Open menu</span>
+            <span className='sr-only'>Buka menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-40'>
@@ -38,7 +38,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               setOpen('edit')
             }}
           >
-            Edit
+            Ubah
             <DropdownMenuShortcut>
               <UserPen size={16} />
             </DropdownMenuShortcut>
@@ -49,9 +49,9 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               setCurrentRow(row.original)
               setOpen('delete')
             }}
-            className='text-red-500!'
+            className='text-destructive focus:text-destructive'
           >
-            Delete
+            Hapus
             <DropdownMenuShortcut>
               <Trash2 size={16} />
             </DropdownMenuShortcut>

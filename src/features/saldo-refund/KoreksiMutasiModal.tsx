@@ -14,6 +14,7 @@ import { formatRupiah } from '@/lib/formatters'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -251,7 +252,7 @@ function KoreksiMutasiFormContent({
       </div>
 
       {/* Pemilihan Siswa Pemilik Saldo */}
-      <div className='space-y-3 rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5'>
+      <div className='space-y-3 rounded-xl border border-border bg-muted/30 p-3.5'>
         <div className='flex items-center justify-between'>
           <Label className='text-xs font-semibold'>
             Pilih Siswa Pemilik Saldo:
@@ -276,7 +277,7 @@ function KoreksiMutasiFormContent({
                 <SelectItem
                   key={s.siswa_id}
                   value={s.siswa_id.toString()}
-                  className='text-xs'
+                  className='text-xs tabular-nums'
                 >
                   {s.nama} — {s.kelas} (Saldo: {formatRupiah(s.saldo)})
                 </SelectItem>
@@ -286,16 +287,16 @@ function KoreksiMutasiFormContent({
         </Select>
 
         {/* Detail Siswa Card */}
-        <div className='flex items-center justify-between rounded-lg border-0 bg-background/80 dark:bg-background/40 p-2.5 text-xs'>
+        <div className='flex items-center justify-between rounded-lg border border-border bg-card p-2.5 text-xs'>
           <div>
             <span className='font-semibold text-foreground'>{siswaNama}</span>
-            <p className='text-[11px] text-muted-foreground'>{siswaInfo}</p>
+            <p className='text-[11px] text-muted-foreground tabular-nums'>{siswaInfo}</p>
           </div>
           <div className='text-right'>
             <span className='block text-[11px] text-muted-foreground'>
               Saldo Berjalan Saat Ini:
             </span>
-            <span className='font-mono text-sm font-bold text-foreground'>
+            <span className='font-mono text-sm font-bold text-foreground tabular-nums'>
               {formatRupiah(saldoSaatIni)}
             </span>
           </div>
@@ -311,10 +312,10 @@ function KoreksiMutasiFormContent({
           <div className='grid grid-cols-2 gap-3'>
             <div
               onClick={() => setArah('DEBIT')}
-              className={`flex cursor-pointer items-start gap-2.5 rounded-lg border-0 p-3 transition-all select-none ${
+              className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition-all select-none ${
                 arah === 'DEBIT'
-                  ? 'bg-destructive/15 text-destructive font-semibold'
-                  : 'bg-muted/60 hover:bg-muted/80 text-foreground'
+                  ? 'border-destructive/50 bg-destructive/10 text-destructive font-semibold'
+                  : 'border-border bg-card hover:bg-muted/40 text-foreground'
               }`}
             >
               <ArrowDownRight className='mt-0.5 h-4 w-4 text-destructive' />
@@ -330,10 +331,10 @@ function KoreksiMutasiFormContent({
 
             <div
               onClick={() => setArah('KREDIT')}
-              className={`flex cursor-pointer items-start gap-2.5 rounded-lg border-0 p-3 transition-all select-none ${
+              className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition-all select-none ${
                 arah === 'KREDIT'
-                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-semibold'
-                  : 'bg-muted/60 hover:bg-muted/80 text-foreground'
+                  ? 'border-emerald-500/50 bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 font-semibold'
+                  : 'border-border bg-card hover:bg-muted/40 text-foreground'
               }`}
             >
               <ArrowUpRight className='mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
@@ -360,10 +361,10 @@ function KoreksiMutasiFormContent({
                 <Button
                   key={amt}
                   type='button'
-                  variant='secondary'
+                  variant='outline'
                   size='sm'
                   onClick={() => setNominalStr(amt.toString())}
-                  className='h-6 px-1.5 font-mono text-[10px] border-0'
+                  className='h-6 px-2 font-mono text-[10px] tabular-nums'
                 >
                   +{amt / 1000}k
                 </Button>
@@ -371,7 +372,7 @@ function KoreksiMutasiFormContent({
             </div>
           </div>
           <div className='relative'>
-            <span className='absolute top-2.5 left-3 text-xs font-medium text-muted-foreground'>
+            <span className='absolute top-1/2 left-3 -translate-y-1/2 text-xs font-medium text-muted-foreground'>
               Rp
             </span>
             <Input
@@ -382,7 +383,7 @@ function KoreksiMutasiFormContent({
               value={nominalStr}
               onChange={(e) => setNominalStr(e.target.value)}
               placeholder='0'
-              className='pl-9 font-mono text-sm font-semibold'
+              className='pl-9 font-mono text-sm font-semibold tabular-nums'
               required
             />
           </div>
@@ -390,11 +391,11 @@ function KoreksiMutasiFormContent({
       </div>
 
       {/* Visualisasi Proyeksi Dampak Saldo */}
-      <div className='space-y-2 rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5'>
+      <div className='space-y-2 rounded-xl border border-border bg-muted/30 p-3.5'>
         <span className='block text-xs font-semibold text-muted-foreground'>
           Perubahan Saldo:
         </span>
-        <div className='flex items-center justify-between font-mono text-xs'>
+        <div className='flex items-center justify-between font-mono text-xs tabular-nums'>
           <div>
             <span className='block text-[10px] text-muted-foreground'>
               Saldo Awal:
@@ -408,11 +409,11 @@ function KoreksiMutasiFormContent({
               Perubahan:
             </span>
             <Badge
-              variant='secondary'
+              variant='outline'
               className={
                 arah === 'DEBIT'
-                  ? 'border-0 bg-destructive/15 text-[11px] text-destructive'
-                  : 'border-0 bg-emerald-500/15 text-[11px] text-emerald-600 dark:text-emerald-400'
+                  ? 'rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 tabular-nums dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
+                  : 'rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 tabular-nums dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
               }
             >
               {arah === 'DEBIT' ? '-' : '+'}{formatRupiah(nominalNum)}
@@ -465,12 +466,11 @@ function KoreksiMutasiFormContent({
 
       {/* Checkbox Persetujuan Bendahara */}
       <div className='flex items-start space-x-2 pt-2'>
-        <input
-          type='checkbox'
+        <Checkbox
           id={agreementCheckboxId}
           checked={isAgreed}
-          onChange={(e) => setIsAgreed(e.target.checked)}
-          className='mt-1 h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary'
+          onCheckedChange={(checked) => setIsAgreed(checked === true)}
+          className='mt-0.5'
         />
         <Label
           htmlFor={agreementCheckboxId}
@@ -483,8 +483,7 @@ function KoreksiMutasiFormContent({
       <DialogFooter className='gap-2 pt-2 sm:space-x-0'>
         <Button
           type='button'
-          variant='secondary'
-          className='border-0 bg-muted/80 shadow-none'
+          variant='outline'
           onClick={onCancel}
           disabled={isSubmitting}
         >
@@ -559,7 +558,7 @@ export function KoreksiMutasiModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-[620px] border-0 shadow-2xl'>
+      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-[620px]'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Mutasi Koreksi Bendahara

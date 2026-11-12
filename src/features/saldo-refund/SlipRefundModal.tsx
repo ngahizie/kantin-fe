@@ -42,7 +42,7 @@ export function SlipRefundModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md sm:max-w-lg overflow-y-auto max-h-[90vh] border-0 shadow-2xl'>
+      <DialogContent className='max-w-md sm:max-w-lg overflow-y-auto max-h-[90vh]'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             {isTransfer ? 'Bukti Pemindahan Saldo Saudara' : 'Bukti Refund Saldo Siswa'}
@@ -55,10 +55,10 @@ export function SlipRefundModal({
         {/* Struk Fisik Thermal Format */}
         <div
           ref={printAreaRef}
-          className='rounded-xl border-0 bg-muted/50 dark:bg-muted/20 p-5 space-y-4 font-sans text-xs'
+          className='rounded-xl border border-border bg-muted/30 p-5 space-y-4 font-sans text-xs print:border-none'
         >
           {/* Header Slip */}
-          <div className='text-center pb-3 border-0 space-y-1'>
+          <div className='text-center pb-3 border-b border-border space-y-1'>
             <div className='flex items-center justify-center gap-2 font-bold text-sm tracking-wide text-foreground'>
               <img
                 src='/logo.png'
@@ -70,20 +70,20 @@ export function SlipRefundModal({
             <p className='text-muted-foreground text-[11px]'>
               SMA NEGERI 1 SKOOLIA — TATA USAHA & BENDAHARA
             </p>
-            <p className='text-[10px] text-muted-foreground font-mono'>
+            <p className='text-[10px] text-muted-foreground font-mono tabular-nums'>
               REF NO: {slipData.ref_no}
             </p>
           </div>
 
           {/* Badge Transaksi */}
-          <div className='flex justify-between items-center bg-card p-2.5 rounded-lg border-0 shadow-none'>
+          <div className='flex justify-between items-center bg-card p-2.5 rounded-xl border border-border'>
             <span className='font-medium text-muted-foreground'>Jenis Transaksi:</span>
             <Badge
               variant='outline'
               className={
                 isTransfer
-                  ? 'border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 font-medium'
-                  : 'border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium'
+                  ? 'rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
+                  : 'rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
               }
             >
               {isTransfer ? 'Transfer Antar Saudara' : `Refund Ortu (${slipData.metode})`}
@@ -96,20 +96,23 @@ export function SlipRefundModal({
               <User className='h-3.5 w-3.5 text-muted-foreground' />
               Data Siswa Nonaktif (Asal)
             </p>
-            <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
+            <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-xl border border-border'>
               <span className='text-muted-foreground'>Nama Siswa:</span>
               <span className='font-semibold text-right truncate'>{slipData.siswa_asal.nama}</span>
               <span className='text-muted-foreground'>NIS / Kelas:</span>
-              <span className='text-right font-mono'>
+              <span className='text-right font-mono tabular-nums'>
                 {slipData.siswa_asal.nis} ({slipData.siswa_asal.kelas_terakhir})
               </span>
               <span className='text-muted-foreground'>Kartu RFID:</span>
-              <span className='text-right font-mono text-muted-foreground'>
+              <span className='text-right font-mono text-muted-foreground tabular-nums'>
                 {slipData.siswa_asal.rfid_uid || '-'}
               </span>
               <span className='text-muted-foreground'>Status Kartu:</span>
               <span className='text-right'>
-                <Badge variant='outline' className='border-0 bg-destructive/15 text-destructive text-[10px] py-0 px-1.5 gap-1 font-medium'>
+                <Badge
+                  variant='outline'
+                  className='rounded-full border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 text-[10px] py-0 px-2 gap-1 font-medium'
+                >
                   <Lock className='h-2.5 w-2.5' /> DIBLOKIR PERMANEN
                 </Badge>
               </span>
@@ -123,23 +126,23 @@ export function SlipRefundModal({
                 <ArrowRight className='h-3.5 w-3.5 text-primary' />
                 Siswa Penerima (Saudara Kandung Aktif)
               </p>
-              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
+              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-xl border border-border'>
                 <span className='text-muted-foreground'>Nama Saudara:</span>
                 <span className='font-semibold text-right text-primary truncate'>
                   {slipData.siswa_tujuan.nama}
                 </span>
                 <span className='text-muted-foreground'>NIS / Kelas:</span>
-                <span className='text-right font-mono'>
+                <span className='text-right font-mono tabular-nums'>
                   {slipData.siswa_tujuan.nis} ({slipData.siswa_tujuan.kelas})
                 </span>
                 <span className='text-muted-foreground'>Saldo Awal:</span>
-                <span className='text-right font-mono'>
+                <span className='text-right font-mono tabular-nums'>
                   {formatRupiah(slipData.siswa_tujuan.saldo_awal)}
                 </span>
                 <span className='text-muted-foreground font-semibold text-foreground'>
                   Saldo Akhir (+Transfer):
                 </span>
-                <span className='text-right font-mono font-bold text-emerald-600 dark:text-emerald-400'>
+                <span className='text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                   {formatRupiah(slipData.siswa_tujuan.saldo_akhir)}
                 </span>
               </div>
@@ -150,17 +153,17 @@ export function SlipRefundModal({
                 <CreditCard className='h-3.5 w-3.5 text-muted-foreground' />
                 Detail Penerima Dana (Orang Tua / Wali)
               </p>
-              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-lg border-0 shadow-none'>
+              <div className='grid grid-cols-2 gap-x-2 gap-y-1 bg-card p-2.5 rounded-xl border border-border'>
                 <span className='text-muted-foreground'>Nama Penerima:</span>
                 <span className='font-semibold text-right'>{slipData.nama_penerima || '-'}</span>
                 <span className='text-muted-foreground'>Kontak / HP:</span>
-                <span className='text-right font-mono'>{slipData.kontak_penerima || '-'}</span>
+                <span className='text-right font-mono tabular-nums'>{slipData.kontak_penerima || '-'}</span>
                 {slipData.metode === 'TRANSFER_BANK' && (
                   <>
                     <span className='text-muted-foreground'>Bank Tujuan:</span>
                     <span className='text-right font-semibold'>{slipData.bank}</span>
                     <span className='text-muted-foreground'>No. Rekening:</span>
-                    <span className='text-right font-mono'>{slipData.nomor_rekening}</span>
+                    <span className='text-right font-mono tabular-nums'>{slipData.nomor_rekening}</span>
                     <span className='text-muted-foreground'>Atas Nama:</span>
                     <span className='text-right truncate'>{slipData.nama_rekening}</span>
                   </>
@@ -170,18 +173,18 @@ export function SlipRefundModal({
           )}
 
           {/* Nominal Ringkasan */}
-          <div className='rounded-lg bg-emerald-500/15 p-3 border-0 flex items-center justify-between'>
-            <span className='text-xs font-semibold text-emerald-900 dark:text-emerald-200'>
+          <div className='rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40 p-3 flex items-center justify-between'>
+            <span className='text-xs font-semibold text-emerald-800 dark:text-emerald-200'>
               {isTransfer ? 'TOTAL SALDO DIPINDAHKAN' : 'TOTAL SALDO DI-REFUND'}
             </span>
-            <span className='text-base font-bold font-mono text-emerald-700 dark:text-emerald-400'>
+            <span className='text-base font-bold font-mono text-emerald-700 dark:text-emerald-300 tabular-nums'>
               {formatRupiah(slipData.nominal)}
             </span>
           </div>
 
           {/* Footer Struk */}
-          <div className='pt-2 border-0 text-center space-y-1 text-[10px] text-muted-foreground'>
-            <p>Waktu Transaksi: {new Date(slipData.waktu).toLocaleString('id-ID')}</p>
+          <div className='pt-2 border-t border-border text-center space-y-1 text-[10px] text-muted-foreground'>
+            <p className='tabular-nums'>Waktu Transaksi: {new Date(slipData.waktu).toLocaleString('id-ID')}</p>
             <p>Petugas TU / Kasir: {slipData.petugas_nama}</p>
             <p className='italic font-medium text-foreground'>
               "Status saldo siswa asal telah menjadi Rp 0 dan kartu fisik telah diblokir permanen."
@@ -190,7 +193,7 @@ export function SlipRefundModal({
         </div>
 
         <DialogFooter className='flex-col sm:flex-row gap-2 pt-2'>
-          <Button variant='secondary' onClick={handlePrint} className='gap-2 w-full sm:w-auto border-0 bg-muted/80 shadow-none'>
+          <Button variant='outline' onClick={handlePrint} className='gap-2 w-full sm:w-auto'>
             <Printer className='h-4 w-4' />
             Cetak Struk / Bukti
           </Button>

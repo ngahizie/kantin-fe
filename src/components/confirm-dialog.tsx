@@ -63,7 +63,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         {children}
         <AlertDialogFooter>
           <AlertDialogCancel className={cancelBtnClassName} disabled={isLoading}>
-            {cancelBtnText ?? 'Cancel'}
+            {cancelBtnText ?? 'Batal'}
           </AlertDialogCancel>
           <Button
             type={form ? 'submit' : 'button'}
@@ -73,7 +73,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             className={confirmBtnClassName}
             disabled={disabled || isLoading}
           >
-            {confirmText ?? 'Continue'}
+            {confirmText ?? 'Lanjutkan'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

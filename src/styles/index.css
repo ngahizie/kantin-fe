@@ -19,80 +19,27 @@
 }
 
 @layer base {
-  /* Samakan semua font teks, angka, kode, dan elemen input agar 100% konsisten */
-  html,
-  body,
-  input,
-  button,
-  select,
-  textarea,
-  table,
-  th,
-  td,
-  code,
-  kbd,
-  samp,
-  pre,
-  .font-mono,
-  [class*='font-mono'] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  }
-
-  /* Hilangkan semua garis luar (outline, ring, border) di seluruh elemen di seluruh halaman */
-  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline),
-  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline)::before,
-  *:not(.animate-spin):not(.has-border):not([class*='!border-']):not(.has-outline)::after {
-    outline: none !important;
-    border-color: transparent !important;
-  }
-
-  /* Nonaktifkan efek ring dan focus shadow di seluruh elemen */
-  *:focus,
-  *:focus-visible,
-  *:focus-within {
-    outline: none !important;
-    --tw-ring-offset-shadow: 0 0 #0000 !important;
-    --tw-ring-shadow: 0 0 #0000 !important;
-    --tw-ring-color: transparent !important;
-    --tw-ring-offset-color: transparent !important;
-    box-shadow: none !important;
-  }
-
-  /* Pengecualian spinner: biarkan animasi loading lingkaran tetap terlihat */
-  .animate-spin {
-    border-color: var(--primary) transparent transparent transparent !important;
-  }
-
   * {
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
+    @apply border-border outline-ring/50;
   }
 
   html {
-    @apply overflow-x-hidden;
-  }
-  body {
-    @apply min-h-svh w-full bg-background text-foreground has-[div[data-variant='inset']]:bg-sidebar;
+    @apply overflow-x-hidden bg-background;
+    scrollbar-gutter: stable;
   }
 
-  /* Override Radix scroll locking for sticky headers */
-  body[data-scroll-locked] {
-    overflow: unset !important;
+  html:has([data-kasir-layout]) {
+    scrollbar-gutter: auto;
+  }
+
+  body {
+    @apply min-h-svh w-full bg-background font-sans text-foreground has-[div[data-variant='inset']]:bg-sidebar;
   }
 
   /* Cursor pointer for buttons */
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
-  }
-
-  /* Prevent focus zoom on mobile devices */
-  @media screen and (max-width: 767px) {
-    input,
-    select,
-    textarea {
-      font-size: 16px !important;
-    }
   }
 
   /* Sembunyikan ikon reveal dan autofill bawaan peramban (Edge/Chrome/Safari) */

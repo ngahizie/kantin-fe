@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
+import '@/styles/index.css'
 import { getRoleLabel, ProfileDropdown } from './profile-dropdown'
 
 const mockAuthUser = {
@@ -73,9 +74,21 @@ describe('ProfileDropdown', () => {
     await userEvent.click(triggerButton)
 
     // Baris pertama menampilkan username / email akun
-    await expect.element(getByText('admin@skoolia.id')).toBeInTheDocument()
+    const usernameEl = getByText('admin@skoolia.id')
+    await expect.element(usernameEl).toBeInTheDocument()
     // Baris kedua menampilkan label role
-    await expect.element(getByText('Admin Sekolah')).toBeInTheDocument()
+    const roleEl = getByText('Admin Sekolah')
+    await expect.element(roleEl).toBeInTheDocument()
+
+    // Pastikan line-height cukup (> font-size) agar descender seperti 'g'/'p' tidak terpotong oleh truncate
+    const usernameStyle = getComputedStyle(usernameEl.element())
+    const roleStyle = getComputedStyle(roleEl.element())
+    expect(parseFloat(usernameStyle.lineHeight)).toBeGreaterThan(
+      parseFloat(usernameStyle.fontSize) * 1.2
+    )
+    expect(parseFloat(roleStyle.lineHeight)).toBeGreaterThan(
+      parseFloat(roleStyle.fontSize) * 1.2
+    )
   })
 
   describe('getRoleLabel', () => {

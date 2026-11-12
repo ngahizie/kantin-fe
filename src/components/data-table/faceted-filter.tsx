@@ -12,6 +12,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from '@/components/ui/command'
 import {
   Popover,
@@ -37,6 +38,7 @@ type DataTableFacetedFilterProps<TData, TValue> = {
   allLabel?: string
   searchPlaceholder?: string
   showSearch?: boolean
+  triggerClassName?: string
 }
 
 type SingleSelectTriggerProps = React.ComponentProps<typeof Button> & {
@@ -59,12 +61,12 @@ function SingleSelectTrigger({
   const DisplayIcon = selectedOption?.icon ?? LeadingIcon
   return (
     <Button
-      variant='secondary'
+      variant='outline'
       size='sm'
       aria-expanded={open}
       aria-label={title}
       className={cn(
-        'h-8 min-w-[130px] justify-between gap-2 px-3 text-xs border-0 bg-muted/70 hover:bg-muted dark:bg-muted/40 dark:hover:bg-muted/60 shadow-none font-normal',
+        'h-8 min-w-[130px] justify-between gap-2 px-3 text-xs font-normal',
         selectedOption
           ? 'text-foreground font-medium'
           : 'text-muted-foreground',
@@ -72,7 +74,7 @@ function SingleSelectTrigger({
       )}
       {...buttonProps}
     >
-      <span className='flex items-center gap-1.5 truncate'>
+      <span className='flex min-w-0 items-center gap-1.5'>
         {DisplayIcon && (
           <DisplayIcon className='size-3.5 text-muted-foreground shrink-0' />
         )}
@@ -102,10 +104,10 @@ function MultiSelectTrigger({
 }: MultiSelectTriggerProps) {
   return (
     <Button
-      variant='secondary'
+      variant='outline'
       size='sm'
       className={cn(
-        'h-8 text-xs border-0 bg-muted/70 hover:bg-muted text-foreground shadow-none gap-1.5',
+        'h-8 text-xs gap-1.5',
         className
       )}
       {...buttonProps}
@@ -117,7 +119,7 @@ function MultiSelectTrigger({
           <Separator orientation='vertical' className='mx-2 h-4' />
           <Badge
             variant='secondary'
-            className='rounded-sm px-1 font-normal lg:hidden border-0 bg-background/80'
+            className='rounded-sm px-1 font-normal lg:hidden'
           >
             {selectedCount}
           </Badge>
@@ -125,16 +127,16 @@ function MultiSelectTrigger({
             {selectedCount > 2 ? (
               <Badge
                 variant='secondary'
-                className='rounded-sm px-1 font-normal border-0 bg-background/80'
+                className='rounded-sm px-1 font-normal'
               >
-                {selectedCount} selected
+                {selectedCount} dipilih
               </Badge>
             ) : (
               selectedOptions.map((option) => (
                 <Badge
                   variant='secondary'
                   key={option.value}
-                  className='rounded-sm px-1 font-normal border-0 bg-background/80'
+                  className='rounded-sm px-1 font-normal'
                 >
                   {option.label}
                 </Badge>
@@ -202,6 +204,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   allLabel,
   searchPlaceholder,
   showSearch = true,
+  triggerClassName,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -285,6 +288,7 @@ export function DataTableFacetedFilter<TData, TValue>({
             selectedOption={selectedSingleOption}
             placeholder={triggerPlaceholder}
             open={open}
+            className={triggerClassName}
           />
         ) : (
           <MultiSelectTrigger
@@ -292,12 +296,13 @@ export function DataTableFacetedFilter<TData, TValue>({
             triggerIcon={multiSelectIcon}
             selectedCount={selectedValues.size}
             selectedOptions={selectedOptions}
+            className={triggerClassName}
           />
         )}
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'p-0 has-border border border-slate-200 dark:border-slate-800 shadow-lg',
+          'p-0',
           isSingleSelect ? 'min-w-[200px] w-auto max-w-[260px]' : 'w-[200px]'
         )}
         align='start'
@@ -311,7 +316,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 placeholder={resolvedSearchPlaceholder}
                 className='h-9 text-xs'
               />
-              <div className='h-px w-full bg-slate-200/80 dark:bg-slate-800' />
+              <CommandSeparator />
             </>
           )}
           <CommandList>
@@ -352,7 +357,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                   >
                     <div
                       className={cn(
-                        'has-border border-primary mr-2 flex size-4 items-center justify-center rounded-sm border',
+                        'border-primary mr-2 flex size-4 items-center justify-center rounded-[4px] border',
                         isSelected
                           ? 'bg-primary text-primary-foreground'
                           : 'opacity-50 [&_svg]:invisible'
@@ -365,7 +370,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     )}
                     <span>{option.label}</span>
                     {facetCount !== undefined && (
-                      <span className='ml-auto flex size-4 items-center justify-center font-mono text-xs'>
+                      <span className='ml-auto flex size-4 items-center justify-center font-mono text-xs tabular-nums'>
                         {facetCount}
                       </span>
                     )}
@@ -375,7 +380,7 @@ export function DataTableFacetedFilter<TData, TValue>({
             </CommandGroup>
             {!isSingleSelect && selectedValues.size > 0 && (
               <>
-                <div className='h-px w-full bg-slate-200/80 dark:bg-slate-800' />
+                <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
                     onSelect={handleClear}

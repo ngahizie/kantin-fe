@@ -188,7 +188,7 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     )
 
     // Tutup modal via tombol Close X -> tidak mereset ke Langkah 1
-    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Tutup', exact: true }))
     expect(onOpenChange).toHaveBeenCalledWith(false)
 
     await screen.rerender(

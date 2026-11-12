@@ -33,11 +33,17 @@ export function CommandMenu() {
   }, [currentRole])
 
   return (
-    <CommandDialog modal open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder='Type a command or search...' />
+    <CommandDialog
+      modal
+      open={open}
+      onOpenChange={setOpen}
+      title='Palet Perintah'
+      description='Cari menu atau perintah...'
+    >
+      <CommandInput placeholder='Ketik perintah atau cari...' />
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>Tidak ada hasil ditemukan.</CommandEmpty>
           {allowedNavGroups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {

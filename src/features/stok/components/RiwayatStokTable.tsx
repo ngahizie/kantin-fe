@@ -1,7 +1,7 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useMemo } from 'react'
 import {
-  RefreshCw,
+  Loader2,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
@@ -78,49 +78,49 @@ export function RiwayatStokTable({
     switch (jenis) {
       case 'BARANG_MASUK':
         return (
-          <Badge className='border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'>
+          <Badge variant='outline' className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
             Barang Masuk
           </Badge>
         )
       case 'BARANG_MASUK_PEMBALIK':
         return (
-          <Badge className='border-0 bg-destructive/15 text-[11px] font-medium text-destructive'>
+          <Badge variant='outline' className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
             Pembalik Masuk
           </Badge>
         )
       case 'PENJUALAN':
         return (
-          <Badge className='border-0 bg-blue-500/15 text-[11px] font-medium text-blue-700 dark:text-blue-400'>
+          <Badge variant='outline' className='rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'>
             Penjualan
           </Badge>
         )
       case 'PENJUALAN_VOID':
         return (
-          <Badge className='border-0 bg-destructive/15 text-[11px] font-medium text-destructive dark:text-red-400'>
-            Penjualan Void
+          <Badge variant='outline' className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+            Refund / Void
           </Badge>
         )
       case 'OPNAME_MASUK':
         return (
-          <Badge className='border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'>
+          <Badge variant='outline' className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
             Opname Masuk
           </Badge>
         )
       case 'OPNAME_KELUAR':
         return (
-          <Badge className='border-0 bg-purple-500/15 text-[11px] font-medium text-purple-700 dark:text-purple-400'>
+          <Badge variant='outline' className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'>
             Opname Keluar
           </Badge>
         )
       case 'BARANG_RUSAK':
         return (
-          <Badge className='border-0 bg-rose-500/15 text-[11px] font-medium text-rose-700 dark:text-rose-400'>
+          <Badge variant='outline' className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
             Barang Rusak
           </Badge>
         )
       default:
         return (
-          <Badge className='border-0 bg-muted/80 text-[11px] font-medium text-muted-foreground'>
+          <Badge variant='outline' className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground'>
             {String(jenis).replace(/_/g, ' ')}
           </Badge>
         )
@@ -155,46 +155,46 @@ export function RiwayatStokTable({
       />
 
       {/* Tabel Mutasi */}
-      <div className='overflow-hidden rounded-xl border-0 bg-muted/60 dark:bg-muted/25'>
+      <div className='overflow-hidden rounded-xl border border-border bg-card shadow-xs'>
         <div className='overflow-x-auto'>
           <Table>
             <TableHeader>
-              <TableRow className='bg-muted/90'>
-                <TableHead className='w-12 text-center text-xs'>No.</TableHead>
-                <TableHead className='w-36 text-xs'>Waktu & Tanggal</TableHead>
-                <TableHead className='w-36 text-xs'>
+              <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu & Tanggal</TableHead>
+                <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                   No. Bukti / Faktur
                 </TableHead>
-                <TableHead className='min-w-[180px] text-xs'>Menu</TableHead>
-                <TableHead className='w-36 text-xs'>Jenis Mutasi</TableHead>
-                <TableHead className='w-24 text-right text-xs'>Qty</TableHead>
-                <TableHead className='w-32 text-right text-xs'>
+                <TableHead className='min-w-[180px] text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu</TableHead>
+                <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
+                <TableHead className='w-24 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Qty</TableHead>
+                <TableHead className='w-32 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                   Harga Satuan
                 </TableHead>
-                <TableHead className='w-32 text-right text-xs'>
+                <TableHead className='w-32 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                   Total Nilai
                 </TableHead>
-                <TableHead className='w-28 text-right text-xs'>
+                <TableHead className='w-28 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                   Stok Sisa
                 </TableHead>
-                <TableHead className='w-36 text-center text-xs'>
+                <TableHead className='w-36 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                   Aksi / Status
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
+                <TableRow className='hover:bg-transparent border-b-0'>
                   <TableCell
                     colSpan={10}
                     className='h-32 text-center text-xs text-muted-foreground'
                   >
-                    <RefreshCw className='mx-auto mb-2 h-5 w-5 animate-spin text-primary' />
+                    <Loader2 className='mx-auto mb-2 size-6 animate-spin text-muted-foreground' />
                     Memuat data riwayat mutasi...
                   </TableCell>
                 </TableRow>
               ) : filteredItems.length === 0 ? (
-                <TableRow>
+                <TableRow className='hover:bg-transparent border-b-0'>
                   <TableCell
                     colSpan={10}
                     className='h-32 text-center text-xs text-muted-foreground'
@@ -209,13 +209,13 @@ export function RiwayatStokTable({
                   return (
                     <TableRow
                       key={item.id}
-                      className='text-xs hover:bg-muted/20'
+                      className='text-xs border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'
                     >
-                      <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                      <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                         {idx + 1}
                       </TableCell>
                       {/* Waktu */}
-                      <TableCell className='font-mono whitespace-nowrap text-muted-foreground'>
+                      <TableCell className='font-mono whitespace-nowrap text-muted-foreground tabular-nums'>
                         {formatDateTime(item.waktu)}
                       </TableCell>
 
@@ -242,7 +242,7 @@ export function RiwayatStokTable({
                       <TableCell>{renderJenisBadge(item.jenis)}</TableCell>
 
                       {/* Qty */}
-                      <TableCell className='text-right font-semibold'>
+                      <TableCell className='text-right font-semibold tabular-nums'>
                         <span
                           className={
                             isMasuk
@@ -257,21 +257,21 @@ export function RiwayatStokTable({
                       </TableCell>
 
                       {/* Harga Satuan */}
-                      <TableCell className='text-right text-muted-foreground'>
+                      <TableCell className='text-right text-muted-foreground tabular-nums'>
                         {item.hargaBeliSatuan != null
                           ? formatRupiah(item.hargaBeliSatuan)
                           : '-'}
                       </TableCell>
 
                       {/* Total Nilai */}
-                      <TableCell className='text-right font-medium'>
+                      <TableCell className='text-right font-medium tabular-nums'>
                         {item.totalNilai != null
                           ? formatRupiah(item.totalNilai)
                           : '-'}
                       </TableCell>
 
                       {/* Stok Sesudah */}
-                      <TableCell className='text-right text-muted-foreground'>
+                      <TableCell className='text-right text-muted-foreground tabular-nums'>
                         {formatNumber(item.stokSetelah)} unit
                       </TableCell>
 
@@ -283,7 +283,7 @@ export function RiwayatStokTable({
                               variant='ghost'
                               size='sm'
                               onClick={() => handleOpenPembalik(item)}
-                              className='h-7 gap-1 border-0 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive hover:bg-destructive/20 hover:text-destructive'
+                              className='h-7 gap-1 bg-rose-50 px-2.5 text-[11px] font-medium text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60'
                             >
                               <RotateCcw className='h-3 w-3' />
                               Koreksi / Balik
@@ -293,7 +293,8 @@ export function RiwayatStokTable({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Badge
-                                    className='cursor-help border-0 bg-muted/80 text-[10px] font-normal text-muted-foreground'
+                                    variant='outline'
+                                    className='cursor-help rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-[11px] font-normal text-muted-foreground'
                                   >
                                     Sudah Dibalik
                                   </Badge>
@@ -307,7 +308,8 @@ export function RiwayatStokTable({
                           )
                         ) : item.jenis === 'BARANG_MASUK_PEMBALIK' ? (
                           <Badge
-                            className='border-0 bg-muted/80 text-[10px] font-normal text-muted-foreground'
+                            variant='outline'
+                            className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-[11px] font-normal text-muted-foreground'
                           >
                             Entri Pembalik
                           </Badge>
@@ -327,8 +329,8 @@ export function RiwayatStokTable({
 
         {/* Pagination Footer */}
         {totalCount > 0 && (
-          <div className='flex items-center justify-between border-t border-border/40 bg-muted/40 p-3 text-xs'>
-            <span className='text-muted-foreground'>
+          <div className='flex items-center justify-between border-t border-border bg-muted/30 p-3 text-xs'>
+            <span className='text-muted-foreground tabular-nums'>
               Menampilkan {filteredItems.length} dari {totalCount} riwayat
             </span>
 
@@ -338,12 +340,12 @@ export function RiwayatStokTable({
                 size='sm'
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage <= 0 || loading}
-                className='h-8 px-2 text-xs bg-background'
+                className='h-8 px-2 text-xs'
               >
                 <ChevronLeft className='mr-1 h-3.5 w-3.5' />
                 Sebelumnya
               </Button>
-              <span className='text-xs font-medium'>
+              <span className='text-xs font-medium tabular-nums'>
                 Halaman {currentPage + 1} dari {totalPages}
               </span>
               <Button
@@ -351,7 +353,7 @@ export function RiwayatStokTable({
                 size='sm'
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage + 1 >= totalPages || loading}
-                className='h-8 px-2 text-xs bg-background'
+                className='h-8 px-2 text-xs'
               >
                 Selanjutnya
                 <ChevronRight className='ml-1 h-3.5 w-3.5' />

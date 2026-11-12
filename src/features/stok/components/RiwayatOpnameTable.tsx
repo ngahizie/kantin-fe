@@ -4,9 +4,17 @@ import {
   AlertOctagon,
   TrendingDown,
   TrendingUp,
+  Loader2,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { RiwayatStokItem, JenisMutasiStok } from '../types'
 
 interface RiwayatOpnameTableProps {
@@ -17,6 +25,7 @@ interface RiwayatOpnameTableProps {
 
 export function RiwayatOpnameTable({
   riwayatList,
+  isLoading = false,
 }: RiwayatOpnameTableProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterJenis, setFilterJenis] = useState<string>('ALL_OPNAME')
@@ -61,25 +70,28 @@ export function RiwayatOpnameTable({
       case 'BARANG_RUSAK':
         return (
           <Badge
-            className="gap-1 border-0 bg-rose-500/15 text-[11px] font-medium text-rose-700 dark:text-rose-400 py-0.5"
+            variant="outline"
+            className="gap-1 rounded-full border border-rose-500/20 bg-rose-500/15 py-0.5 text-[11px] font-medium text-rose-700 dark:text-rose-400"
           >
-            <AlertOctagon className="h-3 w-3 text-rose-500" />
+            <AlertOctagon className="h-3 w-3 text-rose-600 dark:text-rose-400" />
             Barang Rusak / Basi
           </Badge>
         )
       case 'OPNAME_KELUAR':
         return (
           <Badge
-            className="gap-1 border-0 bg-purple-500/15 text-[11px] font-medium text-purple-700 dark:text-purple-400 py-0.5"
+            variant="outline"
+            className="gap-1 rounded-full border border-amber-500/20 bg-amber-500/15 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400"
           >
-            <TrendingDown className="h-3 w-3 text-purple-500" />
+            <TrendingDown className="h-3 w-3 text-amber-600 dark:text-amber-400" />
             Opname Keluar (Kurang)
           </Badge>
         )
       case 'OPNAME_MASUK':
         return (
           <Badge
-            className="gap-1 border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 py-0.5"
+            variant="outline"
+            className="gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/15 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400"
           >
             <TrendingUp className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
             Opname Masuk (Lebih)
@@ -87,7 +99,10 @@ export function RiwayatOpnameTable({
         )
       default:
         return (
-          <Badge className="border-0 bg-muted/80 text-[11px] font-medium text-muted-foreground py-0.5">
+          <Badge
+            variant="outline"
+            className="rounded-full border border-border bg-muted/60 py-0.5 text-[11px] font-medium text-muted-foreground"
+          >
             {String(jenis).replace(/_/g, ' ')}
           </Badge>
         )
@@ -137,101 +152,108 @@ export function RiwayatOpnameTable({
       />
 
       {/* Table */}
-      <Card className="border-0 bg-muted/60 dark:bg-muted/25 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border/40 bg-muted/90 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="py-3 px-4">Waktu & Bukti</th>
-                <th className="py-3 px-3">Nama Menu</th>
-                <th className="py-3 px-3">Tipe Mutasi</th>
-                <th className="py-3 px-3 text-center">Qty Mutasi</th>
-                <th className="py-3 px-3 text-right">Nilai Selisih</th>
-                <th className="py-3 px-3 text-center">Stok Akhir</th>
-                <th className="py-3 px-4">Alasan & Kronologi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="py-12 text-center text-muted-foreground text-sm"
-                  >
-                    Belum ada riwayat audit opname atau barang rusak yang tercatat.
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="transition-colors hover:bg-muted/20"
-                  >
-                    {/* Waktu & Referensi */}
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-foreground text-xs">
-                        {formatTanggal(item.waktu)}
-                      </div>
-                      <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
-                        {item.referensiId || '—'}
-                      </div>
-                    </td>
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow className="border-b border-border hover:bg-muted/50">
+              <TableHead className="px-4 py-3">Waktu & Bukti</TableHead>
+              <TableHead className="px-3 py-3">Nama Menu</TableHead>
+              <TableHead className="px-3 py-3">Tipe Mutasi</TableHead>
+              <TableHead className="px-3 py-3 text-center">Qty Mutasi</TableHead>
+              <TableHead className="px-3 py-3 text-right">Nilai Selisih</TableHead>
+              <TableHead className="px-3 py-3 text-center">Stok Akhir</TableHead>
+              <TableHead className="px-4 py-3">Alasan & Kronologi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="h-48 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                    <span className="text-sm">Memuat riwayat opname...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={7}
+                  className="py-12 text-center text-sm text-muted-foreground"
+                >
+                  Belum ada riwayat audit opname atau barang rusak yang tercatat.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredData.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className="border-b border-border transition-colors hover:bg-muted/30"
+                >
+                  {/* Waktu & Referensi */}
+                  <TableCell className="px-4 py-3">
+                    <div className="text-xs font-medium text-foreground tabular-nums">
+                      {formatTanggal(item.waktu)}
+                    </div>
+                    <div className="mt-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">
+                      {item.referensiId || '—'}
+                    </div>
+                  </TableCell>
 
-                    {/* Menu */}
-                    <td className="py-3 px-3 font-semibold text-foreground">
-                      {item.menuNama || `Menu #${item.menuId}`}
-                    </td>
+                  {/* Menu */}
+                  <TableCell className="px-3 py-3 font-semibold text-foreground">
+                    {item.menuNama || `Menu #${item.menuId}`}
+                  </TableCell>
 
-                    {/* Tipe Mutasi */}
-                    <td className="py-3 px-3">{renderBadgeJenis(item.jenis)}</td>
+                  {/* Tipe Mutasi */}
+                  <TableCell className="px-3 py-3">{renderBadgeJenis(item.jenis)}</TableCell>
 
-                    {/* Qty */}
-                    <td className="py-3 px-3 text-center font-mono font-bold">
-                      {item.arah === 'KELUAR' ? (
-                        <span className="text-destructive">-{item.qty}</span>
-                      ) : (
-                        <span className="text-emerald-500">+{item.qty}</span>
-                      )}
-                    </td>
+                  {/* Qty */}
+                  <TableCell className="px-3 py-3 text-center font-mono font-bold tabular-nums">
+                    {item.arah === 'KELUAR' ? (
+                      <span className="text-destructive">-{item.qty}</span>
+                    ) : (
+                      <span className="text-emerald-600 dark:text-emerald-400">+{item.qty}</span>
+                    )}
+                  </TableCell>
 
-                    {/* Nilai Selisih */}
-                    <td className="py-3 px-3 text-right font-mono text-xs font-semibold">
-                      {item.totalNilai ? (
-                        <span
-                          className={
-                            item.arah === 'KELUAR'
-                              ? 'text-destructive'
-                              : 'text-emerald-500'
-                          }
-                        >
-                          {item.arah === 'KELUAR' ? '-' : '+'} Rp{' '}
-                          {item.totalNilai.toLocaleString('id-ID')}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Rp 0</span>
-                      )}
-                    </td>
+                  {/* Nilai Selisih */}
+                  <TableCell className="px-3 py-3 text-right font-mono text-xs font-semibold tabular-nums">
+                    {item.totalNilai ? (
+                      <span
+                        className={
+                          item.arah === 'KELUAR'
+                            ? 'text-destructive'
+                            : 'text-emerald-600 dark:text-emerald-400'
+                        }
+                      >
+                        {item.arah === 'KELUAR' ? '-' : '+'} Rp{' '}
+                        {item.totalNilai.toLocaleString('id-ID')}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Rp 0</span>
+                    )}
+                  </TableCell>
 
-                    {/* Stok Setelah */}
-                    <td className="py-3 px-3 text-center font-mono text-xs">
-                      {item.stokSetelah}
-                    </td>
+                  {/* Stok Setelah */}
+                  <TableCell className="px-3 py-3 text-center font-mono text-xs tabular-nums">
+                    {item.stokSetelah}
+                  </TableCell>
 
-                    {/* Alasan */}
-                    <td className="py-3 px-4 text-xs text-muted-foreground max-w-xs truncate">
-                      {item.alasan || (
-                        <span className="italic text-muted-foreground/60">
-                          Tanpa keterangan
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                  {/* Alasan */}
+                  <TableCell className="max-w-xs truncate px-4 py-3 text-xs text-muted-foreground">
+                    {item.alasan || (
+                      <span className="italic text-muted-foreground/60">
+                        Tanpa keterangan
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

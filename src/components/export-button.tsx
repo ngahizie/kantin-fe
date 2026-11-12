@@ -144,7 +144,7 @@ export function ExportButton({
                 onClick={() => handleSelectFormat(option.onSelect)}
                 data-testid={option.testId}
                 className={cn(
-                  'group flex w-full items-start gap-3.5 rounded-lg border bg-card p-3.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+                  'group flex w-full items-start gap-3.5 rounded-xl border border-border bg-card p-3.5 text-left transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50',
                   option.cardClassName
                 )}
               >
@@ -181,7 +181,7 @@ export function ExportButton({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button type='button' variant='outline' size='sm' className='h-9'>
+            <Button type='button' variant='outline'>
               Batal
             </Button>
           </DialogClose>

@@ -28,7 +28,7 @@ describe('ThemeSwitch', () => {
 
     await userEvent.click(button)
 
-    const darkOption = getByText('Dark')
+    const darkOption = getByText('Gelap')
     await expect.element(darkOption).toBeInTheDocument()
     await userEvent.click(darkOption)
     expect(mockSetTheme).toHaveBeenCalledWith('dark')

@@ -1,9 +1,14 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Tag,
-  Store,
+  Banknote,
   Layers,
+  Loader2,
+  ShoppingCart,
+  Store,
+  Tag,
+  TrendingUp,
+  Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -24,9 +29,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
@@ -44,18 +48,18 @@ import type {
 const getCategoryBadgeClass = (kategori: string) => {
   const k = (kategori || '').toLowerCase()
   if (k.includes('berat')) {
-    return 'border-0 bg-orange-500/15 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
+    return 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300'
   }
   if (k.includes('dingin') || k.includes('minum')) {
-    return 'border-0 bg-cyan-500/15 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300'
+    return 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-300'
   }
   if (k.includes('snack') || k.includes('roti')) {
-    return 'border-0 bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+    return 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
   }
   if (k.includes('hangat')) {
-    return 'border-0 bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+    return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
   }
-  return 'border-0 bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
+  return 'border-border bg-muted text-muted-foreground'
 }
 
 export function LaporanPenjualanPage() {
@@ -337,7 +341,7 @@ export function LaporanPenjualanPage() {
           'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
           'Laba Total': formatRupiah(summaryLaba),
-          'Rata-rata Gross Margin': `${summaryMargin}%`,
+          'Rata-rata Margin Kotor': `${summaryMargin}%`,
         },
         sections: [
           {
@@ -450,23 +454,11 @@ export function LaporanPenjualanPage() {
   return (
     <>
       <Header fixed>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Laporan Keuangan
-            </span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Penjualan & Laba Kotor</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Laporan Keuangan' title='Penjualan & Laba Kotor' />
+        <HeaderActions />
       </Header>
 
-      <Main>
-        <div className="space-y-6 pb-12">
+      <Main className="space-y-6">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -496,31 +488,37 @@ export function LaporanPenjualanPage() {
 
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Penjualan Bersih
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                  <Banknote className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {ringkasan ? formatRupiah(summaryPenjualanBersih) : '...'}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                <div className="text-xs text-muted-foreground mt-1 flex justify-between gap-2 tabular-nums">
                   <span>Bruto: {ringkasan ? formatRupiah(summaryPenjualanBruto) : '-'}</span>
-                  <span className="text-amber-600">Refund: {ringkasan ? formatRupiah(summaryNilaiRefund) : '-'}</span>
+                  <span className="text-amber-600 dark:text-amber-400">Refund: {ringkasan ? formatRupiah(summaryNilaiRefund) : '-'}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Modal (HPP)
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Wallet className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {ringkasan ? formatRupiah(summaryTotalModal) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -529,18 +527,21 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Laba Kotor (Gross Profit)
+                  Laba Kotor
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-blue-600">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-blue-600 dark:text-blue-400">
                   {ringkasan ? formatRupiah(summaryLaba) : '...'}
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
-                  <Badge variant="secondary" className="font-mono text-xs text-blue-700 bg-blue-50">
+                  <Badge variant="outline" className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-mono text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
                     Margin: {formatMargin(summaryMargin)}
                   </Badge>
                   <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
@@ -548,17 +549,20 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Volume Transaksi
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                  <ShoppingCart className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {ringkasan ? `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx` : '...'}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1 tabular-nums">
                   {summaryJumlahRefund} transaksi di-refund
                 </p>
               </CardContent>
@@ -617,8 +621,8 @@ export function LaporanPenjualanPage() {
 
             {/* TAB CONTENT 1: PENJUALAN PER ITEM */}
             <TabsContent value="item" className="space-y-4">
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
+              <Card className="p-0 gap-0 overflow-hidden">
+                <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
                     Penjualan & Laba Kotor per Item Menu
                   </CardTitle>
@@ -626,102 +630,103 @@ export function LaporanPenjualanPage() {
                     Peringkat menu berdasarkan volume terjual, modal (HPP), dan kontribusi laba.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nama Menu</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Satuan</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Unit</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
+                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
                         <TableRow>
-                          <TableHead className="w-12 text-center">No.</TableHead>
-                          <TableHead>Nama Menu</TableHead>
-                          <TableHead>Kategori</TableHead>
-                          <TableHead className="text-right">Qty</TableHead>
-                          <TableHead className="text-right">Harga Satuan</TableHead>
-                          <TableHead className="text-right">Modal Unit</TableHead>
-                          <TableHead className="text-right">Total Penjualan</TableHead>
-                          <TableHead className="text-right">Total Modal</TableHead>
-                          <TableHead className="text-right font-bold text-primary">Laba</TableHead>
-                          <TableHead className="text-center">Margin</TableHead>
+                          <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Memuat rincian penjualan per menu...</span>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                              Memuat rincian penjualan per menu...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredItems.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
-                              Tidak ada data item yang cocok.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredItems.map((item, idx) => {
-                            const itemMargin = getItemMargin(item)
-                            return (
-                              <TableRow key={getItemId(item) || idx}>
-                                <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                  {idx + 1}
-                                </TableCell>
-                                <TableCell className="font-semibold text-sm">
-                                  {item.nama}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant="secondary"
-                                    className={`text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
-                                  >
-                                    {item.kategoriNama || 'Umum'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right font-mono font-bold">
-                                  {formatNumber(item.qty ?? 0)}
-                                </TableCell>
-                                <TableCell className="text-right font-mono text-xs">
-                                  {formatRupiah(getItemHarga(item))}
-                                </TableCell>
-                                <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                  {formatRupiah(getItemUnitModal(item))}
-                                </TableCell>
-                                <TableCell className="text-right font-mono font-bold text-sm">
-                                  {formatRupiah(getItemOmset(item))}
-                                </TableCell>
-                                <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                  {formatRupiah(getItemModal(item))}
-                                </TableCell>
-                                <TableCell className="text-right font-mono font-bold text-sm text-blue-600">
-                                  {formatRupiah(getItemLaba(item))}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge
-                                    variant="secondary"
-                                    className={`font-mono text-xs ${
-                                      (itemMargin || 0) >= 35
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                        : (itemMargin || 0) >= 20
-                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-                                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                    }`}
-                                  >
-                                    {formatMargin(itemMargin)}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            )
-                          })
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      ) : filteredItems.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                            Tidak ada data item yang cocok.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredItems.map((item, idx) => {
+                          const itemMargin = getItemMargin(item)
+                          return (
+                            <TableRow key={getItemId(item) || idx} className="border-b border-border last:border-b-0">
+                              <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                                {idx + 1}
+                              </TableCell>
+                              <TableCell className="font-semibold text-sm">
+                                {item.nama}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getCategoryBadgeClass(item.kategoriNama)}`}
+                                >
+                                  {item.kategoriNama || 'Umum'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold tabular-nums">
+                                {formatNumber(item.qty ?? 0)}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs tabular-nums">
+                                {formatRupiah(getItemHarga(item))}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                {formatRupiah(getItemUnitModal(item))}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold text-sm tabular-nums">
+                                {formatRupiah(getItemOmset(item))}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                {formatRupiah(getItemModal(item))}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
+                                {formatRupiah(getItemLaba(item))}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge
+                                  variant="outline"
+                                  className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-medium tabular-nums ${
+                                    (itemMargin || 0) >= 35
+                                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                      : (itemMargin || 0) >= 20
+                                      ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
+                                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                                  }`}
+                                >
+                                  {formatMargin(itemMargin)}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* TAB CONTENT 2: PENJUALAN PER KATEGORI */}
             <TabsContent value="kategori" className="space-y-4">
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
+              <Card className="p-0 gap-0 overflow-hidden">
+                <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
                     Penjualan & Laba Kotor per Kategori
                   </CardTitle>
@@ -729,79 +734,80 @@ export function LaporanPenjualanPage() {
                     Perbandingan performa omset dan margin laba antar kelompok kategori makanan/minuman.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori Menu</TableHead>
+                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Variasi Menu</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Terjual (Qty)</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
+                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin Rata-rata</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
                         <TableRow>
-                          <TableHead className="w-12 text-center">No.</TableHead>
-                          <TableHead>Kategori Menu</TableHead>
-                          <TableHead className="text-center">Variasi Menu</TableHead>
-                          <TableHead className="text-right">Total Terjual (Qty)</TableHead>
-                          <TableHead className="text-right">Total Penjualan</TableHead>
-                          <TableHead className="text-right">Total Modal</TableHead>
-                          <TableHead className="text-right font-bold text-primary">Laba</TableHead>
-                          <TableHead className="text-center">Margin Rata-rata</TableHead>
+                          <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Memuat data penjualan per kategori...</span>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                              Memuat data penjualan per kategori...
+                      ) : filteredKategoris.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                            Tidak ada kategori yang cocok.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredKategoris.map((kat, idx) => (
+                          <TableRow key={getKatId(kat) || idx} className="border-b border-border last:border-b-0">
+                            <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className="font-semibold text-sm">
+                              {kat.nama}
+                            </TableCell>
+                            <TableCell className="text-center text-xs text-muted-foreground tabular-nums">
+                              {kat.jumlahItem !== null && kat.jumlahItem !== undefined
+                                ? `${kat.jumlahItem} menu`
+                                : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold tabular-nums">
+                              {formatNumber(kat.qty ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm tabular-nums">
+                              {formatRupiah(getKatOmset(kat))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                              {formatRupiah(getKatModal(kat))}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
+                              {formatRupiah(getKatLaba(kat))}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className="rounded-full border border-border bg-muted px-2.5 py-0.5 font-mono text-xs font-medium text-foreground tabular-nums">
+                                {formatMargin(getKatMargin(kat))}
+                              </Badge>
                             </TableCell>
                           </TableRow>
-                        ) : filteredKategoris.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                              Tidak ada kategori yang cocok.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredKategoris.map((kat, idx) => (
-                            <TableRow key={getKatId(kat) || idx}>
-                              <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell className="font-semibold text-sm">
-                                {kat.nama}
-                              </TableCell>
-                              <TableCell className="text-center text-xs text-muted-foreground">
-                                {kat.jumlahItem !== null && kat.jumlahItem !== undefined
-                                  ? `${kat.jumlahItem} menu`
-                                  : '-'}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold">
-                                {formatNumber(kat.qty ?? 0)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm">
-                                {formatRupiah(getKatOmset(kat))}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                                {formatRupiah(getKatModal(kat))}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-blue-600">
-                                {formatRupiah(getKatLaba(kat))}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Badge variant="secondary" className="font-mono text-xs">
-                                  {formatMargin(getKatMargin(kat))}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* TAB CONTENT 3: PENJUALAN PER KASIR */}
             <TabsContent value="kasir" className="space-y-4">
-              <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-                <CardHeader>
+              <Card className="p-0 gap-0 overflow-hidden">
+                <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
                     Penjualan per Titik Kasir & Petugas
                   </CardTitle>
@@ -809,68 +815,68 @@ export function LaporanPenjualanPage() {
                     Rekap penerimaan transaksi, pembatalan void, dan omset bersih per loket POS.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-hidden rounded-lg">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titik Kasir</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Petugas Jaga</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jumlah Transaksi</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penjualan Bruto</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Nilai Void</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Penjualan Bersih</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
                         <TableRow>
-                          <TableHead className="w-12 text-center">No.</TableHead>
-                          <TableHead>Titik Kasir</TableHead>
-                          <TableHead>Petugas Jaga</TableHead>
-                          <TableHead className="text-right">Jumlah Transaksi</TableHead>
-                          <TableHead className="text-right">Penjualan Bruto</TableHead>
-                          <TableHead className="text-right text-amber-600">Nilai Void</TableHead>
-                          <TableHead className="text-right font-bold text-primary">Penjualan Bersih</TableHead>
+                          <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Memuat data penjualan per titik kasir...</span>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                              Memuat data penjualan per titik kasir...
+                      ) : filteredKasirs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                            Tidak ada titik kasir yang cocok.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredKasirs.map((kasir, idx) => (
+                          <TableRow key={kasir.titikKasirId ?? idx} className="border-b border-border last:border-b-0">
+                            <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className="font-semibold text-sm">
+                              {kasir.namaTitikKasir || `Kasir #${kasir.titikKasirId}`}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {kasir.petugas || '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold tabular-nums">
+                              {formatNumber(kasir.jumlahTransaksi ?? 0)} trx
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm tabular-nums">
+                              {formatRupiah(kasir.penjualanBruto ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-xs text-amber-600 dark:text-amber-400 tabular-nums">
+                              {formatRupiah(kasir.nilaiVoid ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">
+                              {formatRupiah(kasir.penjualanBersih ?? 0)}
                             </TableCell>
                           </TableRow>
-                        ) : filteredKasirs.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                              Tidak ada titik kasir yang cocok.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredKasirs.map((kasir, idx) => (
-                            <TableRow key={kasir.titikKasirId ?? idx}>
-                              <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell className="font-semibold text-sm">
-                                {kasir.namaTitikKasir || `Kasir #${kasir.titikKasirId}`}
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">
-                                {kasir.petugas || '-'}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold">
-                                {formatNumber(kasir.jumlahTransaksi ?? 0)} trx
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-sm">
-                                {formatRupiah(kasir.penjualanBruto ?? 0)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-amber-600">
-                                {formatRupiah(kasir.nilaiVoid ?? 0)}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-emerald-600">
-                                {formatRupiah(kasir.penjualanBersih ?? 0)}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
       </Main>
     </>
   )

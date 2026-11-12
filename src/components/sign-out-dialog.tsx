@@ -41,11 +41,8 @@ export function SignOutDialog({
       cancelBtnText='Batal'
       destructive
       handleConfirm={handleSignOut}
-      className={cn('sm:max-w-sm border-0', className)}
-      cancelBtnClassName={cn(
-        'border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 focus-visible:border-transparent outline-none focus:outline-none focus-visible:outline-none',
-        cancelBtnClassName
-      )}
+      className={cn('sm:max-w-sm', className)}
+      cancelBtnClassName={cancelBtnClassName}
       confirmBtnClassName={confirmBtnClassName}
     />
   )

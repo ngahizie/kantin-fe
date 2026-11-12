@@ -9,6 +9,9 @@ import {
   FileCheck2,
   RotateCcw,
   AlertCircle,
+  Loader2,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
@@ -41,9 +44,8 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { ExportButton } from '@/components/export-button'
 import { formatDateTime, formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
@@ -424,13 +426,11 @@ export function KoreksiBendaharaPage() {
   return (
     <>
       <Header fixed>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Saldo & Pengawasan' title='Penyesuaian Saldo Bendahara' />
+        <HeaderActions />
       </Header>
 
-      <Main className='space-y-6 pb-12'>
+      <Main className='space-y-6'>
         {/* Header Title & Actions */}
         <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
           <div>
@@ -462,58 +462,78 @@ export function KoreksiBendaharaPage() {
         </div>
 
         {/* KPI Summary Cards */}
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Catatan Penyesuaian
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400'>
+                <ClipboardList className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {koreksiList.length} Mutasi
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 Tercatat rapi dan aman di buku besar
               </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Penambahan Saldo (+)
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'>
+                <ArrowUpRight className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(totalKoreksiKredit)}
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 Pengembalian saldo akibat salah potong kasir
               </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Pengurangan Saldo (-)
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-destructive'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-400'>
+                <ArrowDownRight className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-destructive tabular-nums'>
                 {formatRupiah(totalKoreksiDebit)}
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 Koreksi kelebihan pengisian saldo TU
               </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Transaksi Selesai Disesuaikan
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-400'>
+                <CheckCircle2 className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {totalTransaksiTerkoreksi} Transaksi
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 Dari transaksi kasir yang telah ditutup
               </p>
             </CardContent>
@@ -584,9 +604,9 @@ export function KoreksiBendaharaPage() {
             />
 
             {/* Tabel Mutasi Koreksi */}
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden'>
-              <CardHeader className='border-b bg-muted/20 px-6 py-4'>
-                <div className='flex items-center justify-between'>
+            <Card className='p-0 gap-0 overflow-hidden'>
+              <CardHeader className='border-b border-border bg-muted/30 px-6 py-4'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
                   <div>
                     <CardTitle className='text-base font-semibold'>
                       Riwayat Resmi Penyesuaian Saldo
@@ -595,7 +615,10 @@ export function KoreksiBendaharaPage() {
                       Daftar penyesuaian saldo resmi yang diperiksa dan disetujui oleh Bendahara Sekolah
                     </CardDescription>
                   </div>
-                  <Badge variant='secondary' className='border-0 font-mono text-xs'>
+                  <Badge
+                    variant='outline'
+                    className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 font-mono text-xs font-medium text-muted-foreground tabular-nums'
+                  >
                     {filteredKoreksi.length} Rekaman Audit
                   </Badge>
                 </div>
@@ -603,36 +626,36 @@ export function KoreksiBendaharaPage() {
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
-                    <TableHeader>
-                      <TableRow className='bg-muted/40'>
-                        <TableHead className='w-12 text-center text-xs font-semibold'>
+                    <TableHeader className='bg-muted/50'>
+                      <TableRow className='border-b border-border hover:bg-transparent'>
+                        <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           No.
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           No. Berita Acara & Waktu
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Subjek Pemilik
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Jenis Masalah
                         </TableHead>
-                        <TableHead className='text-center text-xs font-semibold'>
+                        <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Arah Mutasi
                         </TableHead>
-                        <TableHead className='text-right text-xs font-semibold'>
+                        <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Nominal
                         </TableHead>
-                        <TableHead className='text-right text-xs font-semibold'>
+                        <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Saldo (Sebelum → Sesudah)
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Alasan Audit Koreksi
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Bendahara
                         </TableHead>
-                        <TableHead className='pr-6 text-right text-xs font-semibold'>
+                        <TableHead className='pr-6 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Aksi
                         </TableHead>
                       </TableRow>
@@ -645,7 +668,7 @@ export function KoreksiBendaharaPage() {
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
-                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <Loader2 className='size-6 animate-spin text-muted-foreground' />
                               <p className='text-sm text-muted-foreground'>
                                 Memuat data mutasi koreksi...
                               </p>
@@ -668,11 +691,14 @@ export function KoreksiBendaharaPage() {
                         </TableRow>
                       ) : (
                         filteredKoreksi.map((k, idx) => (
-                          <TableRow key={k.id} className='hover:bg-muted/30'>
-                            <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                          <TableRow
+                            key={k.id}
+                            className='border-b border-border last:border-b-0 hover:bg-muted/30'
+                          >
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                               {idx + 1}
                             </TableCell>
-                            <TableCell className='font-mono text-xs'>
+                            <TableCell className='font-mono text-xs tabular-nums'>
                               <div className='font-bold text-foreground'>
                                 {k.referensi_id}
                               </div>
@@ -691,7 +717,7 @@ export function KoreksiBendaharaPage() {
                               <div className='font-semibold text-foreground'>
                                 {k.siswa_nama}
                               </div>
-                              <div className='text-[11px] text-muted-foreground'>
+                              <div className='text-[11px] text-muted-foreground tabular-nums'>
                                 {k.siswa_info}
                               </div>
                             </TableCell>
@@ -700,7 +726,7 @@ export function KoreksiBendaharaPage() {
                               {k.jenis_koreksi === 'SALAH_INPUT_TOPUP' ? (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-medium'
+                                  className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                                 >
                                   Salah Topup TU
                                 </Badge>
@@ -708,14 +734,14 @@ export function KoreksiBendaharaPage() {
                                 'PEMBALIK_TRANSAKSI_KASIR' ? (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[11px] font-medium'
+                                  className='rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
                                 >
                                   Pembalik Kasir Sesi Tutup
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-purple-500/15 text-purple-700 dark:text-purple-400 text-[11px] font-medium'
+                                  className='rounded-full border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
                                 >
                                   Penyesuaian Audit
                                 </Badge>
@@ -726,7 +752,7 @@ export function KoreksiBendaharaPage() {
                               {k.arah === 'DEBIT' ? (
                                 <Badge
                                   variant='outline'
-                                  className='gap-1 border-0 bg-destructive/15 text-destructive dark:text-destructive text-[11px] font-medium'
+                                  className='gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
                                   <ArrowDownRight className='h-3 w-3' />
                                   DEBIT (-Saldo)
@@ -734,7 +760,7 @@ export function KoreksiBendaharaPage() {
                               ) : (
                                 <Badge
                                   variant='outline'
-                                  className='gap-1 border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium'
+                                  className='gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 >
                                   <ArrowUpRight className='h-3 w-3' />
                                   KREDIT (+Saldo)
@@ -742,7 +768,7 @@ export function KoreksiBendaharaPage() {
                               )}
                             </TableCell>
 
-                            <TableCell className='text-right font-mono text-xs font-bold'>
+                            <TableCell className='text-right font-mono text-xs font-bold tabular-nums'>
                               <span
                                 className={
                                   k.arah === 'DEBIT'
@@ -755,7 +781,7 @@ export function KoreksiBendaharaPage() {
                               </span>
                             </TableCell>
 
-                            <TableCell className='text-right font-mono text-xs'>
+                            <TableCell className='text-right font-mono text-xs tabular-nums'>
                               <span className='text-muted-foreground'>
                                 {formatRupiah(k.saldo_sebelum)}
                               </span>{' '}
@@ -773,7 +799,7 @@ export function KoreksiBendaharaPage() {
                                 "{k.alasan}"
                               </div>
                               {k.transaksi_terkait_id && (
-                                <div className='mt-0.5 font-mono text-[10px] text-primary'>
+                                <div className='mt-0.5 font-mono text-[10px] text-primary tabular-nums'>
                                   Terkait: {k.transaksi_terkait_id}
                                   {k.sesi_kasir_id ? ` (Sesi #${k.sesi_kasir_id})` : ''}
                                 </div>
@@ -788,13 +814,13 @@ export function KoreksiBendaharaPage() {
 
                             <TableCell className='pr-6 text-right'>
                               <Button
-                                variant='secondary'
+                                variant='outline'
                                 size='sm'
                                 onClick={() => {
                                   setSelectedKoreksiForPrint(k)
                                   setIsPrintModalOpen(true)
                                 }}
-                                className='h-7 gap-1 text-xs border-0'
+                                className='h-8 gap-1 text-xs'
                               >
                                 <Printer className='h-3.5 w-3.5' />
                                 Berita Acara
@@ -855,9 +881,9 @@ export function KoreksiBendaharaPage() {
               }}
             />
 
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden'>
-              <CardHeader className='border-b bg-muted/20 px-6 py-4'>
-                <div className='flex items-center justify-between'>
+            <Card className='p-0 gap-0 overflow-hidden'>
+              <CardHeader className='border-b border-border bg-muted/30 px-6 py-4'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
                   <div>
                     <CardTitle className='text-base font-semibold'>
                       Transaksi Kasir Sesi Lampau
@@ -866,7 +892,10 @@ export function KoreksiBendaharaPage() {
                       Pilih transaksi bermasalah pada sesi yang telah ditutup untuk memproses pengembalian saldo secara resmi
                     </CardDescription>
                   </div>
-                  <Badge variant='secondary' className='border-0 font-mono text-xs'>
+                  <Badge
+                    variant='outline'
+                    className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 font-mono text-xs font-medium text-muted-foreground tabular-nums'
+                  >
                     {filteredTransaksi.length} Transaksi Kandidat
                   </Badge>
                 </div>
@@ -874,30 +903,30 @@ export function KoreksiBendaharaPage() {
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
-                    <TableHeader>
-                      <TableRow className='bg-muted/40'>
-                        <TableHead className='w-12 text-center text-xs font-semibold'>
+                    <TableHeader className='bg-muted/50'>
+                      <TableRow className='border-b border-border hover:bg-transparent'>
+                        <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           No.
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           ID Transaksi & Waktu
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Sesi Kasir & Petugas
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Subjek Pembeli
                         </TableHead>
-                        <TableHead className='text-xs font-semibold'>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Rincian / Info Belanja
                         </TableHead>
-                        <TableHead className='text-right text-xs font-semibold'>
+                        <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Total Belanja
                         </TableHead>
-                        <TableHead className='text-center text-xs font-semibold'>
+                        <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Status
                         </TableHead>
-                        <TableHead className='pr-6 text-right text-xs font-semibold'>
+                        <TableHead className='pr-6 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Aksi Otorisasi
                         </TableHead>
                       </TableRow>
@@ -910,7 +939,7 @@ export function KoreksiBendaharaPage() {
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center space-y-2'>
-                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                              <Loader2 className='size-6 animate-spin text-muted-foreground' />
                               <p className='text-sm text-muted-foreground'>
                                 Memuat data transaksi sesi tutup...
                               </p>
@@ -933,11 +962,14 @@ export function KoreksiBendaharaPage() {
                         </TableRow>
                       ) : (
                         filteredTransaksi.map((tx, idx) => (
-                          <TableRow key={tx.id} className='hover:bg-muted/30'>
-                            <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                          <TableRow
+                            key={tx.id}
+                            className='border-b border-border last:border-b-0 hover:bg-muted/30'
+                          >
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                               {idx + 1}
                             </TableCell>
-                            <TableCell className='font-mono text-xs'>
+                            <TableCell className='font-mono text-xs tabular-nums'>
                               <div className='font-bold text-foreground'>
                                 {tx.id}
                               </div>
@@ -953,7 +985,7 @@ export function KoreksiBendaharaPage() {
                             </TableCell>
 
                             <TableCell className='text-xs'>
-                              <div className='font-medium text-foreground'>
+                              <div className='font-medium text-foreground tabular-nums'>
                                 Sesi #{tx.sesi_kasir_id} ({tx.titik_kasir})
                               </div>
                               <div className='text-[11px] text-muted-foreground'>
@@ -965,14 +997,14 @@ export function KoreksiBendaharaPage() {
                               <div className='font-semibold text-foreground'>
                                 {tx.siswa_nama}
                               </div>
-                              <div className='text-[11px] text-muted-foreground'>
+                              <div className='text-[11px] text-muted-foreground tabular-nums'>
                                 {tx.siswa_info}
                               </div>
                             </TableCell>
 
                             <TableCell className='text-xs'>
                               {tx.items && tx.items.length > 0 ? (
-                                <div className='space-y-0.5'>
+                                <div className='space-y-0.5 tabular-nums'>
                                   {tx.items.map((it, idx) => (
                                     <div
                                       key={idx}
@@ -983,13 +1015,13 @@ export function KoreksiBendaharaPage() {
                                   ))}
                                 </div>
                               ) : (
-                                <div className='text-[11px] text-muted-foreground'>
+                                <div className='text-[11px] text-muted-foreground tabular-nums'>
                                   {tx.kartu_uid ? `Kartu UID: ${tx.kartu_uid}` : 'Transaksi Kasir POS'}
                                 </div>
                               )}
                             </TableCell>
 
-                            <TableCell className='text-right font-mono text-xs font-bold text-primary'>
+                            <TableCell className='text-right font-mono text-xs font-bold text-primary tabular-nums'>
                               {formatRupiah(tx.total)}
                             </TableCell>
 
@@ -997,21 +1029,21 @@ export function KoreksiBendaharaPage() {
                               {tx.status === 'DIKOREKSI' ? (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-medium'
+                                  className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                                 >
                                   Telah Dikoreksi {tx.koreksi_referensi_id ? `(${tx.koreksi_referensi_id})` : ''}
                                 </Badge>
                               ) : tx.status === 'VOID' ? (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-destructive/15 text-destructive text-[11px] font-medium'
+                                  className='rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
                                   VOID {tx.alasanVoid ? `(${tx.alasanVoid})` : ''}
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant='outline'
-                                  className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium'
+                                  className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 >
                                   Selesai (Terkunci)
                                 </Badge>
@@ -1034,7 +1066,7 @@ export function KoreksiBendaharaPage() {
                                     setSelectedTxForKoreksi(tx)
                                     setIsCreateModalOpen(true)
                                   }}
-                                  className='h-7 gap-1 text-xs'
+                                  className='h-8 gap-1 text-xs'
                                 >
                                   <RotateCcw className='h-3.5 w-3.5' />
                                   Koreksi Pembalik
@@ -1078,9 +1110,9 @@ export function KoreksiBendaharaPage() {
           {selectedKoreksiForPrint && (
             <div
               id='print-koreksi-area'
-              className='space-y-4 rounded-lg bg-card p-4 font-sans text-xs border-0 outline-none'
+              className='space-y-4 rounded-xl border border-border bg-card p-4 font-sans text-xs print:border-none'
             >
-              <div className='space-y-1 border-b pb-3 text-center'>
+              <div className='space-y-1 border-b border-border pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
                   SMA NEGERI 1 SKOOLIA
                 </h3>
@@ -1136,7 +1168,7 @@ export function KoreksiBendaharaPage() {
                 )}
               </div>
 
-              <div className='space-y-1.5 rounded-md bg-muted/40 p-3 font-mono border-0'>
+              <div className='space-y-1.5 rounded-md border border-border bg-muted/30 p-3 font-mono tabular-nums'>
                 <div className='flex justify-between'>
                   <span>Arah Mutasi:</span>
                   <span className='font-bold uppercase'>
@@ -1151,7 +1183,7 @@ export function KoreksiBendaharaPage() {
                     {formatRupiah(selectedKoreksiForPrint.nominal)}
                   </span>
                 </div>
-                <div className='flex justify-between border-t border-muted-foreground/10 pt-1'>
+                <div className='flex justify-between border-t border-border pt-1'>
                   <span>Saldo Awal → Saldo Baru:</span>
                   <span className='font-semibold'>
                     {formatRupiah(selectedKoreksiForPrint.saldo_sebelum)}{' '}
@@ -1161,7 +1193,7 @@ export function KoreksiBendaharaPage() {
                 </div>
               </div>
 
-              <div className='space-y-1 rounded bg-muted/20 p-2.5 border-0'>
+              <div className='space-y-1 rounded border border-border bg-muted/20 p-2.5'>
                 <span className='block text-[10px] font-semibold text-muted-foreground'>
                   Alasan Audit Koreksi Wajib:
                 </span>
@@ -1192,9 +1224,8 @@ export function KoreksiBendaharaPage() {
           <div className='flex justify-end gap-2 pt-2'>
             <Button
               type='button'
-              variant='secondary'
+              variant='outline'
               onClick={() => setIsPrintModalOpen(false)}
-              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Tutup
             </Button>

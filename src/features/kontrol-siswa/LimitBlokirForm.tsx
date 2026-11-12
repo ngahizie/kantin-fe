@@ -21,8 +21,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
@@ -269,44 +271,61 @@ function LimitBlokirFormContent({
         </DialogHeader>
 
         {/* Profil Siswa Header Card */}
-        <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-4 space-y-3'>
+        <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
             <div className='flex items-center gap-3 min-w-0'>
-              <img
-                src={student.foto_url}
-                alt={student.nama}
-                className='h-12 w-12 rounded-full object-cover shrink-0'
-              />
+              <Avatar className='h-12 w-12 shrink-0'>
+                <AvatarImage
+                  src={student.foto_url || undefined}
+                  alt={student.nama}
+                  className='object-cover'
+                />
+                <AvatarFallback className='text-sm font-semibold'>
+                  {student.nama
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((p) => p[0] ?? '')
+                    .join('')
+                    .toUpperCase() || 'S'}
+                </AvatarFallback>
+              </Avatar>
               <div className='min-w-0 flex-1'>
                 <p className='font-bold text-sm text-foreground truncate'>{student.nama}</p>
-                <p className='text-xs text-muted-foreground font-mono'>
+                <p className='text-xs text-muted-foreground font-mono tabular-nums'>
                   NIS: {student.nis} • Kelas: {student.kelas}
                 </p>
                 <div className='flex flex-wrap items-center gap-1.5 mt-1'>
                   {student.parent_app_registered ? (
-                    <Badge variant='secondary' className='border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] py-0.5 gap-1 font-medium'>
+                    <Badge
+                      variant='outline'
+                      className='rounded-full border px-2 py-0.5 text-[10px] font-medium gap-1 text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
+                    >
                       <Smartphone className='h-3 w-3' /> Terhubung Aplikasi Mobile
                     </Badge>
                   ) : (
-                    <Badge variant='secondary' className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] py-0.5 gap-1 font-medium'>
+                    <Badge
+                      variant='outline'
+                      className='rounded-full border px-2 py-0.5 text-[10px] font-medium gap-1 text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900/60'
+                    >
                       <PhoneOff className='h-3 w-3' /> Ortu Belum Pakai App (Perwalian Admin)
                     </Badge>
                   )}
-                  <span className='text-[11px] text-muted-foreground font-mono'>
+                  <span className='text-[11px] text-muted-foreground font-mono tabular-nums'>
                     RFID: {student.uid}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className='sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40'>
+            <div className='sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border'>
               <p className='text-[10px] text-muted-foreground uppercase tracking-wider font-semibold'>
                 Saldo Digital
               </p>
-              <p className='text-base font-bold font-mono text-emerald-600 dark:text-emerald-400'>
+              <p className='text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(student.saldo)}
               </p>
-              <p className='text-[10px] text-muted-foreground'>
+              <p className='text-[10px] text-muted-foreground tabular-nums'>
                 Belanja hari ini: {formatRupiah(student.belanja_hari_ini)}
               </p>
             </div>
@@ -315,7 +334,7 @@ function LimitBlokirFormContent({
 
         <form onSubmit={handleSubmit} className='space-y-5 pt-1'>
           {/* BAGIAN 1: PENGATURAN LIMIT BELANJA HARIAN */}
-          <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-4 space-y-3'>
+          <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
             <div className='flex items-center justify-between gap-3'>
               <div className='space-y-0.5'>
                 <Label htmlFor='limit-switch' className='text-sm font-bold flex items-center gap-2'>
@@ -334,7 +353,7 @@ function LimitBlokirFormContent({
             </div>
 
             {limitEnabled ? (
-              <div className='pt-2 space-y-3 border-t border-border/40'>
+              <div className='pt-3 space-y-3 border-t border-border'>
                 <div className='flex flex-wrap items-center gap-2'>
                   <span className='text-xs text-muted-foreground font-medium'>Pilihan Cepat:</span>
                   {PRESET_LIMITS.map((amount) => (
@@ -342,13 +361,9 @@ function LimitBlokirFormContent({
                       key={amount}
                       type='button'
                       size='sm'
-                      variant={nominalLimitNum === amount ? 'default' : 'secondary'}
+                      variant={nominalLimitNum === amount ? 'default' : 'outline'}
                       onClick={() => setLimitNominal(amount.toString())}
-                      className={`h-7 text-xs px-2.5 font-mono border-0 shadow-none ${
-                        nominalLimitNum === amount
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                          : 'bg-background/80 text-foreground hover:bg-background'
-                      }`}
+                      className='h-7 text-xs px-2.5 font-mono tabular-nums'
                     >
                       {formatRupiah(amount)}
                     </Button>
@@ -360,7 +375,7 @@ function LimitBlokirFormContent({
                     Jumlah Batas Harian (Rp) *
                   </Label>
                   <div className='relative'>
-                    <span className='absolute left-3 top-2 text-xs font-bold text-muted-foreground'>
+                    <span className='absolute left-3 top-2.5 text-xs font-bold text-muted-foreground'>
                       Rp
                     </span>
                     <Input
@@ -368,7 +383,7 @@ function LimitBlokirFormContent({
                       value={limitNominal}
                       onChange={(e) => setLimitNominal(e.target.value.replace(/\D/g, ''))}
                       placeholder='25000'
-                      className='h-9 pl-9 font-mono text-sm font-semibold border-0 bg-background/80 shadow-none'
+                      className='pl-9 font-mono text-sm font-semibold tabular-nums'
                     />
                   </div>
                   {!isValidNominal && (
@@ -378,24 +393,24 @@ function LimitBlokirFormContent({
                   )}
                 </div>
 
-                <div className='rounded-lg bg-blue-500/10 p-2.5 border-0 text-xs text-blue-900 dark:text-blue-200'>
+                <div className='rounded-lg border border-blue-200 bg-blue-50 p-2.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200'>
                   <span>
                     Jika belanja hari ini melebihi{' '}
-                    <strong>{formatRupiah(nominalLimitNum)}</strong>, kasir akan otomatis menolak
-                    transaksi dengan pesan <em>"Melebihi limit harian"</em> .
+                    <strong className='tabular-nums'>{formatRupiah(nominalLimitNum)}</strong>, kasir akan otomatis menolak
+                    transaksi dengan pesan <em>"Melebihi limit harian"</em>.
                   </span>
                 </div>
               </div>
             ) : (
-              <div className='text-xs text-muted-foreground bg-background/60 p-2.5 rounded-lg flex items-center gap-2 border-0'>
-                <Check className='h-3.5 w-3.5 text-emerald-600' />
+              <div className='text-xs text-muted-foreground bg-background p-2.5 rounded-lg flex items-center gap-2 border border-border'>
+                <Check className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
                 <span>
                   <strong>Tanpa Batasan:</strong> Siswa dapat jajan bebas selama saldo kartu masih mencukupi.
                 </span>
               </div>
             )}
           </div>
-          <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-4 space-y-3'>
+          <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
             <div className='space-y-0.5'>
               <Label className='text-sm font-bold flex items-center gap-2'>
                 <Tag className='h-4 w-4 text-amber-500' />
@@ -413,36 +428,28 @@ function LimitBlokirFormContent({
                   <div
                     key={kat.id}
                     onClick={() => handleToggleCategory(kat.id)}
-                    className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all select-none ${
+                    className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-colors select-none ${
                       isBlocked
-                        ? 'border-0 bg-destructive/15'
-                        : 'border-0 bg-background/80 hover:bg-background'
+                        ? 'border-destructive/40 bg-destructive/10'
+                        : 'border-border bg-background hover:bg-muted/40'
                     }`}
                   >
                     <div className='flex items-center gap-2.5 pointer-events-none'>
-                      <div
-                        className={`size-4 shrink-0 rounded border transition-colors flex items-center justify-center ${
-                          isBlocked
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-input bg-background/50'
-                        }`}
-                      >
-                        {isBlocked && <Check className='size-3 text-primary-foreground stroke-[3]' />}
-                      </div>
+                      <Checkbox checked={isBlocked} tabIndex={-1} aria-hidden='true' />
                       <span className='text-xs font-semibold text-foreground'>
                         {kat.nama}
                       </span>
                     </div>
 
                     <Badge
-                      variant='secondary'
+                      variant='outline'
                       className={
                         isBlocked
-                          ? 'border-0 bg-destructive/20 text-destructive text-[10px] py-0 px-1.5 font-medium'
-                          : 'border-0 bg-muted/80 text-muted-foreground text-[10px] py-0 px-1.5 font-medium'
+                          ? 'rounded-full border px-2 py-0 text-[10px] font-medium text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-900/60'
+                          : 'rounded-full border px-2 py-0 text-[10px] font-medium text-muted-foreground bg-muted/50 border-border'
                       }
                     >
-                      {isBlocked ? 'DIBLOKIR' : 'Diizinkan'}
+                      {isBlocked ? 'Diblokir' : 'Diizinkan'}
                     </Badge>
                   </div>
                 )
@@ -451,11 +458,11 @@ function LimitBlokirFormContent({
           </div>
 
           {/* BAGIAN 3: BLOKIR ITEM MENU SPESIFIK */}
-          <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-4 space-y-3'>
+          <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
             <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
               <div className='space-y-0.5'>
                 <Label className='text-sm font-bold flex items-center gap-2'>
-                  <UtensilsCrossed className='h-4 w-4 text-red-500' />
+                  <UtensilsCrossed className='h-4 w-4 text-destructive' />
                   Pantangan Menu Makanan Tertentu
                 </Label>
                 <p className='text-xs text-muted-foreground'>
@@ -464,7 +471,10 @@ function LimitBlokirFormContent({
               </div>
 
               {blockedItemIds.length > 0 && (
-                <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-xs font-medium'>
+                <Badge
+                  variant='outline'
+                  className='rounded-full border px-2.5 py-0.5 text-xs font-medium tabular-nums text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-900/60'
+                >
                   {blockedItemIds.length} Menu Dilarang
                 </Badge>
               )}
@@ -478,7 +488,7 @@ function LimitBlokirFormContent({
                   value={menuSearch}
                   onChange={(e) => setMenuSearch(e.target.value)}
                   placeholder='Cari nama menu...'
-                  className='h-8 pl-8 text-xs border-0 bg-background/80 shadow-none'
+                  className='h-8 pl-8 text-xs'
                 />
               </div>
 
@@ -486,13 +496,9 @@ function LimitBlokirFormContent({
                 <Button
                   type='button'
                   size='sm'
-                  variant={menuCatFilter === 'ALL' ? 'default' : 'secondary'}
+                  variant={menuCatFilter === 'ALL' ? 'default' : 'outline'}
                   onClick={() => setMenuCatFilter('ALL')}
-                  className={`h-8 text-[11px] px-2.5 border-0 shadow-none ${
-                    menuCatFilter === 'ALL'
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                      : 'bg-background/80 text-foreground hover:bg-background'
-                  }`}
+                  className='h-8 text-xs px-2.5'
                 >
                   Semua
                 </Button>
@@ -501,13 +507,9 @@ function LimitBlokirFormContent({
                     key={c.id}
                     type='button'
                     size='sm'
-                    variant={menuCatFilter === c.id ? 'default' : 'secondary'}
+                    variant={menuCatFilter === c.id ? 'default' : 'outline'}
                     onClick={() => setMenuCatFilter(c.id)}
-                    className={`h-8 text-[11px] px-2.5 whitespace-nowrap border-0 shadow-none ${
-                      menuCatFilter === c.id
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'bg-background/80 text-foreground hover:bg-background'
-                    }`}
+                    className='h-8 text-xs px-2.5 whitespace-nowrap'
                   >
                     {c.nama}
                   </Button>
@@ -516,7 +518,7 @@ function LimitBlokirFormContent({
             </div>
 
             {/* List Menu Item Grid */}
-            <div className='max-h-56 overflow-y-auto rounded-lg border-0 bg-background/50 divide-y divide-border/40'>
+            <div className='max-h-56 overflow-y-auto rounded-lg border border-border bg-background divide-y divide-border'>
               {filteredMenuItems.length === 0 ? (
                 <p className='p-4 text-center text-xs text-muted-foreground'>
                   Tidak ada menu yang sesuai pencarian.
@@ -539,30 +541,19 @@ function LimitBlokirFormContent({
                       }}
                       className={`p-2.5 flex items-center justify-between text-xs transition-colors select-none ${
                         isCatBlocked
-                          ? 'bg-amber-500/10 dark:bg-amber-950/20 opacity-80 cursor-not-allowed'
+                          ? 'bg-amber-50/70 dark:bg-amber-950/20 opacity-80 cursor-not-allowed'
                           : isItemBlocked
                           ? 'bg-destructive/10 cursor-pointer'
-                          : 'hover:bg-muted/50 cursor-pointer'
+                          : 'hover:bg-muted/40 cursor-pointer'
                       }`}
                     >
                       <div className='flex items-center gap-3 min-w-0 pointer-events-none'>
-                        <div
-                          className={`size-4 shrink-0 rounded border transition-colors flex items-center justify-center ${
-                            isCatBlocked
-                              ? 'border-amber-500/50 bg-amber-500/20 text-amber-700 dark:text-amber-400 opacity-60'
-                              : isItemBlocked
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-input bg-background/50'
-                          }`}
-                        >
-                          {(isItemBlocked || isCatBlocked) && (
-                            <Check
-                              className={`size-3 stroke-[3] ${
-                                isCatBlocked ? 'text-amber-700 dark:text-amber-400' : 'text-primary-foreground'
-                              }`}
-                            />
-                          )}
-                        </div>
+                        <Checkbox
+                          checked={isItemBlocked || isCatBlocked}
+                          disabled={isCatBlocked}
+                          tabIndex={-1}
+                          aria-hidden='true'
+                        />
                         {item.foto_url && (
                           <img
                             src={item.foto_url}
@@ -575,14 +566,14 @@ function LimitBlokirFormContent({
                             {item.nama}
                             {isCatBlocked && (
                               <Badge
-                                variant='secondary'
-                                className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] py-0 font-medium shrink-0'
+                                variant='outline'
+                                className='rounded-full border px-2 py-0 text-[10px] font-medium shrink-0 text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900/60'
                               >
                                 Terblokir Kategori ({itemCatNama})
                               </Badge>
                             )}
                           </p>
-                          <p className='text-[11px] text-muted-foreground'>
+                          <p className='text-[11px] text-muted-foreground tabular-nums'>
                             {itemCatNama} • {formatRupiah(itemHarga)}
                           </p>
                         </div>
@@ -590,12 +581,18 @@ function LimitBlokirFormContent({
 
                       <div className='shrink-0 ml-2 pointer-events-none'>
                         {isCatBlocked ? (
-                          <Badge variant='secondary' className='border-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-medium'>
+                          <Badge
+                            variant='outline'
+                            className='rounded-full border px-2 py-0 text-[10px] font-medium text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900/60'
+                          >
                             Kategori Blokir
                           </Badge>
                         ) : isItemBlocked ? (
-                          <Badge variant='secondary' className='border-0 bg-destructive/15 text-destructive text-[10px] py-0 px-2 font-medium'>
-                            DIBLOKIR
+                          <Badge
+                            variant='outline'
+                            className='rounded-full border px-2 py-0 text-[10px] font-medium text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-900/60'
+                          >
+                            Diblokir
                           </Badge>
                         ) : (
                           <span className='text-[11px] text-muted-foreground'>Diizinkan</span>
@@ -618,7 +615,7 @@ function LimitBlokirFormContent({
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               placeholder='Contoh: Permintaan tertulis via formulir TU / WhatsApp: Siswa alergi kafein & dibatasi jajan maksimal Rp 25.000/hari.'
-              className='text-xs min-h-[60px] border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+              className='text-xs min-h-[60px]'
             />
           </div>
 
@@ -637,10 +634,9 @@ function LimitBlokirFormContent({
             <div className='flex items-center gap-2 w-full sm:w-auto'>
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={onClose}
                 disabled={isSubmitting}
-                className='border-0 bg-muted/80 shadow-none'
               >
                 Batal
               </Button>
@@ -764,7 +760,7 @@ export function LimitBlokirForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6 border-0 shadow-2xl'>
+      <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-6'>
         <FormErrorBoundary>
           <LimitBlokirFormContent
             key={student.siswa_id}

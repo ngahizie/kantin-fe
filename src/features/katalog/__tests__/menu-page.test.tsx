@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { page, userEvent } from 'vitest/browser'
+import '@/styles/index.css'
 import {
   KATALOG_SYNC_CHANNEL_NAME,
   KATALOG_SYNC_STORAGE_KEY,
@@ -317,5 +319,121 @@ describe('MenuPage — Auto-Refresh Event-Driven (Hanya Saat Ada Perubahan)', ()
       delete (document as unknown as { visibilityState?: DocumentVisibilityState })
         .visibilityState
     }
+  })
+})
+
+describe('MenuPage — Stabilitas Tata Letak Saat Berganti Filter', () => {
+  beforeEach(() => {
+    localStorage.removeItem(KATALOG_SYNC_STORAGE_KEY)
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    localStorage.removeItem(KATALOG_SYNC_STORAGE_KEY)
+    vi.restoreAllMocks()
+  })
+
+  it('menjaga lebar kolom tabel, ukuran tombol filter, tinggi minimum card, dan footer paginasi tetap konsisten saat filter berganti', async () => {
+    await page.viewport(1280, 900)
+
+    const kategoriVariatif: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, aktif: true },
+      { id: 2, nama: 'Minuman & Es Kemasan Segar', urutan: 2, aktif: true },
+      { id: 3, nama: 'Snack Ringan', urutan: 3, aktif: true },
+    ]
+
+    const menuVariatif: MenuItem[] = [
+      {
+        id: 1,
+        kategoriId: 1,
+        nama: 'Nasi Goreng Ayam Kampung Spesial Dengan Telur Mata Sapi Super Lengkap',
+        kodeBarcode: '899100001',
+        hargaJual: 18000,
+        satuan: 'PORSI',
+        fotoUrl: null,
+        stokMinimum: 5,
+        stokBerjalan: 25,
+        aktif: true,
+      },
+      {
+        id: 2,
+        kategoriId: 2,
+        nama: 'Es Teh',
+        kodeBarcode: null,
+        hargaJual: 4000,
+        satuan: 'GELAS',
+        fotoUrl: null,
+        stokMinimum: 5,
+        stokBerjalan: 30,
+        aktif: true,
+      },
+    ]
+
+    vi.spyOn(katalogApi, 'getKategoriList').mockResolvedValue(kategoriVariatif)
+    vi.spyOn(katalogApi, 'getMenuList').mockResolvedValue(menuVariatif)
+
+    const screen = await render(<MenuPage />)
+    await expect.element(screen.getByText('Es Teh')).toBeInTheDocument()
+
+    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable')
+
+    const measureHeaderCols = () =>
+      Array.from(document.querySelectorAll('th[data-slot="table-head"]')).map((el) => {
+        const rect = el.getBoundingClientRect()
+        return { left: rect.left, width: rect.width }
+      })
+
+    const kategoriBtn = screen.getByRole('button', { name: 'Kategori' })
+    const statusBtn = screen.getByRole('button', { name: 'Status' })
+    const initialKategoriWidth = (await kategoriBtn.element()).getBoundingClientRect().width
+    const initialStatusWidth = (await statusBtn.element()).getBoundingClientRect().width
+    const initialCols = measureHeaderCols()
+    expect(initialCols).toHaveLength(10)
+
+    const tableCard = document.querySelector('table')?.closest('[data-slot="card"]') as HTMLElement | null
+    expect(tableCard).not.toBeNull()
+    const initialCardWidth = tableCard!.getBoundingClientRect().width
+    const initialCardHeight = tableCard!.getBoundingClientRect().height
+
+    // 1. Pilih kategori dengan label panjang ("Minuman & Es Kemasan Segar")
+    await userEvent.click(kategoriBtn)
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Minuman & Es Kemasan Segar' })
+    )
+    await expect.element(screen.getByText(/Nasi Goreng/)).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Es Teh')).toBeInTheDocument()
+    expect(tableCard!.textContent).toContain('Menampilkan 1–1 dari 1 menu')
+
+    expect((await kategoriBtn.element()).getBoundingClientRect().width).toBeCloseTo(
+      initialKategoriWidth,
+      0
+    )
+    expect(tableCard!.getBoundingClientRect().width).toBeCloseTo(initialCardWidth, 0)
+    expect(tableCard!.getBoundingClientRect().height).toBeCloseTo(initialCardHeight, 0)
+
+    const filteredCols = measureHeaderCols()
+    filteredCols.forEach((col, index) => {
+      expect(col.left).toBeCloseTo(initialCols[index].left, 0)
+      expect(col.width).toBeCloseTo(initialCols[index].width, 0)
+    })
+
+    // 2. Ubah filter Status ke kondisi yang menghasilkan 0 data ("Hanya Nonaktif")
+    await userEvent.click(statusBtn)
+    await userEvent.click(screen.getByRole('option', { name: 'Hanya Nonaktif' }))
+    await expect.element(screen.getByText('Tidak ada menu ditemukan')).toBeInTheDocument()
+    await expect.element(screen.getByText('Menampilkan 0 menu')).toBeInTheDocument()
+
+    expect((await statusBtn.element()).getBoundingClientRect().width).toBeCloseTo(
+      initialStatusWidth,
+      0
+    )
+    expect(tableCard!.getBoundingClientRect().width).toBeCloseTo(initialCardWidth, 0)
+    expect(tableCard!.getBoundingClientRect().height).toBeCloseTo(initialCardHeight, 0)
+
+    const emptyCols = measureHeaderCols()
+    emptyCols.forEach((col, index) => {
+      expect(col.left).toBeCloseTo(initialCols[index].left, 0)
+      expect(col.width).toBeCloseTo(initialCols[index].width, 0)
+    })
   })
 })

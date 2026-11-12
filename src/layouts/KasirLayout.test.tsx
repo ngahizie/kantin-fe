@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { page } from 'vitest/browser'
+import '@/styles/index.css'
 import { KasirLayout } from './KasirLayout'
 
 let mockCurrentRole = 'kasir'
@@ -74,5 +76,21 @@ describe('KasirLayout Navigasi & Proteksi Peran', () => {
     const { getByText } = await render(<KasirLayout />)
 
     await expect.element(getByText('Kembali')).toBeInTheDocument()
+  })
+
+  it('mengisi penuh lebar viewport tanpa menyisakan celah scrollbar-gutter di sisi paling kanan', async () => {
+    await page.viewport(1280, 800)
+    const { container } = await render(<KasirLayout />)
+
+    const rootEl = container.querySelector('[data-kasir-layout]')!
+    const headerEl = container.querySelector('header')!
+
+    expect(rootEl).not.toBeNull()
+    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('auto')
+
+    const rootRect = rootEl.getBoundingClientRect()
+    const headerRect = headerEl.getBoundingClientRect()
+    expect(rootRect.right).toBeCloseTo(window.innerWidth, 0)
+    expect(headerRect.right).toBeCloseTo(window.innerWidth, 0)
   })
 })
