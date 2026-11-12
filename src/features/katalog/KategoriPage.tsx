@@ -40,6 +40,7 @@ import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
+  getKategoriDeleteBlockedReason,
   mergeKategoriMenuCounts,
   notifyKategoriChanged,
   shouldPauseMenuAutoRefresh,
@@ -86,6 +87,11 @@ export function KategoriPage() {
   const lastSyncedAtRef = useRef<Date | null>(null)
 
   const handleDeleteClick = (kat: KategoriItem) => {
+    const blockedReason = getKategoriDeleteBlockedReason(kat)
+    if (blockedReason) {
+      toast.error(blockedReason)
+      return
+    }
     setDeleteTarget(kat)
     setActiveDeleteTarget(kat)
   }
@@ -306,17 +312,20 @@ export function KategoriPage() {
   const confirmDelete = async () => {
     const target = activeDeleteTarget
     if (!target) return
+    const latestTarget = kategoriList.find((k) => k.id === target.id) ?? target
+    const blockedReason = getKategoriDeleteBlockedReason(latestTarget)
+    if (blockedReason) {
+      toast.error(blockedReason)
+      setDeleteTarget(null)
+      return
+    }
     mutationEpochRef.current += 1
     try {
       setIsDeleting(true)
       await katalogApi.deleteKategori(target.id)
       mutationEpochRef.current += 1
-      setKategoriList((prev) =>
-        prev.map((k) =>
-          k.id === target.id ? { ...k, isActive: false, aktif: false } : k
-        )
-      )
-      toast.success(`Kategori "${target.nama}" berhasil dinonaktifkan`)
+      setKategoriList((prev) => prev.filter((k) => k.id !== target.id))
+      toast.success(`Kategori "${target.nama}" berhasil dihapus`)
       setDeleteTarget(null)
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)
@@ -325,7 +334,7 @@ export function KategoriPage() {
       const message =
         error.response?.data?.message ||
         error.message ||
-        'Gagal menonaktifkan kategori. Pastikan tidak ada menu aktif yang menggunakannya.'
+        'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
       toast.error(message)
     } finally {
       setIsDeleting(false)
@@ -444,6 +453,9 @@ export function KategoriPage() {
                   filteredKategori.map((kat, idx) => {
                     const isAktif = kat.isActive !== false && kat.aktif !== false
                     const itemQty = kat.jumlahItem ?? 0
+                    const deleteBlockedReason = getKategoriDeleteBlockedReason(kat)
+                    const isDeleteDisabled = Boolean(deleteBlockedReason)
+                    const deleteButtonTitle = deleteBlockedReason || 'Hapus Kategori'
 
                     return (
                       <TableRow
@@ -503,15 +515,22 @@ export function KategoriPage() {
                             >
                               <Pencil className='size-4' />
                             </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
-                              onClick={() => handleDeleteClick(kat)}
-                              title='Nonaktifkan Kategori'
-                            >
-                              <Trash2 className='size-4' />
-                            </Button>
+                            <span title={deleteButtonTitle} className='inline-flex'>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                disabled={isDeleteDisabled}
+                                className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 shadow-none'
+                                onClick={() => handleDeleteClick(kat)}
+                                aria-label={
+                                  isDeleteDisabled
+                                    ? deleteButtonTitle
+                                    : `Hapus ${kat.nama}`
+                                }
+                              >
+                                <Trash2 className='size-4' />
+                              </Button>
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -532,7 +551,7 @@ export function KategoriPage() {
         onSuccess={handleFormSuccess}
       />
 
-      {/* Alert Dialog Konfirmasi Nonaktifkan */}
+      {/* Alert Dialog Konfirmasi Hapus Kategori */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
           <AlertDialogHeader>
@@ -541,29 +560,30 @@ export function KategoriPage() {
                 <AlertTriangle className='size-5' />
               </div>
               <AlertDialogTitle className='text-lg font-bold'>
-                Nonaktifkan Kategori?
+                Hapus Kategori?
               </AlertDialogTitle>
             </div>
-            <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
-              <p>
-                Apakah Anda yakin ingin menonaktifkan kategori{' '}
-                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
-              </p>
-              {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
-                <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-none'>
-                  <AlertTriangle className='size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
-                  <span>
-                    <strong>Perhatian:</strong> Kategori ini saat ini masih memiliki{' '}
-                    <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
-                    kategori hanya akan <strong>dinonaktifkan</strong> (tidak dihapus permanen) agar
-                    riwayat transaksi kasir tetap aman.
-                  </span>
-                </div>
-              ) : (
-                <p className='text-xs text-muted-foreground'>
-                  Kategori yang dinonaktifkan tidak akan muncul lagi di tab kasir POS.
+            <AlertDialogDescription asChild>
+              <div className='space-y-2 pt-2 text-xs text-muted-foreground'>
+                <p>
+                  Apakah Anda yakin ingin menghapus kategori{' '}
+                  <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
                 </p>
-              )}
+                {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
+                  <div className='flex items-start gap-2.5 rounded-xl border-none bg-destructive/10 p-3 text-xs text-destructive shadow-none'>
+                    <AlertTriangle className='size-4 shrink-0 mt-0.5' />
+                    <span>
+                      Kategori ini masih memiliki{' '}
+                      <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong> sehingga tidak dapat
+                      dihapus. Pindahkan atau hapus menu terkait terlebih dahulu.
+                    </span>
+                  </div>
+                ) : (
+                  <p className='text-xs text-muted-foreground'>
+                    Kategori yang dihapus akan dihilangkan dari daftar kategori maupun tab kasir POS.
+                  </p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
@@ -578,10 +598,10 @@ export function KategoriPage() {
                 e.preventDefault()
                 void confirmDelete()
               }}
-              disabled={isDeleting}
+              disabled={isDeleting || Boolean(getKategoriDeleteBlockedReason(activeDeleteTarget))}
               className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
-              {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

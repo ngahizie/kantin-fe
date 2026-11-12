@@ -136,3 +136,18 @@ export function mergeKategoriMenuCounts(
   }))
 }
 
+/**
+ * Mengembalikan pesan penolakan bila kategori masih memiliki menu terkait,
+ * atau null jika kategori memenuhi syarat untuk dihapus.
+ */
+export function getKategoriDeleteBlockedReason(
+  kat: Pick<KategoriItem, 'nama' | 'jumlahItem'> | null | undefined
+): string | null {
+  if (!kat) return null
+  const relatedCount = kat.jumlahItem ?? 0
+  if (relatedCount > 0) {
+    return `Kategori "${kat.nama}" tidak dapat dihapus karena masih memiliki ${relatedCount} menu terkait. Pindahkan atau hapus menu terkait terlebih dahulu.`
+  }
+  return null
+}
+

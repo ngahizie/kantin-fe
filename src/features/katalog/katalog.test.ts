@@ -10,6 +10,7 @@ import {
 } from './types'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
+  getKategoriDeleteBlockedReason,
   matchesMenuSearchQuery,
   mergeKategoriMenuCounts,
   shouldPauseMenuAutoRefresh,
@@ -471,5 +472,51 @@ describe('mergeKategoriMenuCounts', () => {
     ]
 
     expect(mergeKategoriMenuCounts(kategoris, null)).toEqual(kategoris)
+  })
+})
+
+describe('Validasi Hapus Kategori & API Hapus Kategori', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('memblokir penghapusan jika kategori masih memiliki menu terkait dan mengizinkan jika 0 menu', () => {
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Minuman', jumlahItem: 2 })
+    ).toContain('2 menu terkait')
+
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Kosong', jumlahItem: 0 })
+    ).toBeNull()
+
+    expect(getKategoriDeleteBlockedReason(null)).toBeNull()
+  })
+
+  it('menghapus kategori tanpa menu terkait dan menolak jika masih ada menu terkait', async () => {
+    const createdKat = await katalogApi.createKategori({
+      nama: 'Kategori Uji Hapus',
+      urutan: 99,
+      aktif: true,
+    })
+
+    const createdMenu = await katalogApi.createMenu({
+      nama: 'Menu Uji Keterkaitan',
+      kategoriId: createdKat.id,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 1,
+      fotoUrl: '',
+      aktif: false,
+    })
+
+    // Masih memiliki 1 menu terkait (meski nonaktif) -> harus ditolak
+    await expect(katalogApi.deleteKategori(createdKat.id)).rejects.toThrow()
+
+    // Setelah menu terkait dihapus -> kategori bisa dihapus dan hilang dari daftar
+    await katalogApi.deleteMenu(createdMenu.id)
+    await katalogApi.deleteKategori(createdKat.id)
+
+    const remaining = await katalogApi.getKategoriList(false)
+    expect(remaining.some((k) => k.id === createdKat.id)).toBe(false)
   })
 })
