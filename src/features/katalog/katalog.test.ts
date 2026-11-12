@@ -5,11 +5,13 @@ import { katalogApi } from './api/katalog-api'
 import {
   kategoriFormSchema,
   menuFormSchema,
+  type KategoriItem,
   type MenuItem,
 } from './types'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
   matchesMenuSearchQuery,
+  mergeKategoriMenuCounts,
   shouldPauseMenuAutoRefresh,
   sortMenusNewestFirst,
 } from './menu-utils'
@@ -438,5 +440,36 @@ describe('Katalog Menu Kode Barcode — Validasi, Pencarian, & API', () => {
     expect(cleared.kodeBarcode).toBeNull()
 
     await katalogApi.deleteMenu(created.id)
+  })
+})
+
+describe('mergeKategoriMenuCounts', () => {
+  it('menghitung jumlah menu terkait per kategori saat BE tidak mengirim jumlahItem', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true },
+      { id: 2, nama: 'Minuman', urutan: 2, isActive: true },
+      { id: 3, nama: 'Snack', urutan: 3, isActive: false },
+    ]
+    const menus = [
+      { kategoriId: 1 },
+      { kategoriId: 1 },
+      { kategoriId: 2 },
+      { kategoriId: null },
+    ]
+
+    const result = mergeKategoriMenuCounts(kategoris, menus)
+    expect(result.map((k) => ({ id: k.id, jumlahItem: k.jumlahItem }))).toEqual([
+      { id: 1, jumlahItem: 2 },
+      { id: 2, jumlahItem: 1 },
+      { id: 3, jumlahItem: 0 },
+    ])
+  })
+
+  it('mempertahankan data kategori apa adanya bila daftar menu gagal dimuat (null)', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true, jumlahItem: 4 },
+    ]
+
+    expect(mergeKategoriMenuCounts(kategoris, null)).toEqual(kategoris)
   })
 })

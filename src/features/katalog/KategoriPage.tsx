@@ -40,6 +40,7 @@ import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
+  mergeKategoriMenuCounts,
   notifyKategoriChanged,
   shouldPauseMenuAutoRefresh,
   subscribeKategoriChanges,
@@ -51,6 +52,14 @@ const CARD_OUTLINE_CLASS =
 
 const SUMMARY_CARD_CLASS =
   `${CARD_OUTLINE_CLASS} border-none bg-card rounded-2xl shadow-none`
+
+async function fetchKategoriWithMenuCounts(): Promise<KategoriItem[]> {
+  const [kategoris, menus] = await Promise.all([
+    katalogApi.getKategoriList(false),
+    katalogApi.getMenuList(undefined, false).catch(() => null),
+  ])
+  return mergeKategoriMenuCounts(kategoris, menus)
+}
 
 export function KategoriPage() {
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
@@ -104,7 +113,7 @@ export function KategoriPage() {
       const requestEpoch = mutationEpochRef.current
 
       try {
-        const data = await katalogApi.getKategoriList(false)
+        const data = await fetchKategoriWithMenuCounts()
         if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
         if (!force && requestEpoch !== mutationEpochRef.current) return
 
@@ -124,7 +133,7 @@ export function KategoriPage() {
       inFlightCountRef.current += 1
       const syncId = ++activeSyncIdRef.current
       try {
-        const data = await katalogApi.getKategoriList(false)
+        const data = await fetchKategoriWithMenuCounts()
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           commitKategoriData(data)
         }
@@ -231,10 +240,19 @@ export function KategoriPage() {
           const exists = prev.some((k) => k.id === savedKategori.id)
           if (exists) {
             return prev.map((k) =>
-              k.id === savedKategori.id ? { ...k, ...savedKategori } : k
+              k.id === savedKategori.id
+                ? {
+                    ...k,
+                    ...savedKategori,
+                    jumlahItem: savedKategori.jumlahItem ?? k.jumlahItem,
+                  }
+                : k
             )
           }
-          return [...prev, savedKategori]
+          return [
+            ...prev,
+            { ...savedKategori, jumlahItem: savedKategori.jumlahItem ?? 0 },
+          ]
         })
       }
       notifyKategoriChanged(syncSourceId)
@@ -258,7 +276,13 @@ export function KategoriPage() {
       setKategoriList((prev) =>
         prev.map((k) =>
           k.id === kat.id
-            ? { ...k, ...updated, isActive: nextAktif, aktif: nextAktif }
+            ? {
+                ...k,
+                ...updated,
+                jumlahItem: updated.jumlahItem ?? k.jumlahItem,
+                isActive: nextAktif,
+                aktif: nextAktif,
+              }
             : k
         )
       )

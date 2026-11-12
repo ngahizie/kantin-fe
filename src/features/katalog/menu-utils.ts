@@ -1,4 +1,4 @@
-import type { MenuItem } from './types'
+import type { KategoriItem, MenuItem } from './types'
 
 export const MENU_AUTO_REFRESH_INTERVAL_MS = 30_000
 const KATALOG_SYNC_CHANNEL = 'kantin-katalog-sync'
@@ -110,5 +110,29 @@ export function matchesMenuSearchQuery(
   const nama = (item?.nama ?? '').toLowerCase()
   const barcode = (item?.kodeBarcode ?? '').toLowerCase()
   return nama.includes(query) || barcode.includes(query)
+}
+
+/**
+ * Mengisi jumlah menu terkait per kategori berdasarkan daftar menu katalog
+ * karena endpoint daftar kategori BE belum menyertakan field jumlahItem.
+ */
+export function mergeKategoriMenuCounts(
+  kategoris: KategoriItem[],
+  menus: Pick<MenuItem, 'kategoriId'>[] | null | undefined
+): KategoriItem[] {
+  if (!Array.isArray(menus)) return kategoris
+
+  const counts = new Map<number, number>()
+  for (const menu of menus) {
+    if (menu.kategoriId === null || menu.kategoriId === undefined) continue
+    const key = Number(menu.kategoriId)
+    if (!Number.isFinite(key)) continue
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  return kategoris.map((kat) => ({
+    ...kat,
+    jumlahItem: counts.get(Number(kat.id)) ?? 0,
+  }))
 }
 
