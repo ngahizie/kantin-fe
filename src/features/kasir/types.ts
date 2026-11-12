@@ -50,7 +50,6 @@ export interface TransaksiSesiItem {
   transaksiId?: number
   nomorReferensi: string
   waktu: string
-  pembeliTipe: 'SISWA' | 'KARTU_TAMU'
   pembeliNama: string
   pembeliKelas?: string | null
   pembeliNis?: string | null
@@ -86,8 +85,6 @@ export interface TapTransaksiRequest {
 }
 
 export interface TapBuyerInfo {
-  tipe: 'SISWA' | 'KARTU_TAMU'
-  subjekTipe?: 'SISWA' | 'KARTU_TAMU'
   nama: string
   kelas?: string | null
   nis?: string | null
@@ -95,10 +92,6 @@ export interface TapBuyerInfo {
   fotoUrl?: string | null
   sisa_saldo: number
   saldoSisa?: number
-  nomor_kartu?: string
-  nomorKartu?: string
-  label_pemegang?: string
-  labelPemegang?: string
 }
 
 export interface TapTransaksiData {
@@ -126,11 +119,10 @@ export interface ReceiptData {
   waktu: string
   namaKantin: string
   titikKasir?: string | null
-  pembeliTipe: 'SISWA' | 'KARTU_TAMU'
   pembeliNama: string
   pembeliKelas?: string | null
   pembeliNis?: string | null
-  pembeliNomorKartu?: string | null
+  pembeliFotoUrl?: string | null
   items: ReceiptLineItem[]
   namaItemFallback?: string[]
   total: number
@@ -149,16 +141,17 @@ export interface ApiErrorResponse {
 }
 
 export interface InfoSaldoData {
-  tipe: 'SISWA' | 'KARTU_TAMU'
   id?: number
   nis?: string | null
   nama: string
   kelas?: string | null
   fotoUrl?: string | null
   saldo: number
-  nomorKartu?: string | null
-  labelPemegang?: string | null
   status?: string | null
   uid?: string | null
+  belanjaHariIni?: number
+  limitHarian?: number | null
+  sisaLimit?: number | null
+  bisaBelanja?: boolean
 }
 

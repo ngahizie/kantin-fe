@@ -108,10 +108,8 @@ interface RecentTransactionDisplayItem {
   waktu: string
   nama: string
   identitas?: string
-  tipe: string
   item: string
   total: number
-  metode: string
   status: string
 }
 
@@ -190,7 +188,11 @@ const renderStackedBar = (
 // eslint-disable-next-line react-refresh/only-export-components
 export const getStatusBadgeClass = (status: string) => {
   const normalized = status.toUpperCase()
-  if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
+  if (
+    ['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'DIKONFIRMASI', 'TERKONFIRMASI'].includes(
+      normalized
+    )
+  ) {
     return 'has-border border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
   }
   if (['REFUND', 'VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
@@ -309,11 +311,11 @@ export function DashboardPage() {
             return {
               id: `TRX-${trx.id}`,
               waktu: timeStr,
-              nama: trx.siswaNama || (trx.siswaId ? `Siswa #${trx.siswaId}` : 'Pelanggan'),
-              tipe: 'Siswa',
+              nama:
+                trx.siswaNama ||
+                (trx.siswaId ? `Siswa #${trx.siswaId}` : 'Pelanggan Tunai'),
               item: itemSummary,
               total: Number(trx.nominal ?? 0),
-              metode: 'RFID Tap',
               status: trx.jenis === 'VOID' ? 'REFUND' : 'SUKSES',
             }
           })
@@ -878,7 +880,7 @@ export function DashboardPage() {
               Aktivitas Transaksi Kasir Terakhir
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
-              Pencatatan real-time pembelian siswa & tamu via reader RFID USB
+              Pencatatan real-time pembelian siswa via reader RFID USB
             </CardDescription>
           </CardHeader>
           <CardContent className='p-0'>

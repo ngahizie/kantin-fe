@@ -29,6 +29,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth-store'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
 import type { SiswaNonaktifMock, RefundSlipData } from './types'
@@ -153,7 +154,7 @@ function RefundOrangTuaFormContent({
     const refNo = `REFUND-ORTU-${dateCode}-${seq}`
 
     const payload = {
-      subjekId: siswa.siswa_id,
+      siswaId: siswa.siswa_id,
       referensiId: refNo,
       catatan:
         catatan.trim() ||
@@ -163,11 +164,14 @@ function RefundOrangTuaFormContent({
     try {
       await apiClient.post('/api/saldo/refund', payload)
 
+      const currentUser = useAuthStore.getState().auth.user
+      const petugasNama = currentUser?.nama || 'Petugas TU / Bendahara'
+
       const slipData: RefundSlipData = {
         type: 'REFUND_ORTU',
         ref_no: refNo,
         waktu: new Date().toISOString(),
-        petugas_nama: 'Wibisana Bama (Petugas TU/Bendahara)',
+        petugas_nama: petugasNama,
         siswa_asal: {
           siswa_id: siswa.siswa_id,
           nis: siswa.nis,

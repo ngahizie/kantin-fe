@@ -8,7 +8,6 @@ import {
   type BarisPenjualanKasir,
   type RingkasanSaldoMengendap,
   type SiswaSaldoDetail,
-  type KartuTamuSaldoDetail,
   type ProfilSiswaRiwayat,
   type RiwayatBelanjaSiswaItem,
   type RiwayatTransaksiKeseluruhanItem,
@@ -16,15 +15,6 @@ import {
   type RingkasanKerugianStok,
   resolveTitikDanPetugas,
 } from '../types'
-import {
-  getInitialStudents,
-  saveStoredSaldo,
-} from '@/features/tu/saldo-storage'
-import {
-  MOCK_KARTU_TAMU,
-  MOCK_KERUGIAN_STOK,
-  MOCK_RIWAYAT_SISWA,
-} from '@/mocks/mock-data'
 
 interface ApiResponse<T> {
   code?: number
@@ -314,11 +304,10 @@ export const laporanApi = {
           raw.topupBersih ?? totalTopupSemua - totalRefundSemua
         const penjualanBersih =
           raw.penjualanBersih ?? (raw.penjualan ?? 0) - (raw.voidPenjualan ?? 0)
-        // Breakdown saldo siswa & kartu tamu jika BE hanya mengembalikan saldoMengendap total
+        // Sinkronisasi saldo mengendap siswa jika belum disediakan pada payload rekonsiliasi
         let saldoSiswa = raw.saldoSiswa
-        let saldoKartuTamu = raw.saldoKartuTamu
 
-        if (saldoSiswa === undefined || saldoKartuTamu === undefined) {
+        if (saldoSiswa === undefined) {
           try {
             const saldoRes = await apiClient.get<ApiResponse<RingkasanSaldoMengendap>>(
               '/api/laporan/saldo-mengendap',
@@ -327,16 +316,14 @@ export const laporanApi = {
                 : undefined
             )
             if (saldoRes.data?.data) {
-              saldoSiswa = saldoRes.data.data.saldoSiswa ?? 0
-              saldoKartuTamu = saldoRes.data.data.saldoKartuTamu ?? 0
+              saldoSiswa = saldoRes.data.data.saldoSiswa ?? raw.saldoMengendap ?? 0
             }
           } catch {
             saldoSiswa = raw.saldoMengendap ?? 0
-            saldoKartuTamu = 0
           }
         }
 
-        const saldoMengendap = raw.saldoMengendap ?? (saldoSiswa ?? 0) + (saldoKartuTamu ?? 0)
+        const saldoMengendap = raw.saldoMengendap ?? saldoSiswa ?? 0
         const totalPenggunaan =
           raw.totalPenggunaan ?? saldoMengendap + penjualanBersih
 
@@ -348,45 +335,16 @@ export const laporanApi = {
           penjualanBersih,
           totalPenggunaan,
           saldoMengendap,
-          saldoSiswa: saldoSiswa ?? 0,
-          saldoKartuTamu: saldoKartuTamu ?? 0,
+          saldoSiswa: saldoSiswa ?? saldoMengendap,
         }
       }
     } catch (err) {
-      if (import.meta.env.VITE_USE_MOCK !== 'true') {
-        throw err
-      }
-      // Fallback data rekonsiliasi jika backend offline (hanya mode mock)
+      throw err instanceof Error
+        ? err
+        : new Error('Data rekonsiliasi tidak tersedia dari server')
     }
 
-    if (import.meta.env.VITE_USE_MOCK !== 'true') {
-      throw new Error('Data rekonsiliasi tidak tersedia dari server')
-    }
-
-    return {
-      dari: new Date().toISOString().slice(0, 10) + 'T00:00:00+07:00',
-      sampai: new Date().toISOString().slice(0, 10) + 'T23:59:59+07:00',
-      topupOnline: 0,
-      topupTunai: 0,
-      penjualan: 0,
-      voidPenjualan: 0,
-      penjualanBersih: 0,
-      koreksiMasuk: 0,
-      koreksiKeluar: 0,
-      refund: 0,
-      transfer: 0,
-      saldoMengendap: 0,
-      saldoSiswa: 0,
-      saldoKartuTamu: 0,
-      totalKreditSemua: 0,
-      totalDebitSemua: 0,
-      selisih: 0,
-      seimbang: true,
-      totalTopupSemua: 0,
-      totalRefundSemua: 0,
-      topupBersih: 0,
-      totalPenggunaan: 0,
-    }
+    throw new Error('Data rekonsiliasi tidak tersedia dari server')
   },
 
   /**
@@ -483,23 +441,20 @@ export const laporanApi = {
       )
       const data = res.data?.data
       if (data) {
-        // Jika backend mengembalikan 0 siswa karena data siswa berada di admin-be, sinkronkan dari data siswa
         return {
-          ...data,
-          saldoKartuTamu: 0, // Kartu tamu dinonaktifkan sesuai kebutuhan sekolah
+          saldoSiswa: data.saldoSiswa ?? data.total ?? 0,
           total: data.saldoSiswa ?? data.total ?? 0,
+          jumlahSiswa: data.jumlahSiswa ?? 0,
         }
       }
     } catch {
-      // fallback
+      // Gunakan nilai nol jika gagal memuat ringkasan
     }
 
     return {
       saldoSiswa: 0,
-      saldoKartuTamu: 0,
       total: 0,
       jumlahSiswa: 0,
-      jumlahKartuTamu: 0,
     }
   },
 
@@ -510,90 +465,16 @@ export const laporanApi = {
     try {
       const res = await apiClient.get<ApiResponse<SiswaSaldoDetail[]>>(
         '/api/laporan/saldo-mengendap/siswa',
-        { params: { search }, silent: true } as unknown as Record<string, unknown>
+        { params: { search, batas: 50 }, silent: true } as unknown as Record<string, unknown>
       )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
+      if (Array.isArray(res.data?.data)) {
         return res.data.data
       }
     } catch {
-      // fallback
+      // Tidak menggunakan data tiruan saat endpoint gagal
     }
 
-    // Fallback jika integrasi data siswa admin-be (Q7) belum terhubung ke backend
-    const rawStudents = getInitialStudents()
-    const mapped: SiswaSaldoDetail[] = rawStudents.map((s) => ({
-      siswaId: s.siswa_id,
-      nis: s.nis,
-      nama: s.nama,
-      kelas: s.kelas,
-      saldo: s.saldo,
-      belanjaHariIni: s.belanja_hari_ini || 0,
-      limitHarian: s.limit_harian || 0,
-      isBlocked: s.is_blocked || false,
-      parentName: s.parent_name || 'Hendra Santoso',
-      parentPhone: s.parent_phone || '0812-3456-7890',
-      terakhirTransaksi: s.updated_at,
-    }))
-
-    // Coba sinkronisasi saldo riil live dari database backend (/api/saldo)
-    try {
-      const synced = await Promise.all(
-        mapped.map(async (st) => {
-          try {
-            const saldoRes = await apiClient.get('/api/saldo', {
-              params: { subjekTipe: 'SISWA', subjekId: st.siswaId },
-            })
-            const liveSaldo = saldoRes.data?.data?.saldo
-            if (typeof liveSaldo === 'number' && liveSaldo > 0) {
-              saveStoredSaldo(st.siswaId, liveSaldo)
-              return { ...st, saldo: liveSaldo }
-            }
-          } catch {
-            // Abaikan jika siswa belum ada transaksi di saldo_cache
-          }
-          return st
-        })
-      )
-      if (search && search.trim()) {
-        const q = search.trim().toLowerCase()
-        return synced.filter(
-          (s) =>
-            s.nama.toLowerCase().includes(q) ||
-            s.nis.toLowerCase().includes(q) ||
-            s.kelas.toLowerCase().includes(q)
-        )
-      }
-      return synced
-    } catch {
-      return mapped
-    }
-  },
-
-  /**
-   * Mengambil Rincian Saldo per Kartu Tamu
-   */
-  async getKartuTamuSaldoList(): Promise<KartuTamuSaldoDetail[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<KartuTamuSaldoDetail[]>>(
-        '/api/laporan/saldo-mengendap/kartu-tamu',
-        { silent: true } as unknown as Record<string, unknown>
-      )
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res.data.data
-      }
-    } catch {
-      // Fallback
-    }
-
-    return MOCK_KARTU_TAMU.map((k) => ({
-      id: k.id,
-      nomorKartu: k.nomor_kartu,
-      uid: k.uid || `UID-TAMU-${k.id}`,
-      labelPemegang: k.label_pemegang,
-      saldo: k.saldo,
-      status: k.status,
-      createdAt: k.created_at || new Date().toISOString(),
-    }))
+    return []
   },
 
   /**
@@ -631,69 +512,25 @@ export const laporanApi = {
         (err as { status?: number })?.status === 404 ||
         (err instanceof Error && err.message?.includes('404'))
 
-      if (is404) {
-        return {
-          profil: {
-            siswaId,
-            nis: '-',
-            nama: 'Siswa',
-            kelas: '-',
-            saldo: 0,
-            belanjaHariIni: 0,
-            limitHarian: 0,
-            isBlocked: false,
-            parentName: '-',
-            parentPhone: '-',
-          },
-          riwayat: [],
-        }
+      if (!is404) {
+        throw err
       }
-      // Fallback data jika backend offline
     }
-
-    const target = getInitialStudents().find((s) => s.siswa_id === siswaId)
-    const rawRiwayat = MOCK_RIWAYAT_SISWA[siswaId] || [
-      {
-        id: `TRX-20261008-${siswaId}`,
-        waktu: '2026-10-08T10:15:00Z',
-        jenis: 'BELANJA' as const,
-        arah: 'DEBIT' as const,
-        nominal: 15000,
-        saldo_setelah: target?.saldo || 0,
-        titik_kasir: 'Kasir 1 - Kantin Utama',
-        petugas: 'Ahmad Kasir',
-        referensi_id: `TRX-20261008-${siswaId}`,
-        keterangan: 'Pembelian makan istirahat',
-        items: [{ nama: 'Nasi Goreng Ayam', qty: 1, harga: 15000, subtotal: 15000 }],
-      },
-    ]
 
     return {
       profil: {
         siswaId,
-        nis: target?.nis || 'NIS-000',
-        nama: target?.nama || 'Siswa',
-        kelas: target?.kelas || 'Kelas',
-        saldo: target?.saldo || 0,
-        belanjaHariIni: target?.belanja_hari_ini || 0,
-        limitHarian: target?.limit_harian || 0,
-        isBlocked: target?.is_blocked || false,
-        parentName: target?.parent_name || 'Orang Tua Murid',
-        parentPhone: target?.parent_phone || '-',
+        nis: '-',
+        nama: 'Siswa',
+        kelas: '-',
+        saldo: 0,
+        belanjaHariIni: 0,
+        limitHarian: 0,
+        isBlocked: false,
+        parentName: '-',
+        parentPhone: '-',
       },
-      riwayat: rawRiwayat.map((r) => ({
-        id: r.id,
-        waktu: r.waktu,
-        jenis: r.jenis,
-        arah: r.arah,
-        nominal: r.nominal,
-        saldoSetelah: r.saldo_setelah,
-        titikKasir: r.titik_kasir,
-        petugas: r.petugas,
-        referensiId: r.referensi_id,
-        keterangan: r.keterangan,
-        items: r.items,
-      })),
+      riwayat: [],
     }
   },
 
@@ -709,20 +546,17 @@ export const laporanApi = {
         { params, silent: true } as unknown as Record<string, unknown>
       )
       if (Array.isArray(res.data?.data)) {
-        const students = getInitialStudents()
         return res.data.data.map((r) => {
           const { titik, petugas } = resolveTitikDanPetugas(r)
-          const st = students.find((s) => s.siswa_id === r.siswaId)
           return {
             ...r,
             titikKasir: titik,
             petugas,
             siswaNama:
               r.siswaNama ||
-              st?.nama ||
-              (r.siswaId ? `Siswa #${r.siswaId}` : 'Pelanggan'),
-            siswaNis: r.siswaNis || st?.nis || (r.siswaId ? `${r.siswaId}` : '-'),
-            siswaKelas: r.siswaKelas || st?.kelas || '-',
+              (r.siswaId ? `Siswa #${r.siswaId}` : 'Pelanggan Tunai'),
+            siswaNis: r.siswaNis || (r.siswaId ? `${r.siswaId}` : '-'),
+            siswaKelas: r.siswaKelas || '-',
           }
         })
       }
@@ -746,46 +580,29 @@ export const laporanApi = {
         { params }
       )
       const rawList = Array.isArray(res.data?.data) ? res.data.data : []
-      if (rawList.length > 0) {
-        return rawList.map((item, idx) => ({
-          id: Number(item.id ?? idx + 1),
-          waktu: String(item.waktu || item.createdAt || new Date().toISOString()),
-          menuId: Number(item.menuId ?? item.menu_id ?? 0),
-          namaMenu: String(item.namaMenu || item.nama_menu || item.menuNama || 'Menu'),
-          kategoriNama: String(item.kategoriNama || item.kategori_nama || 'Umum'),
-          jenis: (item.jenis === 'BARANG_RUSAK' ? 'BARANG_RUSAK' : 'OPNAME_KELUAR') as 'OPNAME_KELUAR' | 'BARANG_RUSAK',
-          qty: Number(item.qty ?? item.totalQty ?? item.total_qty ?? 0),
-          hppSnapshot: Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0),
-          totalNilai: Number(
-            item.totalNilai ??
-              item.total_nilai ??
-              (Number(item.qty ?? item.totalQty ?? 0) * Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0))
-          ),
-          alasan: String(item.alasan || '-'),
-          beritaAcaraId: String(
-            item.beritaAcaraId || item.berita_acara_id || item.referensiId || item.referensi_id || '-'
-          ),
-          petugas: String(item.petugas || item.aktorNama || item.aktor_nama || 'Petugas'),
-        }))
-      }
+      return rawList.map((item, idx) => ({
+        id: Number(item.id ?? idx + 1),
+        waktu: String(item.waktu || item.createdAt || new Date().toISOString()),
+        menuId: Number(item.menuId ?? item.menu_id ?? 0),
+        namaMenu: String(item.namaMenu || item.nama_menu || item.menuNama || 'Menu'),
+        kategoriNama: String(item.kategoriNama || item.kategori_nama || 'Umum'),
+        jenis: (item.jenis === 'BARANG_RUSAK' ? 'BARANG_RUSAK' : 'OPNAME_KELUAR') as 'OPNAME_KELUAR' | 'BARANG_RUSAK',
+        qty: Number(item.qty ?? item.totalQty ?? item.total_qty ?? 0),
+        hppSnapshot: Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0),
+        totalNilai: Number(
+          item.totalNilai ??
+            item.total_nilai ??
+            (Number(item.qty ?? item.totalQty ?? 0) * Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0))
+        ),
+        alasan: String(item.alasan || '-'),
+        beritaAcaraId: String(
+          item.beritaAcaraId || item.berita_acara_id || item.referensiId || item.referensi_id || '-'
+        ),
+        petugas: String(item.petugas || item.aktorNama || item.aktor_nama || 'Petugas'),
+      }))
     } catch {
-      // Fallback
+      return []
     }
-
-    return MOCK_KERUGIAN_STOK.map((item) => ({
-      id: item.id,
-      waktu: item.waktu,
-      menuId: item.menu_id,
-      namaMenu: item.nama_menu,
-      kategoriNama: item.kategori_nama,
-      jenis: item.jenis,
-      qty: item.qty,
-      hppSnapshot: item.hpp_snapshot,
-      totalNilai: item.total_nilai,
-      alasan: item.alasan,
-      beritaAcaraId: item.berita_acara_id,
-      petugas: item.petugas,
-    }))
   },
 
   /**
@@ -801,39 +618,17 @@ export const laporanApi = {
       )
       if (res.data?.data) return res.data.data
     } catch {
-      // Fallback
+      // Kembalikan ringkasan nol saat data gagal dimuat
     }
 
-    const totalNilai = MOCK_KERUGIAN_STOK.reduce(
-      (sum, item) => sum + item.total_nilai,
-      0
-    )
-    const totalQty = MOCK_KERUGIAN_STOK.reduce(
-      (sum, item) => sum + item.qty,
-      0
-    )
-    const totalInsiden = MOCK_KERUGIAN_STOK.length
-    const nilaiBarangRusak = MOCK_KERUGIAN_STOK.filter(
-      (i) => i.jenis === 'BARANG_RUSAK'
-    ).reduce((s, i) => s + i.total_nilai, 0)
-    const qtyBarangRusak = MOCK_KERUGIAN_STOK.filter(
-      (i) => i.jenis === 'BARANG_RUSAK'
-    ).reduce((s, i) => s + i.qty, 0)
-    const nilaiOpnameKeluar = MOCK_KERUGIAN_STOK.filter(
-      (i) => i.jenis === 'OPNAME_KELUAR'
-    ).reduce((s, i) => s + i.total_nilai, 0)
-    const qtyOpname = MOCK_KERUGIAN_STOK.filter(
-      (i) => i.jenis === 'OPNAME_KELUAR'
-    ).reduce((s, i) => s + i.qty, 0)
-
     return {
-      totalKerugian: totalNilai,
-      totalQtyHilang: totalQty,
-      jumlahKejadian: totalInsiden,
-      kerugianOpname: nilaiOpnameKeluar,
-      qtyOpname,
-      kerugianBarangRusak: nilaiBarangRusak,
-      qtyBarangRusak,
+      totalKerugian: 0,
+      totalQtyHilang: 0,
+      jumlahKejadian: 0,
+      kerugianOpname: 0,
+      qtyOpname: 0,
+      kerugianBarangRusak: 0,
+      qtyBarangRusak: 0,
     }
   },
 

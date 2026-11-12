@@ -68,6 +68,31 @@ describe('mapRekapSetoranTuItem', () => {
     expect(mapped.status).toBe('TERKONFIRMASI')
   })
 
+  it('maps status DIKONFIRMASI and MENUNGGU from skema v2 correctly', () => {
+    const confirmed = mapRekapSetoranTuItem({
+      petugasId: 3,
+      tanggal: '2026-10-23',
+      totalTopup: 150000,
+      jumlahDisetor: 150000,
+      selisih: 0,
+      status: 'DIKONFIRMASI',
+      referensiId: 'BA-SETORAN-20261023-3',
+    })
+    expect(confirmed.status).toBe('DIKONFIRMASI')
+
+    const waiting = mapRekapSetoranTuItem({
+      petugasId: 4,
+      tanggal: '2026-10-23',
+      totalTopup: 75000,
+      jumlahDisetor: 0,
+      selisih: 75000,
+      status: 'MENUNGGU',
+      referensiId: null,
+    })
+    expect(waiting.status).toBe('MENUNGGU')
+    expect(waiting.selisih).toBeNull()
+  })
+
   it('handles null, undefined, or missing properties gracefully without error', () => {
     const mappedNull = mapRekapSetoranTuItem(null, '2026-10-22')
     expect(mappedNull.id).toBeDefined()

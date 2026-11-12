@@ -118,9 +118,11 @@ function KonfirmasiSetoranFormContent({
         referensiId?: string
         jumlahDisetor?: number
         selisih?: number
+        status?: string
         catatan?: string
         waktu?: string
       }
+      const beStatus = beData.status?.toUpperCase()
       const updatedData: SetoranKasItem = {
         ...setoran,
         id: beData.referensiId || setoran.id,
@@ -128,7 +130,7 @@ function KonfirmasiSetoranFormContent({
           beData.jumlahDisetor !== undefined ? beData.jumlahDisetor : uangFisik,
         selisih:
           beData.selisih !== undefined ? -beData.selisih : selisih,
-        status: 'TERKONFIRMASI',
+        status: beStatus === 'DIKONFIRMASI' ? 'DIKONFIRMASI' : 'TERKONFIRMASI',
         catatan:
           beData.catatan ||
           catatan.trim() ||
@@ -147,30 +149,12 @@ function KonfirmasiSetoranFormContent({
 
       onSuccess?.(updatedData)
       onCancel()
-    } catch {
-      // Fallback simulasi frontend jika backend offline atau mutasi tersimpan lokal
-      const updatedData: SetoranKasItem = {
-        ...setoran,
-        uang_fisik: uangFisik,
-        selisih: selisih,
-        status: 'TERKONFIRMASI',
-        catatan:
-          catatan.trim() ||
-          (selisih === 0
-            ? 'Uang fisik pas sesuai total sistem'
-            : `Selisih kas ${selisih < 0 ? 'kurang' : 'lebih'} ${formatRupiah(Math.abs(selisih))}`),
-        bendahara_nama: bendaharaNama,
-        konfirmasi_pada: new Date().toISOString(),
-      }
-
-      toast.success(
-        selisih === 0
-          ? 'Setoran kas fisik berhasil dikonfirmasi (Kas Pas)!'
-          : `Setoran kas berhasil dikonfirmasi dengan catatan selisih ${formatRupiah(selisih)}`
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+      toast.error(
+        errorObj.response?.data?.message ||
+          'Gagal mengonfirmasi setoran kas ke server.'
       )
-
-      onSuccess?.(updatedData)
-      onCancel()
     } finally {
       setIsSubmitting(false)
     }
@@ -208,14 +192,6 @@ function KonfirmasiSetoranFormContent({
             <span className='font-medium text-foreground'>
               {setoran.total_transaksi} Transaksi (Siswa:{' '}
               {formatRupiah(setoran.total_topup_siswa)})
-            </span>
-          </div>
-          <div>
-            <span className='block text-muted-foreground'>
-              Top-up Kartu Tamu:
-            </span>
-            <span className='font-medium text-foreground'>
-              {formatRupiah(setoran.total_topup_kartu_tamu)}
             </span>
           </div>
         </div>
@@ -353,7 +329,7 @@ function KonfirmasiSetoranFormContent({
             Catatan Sistem: {formatRupiah(totalSistem)}
           </span>
           <span className='font-mono text-muted-foreground'>
-            Selisih: {selisih >= 0 ? '+' : ''}{formatRupiah(selisih)}
+            Selisih: {selisih > 0 ? '+' : ''}{formatRupiah(selisih)}
           </span>
         </div>
       </div>

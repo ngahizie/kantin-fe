@@ -16,7 +16,6 @@ declare module 'axios' {
   }
 }
 import { toast } from 'sonner'
-import { setupMockAdapter } from '@/mocks/mock-adapter'
 
 import { getCookie, removeCookie } from '@/lib/cookies'
 import { extractValidationMessage } from '@/lib/validation-error'
@@ -34,12 +33,15 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true,
 })
 
-// Pasang Mock Adapter jika VITE_USE_MOCK=true
+// Pasang Mock Adapter secara lazy hanya jika VITE_USE_MOCK=true agar bundle produksi bebas mock data
+let mockReadyPromise: Promise<void> | null = null
 if (useMock) {
   // eslint-disable-next-line no-console
   console.info('[Kantin-FE] Mock API Layer AKTIF (VITE_USE_MOCK=true).')
-  setupMockAdapter(apiClient)
-  setupMockAdapter(axios)
+  mockReadyPromise = import('@/mocks/mock-adapter').then(({ setupMockAdapter }) => {
+    setupMockAdapter(apiClient)
+    setupMockAdapter(axios)
+  })
 } else {
   // eslint-disable-next-line no-console
   console.info(`[Kantin-FE] Terhubung ke server backend: ${baseURL}`)
@@ -47,7 +49,10 @@ if (useMock) {
 
 // Request Interceptor: Otomatis cantumkan Authorization Bearer token jika ada
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
+    if (mockReadyPromise) {
+      await mockReadyPromise
+    }
     // Jangan cantumkan header Authorization pada endpoint publik login/auth
     const isAuthEndpoint =
       config.url?.includes('/auth/login') ||

@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { Check, Copy, Printer, Receipt } from 'lucide-react'
-import { formatDateTime, formatRupiah } from '@/lib/formatters'
+import { formatDateTime, formatRupiah, getInitials } from '@/lib/formatters'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -52,7 +53,6 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
   const kodeStrukDisplay =
     kodeStruk || (receipt.transaksiId ? `TRX-${receipt.transaksiId}` : '-')
   const hasCopyableKode = kodeStrukDisplay !== '-'
-  const isSiswa = receipt.pembeliTipe === 'SISWA'
 
   useEffect(() => {
     return () => {
@@ -217,38 +217,36 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
             </div>
             <div className='flex items-center justify-between gap-3'>
               <dt className='text-slate-600'>Pembeli</dt>
-              <dd className='font-semibold text-slate-900 text-right'>
-                {receipt.pembeliNama}
+              <dd className='flex items-center justify-end gap-2 font-semibold text-slate-900 text-right'>
+                <Avatar className='h-6 w-6 shrink-0 rounded-full has-border !border !border-slate-200 bg-slate-100 text-slate-700'>
+                  {receipt.pembeliFotoUrl && (
+                    <AvatarImage
+                      src={receipt.pembeliFotoUrl}
+                      alt={receipt.pembeliNama}
+                      className='object-cover'
+                    />
+                  )}
+                  <AvatarFallback className='rounded-full bg-slate-100 text-[10px] font-bold text-slate-700'>
+                    {getInitials(receipt.pembeliNama)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{receipt.pembeliNama}</span>
               </dd>
             </div>
             <div className='flex items-center justify-between gap-3'>
-              <dt className='text-slate-600'>
-                {isSiswa ? 'Status / Kelas' : 'Tipe Kartu'}
-              </dt>
+              <dt className='text-slate-600'>Status / Kelas</dt>
               <dd className='text-slate-700 text-right'>
-                {isSiswa
-                  ? receipt.pembeliKelas
-                    ? `Siswa (${receipt.pembeliKelas})`
-                    : 'Siswa'
-                  : 'Kartu Tamu'}
+                {receipt.pembeliKelas
+                  ? `Siswa (${receipt.pembeliKelas})`
+                  : 'Siswa'}
               </dd>
             </div>
-            {isSiswa && receipt.pembeliNis && (
-              <div className='flex items-center justify-between gap-3'>
-                <dt className='text-slate-600'>NIS</dt>
-                <dd className='text-slate-700 tabular-nums text-right'>
-                  {receipt.pembeliNis}
-                </dd>
-              </div>
-            )}
-            {!isSiswa && receipt.pembeliNomorKartu && (
-              <div className='flex items-center justify-between gap-3'>
-                <dt className='text-slate-600'>No. Kartu</dt>
-                <dd className='text-slate-700 tabular-nums text-right'>
-                  {receipt.pembeliNomorKartu}
-                </dd>
-              </div>
-            )}
+            <div className='flex items-center justify-between gap-3'>
+              <dt className='text-slate-600'>NIS</dt>
+              <dd className='text-slate-700 tabular-nums text-right'>
+                {receipt.pembeliNis || '-'}
+              </dd>
+            </div>
           </dl>
         </div>
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   CheckCircle2,
   User,
-  CreditCard,
   Clock,
   ArrowRight,
 } from 'lucide-react'
@@ -94,18 +93,12 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
   if (!data) return null
 
   const rawExtra = data as unknown as {
-    subjekTipe?: string
     fotoUrl?: string
     saldoSisa?: number
     nama?: string
   }
   const pembeli: Partial<TapBuyerInfo> =
     data.pembeli || (data as unknown as Partial<TapBuyerInfo>) || {}
-  const isSiswa =
-    pembeli?.tipe === 'SISWA' ||
-    pembeli?.subjekTipe === 'SISWA' ||
-    rawExtra.subjekTipe === 'SISWA' ||
-    Boolean(pembeli?.kelas)
   const fotoUrl =
     pembeli?.foto_url || pembeli?.fotoUrl || rawExtra.fotoUrl || null
   const sisaSaldo =
@@ -139,7 +132,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Konten Identitas Siswa / Kartu Tamu */}
+        {/* Konten Identitas Siswa */}
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
@@ -152,11 +145,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
                 />
               )}
               <AvatarFallback className='rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500'>
-                {isSiswa ? (
-                  <User className='h-16 w-16 stroke-[1.5]' />
-                ) : (
-                  <CreditCard className='h-16 w-16 stroke-[1.5]' />
-                )}
+                <User className='h-16 w-16 stroke-[1.5]' />
               </AvatarFallback>
             </Avatar>
             <div className='absolute -bottom-2.5 left-1/2 -translate-x-1/2'>
@@ -164,7 +153,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
                 variant='secondary'
                 className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-700 dark:text-slate-200 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
               >
-                {isSiswa ? pembeli?.kelas || 'Siswa' : 'Kartu Tamu'}
+                {pembeli?.kelas || 'Siswa'}
               </Badge>
             </div>
           </div>
@@ -174,14 +163,9 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             <h3 className='text-lg font-bold tracking-tight text-slate-800 dark:text-white'>
               {namaPembeli}
             </h3>
-            {isSiswa && pembeli?.nis && (
+            {pembeli?.nis && (
               <p className='text-xs text-slate-500 dark:text-slate-400'>
                 NIS: {pembeli.nis}
-              </p>
-            )}
-            {!isSiswa && (pembeli?.nomor_kartu || pembeli?.nomorKartu) && (
-              <p className='text-xs text-slate-500 dark:text-slate-400'>
-                No. Kartu: {pembeli.nomor_kartu || pembeli.nomorKartu}
               </p>
             )}
           </div>

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +41,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { formatRupiah, formatDateTime } from '@/lib/formatters'
+import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -741,7 +742,7 @@ export function LaporanRiwayatSiswaPage() {
                                 {s.nama}
                               </p>
                               <p className="text-[11px] text-muted-foreground">
-                                NIS: {s.nis} {s.nisn ? `• NISN: ${s.nisn}` : ''} • {s.kelas}
+                                NIS: {s.nis || '-'} {s.nisn ? `• NISN: ${s.nisn}` : ''} • {s.kelas}
                               </p>
                             </div>
                             <Badge variant="secondary" className="border-0 text-[10px]">
@@ -801,20 +802,25 @@ export function LaporanRiwayatSiswaPage() {
               <CardContent className="p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-xl font-bold border-0">
-                      {profil.nama
-                        .split(' ')
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join('')}
-                    </div>
+                    <Avatar className="h-16 w-16 shrink-0 rounded-2xl border-0 bg-primary/10 text-primary">
+                      {profil.fotoUrl && (
+                        <AvatarImage
+                          src={profil.fotoUrl}
+                          alt={profil.nama}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="rounded-2xl bg-primary/10 text-primary text-xl font-bold">
+                        {getInitials(profil.nama)}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold tracking-tight">
                           {profil.nama}
                         </h2>
                         <Badge variant="secondary" className="border-0 font-mono text-xs bg-background/80 dark:bg-background/40">
-                          NIS: {profil.nis}
+                          NIS: {profil.nis || '-'}
                         </Badge>
                         <Badge className="border-0 bg-primary/20 text-primary hover:bg-primary/20 text-xs">
                           {profil.kelas}

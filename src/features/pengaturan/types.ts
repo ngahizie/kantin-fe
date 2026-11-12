@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+export type KebijakanSaldoMengendap =
+  | 'REFUND'
+  | 'PINDAH_SAUDARA'
+  | 'TETAP_MENGENDAP'
+
 export interface PengaturanKantin {
   sekolahId?: number
   namaKantin: string
@@ -9,7 +14,8 @@ export interface PengaturanKantin {
   minTopup: number
   maksTopup: number
   batasSaldoSiswa: number
-  batasSaldoKartuTamu: number
+  kebijakanSaldoMengendap: KebijakanSaldoMengendap
+  ambangHari: number
   disimpan?: boolean
   updatedAt?: string
   updatedBy?: string
@@ -34,7 +40,8 @@ export const DEFAULT_PENGATURAN_KANTIN: PengaturanKantin = {
   minTopup: 5000,
   maksTopup: 500000,
   batasSaldoSiswa: 1000000,
-  batasSaldoKartuTamu: 500000,
+  kebijakanSaldoMengendap: 'REFUND',
+  ambangHari: 90,
   disimpan: false,
 }
 
@@ -65,9 +72,15 @@ export const pengaturanKantinSchema = z
     batasSaldoSiswa: z
       .number({ message: 'Nominal harus berupa angka' })
       .min(10000, 'Batas saldo maksimum siswa minimal Rp 10.000'),
-    batasSaldoKartuTamu: z
-      .number({ message: 'Nominal harus berupa angka' })
-      .min(10000, 'Batas saldo maksimum kartu tamu minimal Rp 10.000'),
+    kebijakanSaldoMengendap: z.enum([
+      'REFUND',
+      'PINDAH_SAUDARA',
+      'TETAP_MENGENDAP',
+    ]),
+    ambangHari: z
+      .number({ message: 'Ambang hari harus berupa angka' })
+      .int('Ambang hari harus berupa angka bulat')
+      .min(0, 'Ambang hari tidak boleh negatif'),
   })
   .refine((data) => data.maksTopup >= data.minTopup, {
     message: 'Batas maksimum top-up tidak boleh lebih kecil dari batas minimum top-up',
@@ -76,10 +89,6 @@ export const pengaturanKantinSchema = z
   .refine((data) => data.batasSaldoSiswa >= data.maksTopup, {
     message: 'Batas saldo maksimal siswa tidak boleh lebih kecil dari batas maksimum sekali top-up',
     path: ['batasSaldoSiswa'],
-  })
-  .refine((data) => data.batasSaldoKartuTamu >= data.minTopup, {
-    message: 'Batas saldo maksimal kartu tamu tidak boleh lebih kecil dari batas minimum top-up',
-    path: ['batasSaldoKartuTamu'],
   })
 
 export type PengaturanKantinFormValues = z.infer<typeof pengaturanKantinSchema>

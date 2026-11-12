@@ -1,12 +1,14 @@
-import type { KartuSiswaMock } from '@/mocks/mock-data'
-import { getStoredTopupTransactions } from './saldo-storage'
+import type { KartuSiswaMock } from '@/types/kantin'
+import {
+  getStoredTopupTransactions,
+  type StatusSetoranKas,
+} from './saldo-storage'
 
 export interface TransaksiTopupDetail {
   id: string | number
   waktu: string
-  subjek_tipe: 'SISWA' | 'KARTU_TAMU'
-  subjek_nama: string
-  subjek_info: string
+  siswa_nama: string
+  siswa_info: string
   nominal: number
   penyetor: string
   referensi_id: string
@@ -20,11 +22,10 @@ export interface SetoranKasItem {
   petugas_nip?: string
   total_transaksi: number
   total_topup_siswa: number
-  total_topup_kartu_tamu: number
   total_sistem: number
   uang_fisik: number | null
   selisih: number | null
-  status: 'MENUNGGU_KONFIRMASI' | 'TERKONFIRMASI'
+  status: StatusSetoranKas
   catatan?: string
   bendahara_id?: number | null
   bendahara_nama?: string | null
@@ -55,8 +56,6 @@ export interface RawRekapTu {
   totalTransaksi?: number | null
   total_topup_siswa?: number | null
   totalTopupSiswa?: number | null
-  total_topup_kartu_tamu?: number | null
-  totalTopupKartuTamu?: number | null
   jumlahDisetor?: number | null
   uang_fisik?: number | null
   selisih?: number | null
@@ -94,7 +93,6 @@ export function mapRekapSetoranTuItem(
       petugas_nama: 'Petugas Tidak Diketahui',
       total_transaksi: 0,
       total_topup_siswa: 0,
-      total_topup_kartu_tamu: 0,
       total_sistem: 0,
       uang_fisik: null,
       selisih: null,
@@ -139,12 +137,22 @@ export function mapRekapSetoranTuItem(
         ? Number(raw.uang_fisik)
         : null
 
+  const rawStatus =
+    typeof raw.status === 'string' ? raw.status.trim().toUpperCase() : ''
   const isConfirmed = Boolean(
-    raw.referensiId ||
+    rawStatus === 'DIKONFIRMASI' ||
+      rawStatus === 'TERKONFIRMASI' ||
+      raw.referensiId ||
       raw.referensi_id ||
-      (jumlahDisetor !== null && jumlahDisetor > 0) ||
-      raw.status === 'TERKONFIRMASI'
+      (jumlahDisetor !== null && jumlahDisetor > 0)
   )
+  const resolvedStatus: StatusSetoranKas = isConfirmed
+    ? rawStatus === 'DIKONFIRMASI'
+      ? 'DIKONFIRMASI'
+      : 'TERKONFIRMASI'
+    : rawStatus === 'MENUNGGU'
+      ? 'MENUNGGU'
+      : 'MENUNGGU_KONFIRMASI'
 
   let selisih: number | null = null
   if (jumlahDisetor !== null) {
@@ -187,13 +195,10 @@ export function mapRekapSetoranTuItem(
   const rincianTransaksi: TransaksiTopupDetail[] =
     rawRincian.length > 0 ? rawRincian : storedTransactions
 
-  const hitungTotalSiswa = rincianTransaksi
-    .filter((tx) => tx.subjek_tipe === 'SISWA')
-    .reduce((sum, tx) => sum + (tx.nominal || 0), 0)
-
-  const hitungTotalTamu = rincianTransaksi
-    .filter((tx) => tx.subjek_tipe === 'KARTU_TAMU')
-    .reduce((sum, tx) => sum + (tx.nominal || 0), 0)
+  const hitungTotalSiswa = rincianTransaksi.reduce(
+    (sum, tx) => sum + (tx.nominal || 0),
+    0
+  )
 
   const totalTransaksi = Number(
     raw.total_transaksi ??
@@ -207,12 +212,6 @@ export function mapRekapSetoranTuItem(
       (hitungTotalSiswa > 0 ? hitungTotalSiswa : totalTopup)
   )
 
-  const totalTopupKartuTamu = Number(
-    raw.total_topup_kartu_tamu ??
-      raw.totalTopupKartuTamu ??
-      hitungTotalTamu
-  )
-
   return {
     id,
     tanggal,
@@ -221,11 +220,10 @@ export function mapRekapSetoranTuItem(
     petugas_nip: petugasNip || undefined,
     total_transaksi: totalTransaksi,
     total_topup_siswa: totalTopupSiswa,
-    total_topup_kartu_tamu: totalTopupKartuTamu,
     total_sistem: totalTopup,
     uang_fisik: isConfirmed ? (jumlahDisetor ?? totalTopup) : null,
     selisih: isConfirmed ? (selisih ?? 0) : null,
-    status: isConfirmed ? 'TERKONFIRMASI' : 'MENUNGGU_KONFIRMASI',
+    status: resolvedStatus,
     catatan:
       (raw.catatan ||
       (isConfirmed
@@ -256,8 +254,6 @@ export interface RawInfoSiswa {
   siswaId?: number | string
   siswa_id?: number | string
   id?: number | string
-  subjekId?: number | string
-  subjek_id?: number | string
   nis?: string
   nama?: string
   kelas?: string
@@ -303,9 +299,7 @@ export function mapInfoSiswaToKartuSiswa(
     }
   }
 
-  const siswaId = Number(
-    raw.siswaId ?? raw.siswa_id ?? raw.id ?? raw.subjekId ?? raw.subjek_id ?? 0
-  )
+  const siswaId = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
   const nis = String(raw.nis ?? '')
   const isBlocked = Boolean(
     raw.isBlocked ?? raw.is_blocked ?? raw.tidakAktif ?? raw.tidak_aktif ?? false

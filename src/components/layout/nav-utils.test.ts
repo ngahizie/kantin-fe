@@ -35,7 +35,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
-    expect(subReportTitles).toContain('Saldo Mengendap')
+    expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).not.toContain('Laporan Kerugian Stok')
@@ -72,7 +72,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Analisis Laba Kotor')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).not.toContain('Cek Selisih Uang')
-    expect(subReportTitles).not.toContain('Saldo Mengendap')
+    expect(subReportTitles).not.toContain('Total Saldo Siswa')
     expect(subReportTitles).not.toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
 
@@ -101,14 +101,14 @@ describe('filterNavGroupsByRole', () => {
     const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
     expect(ringkasanGroup?.items.map((i) => i.title)).toEqual(['Dashboard Ringkasan'])
 
-    // Laporan yang boleh dilihat TU (Rekonsiliasi, Saldo Mengendap, Riwayat Belanja)
+    // Laporan yang boleh dilihat TU (Rekonsiliasi, Total Saldo Siswa, Riwayat Belanja)
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')
     const laporanMenu = laporanGroup?.items.find((i) => i.title === 'Laporan Keuangan')
     const subReportTitles = (laporanMenu && 'items' in laporanMenu ? (laporanMenu as NavCollapsible).items : []).map(
       (s) => s.title
     )
     expect(subReportTitles).toContain('Cek Selisih Uang')
-    expect(subReportTitles).toContain('Saldo Mengendap')
+    expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
@@ -168,7 +168,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Analisis Laba Kotor')
-    expect(subReportTitles).toContain('Saldo Mengendap')
+    expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')

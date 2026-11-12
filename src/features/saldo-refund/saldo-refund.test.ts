@@ -12,7 +12,7 @@ describe('Refund Saldo Orang Tua Zod Validation Schema', () => {
       siswaId: 201,
       nominal: 125000,
       metode: 'TUNAI' as const,
-      namaPenerima: 'Hendra Santoso',
+      namaPenerima: 'Ahmad Hidayat',
       kontakPenerima: '081234567890',
       catatan: 'Pengembalian tunai kelulusan',
     }
@@ -68,7 +68,7 @@ describe('Refund Saldo Orang Tua Zod Validation Schema', () => {
       siswaId: 201,
       nominal: 0,
       metode: 'TUNAI' as const,
-      namaPenerima: 'Hendra Santoso',
+      namaPenerima: 'Ahmad Hidayat',
       kontakPenerima: '081234567890',
     }
     const result = refundOrangTuaSchema.safeParse(invalidData)
@@ -133,9 +133,8 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
       titikKasirId: 1001,
       titikKasirNama: 'Kasir Kantin Utama',
       petugasId: 4,
-      subjekTipe: 'SISWA',
-      subjekId: 101,
-      subjekNama: null, // Dari BE null untuk siswa
+      siswaId: 101,
+      siswaNama: null, // Dari BE null untuk siswa
       kartuUid: 'DA000003',
       total: 16000,
       status: 'SUKSES',
@@ -150,10 +149,9 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.sesi_kasir_id).toBe(1002)
     expect(mapped.titik_kasir).toBe('Kasir Kantin Utama')
     expect(mapped.petugas_kasir).toBe('Petugas #4')
-    expect(mapped.subjek_tipe).toBe('SISWA')
-    expect(mapped.subjek_id).toBe(101)
-    expect(mapped.subjek_nama).toBe('Budi Santoso')
-    expect(mapped.subjek_info).toBe('X IPA 1 (NIS: 2026001)')
+    expect(mapped.siswa_id).toBe(101)
+    expect(mapped.siswa_nama).toBe('Budi Santoso')
+    expect(mapped.siswa_info).toBe('X IPA 1 (NIS: 2026001)')
     expect(mapped.total).toBe(16000)
     expect(mapped.status).toBe('SUKSES')
     expect(mapped.dapatDikoreksi).toBe(true)
@@ -167,10 +165,9 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
       sesiKasirId: 1002,
       titikKasirNama: 'Kasir Kantin Utama',
       petugasId: 4,
-      subjekTipe: 'KARTU_TAMU',
-      subjekId: 1003,
-      subjekNama: 'Tamu Umum',
-      kartuUid: 'DA000003',
+      siswaId: 102,
+      siswaNama: 'Siti Rahmawati',
+      kartuUid: 'DA000004',
       total: 5000,
       status: 'VOID',
       alasanVoid: 'Salah input item',
@@ -184,16 +181,15 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.dapatDikoreksi).toBe(false)
     expect(mapped.dapat_dikoreksi).toBe(false)
     expect(mapped.alasanVoid).toBe('Salah input item')
-    expect(mapped.subjek_nama).toBe('Tamu Umum')
+    expect(mapped.siswa_nama).toBe('Siti Rahmawati')
   })
 
   it('berhasil memetakan MutasiKoreksiItem camelCase BE ke MutasiKoreksiItem FE', () => {
     const rawBeMutasi = {
       id: 12,
       waktu: '2026-10-20T10:00:00+07:00',
-      subjekTipe: 'SISWA',
-      subjekId: 101,
-      subjekNama: null,
+      siswaId: 101,
+      siswaNama: null,
       arah: 'KREDIT',
       nominal: 16000,
       saldoSebelum: 50000,
@@ -208,7 +204,7 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
 
     expect(mapped.id).toBe(12)
     expect(mapped.referensi_id).toBe('BA-KOR-20261020-9988')
-    expect(mapped.subjek_nama).toBe('Budi Santoso')
+    expect(mapped.siswa_nama).toBe('Budi Santoso')
     expect(mapped.nominal).toBe(16000)
     expect(mapped.saldo_sebelum).toBe(50000)
     expect(mapped.saldo_setelah).toBe(66000)

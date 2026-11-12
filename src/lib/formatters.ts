@@ -10,12 +10,16 @@ export function formatRupiah(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || isNaN(amount)) {
     return 'Rp 0'
   }
-  return new Intl.NumberFormat('id-ID', {
+  const formatter = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  })
+  if (amount < 0) {
+    return `-${formatter.format(Math.abs(amount))}`
+  }
+  return formatter.format(amount)
 }
 
 /**
@@ -108,4 +112,16 @@ export function formatTimeWithZone(date: string | Date | null | undefined): stri
     })
     .replace(':', '.')
   return `${timeStr} ${getTimezoneSuffix(d)}`
+}
+
+/**
+ * Ambil inisial 1-2 huruf dari nama untuk AvatarFallback
+ */
+export function getInitials(name?: string | null): string {
+  if (!name?.trim()) return 'S'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+  return parts[0].slice(0, 2).toUpperCase()
 }

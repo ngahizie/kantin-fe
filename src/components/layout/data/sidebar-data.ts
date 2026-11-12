@@ -160,7 +160,7 @@ export const sidebarData: SidebarData = {
               roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
             {
-              title: 'Saldo Mengendap',
+              title: 'Total Saldo Siswa',
               url: '/laporan/saldo-mengendap',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
