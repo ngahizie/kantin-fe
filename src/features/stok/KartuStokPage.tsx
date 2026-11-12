@@ -637,7 +637,7 @@ export function KartuStokPage() {
                 Total Masuk
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
-                +{formatNumber(kpiData.totalMasuk)}
+                {formatNumber(kpiData.totalMasuk)}
               </CardTitle>
             </CardHeader>
             <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
@@ -652,7 +652,7 @@ export function KartuStokPage() {
                 Total Keluar
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-rose-600 dark:text-rose-400'>
-                -{formatNumber(kpiData.totalKeluar)}
+                {formatNumber(kpiData.totalKeluar)}
               </CardTitle>
             </CardHeader>
             <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
@@ -836,10 +836,10 @@ export function KartuStokPage() {
                                 </Badge>
                               </TableCell>
                               <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400'>
-                                {isMasuk ? `+${formatNumber(item.qty)}` : '-'}
+                                {isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
                               <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400'>
-                                {!isMasuk ? `-${formatNumber(item.qty)}` : '-'}
+                                {!isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
                               <TableCell className='text-right font-mono font-bold text-foreground'>
                                 {formatNumber(item.stokSetelah)}
