@@ -885,31 +885,30 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
 
       if (method === 'delete' && targetId) {
-        // Pengecekan aturan bisnis: jika kategori masih digunakan menu aktif, tidak bisa dihapus
-        const activeUsage = menuList.some(
-          (m) => m.kategori_id === targetId && m.is_active
-        )
-        if (activeUsage) {
+        const idx = kategoriList.findIndex((k) => k.id === targetId)
+        if (idx === -1) {
+          return { status: 404, data: { message: 'Kategori tidak ditemukan' } }
+        }
+        // Kategori tidak boleh dihapus selama masih ada menu terkait (aktif maupun nonaktif)
+        const relatedUsage = menuList.some((m) => m.kategori_id === targetId)
+        if (relatedUsage) {
           return {
             status: 400,
             data: {
               code: 400,
               status: 'BAD_REQUEST',
               message:
-                'Kategori ini masih digunakan oleh menu aktif. Nonaktifkan atau pindahkan menu terlebih dahulu sebelum menghapus kategori.',
+                'Kategori tidak dapat dihapus karena masih memiliki menu terkait. Pindahkan atau hapus menu terkait terlebih dahulu.',
             },
           }
         }
-        const idx = kategoriList.findIndex((k) => k.id === targetId)
-        if (idx !== -1) {
-          kategoriList[idx].is_active = false
-        }
+        kategoriList.splice(idx, 1)
         return {
           status: 200,
           data: {
             code: 200,
             status: 'SUCCESS',
-            message: 'Kategori berhasil dinonaktifkan',
+            message: 'Kategori berhasil dihapus',
           },
         }
       }

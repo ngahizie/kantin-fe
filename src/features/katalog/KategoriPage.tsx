@@ -1,5 +1,5 @@
 import { TableToolbar } from '@/components/data-table'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react'
 import {
   Tag,
   Plus,
@@ -16,6 +16,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -37,7 +38,29 @@ import {
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
+import {
+  MENU_AUTO_REFRESH_INTERVAL_MS,
+  getKategoriDeleteBlockedReason,
+  mergeKategoriMenuCounts,
+  notifyKategoriChanged,
+  shouldPauseMenuAutoRefresh,
+  subscribeKategoriChanges,
+} from './menu-utils'
 import type { KategoriItem } from './types'
+
+const CARD_OUTLINE_CLASS =
+  'has-outline outline-2 outline-slate-200 dark:outline-slate-800'
+
+const SUMMARY_CARD_CLASS =
+  `${CARD_OUTLINE_CLASS} border-none bg-card rounded-2xl shadow-none`
+
+async function fetchKategoriWithMenuCounts(): Promise<KategoriItem[]> {
+  const [kategoris, menus] = await Promise.all([
+    katalogApi.getKategoriList(false),
+    katalogApi.getMenuList(undefined, false).catch(() => null),
+  ])
+  return mergeKategoriMenuCounts(kategoris, menus)
+}
 
 export function KategoriPage() {
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
@@ -50,47 +73,145 @@ export function KategoriPage() {
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [activeDeleteTarget, setActiveDeleteTarget] = useState<KategoriItem | null>(null)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
+
+  const [isDocumentHidden, setIsDocumentHidden] = useState(() =>
+    typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
+  )
+
+  const syncSourceId = useId()
+  const isMountedRef = useRef(true)
+  const inFlightCountRef = useRef(0)
+  const activeSyncIdRef = useRef(0)
+  const mutationEpochRef = useRef(0)
+  const lastSyncedAtRef = useRef<Date | null>(null)
+
   const handleDeleteClick = (kat: KategoriItem) => {
+    const blockedReason = getKategoriDeleteBlockedReason(kat)
+    if (blockedReason) {
+      toast.error(blockedReason)
+      return
+    }
     setDeleteTarget(kat)
     setActiveDeleteTarget(kat)
   }
 
-  
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const data = await katalogApi.getKategoriList(false)
-      setKategoriList(data)
-    } catch (err: unknown) {
-      const error = err as { message?: string }
-      toast.error(error.message || 'Gagal memuat daftar kategori')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
+    isModalOpen,
+    hasDeleteTarget: Boolean(deleteTarget),
+    isDeleting,
+    togglingId,
+    isDocumentHidden,
+  })
+
+  const commitKategoriData = useCallback((data: KategoriItem[]) => {
+    setKategoriList(data)
+    lastSyncedAtRef.current = new Date()
+  }, [])
+
+  // Sinkronisasi latar belakang & pasca-mutasi tanpa mengganggu tampilan tabel dengan loading penuh
+  const syncKategori = useCallback(
+    async (force = false) => {
+      if (!force && inFlightCountRef.current > 0) return
+
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
+      const requestEpoch = mutationEpochRef.current
+
+      try {
+        const data = await fetchKategoriWithMenuCounts()
+        if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
+        if (!force && requestEpoch !== mutationEpochRef.current) return
+
+        commitKategoriData(data)
+      } catch {
+        // Abaikan kegagalan sinkronisasi latar belakang agar tidak mengganggu antarmuka
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+      }
+    },
+    [commitKategoriData]
+  )
 
   useEffect(() => {
-    let isMounted = true
+    isMountedRef.current = true
     const init = async () => {
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
       try {
-        const data = await katalogApi.getKategoriList(false)
-        if (isMounted) {
-          setKategoriList(data)
-          setLoading(false)
+        const data = await fetchKategoriWithMenuCounts()
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
+          commitKategoriData(data)
         }
       } catch (err: unknown) {
-        if (isMounted) {
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           const error = err as { message?: string }
           toast.error(error.message || 'Gagal memuat daftar kategori')
+        }
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+        if (isMountedRef.current && inFlightCountRef.current === 0) {
           setLoading(false)
         }
       }
     }
     void init()
     return () => {
-      isMounted = false
+      isMountedRef.current = false
     }
-  }, [])
+  }, [commitKategoriData])
+
+  // Pantau visibilitas tab agar auto-refresh berhenti saat tab tersembunyi
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const hidden = document.visibilityState === 'hidden'
+      setIsDocumentHidden(hidden)
+
+      if (hidden) return
+
+      const pausedWithoutVisibility = shouldPauseMenuAutoRefresh({
+        isModalOpen,
+        hasDeleteTarget: Boolean(deleteTarget),
+        isDeleting,
+        togglingId,
+        isDocumentHidden: false,
+      })
+      if (pausedWithoutVisibility) return
+
+      const elapsedMs = lastSyncedAtRef.current
+        ? Date.now() - lastSyncedAtRef.current.getTime()
+        : Number.POSITIVE_INFINITY
+      if (elapsedMs >= MENU_AUTO_REFRESH_INTERVAL_MS) {
+        void syncKategori()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isModalOpen, deleteTarget, isDeleting, togglingId, syncKategori])
+
+  // Polling otomatis setiap 30 detik selalu aktif selama tidak dijeda
+  useEffect(() => {
+    if (isAutoRefreshPaused) return
+
+    const timer = window.setInterval(() => {
+      void syncKategori()
+    }, MENU_AUTO_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [isAutoRefreshPaused, syncKategori])
+
+  // Dengarkan perubahan kategori dari tab atau komponen lain untuk sinkronisasi otomatis
+  useEffect(() => {
+    return subscribeKategoriChanges(() => {
+      mutationEpochRef.current += 1
+      void syncKategori(true)
+    }, syncSourceId)
+  }, [syncKategori, syncSourceId])
 
   // Filter kategori berdasarkan search
   const filteredKategori = useMemo(() => {
@@ -117,21 +238,103 @@ export function KategoriPage() {
     setIsModalOpen(true)
   }
 
+  const handleFormSuccess = useCallback(
+    async (savedKategori?: KategoriItem) => {
+      mutationEpochRef.current += 1
+      if (savedKategori && typeof savedKategori === 'object') {
+        setKategoriList((prev) => {
+          const exists = prev.some((k) => k.id === savedKategori.id)
+          if (exists) {
+            return prev.map((k) =>
+              k.id === savedKategori.id
+                ? {
+                    ...k,
+                    ...savedKategori,
+                    jumlahItem: savedKategori.jumlahItem ?? k.jumlahItem,
+                  }
+                : k
+            )
+          }
+          return [
+            ...prev,
+            { ...savedKategori, jumlahItem: savedKategori.jumlahItem ?? 0 },
+          ]
+        })
+      }
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
+    },
+    [syncKategori, syncSourceId]
+  )
+
+  const handleToggleAktif = async (kat: KategoriItem) => {
+    const currentAktif = kat.isActive !== false && kat.aktif !== false
+    const nextAktif = !currentAktif
+    mutationEpochRef.current += 1
+    try {
+      setTogglingId(kat.id)
+      const updated = await katalogApi.updateKategori(kat.id, {
+        nama: kat.nama,
+        urutan: kat.urutan ?? 0,
+        aktif: nextAktif,
+      })
+      mutationEpochRef.current += 1
+      setKategoriList((prev) =>
+        prev.map((k) =>
+          k.id === kat.id
+            ? {
+                ...k,
+                ...updated,
+                jumlahItem: updated.jumlahItem ?? k.jumlahItem,
+                isActive: nextAktif,
+                aktif: nextAktif,
+              }
+            : k
+        )
+      )
+      toast.success(
+        nextAktif
+          ? `Kategori "${kat.nama}" diaktifkan`
+          : `Kategori "${kat.nama}" dinonaktifkan`
+      )
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const message =
+        error.response?.data?.message || error.message || 'Gagal memperbarui status kategori'
+      toast.error(message)
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
   const confirmDelete = async () => {
     const target = activeDeleteTarget
     if (!target) return
+    const latestTarget = kategoriList.find((k) => k.id === target.id) ?? target
+    const blockedReason = getKategoriDeleteBlockedReason(latestTarget)
+    if (blockedReason) {
+      toast.error(blockedReason)
+      setDeleteTarget(null)
+      return
+    }
+    mutationEpochRef.current += 1
     try {
       setIsDeleting(true)
       await katalogApi.deleteKategori(target.id)
-      toast.success(`Kategori "${target.nama}" berhasil dinonaktifkan`)
+      mutationEpochRef.current += 1
+      setKategoriList((prev) => prev.filter((k) => k.id !== target.id))
+      toast.success(`Kategori "${target.nama}" berhasil dihapus`)
       setDeleteTarget(null)
-      loadData()
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
       const message =
         error.response?.data?.message ||
         error.message ||
-        'Gagal menonaktifkan kategori. Pastikan tidak ada menu aktif yang menggunakannya.'
+        'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
       toast.error(message)
     } finally {
       setIsDeleting(false)
@@ -140,7 +343,7 @@ export function KategoriPage() {
 
   return (
     <>
-      <Header fixed className='border-b border-sidebar-border/50'>
+      <Header fixed className='has-border border-b border-slate-200 dark:border-slate-800'>
         <div className='flex items-center gap-2 overflow-hidden me-auto'>
           <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
             Manajemen Kategori Menu
@@ -153,31 +356,9 @@ export function KategoriPage() {
       </Header>
 
       <Main className='space-y-6 pb-12'>
-        {/* Actions */}
-        <div className='flex items-center justify-end gap-2'>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={loadData}
-            disabled={loading}
-            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-          >
-            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Segarkan
-          </Button>
-          <Button
-            size='sm'
-            onClick={handleAdd}
-            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
-          >
-            <Plus className='size-4' />
-            Tambah Kategori
-          </Button>
-        </div>
-
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Kategori</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
@@ -185,7 +366,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori Aktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
@@ -195,7 +376,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Nonaktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
@@ -207,7 +388,7 @@ export function KategoriPage() {
         </div>
 
         {/* Search & Table Card */}
-        <Card className='border border-border bg-card shadow-xs'>
+        <Card className={`${CARD_OUTLINE_CLASS} border-0 bg-card shadow-xs`}>
           <div className='p-4 border-b'>
             <TableToolbar
               searchPlaceholder='Cari nama kategori...'
@@ -239,7 +420,7 @@ export function KategoriPage() {
                   <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Status
                   </TableHead>
-                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
+                  <TableHead className='w-36 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
                     Aksi
                   </TableHead>
                 </TableRow>
@@ -272,6 +453,9 @@ export function KategoriPage() {
                   filteredKategori.map((kat, idx) => {
                     const isAktif = kat.isActive !== false && kat.aktif !== false
                     const itemQty = kat.jumlahItem ?? 0
+                    const deleteBlockedReason = getKategoriDeleteBlockedReason(kat)
+                    const isDeleteDisabled = Boolean(deleteBlockedReason)
+                    const deleteButtonTitle = deleteBlockedReason || 'Hapus Kategori'
 
                     return (
                       <TableRow
@@ -313,7 +497,15 @@ export function KategoriPage() {
                           )}
                         </TableCell>
                         <TableCell className='text-right border-none py-3.5 pe-6'>
-                          <div className='flex items-center justify-end gap-1'>
+                          <div className='flex items-center justify-end gap-1.5'>
+                            <Switch
+                              checked={isAktif}
+                              disabled={togglingId === kat.id}
+                              onCheckedChange={() => void handleToggleAktif(kat)}
+                              aria-label={isAktif ? `Nonaktifkan ${kat.nama}` : `Aktifkan ${kat.nama}`}
+                              title={isAktif ? 'Nonaktifkan Kategori' : 'Aktifkan Kategori'}
+                              className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
+                            />
                             <Button
                               variant='ghost'
                               size='icon'
@@ -323,15 +515,22 @@ export function KategoriPage() {
                             >
                               <Pencil className='size-4' />
                             </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none'
-                              onClick={() => handleDeleteClick(kat)}
-                              title='Nonaktifkan Kategori'
-                            >
-                              <Trash2 className='size-4' />
-                            </Button>
+                            <span title={deleteButtonTitle} className='inline-flex'>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                disabled={isDeleteDisabled}
+                                className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 shadow-none'
+                                onClick={() => handleDeleteClick(kat)}
+                                aria-label={
+                                  isDeleteDisabled
+                                    ? deleteButtonTitle
+                                    : `Hapus ${kat.nama}`
+                                }
+                              >
+                                <Trash2 className='size-4' />
+                              </Button>
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -349,10 +548,10 @@ export function KategoriPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         selectedKategori={selectedKategori}
-        onSuccess={loadData}
+        onSuccess={handleFormSuccess}
       />
 
-      {/* Alert Dialog Konfirmasi Nonaktifkan */}
+      {/* Alert Dialog Konfirmasi Hapus Kategori */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
           <AlertDialogHeader>
@@ -361,29 +560,30 @@ export function KategoriPage() {
                 <AlertTriangle className='size-5' />
               </div>
               <AlertDialogTitle className='text-lg font-bold'>
-                Nonaktifkan Kategori?
+                Hapus Kategori?
               </AlertDialogTitle>
             </div>
-            <AlertDialogDescription className='space-y-2 pt-2 text-xs'>
-              <p>
-                Apakah Anda yakin ingin menonaktifkan kategori{' '}
-                <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
-              </p>
-              {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
-                <div className='flex items-start gap-2.5 rounded-xl border-none bg-amber-500/15 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-none'>
-                  <AlertTriangle className='size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5' />
-                  <span>
-                    <strong>Perhatian:</strong> Kategori ini saat ini masih memiliki{' '}
-                    <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong>. Sesuai aturan sistem,
-                    kategori hanya akan <strong>dinonaktifkan</strong> (tidak dihapus permanen) agar
-                    riwayat transaksi kasir tetap aman.
-                  </span>
-                </div>
-              ) : (
-                <p className='text-xs text-muted-foreground'>
-                  Kategori yang dinonaktifkan tidak akan muncul lagi di tab kasir POS.
+            <AlertDialogDescription asChild>
+              <div className='space-y-2 pt-2 text-xs text-muted-foreground'>
+                <p>
+                  Apakah Anda yakin ingin menghapus kategori{' '}
+                  <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
                 </p>
-              )}
+                {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
+                  <div className='flex items-start gap-2.5 rounded-xl border-none bg-destructive/10 p-3 text-xs text-destructive shadow-none'>
+                    <AlertTriangle className='size-4 shrink-0 mt-0.5' />
+                    <span>
+                      Kategori ini masih memiliki{' '}
+                      <strong>{activeDeleteTarget.jumlahItem} menu terkait</strong> sehingga tidak dapat
+                      dihapus. Pindahkan atau hapus menu terkait terlebih dahulu.
+                    </span>
+                  </div>
+                ) : (
+                  <p className='text-xs text-muted-foreground'>
+                    Kategori yang dihapus akan dihilangkan dari daftar kategori maupun tab kasir POS.
+                  </p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
@@ -394,11 +594,14 @@ export function KategoriPage() {
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault()
+                void confirmDelete()
+              }}
+              disabled={isDeleting || Boolean(getKategoriDeleteBlockedReason(activeDeleteTarget))}
               className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
-              {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
