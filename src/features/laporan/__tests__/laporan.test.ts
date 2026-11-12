@@ -40,7 +40,7 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       const topupBersih = data.topupOnline + data.topupTunai - data.refund
       const totalPenggunaan = data.saldoMengendap + data.penjualanBersih
       expect(topupBersih).toBe(totalPenggunaan)
-      expect(data.saldoMengendap).toBe(data.saldoSiswa + data.saldoKartuTamu)
+      expect(data.saldoMengendap).toBe(data.saldoSiswa)
     })
 
     it('menampilkan indikator selisih (seimbang=false, selisih!=0) secara akurat saat simulasi selisih aktif', async () => {
@@ -88,8 +88,7 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
         { pos: 'Top-up Tunai', nominal: 2350000, arah: 'KREDIT' },
         { pos: 'Refund Saldo', nominal: 100000, arah: 'DEBIT' },
         { pos: 'Penjualan Bersih', nominal: 3000000, arah: 'DEBIT' },
-        { pos: 'Saldo Mengendap Siswa', nominal: 400000, arah: 'STATUS' },
-        { pos: 'Saldo Mengendap Tamu', nominal: 100000, arah: 'STATUS' },
+        { pos: 'Saldo Mengendap Siswa', nominal: 500000, arah: 'STATUS' },
       ]
 
       const result = exportTableToExcel({
@@ -336,20 +335,16 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
   })
 
   describe('Laporan Saldo Mengendap & Riwayat Belanja Siswa (PRD §9.5)', () => {
-    it('mengambil ringkasan saldo mengendap dan rincian per siswa serta kartu tamu', async () => {
-      const [ringkasan, siswa, kartuTamu] = await Promise.all([
+    it('mengambil ringkasan saldo mengendap dan rincian per siswa', async () => {
+      const [ringkasan, siswa] = await Promise.all([
         laporanApi.getSaldoMengendap(),
         laporanApi.getSiswaSaldoList(),
-        laporanApi.getKartuTamuSaldoList(),
       ])
 
-      expect(ringkasan.total).toBe(ringkasan.saldoSiswa + ringkasan.saldoKartuTamu)
+      expect(ringkasan.total).toBe(ringkasan.saldoSiswa)
       expect(siswa.length).toBeGreaterThan(0)
       expect(siswa[0]).toHaveProperty('nis')
       expect(siswa[0]).toHaveProperty('saldo')
-
-      expect(kartuTamu.length).toBeGreaterThan(0)
-      expect(kartuTamu[0]).toHaveProperty('nomorKartu')
     })
 
     it('mengambil riwayat belanja lengkap siswa beserta rincian item pesanan untuk komplain ortu', async () => {

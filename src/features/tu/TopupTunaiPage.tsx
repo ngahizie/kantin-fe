@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type KartuSiswaMock } from '@/mocks/mock-data'
+import { type KartuSiswaMock } from '@/types/kantin'
 import {
   AlertCircle,
   ArrowRight,
@@ -30,7 +30,6 @@ import { mapInfoSiswaToKartuSiswa } from './types'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   applyStoredSaldoOverrides,
-  getInitialStudents,
   saveStoredSaldo,
   saveTopupTransaction,
 } from './saldo-storage'
@@ -39,7 +38,8 @@ const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const MAX_SALDO_SEKOLAH = 500000
 
 export function TopupTunaiPage() {
-  const [students, setStudents] = useState<KartuSiswaMock[]>(getInitialStudents)
+  const [students, setStudents] = useState<KartuSiswaMock[]>([])
+  const [isLoadingStudents, setIsLoadingStudents] = useState(true)
   const [selectedStudent, setSelectedStudent] = useState<KartuSiswaMock | null>(
     null
   )
@@ -53,14 +53,14 @@ export function TopupTunaiPage() {
   useEffect(() => {
     let isMounted = true
     const loadStudents = async () => {
-      let currentList = getInitialStudents()
+      setIsLoadingStudents(true)
+      let currentList: KartuSiswaMock[] = []
       try {
         const res = await apiClient.get('/api/siswa', { params: { batas: 50 } })
         if (
           isMounted &&
           res.data?.data &&
-          Array.isArray(res.data.data) &&
-          res.data.data.length > 0
+          Array.isArray(res.data.data)
         ) {
           const mapped = res.data.data.map(mapInfoSiswaToKartuSiswa)
           currentList = applyStoredSaldoOverrides(mapped)
@@ -68,9 +68,15 @@ export function TopupTunaiPage() {
         }
       } catch {
         if (isMounted) {
-          setStudents(currentList)
+          setStudents([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingStudents(false)
         }
       }
+
+      if (currentList.length === 0) return
 
       // Sinkronisasi saldo riil dari backend (/api/saldo) bila terhubung ke live BE
       try {
@@ -79,8 +85,7 @@ export function TopupTunaiPage() {
             try {
               const saldoRes = await apiClient.get('/api/saldo', {
                 params: {
-                  subjekTipe: 'SISWA',
-                  subjekId: student.siswa_id,
+                  siswaId: student.siswa_id,
                 },
               })
               const liveSaldo = saldoRes.data?.data?.saldo
@@ -151,55 +156,32 @@ export function TopupTunaiPage() {
       const randomSeq = Math.floor(1000 + Math.random() * 9000)
       const refNo = `TU-TOPUP-${dateCode}-${randomSeq}`
 
-      try {
-        const response = await apiClient.post('/api/saldo/topup', {
-          subjekTipe: 'SISWA',
-          subjekId: currentStudent.siswa_id,
-          nominal: nominalNum,
-          penyetor: namaPenyetor.trim(),
-          referensiId: refNo,
-        })
-        const resData = response.data?.data
-        const saldoAwal = resData?.saldoSebelum ?? currentStudent.saldo
-        const saldoBaruRes = resData?.saldoSetelah ?? saldoAwal + nominalNum
+      const response = await apiClient.post('/api/saldo/topup', {
+        subjekTipe: 'SISWA',
+        siswaId: currentStudent.siswa_id,
+        nominal: nominalNum,
+        penyetor: namaPenyetor.trim(),
+        referensiId: refNo,
+      })
+      const resData = response.data?.data
+      const saldoAwal = resData?.saldoSebelum ?? currentStudent.saldo
+      const saldoBaruRes = resData?.saldoSetelah ?? saldoAwal + nominalNum
 
-        result = {
-          ref_no: refNo,
-          waktu: resData?.waktu || now.toISOString(),
-          petugas_nama: petugasNama,
-          nama_penyetor: namaPenyetor.trim(),
-          nominal: nominalNum,
-          saldo_awal: saldoAwal,
-          saldo_baru: saldoBaruRes,
-          siswa: {
-            siswa_id: currentStudent.siswa_id,
-            nis: currentStudent.nis,
-            nama: currentStudent.nama,
-            kelas: currentStudent.kelas,
-            foto_url: currentStudent.foto_url,
-          },
-        }
-      } catch {
-        // Fallback simulasi frontend jika backend API / mock adapter tidak merespons
-        const saldoAwal = currentStudent.saldo
-        const saldoBaruCalculated = saldoAwal + nominalNum
-
-        result = {
-          ref_no: refNo,
-          waktu: now.toISOString(),
-          petugas_nama: petugasNama,
-          nama_penyetor: namaPenyetor.trim(),
-          nominal: nominalNum,
-          saldo_awal: saldoAwal,
-          saldo_baru: saldoBaruCalculated,
-          siswa: {
-            siswa_id: currentStudent.siswa_id,
-            nis: currentStudent.nis,
-            nama: currentStudent.nama,
-            kelas: currentStudent.kelas,
-            foto_url: currentStudent.foto_url,
-          },
-        }
+      result = {
+        ref_no: refNo,
+        waktu: resData?.waktu || now.toISOString(),
+        petugas_nama: petugasNama,
+        nama_penyetor: namaPenyetor.trim(),
+        nominal: nominalNum,
+        saldo_awal: saldoAwal,
+        saldo_baru: saldoBaruRes,
+        siswa: {
+          siswa_id: currentStudent.siswa_id,
+          nis: currentStudent.nis,
+          nama: currentStudent.nama,
+          kelas: currentStudent.kelas,
+          foto_url: currentStudent.foto_url,
+        },
       }
 
       if (result) {
@@ -210,9 +192,8 @@ export function TopupTunaiPage() {
         saveTopupTransaction({
           id: result.ref_no,
           waktu: result.waktu,
-          subjek_tipe: 'SISWA',
-          subjek_nama: currentStudent.nama,
-          subjek_info: `${currentStudent.kelas} (NIS: ${currentStudent.nis})`,
+          siswa_nama: currentStudent.nama,
+          siswa_info: `${currentStudent.kelas} (NIS: ${currentStudent.nis})`,
           nominal: result.nominal,
           penyetor: result.nama_penyetor,
           referensi_id: result.ref_no,
@@ -320,6 +301,7 @@ export function TopupTunaiPage() {
               students={students}
               selectedStudent={currentStudent}
               onSelectStudent={setSelectedStudent}
+              isLoading={isLoadingStudents}
             />
           </div>
 

@@ -15,9 +15,10 @@ describe('LaporanExportButton', () => {
       />
     )
 
-    // Tombol tunggal awal
+    // Tombol tunggal awal memakai varian default (solid primary)
     const exportBtn = screen.getByRole('button', { name: /Ekspor/i })
     await expect.element(exportBtn).toBeInTheDocument()
+    await expect.element(exportBtn).toHaveClass('bg-primary')
 
     // Dialog belum terbuka
     await expect.element(screen.getByText('Pilih Format Ekspor')).not.toBeInTheDocument()

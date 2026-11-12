@@ -1,7 +1,7 @@
 import { TableToolbar } from '@/components/data-table'
+import { ExportButton } from '@/components/export-button'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Download,
   History,
   PackagePlus,
 } from 'lucide-react'
@@ -316,27 +316,12 @@ export function InventarisPage() {
             </h1>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleExportCsv}
+            <ExportButton
+              onExportCsv={handleExportCsv}
+              onExportPdf={handleExportPdf}
               disabled={filteredAndSortedList.length === 0}
-              className='gap-1.5'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor CSV</span>
-            </Button>
-
-            <Button
-              variant='default'
-              size='sm'
-              onClick={handleExportPdf}
-              disabled={filteredAndSortedList.length === 0}
-              className='gap-1.5 bg-rose-600 hover:bg-rose-700 text-white'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor PDF (.pdf)</span>
-            </Button>
+              data-testid='btn-inventaris-export'
+            />
 
             <Button size='sm' asChild className='gap-1.5'>
               <Link to='/stok/kartu'>
@@ -485,30 +470,7 @@ export function InventarisPage() {
             setSelectedStatus('ALL')
             setSortBy('NILAI_DESC')
           }}
-        >
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleExportCsv}
-              disabled={filteredAndSortedList.length === 0}
-              className='h-8 gap-1.5 text-xs'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor CSV</span>
-            </Button>
-            <Button
-              variant='default'
-              size='sm'
-              onClick={handleExportPdf}
-              disabled={filteredAndSortedList.length === 0}
-              className='h-8 gap-1.5 text-xs bg-rose-600 hover:bg-rose-700 text-white'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor PDF</span>
-            </Button>
-          </div>
-        </TableToolbar>
+        />
 
         {/* Data Table */}
         <Card className='border-0 bg-muted/70 dark:bg-muted/30'>

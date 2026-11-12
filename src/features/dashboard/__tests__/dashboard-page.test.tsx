@@ -246,6 +246,7 @@ describe('getStatusBadgeClass color semantics', () => {
     expect(getStatusBadgeClass('SUKSES')).toContain('text-emerald-700')
     expect(getStatusBadgeClass('BERHASIL')).toContain('text-emerald-700')
     expect(getStatusBadgeClass('SELESAI')).toContain('text-emerald-700')
+    expect(getStatusBadgeClass('DIKONFIRMASI')).toContain('text-emerald-700')
   })
 
   it('memberikan warna merah untuk status negatif', () => {

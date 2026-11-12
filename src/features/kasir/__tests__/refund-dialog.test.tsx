@@ -17,7 +17,6 @@ const sampleTransactions: TransaksiSesiItem[] = [
     transaksiId: 201,
     nomorReferensi: 'TRX-20261110-201',
     waktu: '2026-11-10T08:30:00Z',
-    pembeliTipe: 'SISWA',
     pembeliNama: 'Bima Aditya Pratama',
     pembeliKelas: 'XII RPL 1',
     pembeliNis: '2026001',
@@ -38,8 +37,7 @@ const sampleTransactions: TransaksiSesiItem[] = [
     transaksiId: 202,
     nomorReferensi: 'TRX-20261110-202',
     waktu: '2026-11-10T09:05:00Z',
-    pembeliTipe: 'KARTU_TAMU',
-    pembeliNama: 'Tamu Dinas Pendidikan',
+    pembeliNama: 'Dewi Lestari',
     items: [
       {
         menuId: 2,
@@ -288,9 +286,9 @@ describe('RefundDialog (BE #292)', () => {
     )
 
     await expect
-      .element(screen.getByText('Tamu Dinas Pendidikan'))
+      .element(screen.getByText('Dewi Lestari'))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('Kartu Tamu')).toBeInTheDocument()
+    await expect.element(screen.getByText('Siswa')).toBeInTheDocument()
 
     const kodeInput = screen.getByLabelText(/Kode Struk/i)
     await userEvent.fill(kodeInput, '  TRX-20261110-202  ')

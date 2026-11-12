@@ -11,10 +11,10 @@ const sampleTransactions: TransaksiSesiItem[] = [
     id: 101,
     nomorReferensi: 'TRX-20261110-0001',
     waktu: '2026-11-10T09:00:00Z',
-    pembeliTipe: 'SISWA',
     pembeliNama: 'Budi Santoso',
     pembeliKelas: 'VIII-A',
     pembeliNis: '2026001',
+    pembeliFotoUrl: null,
     items: [
       {
         menuId: 1,
@@ -31,8 +31,9 @@ const sampleTransactions: TransaksiSesiItem[] = [
     id: 102,
     nomorReferensi: 'TRX-20261110-0002',
     waktu: '2026-11-10T09:15:00Z',
-    pembeliTipe: 'KARTU_TAMU',
-    pembeliNama: 'Tamu 01',
+    pembeliNama: 'Rizky Pratama',
+    pembeliNis: null,
+    pembeliFotoUrl: null,
     items: [
       {
         menuId: 2,
@@ -73,8 +74,12 @@ describe('SessionHistoryModal', () => {
       .element(screen.getByText('TRX-20261110-0002'))
       .not.toBeInTheDocument()
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
+    await expect.element(screen.getByText('BS')).toBeInTheDocument()
+    await expect.element(screen.getByText(/NIS: 2026001/)).toBeInTheDocument()
     await expect.element(screen.getByText('2x Air Mineral')).toBeInTheDocument()
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
+    await expect.element(screen.getByText('RP', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('NIS: -')).toBeInTheDocument()
     await expect.element(screen.getByText('REFUND', { exact: true })).toBeInTheDocument()
     await expect.element(screen.getByText('VOID', { exact: true })).not.toBeInTheDocument()
     await expect.element(screen.getByText(/Alasan Refund:/i)).toBeInTheDocument()
@@ -119,7 +124,7 @@ describe('SessionHistoryModal', () => {
 
     // Cari berdasarkan nama item menu transaksi VOID ("Ayam Geprek")
     await userEvent.fill(searchInput, 'Ayam Geprek')
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
     await expect
       .element(screen.getByText('Budi Santoso'))
       .not.toBeInTheDocument()
@@ -129,7 +134,7 @@ describe('SessionHistoryModal', () => {
       screen.getByRole('button', { name: /Bersihkan pencarian/i })
     )
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
 
     // Filter status "Hanya Sukses"
     const statusFilter = screen.getByRole('combobox', {
@@ -139,12 +144,12 @@ describe('SessionHistoryModal', () => {
     await userEvent.click(screen.getByRole('option', { name: 'Hanya Sukses' }))
 
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
-    await expect.element(screen.getByText('Tamu 01')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).not.toBeInTheDocument()
 
     // Filter status "Hanya Refund" + query yang tidak cocok -> tampil tombol Reset Filter
     await userEvent.click(statusFilter)
     await userEvent.click(screen.getByRole('option', { name: 'Hanya Refund' }))
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
     await expect
       .element(screen.getByText('Budi Santoso'))
       .not.toBeInTheDocument()
@@ -156,7 +161,7 @@ describe('SessionHistoryModal', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset Filter' }))
     await expect.element(screen.getByText('Budi Santoso')).toBeInTheDocument()
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
 
     // Terapkan filter lagi, tutup lalu buka ulang drawer -> filter kembali default
     await userEvent.fill(searchInput, 'Budi')
@@ -175,7 +180,7 @@ describe('SessionHistoryModal', () => {
       />
     )
     await expect.element(searchInput).toHaveValue('')
-    await expect.element(screen.getByText('Tamu 01')).toBeInTheDocument()
+    await expect.element(screen.getByText('Rizky Pratama')).toBeInTheDocument()
   })
 
   it('menonaktifkan tombol Refund Transaksi saat offline atau sesi kasir telah ditutup', async () => {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   FileSpreadsheet,
-  Download,
   History,
   Calendar,
 } from 'lucide-react'
@@ -31,6 +30,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { ExportButton } from '@/components/export-button'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
@@ -410,27 +410,12 @@ export function KartuStokPage() {
 
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleExportCsv}
+            <ExportButton
+              onExportCsv={handleExportCsv}
+              onExportPdf={handleExportPdf}
               disabled={filteredRiwayat.length === 0}
-              className='gap-1.5'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor CSV</span>
-            </Button>
-
-            <Button
-              variant='default'
-              size='sm'
-              onClick={handleExportPdf}
-              disabled={filteredRiwayat.length === 0}
-              className='gap-1.5 bg-rose-600 hover:bg-rose-700 text-white'
-            >
-              <Download className='h-4 w-4' />
-              <span>Ekspor PDF (.pdf)</span>
-            </Button>
+              data-testid='btn-kartu-stok-export'
+            />
 
             <Button size='sm' asChild className='gap-1.5'>
               <Link to='/stok/inventaris'>
@@ -637,7 +622,7 @@ export function KartuStokPage() {
                 Total Masuk
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
-                +{formatNumber(kpiData.totalMasuk)}
+                {formatNumber(kpiData.totalMasuk)}
               </CardTitle>
             </CardHeader>
             <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
@@ -652,7 +637,7 @@ export function KartuStokPage() {
                 Total Keluar
               </CardDescription>
               <CardTitle className='text-2xl font-bold text-rose-600 dark:text-rose-400'>
-                -{formatNumber(kpiData.totalKeluar)}
+                {formatNumber(kpiData.totalKeluar)}
               </CardTitle>
             </CardHeader>
             <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
@@ -836,10 +821,10 @@ export function KartuStokPage() {
                                 </Badge>
                               </TableCell>
                               <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400'>
-                                {isMasuk ? `+${formatNumber(item.qty)}` : '-'}
+                                {isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
                               <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400'>
-                                {!isMasuk ? `-${formatNumber(item.qty)}` : '-'}
+                                {!isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
                               <TableCell className='text-right font-mono font-bold text-foreground'>
                                 {formatNumber(item.stokSetelah)}

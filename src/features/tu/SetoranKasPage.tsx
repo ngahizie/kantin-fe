@@ -1,12 +1,10 @@
 import { TableToolbar } from '@/components/data-table'
+import { ExportButton } from '@/components/export-button'
 import { useState, useEffect, useMemo } from 'react'
-import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
   CheckCircle2,
   AlertTriangle,
   Printer,
-  FileSpreadsheet,
-  Download,
   Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -57,7 +55,11 @@ import {
   applyStoredSetoranConfirmations,
 } from './saldo-storage'
 
-const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+const isSetoranConfirmed = (status: string) =>
+  status === 'TERKONFIRMASI' || status === 'DIKONFIRMASI'
+
+const isSetoranWaiting = (status: string) =>
+  status === 'MENUNGGU_KONFIRMASI' || status === 'MENUNGGU'
 
 export function SetoranKasPage() {
   const { auth } = useAuthStore()
@@ -67,9 +69,7 @@ export function SetoranKasPage() {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [setoranList, setSetoranList] = useState<SetoranKasItem[]>(() =>
-    useMock ? MOCK_SETORAN_KAS : []
-  )
+  const [setoranList, setSetoranList] = useState<SetoranKasItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   // State modal konfirmasi
@@ -125,13 +125,11 @@ export function SetoranKasPage() {
 
           for (const [pId, txs] of groupedByPetugas.entries()) {
             const existingIdx = items.findIndex((it) => it.petugas_id === pId)
-            const totalSiswa = txs
-              .filter((t) => t.subjek_tipe === 'SISWA')
-              .reduce((sum, t) => sum + (t.nominal || 0), 0)
-            const totalTamu = txs
-              .filter((t) => t.subjek_tipe === 'KARTU_TAMU')
-              .reduce((sum, t) => sum + (t.nominal || 0), 0)
-            const totalSistem = totalSiswa + totalTamu
+            const totalSiswa = txs.reduce(
+              (sum, t) => sum + (t.nominal || 0),
+              0
+            )
+            const totalSistem = totalSiswa
 
             if (existingIdx >= 0) {
               const existing = items[existingIdx]
@@ -141,10 +139,6 @@ export function SetoranKasPage() {
                 total_topup_siswa: Math.max(
                   existing.total_topup_siswa,
                   totalSiswa
-                ),
-                total_topup_kartu_tamu: Math.max(
-                  existing.total_topup_kartu_tamu,
-                  totalTamu
                 ),
                 total_sistem: Math.max(existing.total_sistem, totalSistem),
                 rincian_transaksi:
@@ -170,7 +164,6 @@ export function SetoranKasPage() {
                 petugas_nip: petugasNip,
                 total_transaksi: txs.length,
                 total_topup_siswa: totalSiswa,
-                total_topup_kartu_tamu: totalTamu,
                 total_sistem: totalSistem,
                 uang_fisik: null,
                 selisih: null,
@@ -183,14 +176,6 @@ export function SetoranKasPage() {
 
         // Terapkan data konfirmasi yang tersimpan di storage lokal jika ada
         items = applyStoredSetoranConfirmations(items)
-
-        // Fallback jika sama sekali tidak ada data dan flag useMock aktif
-        if (items.length === 0 && useMock) {
-          const filteredMock = MOCK_SETORAN_KAS.filter(
-            (s) => s.tanggal === selectedDate
-          )
-          items = filteredMock.length > 0 ? filteredMock : MOCK_SETORAN_KAS
-        }
 
         if (isMounted) {
           setSetoranList(items)
@@ -228,9 +213,9 @@ export function SetoranKasPage() {
 
       let matchStatus = true
       if (statusFilter === 'MENUNGGU_KONFIRMASI') {
-        matchStatus = item.status === 'MENUNGGU_KONFIRMASI'
+        matchStatus = isSetoranWaiting(item.status)
       } else if (statusFilter === 'TERKONFIRMASI') {
-        matchStatus = item.status === 'TERKONFIRMASI'
+        matchStatus = isSetoranConfirmed(item.status)
       } else if (statusFilter === 'SELISIH') {
         matchStatus = item.selisih !== null && item.selisih !== 0
       }
@@ -253,11 +238,15 @@ export function SetoranKasPage() {
   }, [filteredList])
 
   const totalPetugasSelesai = useMemo(() => {
-    return filteredList.filter((i) => i.status === 'TERKONFIRMASI').length
+    return filteredList.filter((i) => isSetoranConfirmed(i.status)).length
   }, [filteredList])
 
   // Export to CSV
   const handleExportCSV = () => {
+    if (filteredList.length === 0) {
+      toast.warning('Tidak ada data untuk diekspor')
+      return
+    }
     const headers = [
       'ID Setoran',
       'Tanggal',
@@ -265,7 +254,6 @@ export function SetoranKasPage() {
       'NIP',
       'Jumlah Transaksi',
       'Topup Siswa (Rp)',
-      'Topup Kartu Tamu (Rp)',
       'Total Sistem (Rp)',
       'Uang Fisik (Rp)',
       'Selisih (Rp)',
@@ -282,7 +270,6 @@ export function SetoranKasPage() {
       item.petugas_nip || '-',
       item.total_transaksi,
       item.total_topup_siswa,
-      item.total_topup_kartu_tamu,
       item.total_sistem,
       item.uang_fisik !== null ? item.uang_fisik : '-',
       item.selisih !== null ? item.selisih : '-',
@@ -319,7 +306,6 @@ export function SetoranKasPage() {
         petugas: item.petugas_nama,
         trx: item.total_transaksi,
         topupSiswa: formatRupiah(item.total_topup_siswa),
-        topupTamu: formatRupiah(item.total_topup_kartu_tamu),
         totalSistem: formatRupiah(item.total_sistem),
         uangFisik: item.uang_fisik !== null ? formatRupiah(item.uang_fisik) : '-',
         selisih: item.selisih !== null ? formatRupiah(item.selisih) : '-',
@@ -343,7 +329,6 @@ export function SetoranKasPage() {
           { header: 'Petugas TU', key: 'petugas' },
           { header: 'Trx', key: 'trx' },
           { header: 'Topup Siswa', key: 'topupSiswa' },
-          { header: 'Topup Tamu', key: 'topupTamu' },
           { header: 'Total Sistem', key: 'totalSistem' },
           { header: 'Uang Fisik', key: 'uangFisik' },
           { header: 'Selisih', key: 'selisih' },
@@ -487,26 +472,13 @@ export function SetoranKasPage() {
             setStatusFilter('ALL')
           }}
         >
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={handleExportCSV}
-              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none'
-            >
-              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-              Ekspor CSV
-            </Button>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={handleExportPdf}
-              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none text-rose-600 dark:text-rose-400'
-            >
-              <Download className='h-3.5 w-3.5 text-rose-600' />
-              Ekspor PDF
-            </Button>
-          </div>
+          <ExportButton
+            onExportCsv={handleExportCSV}
+            onExportPdf={handleExportPdf}
+            disabled={filteredList.length === 0}
+            className='h-8 text-xs'
+            data-testid='btn-setoran-kas-export'
+          />
         </TableToolbar>
 
         {/* Rekapitulasi Table */}
@@ -622,7 +594,7 @@ export function SetoranKasPage() {
                               {item.total_transaksi} Transaksi
                             </div>
                             <div className='text-[11px] text-muted-foreground'>
-                              Siswa: {formatRupiah(item.total_topup_siswa)} | Tamu: {formatRupiah(item.total_topup_kartu_tamu)}
+                              Topup Siswa: {formatRupiah(item.total_topup_siswa)}
                             </div>
                           </TableCell>
 
@@ -669,7 +641,7 @@ export function SetoranKasPage() {
                           </TableCell>
 
                           <TableCell className='text-center'>
-                            {item.status === 'TERKONFIRMASI' ? (
+                            {isSetoranConfirmed(item.status) ? (
                               <Badge
                                 className='gap-1 border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
                               >
@@ -687,7 +659,7 @@ export function SetoranKasPage() {
                           </TableCell>
 
                           <TableCell>
-                            {item.status === 'TERKONFIRMASI' ? (
+                            {isSetoranConfirmed(item.status) ? (
                               <div className='text-xs'>
                                 <div className='font-medium text-foreground'>
                                   {item.bendahara_nama}
@@ -719,7 +691,7 @@ export function SetoranKasPage() {
                             <div className='flex items-center justify-end gap-1.5'>
                               {/* Tombol Konfirmasi Bendahara */}
                               {isBendaharaOrAdmin &&
-                                item.status === 'MENUNGGU_KONFIRMASI' && (
+                                isSetoranWaiting(item.status) && (
                                   <Button
                                     size='sm'
                                     onClick={() => {
@@ -735,7 +707,7 @@ export function SetoranKasPage() {
 
                               {/* Tombol Edit Konfirmasi jika sudah terkonfirmasi */}
                               {isBendaharaOrAdmin &&
-                                item.status === 'TERKONFIRMASI' && (
+                                isSetoranConfirmed(item.status) && (
                                   <Button
                                     variant='ghost'
                                     size='sm'
@@ -891,10 +863,10 @@ export function SetoranKasPage() {
                               </TableCell>
                               <TableCell className='text-xs'>
                                 <div className='font-medium text-foreground'>
-                                  {tx.subjek_nama}
+                                  {tx.siswa_nama}
                                 </div>
                                 <div className='text-[11px] text-muted-foreground'>
-                                  {tx.subjek_info}
+                                  {tx.siswa_info}
                                 </div>
                               </TableCell>
                               <TableCell className='text-xs text-muted-foreground'>

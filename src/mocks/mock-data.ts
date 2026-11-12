@@ -2,104 +2,20 @@
  * Initial Mock Data untuk pengembangan lokal kantin-fe
  */
 
-export interface MenuItemMock {
-  id: number
-  nama: string
-  kode_barcode?: string | null
-  kategori_id: number
-  kategori_nama: string
-  harga_jual: number
-  stok: number
-  stok_minimum: number
-  satuan: string
-  foto_url?: string
-  is_active: boolean
-  hpp: number
-}
+import type {
+  MenuItemMock,
+  KategoriMock,
+  KartuSiswaMock,
+  SiblingMock,
+  SiswaNonaktifMock,
+} from '@/types/kantin'
 
-export interface KategoriMock {
-  id: number
-  nama: string
-  is_active: boolean
-  jumlah_item: number
-}
-
-export interface KartuSiswaMock {
-  uid: string
-  siswa_id: number
-  nis: string
-  nama: string
-  kelas: string
-  foto_url: string
-  saldo: number
-  limit_harian: number
-  limit_harian_enabled?: boolean
-  belanja_hari_ini: number
-  is_blocked: boolean
-  blocked_items?: number[]
-  blocked_categories?: number[]
-  parent_name?: string
-  parent_phone?: string
-  parent_app_registered?: boolean
-  catatan_kontrol?: string
-  updated_at?: string
-}
-
-export interface SiblingMock {
-  siswa_id: number
-  nis: string
-  nama: string
-  kelas: string
-  foto_url?: string
-  saldo: number
-  rfid_uid: string
-  is_blocked: boolean
-}
-
-export interface SiswaNonaktifMock {
-  siswa_id: number
-  nis: string
-  nama: string
-  kelas_terakhir: string
-  foto_url: string
-  saldo: number
-  status_siswa: 'LULUS' | 'PINDAH' | 'KELUAR'
-  tanggal_nonaktif: string
-  alasan_nonaktif: string
-  rfid_uid: string
-  is_card_blocked: boolean
-  nama_ortu: string
-  kontak_ortu: string
-  no_rekening_ortu?: string
-  bank_ortu?: string
-  saudara_kandung?: SiblingMock[]
-  is_refunded?: boolean
-  refund_info?: {
-    tipe: 'REFUND_ORTU' | 'TRANSFER_SAUDARA'
-    metode?: 'TUNAI' | 'TRANSFER_BANK'
-    nominal: number
-    tanggal: string
-    referensi_id: string
-    keterangan: string
-    bank?: string
-    nomor_rekening?: string
-    nama_rekening?: string
-    bukti_url?: string
-    saudara_tujuan_id?: number
-    saudara_tujuan_nama?: string
-  }
-}
-
-export interface KartuTamuMock {
-  id: number
-  nomor_kartu: string
-  uid: string
-  label_pemegang: string
-  saldo: number
-  is_active: boolean
-  status: 'ACTIVE' | 'BLOCKED' | 'AVAILABLE'
-  created_at: string
-  last_used_at?: string
+export type {
+  MenuItemMock,
+  KategoriMock,
+  KartuSiswaMock,
+  SiblingMock,
+  SiswaNonaktifMock,
 }
 
 export const MOCK_KATEGORI: KategoriMock[] = [
@@ -294,8 +210,8 @@ export const MOCK_SISWA: KartuSiswaMock[] = [
     is_blocked: false,
     blocked_items: [1], // Nasi Uduk Komplit
     blocked_categories: [],
-    parent_name: 'Hendra Santoso',
-    parent_phone: '0812-3456-7890',
+    parent_name: 'Bambang Santoso',
+    parent_phone: '0812-9001-1001',
     parent_app_registered: false, // Belum instal mobile app -> butuh kontrol admin
     catatan_kontrol: 'Permintaan via WA: Kurangi konsumsi nasi berlebihan.',
     updated_at: '2026-10-05T14:20:00Z',
@@ -395,7 +311,7 @@ export const MOCK_SISWA: KartuSiswaMock[] = [
     blocked_items: [],
     blocked_categories: [],
     parent_name: 'Wali Abizard',
-    parent_phone: '0812-3456-7890',
+    parent_phone: '0812-9002-1002',
     parent_app_registered: false,
     catatan_kontrol: '',
     updated_at: '2026-11-09T10:00:00Z',
@@ -455,8 +371,8 @@ export const MOCK_SISWA_NONAKTIF: SiswaNonaktifMock[] = [
     alasan_nonaktif: 'Lulus Tahun Ajaran 2025/2026',
     rfid_uid: '04RD01A9',
     is_card_blocked: false, // Kartu lama belum diblokir, wajib diblokir otomatis saat refund
-    nama_ortu: 'Hendra Santoso',
-    kontak_ortu: '0812-3456-7890',
+    nama_ortu: 'Bambang Santoso',
+    kontak_ortu: '0812-9001-1001',
     bank_ortu: 'BCA',
     no_rekening_ortu: '8830192831',
     saudara_kandung: [
@@ -570,80 +486,11 @@ export const MOCK_SISWA_NONAKTIF: SiswaNonaktifMock[] = [
   },
 ]
 
-export const MOCK_KARTU_TAMU: KartuTamuMock[] = [
-  {
-    id: 1,
-    nomor_kartu: 'KT-001',
-    uid: '04KT01A1',
-    label_pemegang: 'Pak Hartono (Guru Fisika)',
-    saldo: 75000,
-    is_active: true,
-    status: 'ACTIVE',
-    created_at: '2026-10-01T08:00:00Z',
-    last_used_at: '2026-10-04T12:30:00Z',
-  },
-  {
-    id: 2,
-    nomor_kartu: 'KT-002',
-    uid: '04KT02B2',
-    label_pemegang: 'Ibu Ratna (Staf TU)',
-    saldo: 50000,
-    is_active: true,
-    status: 'ACTIVE',
-    created_at: '2026-10-01T08:30:00Z',
-    last_used_at: '2026-10-05T08:10:00Z',
-  },
-  {
-    id: 3,
-    nomor_kartu: 'KT-003',
-    uid: '04KT03C3',
-    label_pemegang: 'Tamu Seminar Pengawas',
-    saldo: 20000,
-    is_active: true,
-    status: 'ACTIVE',
-    created_at: '2026-10-02T09:00:00Z',
-    last_used_at: '2026-10-02T13:45:00Z',
-  },
-  {
-    id: 4,
-    nomor_kartu: 'KT-004',
-    uid: '04KT04D4',
-    label_pemegang: 'Pak Bambang (Satpam)',
-    saldo: 0,
-    is_active: false,
-    status: 'BLOCKED',
-    created_at: '2026-10-01T09:00:00Z',
-    last_used_at: '2026-10-03T11:00:00Z',
-  },
-  {
-    id: 5,
-    nomor_kartu: 'KT-005',
-    uid: '04KT05E5',
-    label_pemegang: '',
-    saldo: 0,
-    is_active: false,
-    status: 'AVAILABLE',
-    created_at: '2026-10-01T10:00:00Z',
-  },
-  {
-    id: 6,
-    nomor_kartu: 'KT-006',
-    uid: '04KT06F6',
-    label_pemegang: 'Ibu Sari (Kepala TU)',
-    saldo: 100000,
-    is_active: true,
-    status: 'ACTIVE',
-    created_at: '2026-10-03T07:30:00Z',
-    last_used_at: '2026-10-05T07:55:00Z',
-  },
-]
-
 export interface TransaksiTopupDetail {
   id: string | number
   waktu: string
-  subjek_tipe: 'SISWA' | 'KARTU_TAMU'
-  subjek_nama: string
-  subjek_info: string
+  siswa_nama: string
+  siswa_info: string
   nominal: number
   penyetor: string
   referensi_id: string
@@ -657,11 +504,10 @@ export interface SetoranKasTUMock {
   petugas_nip?: string
   total_transaksi: number
   total_topup_siswa: number
-  total_topup_kartu_tamu: number
   total_sistem: number
   uang_fisik: number | null
   selisih: number | null
-  status: 'MENUNGGU_KONFIRMASI' | 'TERKONFIRMASI'
+  status: 'MENUNGGU_KONFIRMASI' | 'TERKONFIRMASI' | 'MENUNGGU' | 'DIKONFIRMASI'
   catatan?: string
   bendahara_id?: number | null
   bendahara_nama?: string | null
@@ -673,10 +519,9 @@ export interface MutasiKoreksiMock {
   id: string | number
   referensi_id: string
   waktu: string
-  subjek_tipe: 'SISWA' | 'KARTU_TAMU'
-  subjek_id: number
-  subjek_nama: string
-  subjek_info: string
+  siswa_id: number
+  siswa_nama: string
+  siswa_info: string
   jenis_koreksi:
     | 'SALAH_INPUT_TOPUP'
     | 'PEMBALIK_TRANSAKSI_KASIR'
@@ -698,10 +543,9 @@ export interface TransaksiSesiTutupMock {
   sesi_kasir_id: number
   titik_kasir: string
   petugas_kasir: string
-  subjek_tipe: 'SISWA' | 'KARTU_TAMU'
-  subjek_id: number
-  subjek_nama: string
-  subjek_info: string
+  siswa_id: number
+  siswa_nama: string
+  siswa_info: string
   total: number
   items: Array<{
     menu_id: number
@@ -721,10 +565,9 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
     petugas_id: 1,
     petugas_nama: 'Andika Pratama (Petugas TU 1)',
     petugas_nip: '198805122011011002',
-    total_transaksi: 4,
+    total_transaksi: 3,
     total_topup_siswa: 170000,
-    total_topup_kartu_tamu: 50000,
-    total_sistem: 220000,
+    total_sistem: 170000,
     uang_fisik: null,
     selisih: null,
     status: 'MENUNGGU_KONFIRMASI',
@@ -732,39 +575,26 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
       {
         id: 'TX-TOPUP-001',
         waktu: '2026-10-06T07:45:12Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Budi Santoso',
-        subjek_info: 'X IPA 1 (NIS: 2026001)',
+        siswa_nama: 'Budi Santoso',
+        siswa_info: 'X IPA 1 (NIS: 2026001)',
         nominal: 50000,
-        penyetor: 'Orang Tua (Ibu Hendra)',
+        penyetor: 'Orang Tua Siswa',
         referensi_id: 'TU-TOPUP-20261006-1021',
       },
       {
         id: 'TX-TOPUP-002',
         waktu: '2026-10-06T08:15:30Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Siti Rahmawati',
-        subjek_info: 'XI IPS 2 (NIS: 2026002)',
+        siswa_nama: 'Siti Rahmawati',
+        siswa_info: 'XI IPS 2 (NIS: 2026002)',
         nominal: 100000,
         penyetor: 'Siswa Langsung',
         referensi_id: 'TU-TOPUP-20261006-1022',
       },
       {
-        id: 'TX-TOPUP-003',
-        waktu: '2026-10-06T09:05:00Z',
-        subjek_tipe: 'KARTU_TAMU',
-        subjek_nama: 'Tamu Seminar Pengawas',
-        subjek_info: 'Kartu: KT-003',
-        nominal: 50000,
-        penyetor: 'Panitia Acara',
-        referensi_id: 'TU-TOPUP-20261006-1023',
-      },
-      {
         id: 'TX-TOPUP-004',
         waktu: '2026-10-06T10:20:15Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Ahmad Fauzi',
-        subjek_info: 'XII IPA 3 (NIS: 2026003)',
+        siswa_nama: 'Ahmad Fauzi',
+        siswa_info: 'XII IPA 3 (NIS: 2026003)',
         nominal: 20000,
         penyetor: 'Siswa Langsung',
         referensi_id: 'TU-TOPUP-20261006-1024',
@@ -777,11 +607,10 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
     petugas_id: 2,
     petugas_nama: 'Ibu Ratna (Staf TU 2)',
     petugas_nip: '199203152018012003',
-    total_transaksi: 2,
+    total_transaksi: 1,
     total_topup_siswa: 75000,
-    total_topup_kartu_tamu: 25000,
-    total_sistem: 100000,
-    uang_fisik: 100000,
+    total_sistem: 75000,
+    uang_fisik: 75000,
     selisih: 0,
     status: 'TERKONFIRMASI',
     catatan: 'Uang fisik pas sesuai total sistem',
@@ -792,22 +621,11 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
       {
         id: 'TX-TOPUP-005',
         waktu: '2026-10-06T08:30:00Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Budi Santoso',
-        subjek_info: 'X IPA 1 (NIS: 2026001)',
+        siswa_nama: 'Budi Santoso',
+        siswa_info: 'X IPA 1 (NIS: 2026001)',
         nominal: 75000,
         penyetor: 'Orang Tua',
         referensi_id: 'TU-TOPUP-20261006-1025',
-      },
-      {
-        id: 'TX-TOPUP-006',
-        waktu: '2026-10-06T09:40:00Z',
-        subjek_tipe: 'KARTU_TAMU',
-        subjek_nama: 'Pak Hartono (Guru Fisika)',
-        subjek_info: 'Kartu: KT-001',
-        nominal: 25000,
-        penyetor: 'Pak Hartono',
-        referensi_id: 'TU-TOPUP-20261006-1026',
       },
     ],
   },
@@ -817,11 +635,10 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
     petugas_id: 1,
     petugas_nama: 'Andika Pratama (Petugas TU 1)',
     petugas_nip: '198805122011011002',
-    total_transaksi: 5,
+    total_transaksi: 2,
     total_topup_siswa: 250000,
-    total_topup_kartu_tamu: 100000,
-    total_sistem: 350000,
-    uang_fisik: 348000,
+    total_sistem: 250000,
+    uang_fisik: 248000,
     selisih: -2000,
     status: 'TERKONFIRMASI',
     catatan: 'Kurang Rp2.000 karena selisih kembalian koin fisik',
@@ -832,29 +649,17 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
       {
         id: 'TX-TOPUP-007',
         waktu: '2026-10-05T08:10:00Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Siti Rahmawati',
-        subjek_info: 'XI IPS 2 (NIS: 2026002)',
+        siswa_nama: 'Siti Rahmawati',
+        siswa_info: 'XI IPS 2 (NIS: 2026002)',
         nominal: 150000,
         penyetor: 'Wali Murid',
         referensi_id: 'TU-TOPUP-20261005-0912',
       },
       {
-        id: 'TX-TOPUP-008',
-        waktu: '2026-10-05T10:00:00Z',
-        subjek_tipe: 'KARTU_TAMU',
-        subjek_nama: 'Ibu Sari (Kepala TU)',
-        subjek_info: 'Kartu: KT-006',
-        nominal: 100000,
-        penyetor: 'Ibu Sari',
-        referensi_id: 'TU-TOPUP-20261005-0913',
-      },
-      {
         id: 'TX-TOPUP-009',
         waktu: '2026-10-05T13:20:00Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Ahmad Fauzi',
-        subjek_info: 'XII IPA 3 (NIS: 2026003)',
+        siswa_nama: 'Ahmad Fauzi',
+        siswa_info: 'XII IPA 3 (NIS: 2026003)',
         nominal: 100000,
         penyetor: 'Siswa Langsung',
         referensi_id: 'TU-TOPUP-20261005-0914',
@@ -867,11 +672,10 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
     petugas_id: 2,
     petugas_nama: 'Ibu Ratna (Staf TU 2)',
     petugas_nip: '199203152018012003',
-    total_transaksi: 3,
+    total_transaksi: 1,
     total_topup_siswa: 120000,
-    total_topup_kartu_tamu: 30000,
-    total_sistem: 150000,
-    uang_fisik: 155000,
+    total_sistem: 120000,
+    uang_fisik: 125000,
     selisih: 5000,
     status: 'TERKONFIRMASI',
     catatan: 'Kelebihan uang fisik Rp5.000 tanpa keterangan',
@@ -882,22 +686,11 @@ export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
       {
         id: 'TX-TOPUP-010',
         waktu: '2026-10-05T09:30:00Z',
-        subjek_tipe: 'SISWA',
-        subjek_nama: 'Budi Santoso',
-        subjek_info: 'X IPA 1 (NIS: 2026001)',
+        siswa_nama: 'Budi Santoso',
+        siswa_info: 'X IPA 1 (NIS: 2026001)',
         nominal: 120000,
         penyetor: 'Orang Tua',
         referensi_id: 'TU-TOPUP-20261005-0915',
-      },
-      {
-        id: 'TX-TOPUP-011',
-        waktu: '2026-10-05T11:15:00Z',
-        subjek_tipe: 'KARTU_TAMU',
-        subjek_nama: 'Pak Bambang (Satpam)',
-        subjek_info: 'Kartu: KT-004',
-        nominal: 30000,
-        penyetor: 'Pak Bambang',
-        referensi_id: 'TU-TOPUP-20261005-0916',
       },
     ],
   },
@@ -908,10 +701,9 @@ export const MOCK_KOREKSI_BENDAHARA: MutasiKoreksiMock[] = [
     id: 'KOR-20261005-001',
     referensi_id: 'BA-KOR-20261005-001',
     waktu: '2026-10-05T16:00:00Z',
-    subjek_tipe: 'SISWA',
-    subjek_id: 101,
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
+    siswa_id: 101,
+    siswa_nama: 'Budi Santoso',
+    siswa_info: 'X IPA 1 (NIS: 2026001)',
     jenis_koreksi: 'SALAH_INPUT_TOPUP',
     arah: 'DEBIT',
     nominal: 50000,
@@ -926,10 +718,9 @@ export const MOCK_KOREKSI_BENDAHARA: MutasiKoreksiMock[] = [
     id: 'KOR-20261004-001',
     referensi_id: 'BA-KOR-20261004-001',
     waktu: '2026-10-04T17:30:00Z',
-    subjek_tipe: 'SISWA',
-    subjek_id: 102,
-    subjek_nama: 'Siti Rahmawati',
-    subjek_info: 'XI IPS 2 (NIS: 2026002)',
+    siswa_id: 102,
+    siswa_nama: 'Siti Rahmawati',
+    siswa_info: 'XI IPS 2 (NIS: 2026002)',
     jenis_koreksi: 'PEMBALIK_TRANSAKSI_KASIR',
     arah: 'KREDIT',
     nominal: 15000,
@@ -942,23 +733,6 @@ export const MOCK_KOREKSI_BENDAHARA: MutasiKoreksiMock[] = [
     transaksi_terkait_id: 'TRX-20261004-8901',
     sesi_kasir_id: 88,
   },
-  {
-    id: 'KOR-20261003-001',
-    referensi_id: 'BA-KOR-20261003-001',
-    waktu: '2026-10-03T14:15:00Z',
-    subjek_tipe: 'KARTU_TAMU',
-    subjek_id: 1,
-    subjek_nama: 'Pak Hartono (Guru Fisika)',
-    subjek_info: 'Kartu: KT-001',
-    jenis_koreksi: 'PENYESUAIAN_AUDIT',
-    arah: 'KREDIT',
-    nominal: 25000,
-    saldo_sebelum: 50000,
-    saldo_setelah: 75000,
-    alasan: 'Penyesuaian audit saldo awal migrasi data kartu tamu guru',
-    bendahara_id: 10,
-    bendahara_nama: 'Siti Rahma (Bendahara)',
-  },
 ]
 
 export const MOCK_TRANSAKSI_SESI_TUTUP: TransaksiSesiTutupMock[] = [
@@ -967,11 +741,10 @@ export const MOCK_TRANSAKSI_SESI_TUTUP: TransaksiSesiTutupMock[] = [
     waktu: '2026-10-05T11:30:20Z',
     sesi_kasir_id: 98,
     titik_kasir: 'Kasir 1 - Kantin Utama',
-    petugas_kasir: 'Ahmad Kasir',
-    subjek_tipe: 'SISWA',
-    subjek_id: 101,
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
+    petugas_kasir: 'Petugas Kasir',
+    siswa_id: 101,
+    siswa_nama: 'Budi Santoso',
+    siswa_info: 'X IPA 1 (NIS: 2026001)',
     total: 19000,
     items: [
       {
@@ -990,11 +763,10 @@ export const MOCK_TRANSAKSI_SESI_TUTUP: TransaksiSesiTutupMock[] = [
     waktu: '2026-10-05T12:05:10Z',
     sesi_kasir_id: 98,
     titik_kasir: 'Kasir 1 - Kantin Utama',
-    petugas_kasir: 'Ahmad Kasir',
-    subjek_tipe: 'SISWA',
-    subjek_id: 102,
-    subjek_nama: 'Siti Rahmawati',
-    subjek_info: 'XI IPS 2 (NIS: 2026002)',
+    petugas_kasir: 'Petugas Kasir',
+    siswa_id: 102,
+    siswa_nama: 'Siti Rahmawati',
+    siswa_info: 'XI IPS 2 (NIS: 2026002)',
     total: 14000,
     items: [
       {
@@ -1008,51 +780,14 @@ export const MOCK_TRANSAKSI_SESI_TUTUP: TransaksiSesiTutupMock[] = [
     status: 'SELESAI',
   },
   {
-    id: 'TRX-20261005-9013',
-    waktu: '2026-10-05T12:20:45Z',
-    sesi_kasir_id: 98,
-    titik_kasir: 'Kasir 1 - Kantin Utama',
-    petugas_kasir: 'Ahmad Kasir',
-    subjek_tipe: 'KARTU_TAMU',
-    subjek_id: 2,
-    subjek_nama: 'Ibu Ratna (Staf TU)',
-    subjek_info: 'Kartu: KT-002',
-    total: 20000,
-    items: [
-      {
-        menu_id: 1,
-        nama: 'Nasi Uduk Komplit',
-        qty: 1,
-        harga: 12000,
-        subtotal: 12000,
-      },
-      {
-        menu_id: 5,
-        nama: 'Roti Cokelat Keju',
-        qty: 1,
-        harga: 5000,
-        subtotal: 5000,
-      },
-      {
-        menu_id: 10,
-        nama: 'Air Mineral 600ml',
-        qty: 1,
-        harga: 3000,
-        subtotal: 3000,
-      },
-    ],
-    status: 'SELESAI',
-  },
-  {
     id: 'TRX-20261004-8901',
     waktu: '2026-10-04T12:45:00Z',
     sesi_kasir_id: 88,
     titik_kasir: 'Kasir 2 - Pujasera Samping',
-    petugas_kasir: 'Ahmad Kasir',
-    subjek_tipe: 'SISWA',
-    subjek_id: 102,
-    subjek_nama: 'Siti Rahmawati',
-    subjek_info: 'XI IPS 2 (NIS: 2026002)',
+    petugas_kasir: 'Petugas Kasir',
+    siswa_id: 102,
+    siswa_nama: 'Siti Rahmawati',
+    siswa_info: 'XI IPS 2 (NIS: 2026002)',
     total: 15000,
     items: [
       {
@@ -1082,7 +817,8 @@ export interface PengaturanKantinMock {
   min_topup: number
   max_topup: number
   max_saldo_siswa: number
-  max_saldo_kartu_tamu: number
+  kebijakan_saldo_mengendap: 'REFUND' | 'PINDAH_SAUDARA' | 'TETAP_MENGENDAP'
+  ambang_hari: number
   disimpan?: boolean
   updated_at?: string
   updated_by?: string
@@ -1109,7 +845,8 @@ export const MOCK_PENGATURAN_KANTIN: PengaturanKantinMock = {
   min_topup: 5000,
   max_topup: 500000,
   max_saldo_siswa: 1000000,
-  max_saldo_kartu_tamu: 500000,
+  kebijakan_saldo_mengendap: 'REFUND',
+  ambang_hari: 90,
   disimpan: true,
   updated_at: '2026-10-01T08:00:00Z',
   updated_by: 'Admin Sekolah',
@@ -1222,7 +959,7 @@ export const MOCK_KERUGIAN_STOK: KerugianStokMock[] = [
     total_nilai: 12000,
     alasan: 'Bahan tumpah saat penyiapan dispenser kasir',
     berita_acara_id: 'BA-OPN-20261002-003',
-    petugas: 'Ahmad Kasir',
+    petugas: 'Petugas Kasir',
   },
   {
     id: 5,
@@ -1269,7 +1006,7 @@ export const MOCK_RIWAYAT_SISWA: Record<number, RiwayatSiswaDetailMock[]> = {
       nominal: 19000,
       saldo_setelah: 45000,
       titik_kasir: 'Kasir 1 - Kantin Utama',
-      petugas: 'Ahmad Kasir',
+      petugas: 'Petugas Kasir',
       referensi_id: 'TRX-20261008-0101',
       keterangan: 'Pembelian makan istirahat 1',
       items: [
@@ -1297,7 +1034,7 @@ export const MOCK_RIWAYAT_SISWA: Record<number, RiwayatSiswaDetailMock[]> = {
       nominal: 14000,
       saldo_setelah: 14000,
       titik_kasir: 'Kasir 1 - Kantin Utama',
-      petugas: 'Ahmad Kasir',
+      petugas: 'Petugas Kasir',
       referensi_id: 'TRX-20261006-0089',
       keterangan: 'Pembelian makan siang',
       items: [
@@ -1312,7 +1049,7 @@ export const MOCK_RIWAYAT_SISWA: Record<number, RiwayatSiswaDetailMock[]> = {
       nominal: 19000,
       saldo_setelah: 28000,
       titik_kasir: 'Kasir 1 - Kantin Utama',
-      petugas: 'Ahmad Kasir',
+      petugas: 'Petugas Kasir',
       referensi_id: 'TRX-20261005-9011',
       keterangan: 'Makan siang kantin utama',
       items: [
@@ -1330,7 +1067,7 @@ export const MOCK_RIWAYAT_SISWA: Record<number, RiwayatSiswaDetailMock[]> = {
       nominal: 14000,
       saldo_setelah: 5000,
       titik_kasir: 'Kasir 1 - Kantin Utama',
-      petugas: 'Ahmad Kasir',
+      petugas: 'Petugas Kasir',
       referensi_id: 'TRX-20261005-9012',
       keterangan: 'Makan siang ayam geprek',
       items: [
