@@ -16,6 +16,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -59,6 +60,7 @@ export function KategoriPage() {
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [activeDeleteTarget, setActiveDeleteTarget] = useState<KategoriItem | null>(null)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   const [isDocumentHidden, setIsDocumentHidden] = useState(() =>
     typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
@@ -80,6 +82,7 @@ export function KategoriPage() {
     isModalOpen,
     hasDeleteTarget: Boolean(deleteTarget),
     isDeleting,
+    togglingId,
     isDocumentHidden,
   })
 
@@ -152,6 +155,7 @@ export function KategoriPage() {
         isModalOpen,
         hasDeleteTarget: Boolean(deleteTarget),
         isDeleting,
+        togglingId,
         isDocumentHidden: false,
       })
       if (pausedWithoutVisibility) return
@@ -168,7 +172,7 @@ export function KategoriPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [isModalOpen, deleteTarget, isDeleting, syncKategori])
+  }, [isModalOpen, deleteTarget, isDeleting, togglingId, syncKategori])
 
   // Polling otomatis setiap 30 detik selalu aktif selama tidak dijeda
   useEffect(() => {
@@ -235,6 +239,42 @@ export function KategoriPage() {
     },
     [syncKategori, syncSourceId]
   )
+
+  const handleToggleAktif = async (kat: KategoriItem) => {
+    const currentAktif = kat.isActive !== false && kat.aktif !== false
+    const nextAktif = !currentAktif
+    mutationEpochRef.current += 1
+    try {
+      setTogglingId(kat.id)
+      const updated = await katalogApi.updateKategori(kat.id, {
+        nama: kat.nama,
+        urutan: kat.urutan ?? 0,
+        aktif: nextAktif,
+      })
+      mutationEpochRef.current += 1
+      setKategoriList((prev) =>
+        prev.map((k) =>
+          k.id === kat.id
+            ? { ...k, ...updated, isActive: nextAktif, aktif: nextAktif }
+            : k
+        )
+      )
+      toast.success(
+        nextAktif
+          ? `Kategori "${kat.nama}" diaktifkan`
+          : `Kategori "${kat.nama}" dinonaktifkan`
+      )
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const message =
+        error.response?.data?.message || error.message || 'Gagal memperbarui status kategori'
+      toast.error(message)
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   const confirmDelete = async () => {
     const target = activeDeleteTarget
@@ -344,7 +384,7 @@ export function KategoriPage() {
                   <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Status
                   </TableHead>
-                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
+                  <TableHead className='w-36 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
                     Aksi
                   </TableHead>
                 </TableRow>
@@ -418,7 +458,15 @@ export function KategoriPage() {
                           )}
                         </TableCell>
                         <TableCell className='text-right border-none py-3.5 pe-6'>
-                          <div className='flex items-center justify-end gap-1'>
+                          <div className='flex items-center justify-end gap-1.5'>
+                            <Switch
+                              checked={isAktif}
+                              disabled={togglingId === kat.id}
+                              onCheckedChange={() => void handleToggleAktif(kat)}
+                              aria-label={isAktif ? `Nonaktifkan ${kat.nama}` : `Aktifkan ${kat.nama}`}
+                              title={isAktif ? 'Nonaktifkan Kategori' : 'Aktifkan Kategori'}
+                              className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
+                            />
                             <Button
                               variant='ghost'
                               size='icon'
