@@ -9,7 +9,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   ReceiptText,
-  FileSpreadsheet,
   Printer,
   History,
   FileCheck2,
@@ -50,7 +49,9 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { ExportButton } from '@/components/export-button'
 import { formatRupiah } from '@/lib/formatters'
+import { exportTableToPdf } from '@/lib/pdfExport'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import {
   type MutasiKoreksiItem,
@@ -358,6 +359,52 @@ export function KoreksiBendaharaPage() {
     toast.success('Log audit mutasi koreksi berhasil diekspor ke CSV')
   }
 
+  const handleExportPdf = () => {
+    if (filteredKoreksi.length === 0) {
+      toast.warning('Tidak ada data mutasi koreksi untuk diekspor')
+      return
+    }
+
+    exportTableToPdf({
+      filename: `audit_koreksi_bendahara_${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: 'Log Audit Penyesuaian Saldo Bendahara',
+      subtitle: 'Rekapitulasi riwayat mutasi koreksi saldo kantin',
+      metadata: {
+        'Total Mutasi': `${filteredKoreksi.length} transaksi`,
+        'Total Koreksi Kredit (+)': formatRupiah(totalKoreksiKredit),
+        'Total Koreksi Debit (-)': formatRupiah(totalKoreksiDebit),
+      },
+      columns: [
+        { header: 'Ref ID', key: 'referensi_id' },
+        { header: 'Waktu', key: 'waktu' },
+        { header: 'Subjek', key: 'subjek' },
+        { header: 'Jenis', key: 'jenis_koreksi' },
+        { header: 'Arah', key: 'arah' },
+        { header: 'Nominal', key: 'nominal' },
+        { header: 'Saldo Sebelum', key: 'saldo_sebelum' },
+        { header: 'Saldo Setelah', key: 'saldo_setelah' },
+        { header: 'Alasan', key: 'alasan' },
+        { header: 'Bendahara', key: 'bendahara_nama' },
+      ],
+      data: filteredKoreksi.map((item) => ({
+        referensi_id: item.referensi_id,
+        waktu: item.waktu,
+        subjek: item.subjek_info
+          ? `${item.subjek_nama} (${item.subjek_info})`
+          : item.subjek_nama,
+        jenis_koreksi: item.jenis_koreksi,
+        arah: item.arah === 'KREDIT' ? '+ Kredit' : '- Debit',
+        nominal: formatRupiah(item.nominal),
+        saldo_sebelum: formatRupiah(item.saldo_sebelum),
+        saldo_setelah: formatRupiah(item.saldo_setelah),
+        alasan: item.alasan,
+        bendahara_nama: item.bendahara_nama,
+      })),
+    })
+
+    toast.success('Log audit mutasi koreksi berhasil diekspor ke PDF')
+  }
+
   return (
     <>
       <Header fixed>
@@ -376,15 +423,12 @@ export function KoreksiBendaharaPage() {
             </h1>
           </div>
           <div className='flex items-center gap-2'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={handleExportCSV}
-              className='gap-1.5 text-xs border-0 bg-muted/80 shadow-none'
-            >
-              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-              Ekspor CSV
-            </Button>
+            <ExportButton
+              onExportCsv={handleExportCSV}
+              onExportPdf={handleExportPdf}
+              disabled={filteredKoreksi.length === 0}
+              data-testid='btn-koreksi-export'
+            />
             {!isKepsek && (
               <Button
                 size='sm'
