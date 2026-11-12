@@ -165,7 +165,8 @@ function Sidebar({
       <div
         data-slot='sidebar'
         className={cn(
-          'flex h-full w-(--sidebar-width) flex-col border-0 bg-sidebar text-sidebar-foreground',
+          'flex h-full w-(--sidebar-width) flex-col has-border bg-sidebar text-sidebar-foreground border-slate-200 dark:border-slate-800',
+          side === 'left' ? 'border-e' : 'border-s',
           className
         )}
         {...props}
@@ -182,7 +183,10 @@ function Sidebar({
           data-sidebar='sidebar'
           data-slot='sidebar'
           data-mobile='true'
-          className='w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground'
+          className={cn(
+            'w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground has-border border-slate-200 dark:border-slate-800',
+            side === 'left' ? 'border-e' : 'border-s'
+          )}
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -231,7 +235,7 @@ function Sidebar({
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
-            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) border-0',
+            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) has-border group-data-[side=left]:border-e group-data-[side=right]:border-s border-slate-200 dark:border-slate-800',
           className
         )}
         {...props}
@@ -239,7 +243,7 @@ function Sidebar({
         <div
           data-sidebar='sidebar'
           data-slot='sidebar-inner'
-          className='flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border-0 shadow-lg'
+          className='flex h-full w-full flex-col bg-sidebar has-border group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-slate-200 dark:group-data-[variant=floating]:border-slate-800 group-data-[variant=floating]:shadow-sm'
         >
           {children}
         </div>

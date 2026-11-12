@@ -152,7 +152,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
 
   return (
     <>
-      <Header fixed className='border-b border-sidebar-border/50'>
+      <Header fixed>
         <div className='flex items-center gap-2 overflow-hidden me-auto'>
           <Button
             variant='ghost'

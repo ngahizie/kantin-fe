@@ -26,7 +26,7 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
   return (
     <header
       className={cn(
-        'z-50 h-[65px] bg-background',
+        'z-50 h-[65px] bg-background has-border border-b border-slate-200 dark:border-slate-800',
         fixed && 'header-fixed peer/header sticky top-0 w-[inherit]',
         offset > 10 && fixed ? 'shadow-none' : '',
         className

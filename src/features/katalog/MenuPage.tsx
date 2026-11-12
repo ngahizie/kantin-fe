@@ -446,7 +446,7 @@ export function MenuPage() {
 
   return (
     <>
-      <Header fixed className='has-border border-b border-slate-200 dark:border-slate-800'>
+      <Header fixed>
         <div className='flex items-center gap-2 overflow-hidden me-auto'>
           <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
             Katalog Menu Kantin
