@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client'
+import { notifyKatalogChanged } from '@/lib/katalog-sync'
 import { MOCK_SISWA, MOCK_KARTU_TAMU } from '@/mocks/mock-data'
 import { getStoredSaldoOverrides } from '@/features/tu/saldo-storage'
 import type {
@@ -57,6 +58,7 @@ export const kasirApi = {
       '/api/kasir/tap',
       payload
     )
+    notifyKatalogChanged('kasir')
     const raw = res.data?.data
     if (!raw) return raw as unknown as TapTransaksiData
 
@@ -148,6 +150,7 @@ export const kasirApi = {
       alasan: alasan.trim(),
       kodeStruk: kodeStruk.trim(),
     })
+    notifyKatalogChanged('kasir')
   },
 
   /**

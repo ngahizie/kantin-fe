@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client'
+import { notifyKatalogChanged } from '@/lib/katalog-sync'
 import type {
   KategoriItem,
   MenuItem,
@@ -29,6 +30,7 @@ export const katalogApi = {
       nama: data.nama,
       urutan: data.urutan ?? 0,
     })
+    notifyKatalogChanged('kategori')
     return res.data.data
   },
 
@@ -38,11 +40,13 @@ export const katalogApi = {
       urutan: data.urutan ?? 0,
       aktif: data.aktif,
     })
+    notifyKatalogChanged('kategori')
     return res.data.data
   },
 
   async deleteKategori(id: number): Promise<void> {
     await apiClient.delete(`/api/katalog/kategori/${id}`)
+    notifyKatalogChanged('kategori')
   },
 
   // --- MENU ---
@@ -71,6 +75,7 @@ export const katalogApi = {
       fotoUrl: data.fotoUrl || null,
       stokMinimum: data.stokMinimum,
     })
+    notifyKatalogChanged('menu')
     return res.data.data
   },
 
@@ -90,11 +95,13 @@ export const katalogApi = {
       stokMinimum: data.stokMinimum,
       aktif: data.aktif,
     })
+    notifyKatalogChanged('menu')
     return res.data.data
   },
 
   async deleteMenu(id: number): Promise<void> {
     await apiClient.delete(`/api/katalog/menu/${id}`)
+    notifyKatalogChanged('menu')
   },
 
   // --- STORAGE / UPLOAD ---

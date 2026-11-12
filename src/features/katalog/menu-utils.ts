@@ -1,7 +1,5 @@
 import type { MenuItem } from './types'
 
-export const MENU_AUTO_REFRESH_INTERVAL_MS = 30_000
-
 /**
  * Mengurutkan daftar menu dengan item terbaru (ID terbesar) berada di paling atas,
  * lalu diurutkan alfabetis jika ID sama.
