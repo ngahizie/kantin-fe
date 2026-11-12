@@ -1512,13 +1512,25 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const urlObj = new URL(url, 'http://localhost')
       const tanggalParam =
         urlObj.searchParams.get('tanggal') || (params?.tanggal as string)
+      const dariParam =
+        urlObj.searchParams.get('dari') || (params?.dari as string)
+      const sampaiParam =
+        urlObj.searchParams.get('sampai') || (params?.sampai as string)
       const petugasIdParam =
         urlObj.searchParams.get('petugasId') || (params?.petugasId as string)
       const statusParam =
         urlObj.searchParams.get('status') || (params?.status as string)
 
       let filtered = [...setoranKasList]
-      if (tanggalParam) {
+      if (dariParam || sampaiParam) {
+        const dariYmd = dariParam ? dariParam.slice(0, 10) : null
+        const sampaiYmd = sampaiParam ? sampaiParam.slice(0, 10) : null
+        filtered = filtered.filter((s) => {
+          if (dariYmd && s.tanggal < dariYmd) return false
+          if (sampaiYmd && s.tanggal >= sampaiYmd) return false
+          return true
+        })
+      } else if (tanggalParam) {
         filtered = filtered.filter((s) => s.tanggal === tanggalParam)
       }
       if (petugasIdParam) {
