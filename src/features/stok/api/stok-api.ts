@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client'
+import { notifyKatalogChanged } from '@/lib/katalog-sync'
 import type {
   RiwayatStokItem,
   HalamanResponse,
@@ -29,6 +30,16 @@ export interface RiwayatFilterParams {
   ukuran?: number
 }
 
+async function submitBarangMasuk(
+  payload: BarangMasukSingleRequest
+): Promise<HasilMutasiStok> {
+  const res = await apiClient.post<ApiResponse<HasilMutasiStok>>(
+    '/api/stok/barang-masuk',
+    payload
+  )
+  return res.data.data
+}
+
 export const stokApi = {
   /**
    * Catat barang masuk / restock (PRD §7.2)
@@ -36,11 +47,9 @@ export const stokApi = {
   async catatBarangMasuk(
     payload: BarangMasukSingleRequest
   ): Promise<HasilMutasiStok> {
-    const res = await apiClient.post<ApiResponse<HasilMutasiStok>>(
-      '/api/stok/barang-masuk',
-      payload
-    )
-    return res.data.data
+    const res = await submitBarangMasuk(payload)
+    notifyKatalogChanged('stok')
+    return res
   },
 
   /**
@@ -51,19 +60,25 @@ export const stokApi = {
     baseReferensiId: string
   ): Promise<HasilMutasiStok[]> {
     const results: HasilMutasiStok[] = []
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i]
-      const refId =
-        items.length === 1 ? baseReferensiId : `${baseReferensiId}-${i + 1}`
-      const res = await this.catatBarangMasuk({
-        menuId: item.menuId,
-        qty: item.qty,
-        hargaBeliPerUnit: item.hargaBeliPerUnit,
-        referensiId: refId,
-      })
-      results.push(res)
+    try {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        const refId =
+          items.length === 1 ? baseReferensiId : `${baseReferensiId}-${i + 1}`
+        const res = await submitBarangMasuk({
+          menuId: item.menuId,
+          qty: item.qty,
+          hargaBeliPerUnit: item.hargaBeliPerUnit,
+          referensiId: refId,
+        })
+        results.push(res)
+      }
+      return results
+    } finally {
+      if (results.length > 0) {
+        notifyKatalogChanged('stok')
+      }
     }
-    return results
   },
 
   /**
@@ -76,6 +91,7 @@ export const stokApi = {
       '/api/stok/barang-masuk-pembalik',
       payload
     )
+    notifyKatalogChanged('stok')
     return res.data.data
   },
 
@@ -153,6 +169,7 @@ export const stokApi = {
       '/api/stok/opname',
       payload
     )
+    notifyKatalogChanged('stok')
     return res.data.data
   },
 
@@ -166,6 +183,7 @@ export const stokApi = {
       '/api/stok/opname-batch',
       payload
     )
+    notifyKatalogChanged('stok')
     return res.data.data
   },
 

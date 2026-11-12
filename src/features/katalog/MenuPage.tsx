@@ -44,10 +44,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
+import {
+  getLatestKatalogChangeId,
+  subscribeKatalogChanges,
+} from '@/lib/katalog-sync'
 import { katalogApi } from './api/katalog-api'
 import { MenuFormModal } from './MenuFormModal'
 import {
-  MENU_AUTO_REFRESH_INTERVAL_MS,
   matchesMenuSearchQuery,
   shouldPauseMenuAutoRefresh,
   sortMenusNewestFirst,
@@ -119,17 +122,6 @@ export function MenuPage() {
     typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
   )
 
-  const isMountedRef = useRef(true)
-  const inFlightCountRef = useRef(0)
-  const activeSyncIdRef = useRef(0)
-  const mutationEpochRef = useRef(0)
-  const lastSyncedAtRef = useRef<Date | null>(null)
-
-  const handleDeleteClick = (item: MenuItem) => {
-    setDeleteTarget(item)
-    setActiveDeleteTarget(item)
-  }
-
   const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
     isModalOpen,
     hasDeleteTarget: Boolean(deleteTarget),
@@ -138,23 +130,50 @@ export function MenuPage() {
     isDocumentHidden,
   })
 
+  const isMountedRef = useRef(true)
+  const inFlightCountRef = useRef(0)
+  const activeSyncIdRef = useRef(0)
+  const mutationEpochRef = useRef(0)
+  const pendingSyncRef = useRef(false)
+  const lastSeenChangeIdRef = useRef<string | null>(null)
+  const isAutoRefreshPausedRef = useRef(isAutoRefreshPaused)
+  const ignoringLocalToggleRef = useRef(false)
+
+  const handleDeleteClick = (item: MenuItem) => {
+    setDeleteTarget(item)
+    setActiveDeleteTarget(item)
+  }
+
   const commitKatalogData = useCallback(
     (menus: MenuItem[], categories: KategoriItem[]) => {
       setMenuList(menus)
       setKategoriList(categories)
-      lastSyncedAtRef.current = new Date()
     },
     []
   )
 
-  // Sinkronisasi latar belakang otomatis tanpa mengganggu state tabel/form
+  const syncKatalogRef = useRef<(force?: boolean) => Promise<void>>(
+    async () => {}
+  )
+
+  // Sinkronisasi latar belakang event-driven tanpa mengganggu state tabel/form
   const syncKatalog = useCallback(
     async (force = false) => {
-      if (!force && inFlightCountRef.current > 0) return
+      const hiddenNow =
+        typeof document !== 'undefined' && document.visibilityState === 'hidden'
+      if (
+        !force &&
+        (isAutoRefreshPausedRef.current || hiddenNow || inFlightCountRef.current > 0)
+      ) {
+        return
+      }
 
+      pendingSyncRef.current = false
       inFlightCountRef.current += 1
       const syncId = ++activeSyncIdRef.current
       const requestEpoch = mutationEpochRef.current
+      const syncChangeId = getLatestKatalogChangeId()
+      let succeeded = false
 
       try {
         const { menus, categories } = await fetchKatalogData()
@@ -162,24 +181,58 @@ export function MenuPage() {
         if (!force && requestEpoch !== mutationEpochRef.current) return
 
         commitKatalogData(menus, categories)
+        lastSeenChangeIdRef.current = syncChangeId
+        succeeded = true
       } catch {
-        // Abaikan kegagalan background polling agar tidak mengganggu antarmuka
+        // Abaikan kegagalan sinkronisasi latar belakang agar tidak mengganggu antarmuka
       } finally {
         inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+        const latestId = getLatestKatalogChangeId()
+        if (latestId && latestId !== syncChangeId) {
+          pendingSyncRef.current = true
+        }
+        const stillHidden =
+          typeof document !== 'undefined' && document.visibilityState === 'hidden'
+        if (
+          succeeded &&
+          isMountedRef.current &&
+          inFlightCountRef.current === 0 &&
+          pendingSyncRef.current &&
+          !isAutoRefreshPausedRef.current &&
+          !stillHidden
+        ) {
+          void syncKatalogRef.current()
+        }
       }
     },
     [commitKatalogData]
   )
 
   useEffect(() => {
+    syncKatalogRef.current = syncKatalog
+  }, [syncKatalog])
+
+  useEffect(() => {
+    isAutoRefreshPausedRef.current = isAutoRefreshPaused
+    if (!isAutoRefreshPaused && pendingSyncRef.current) {
+      void syncKatalog()
+    }
+  }, [isAutoRefreshPaused, syncKatalog])
+
+  useEffect(() => {
     isMountedRef.current = true
     const init = async () => {
+      pendingSyncRef.current = false
       inFlightCountRef.current += 1
       const syncId = ++activeSyncIdRef.current
+      const syncChangeId = getLatestKatalogChangeId()
+      let succeeded = false
       try {
         const { menus, categories } = await fetchKatalogData()
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           commitKatalogData(menus, categories)
+          lastSeenChangeIdRef.current = syncChangeId
+          succeeded = true
         }
       } catch (err: unknown) {
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
@@ -188,8 +241,22 @@ export function MenuPage() {
         }
       } finally {
         inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+        const latestId = getLatestKatalogChangeId()
+        if (latestId && latestId !== syncChangeId) {
+          pendingSyncRef.current = true
+        }
         if (isMountedRef.current && inFlightCountRef.current === 0) {
           setLoading(false)
+          const stillHidden =
+            typeof document !== 'undefined' && document.visibilityState === 'hidden'
+          if (
+            succeeded &&
+            pendingSyncRef.current &&
+            !isAutoRefreshPausedRef.current &&
+            !stillHidden
+          ) {
+            void syncKatalog()
+          }
         }
       }
     }
@@ -197,51 +264,63 @@ export function MenuPage() {
     return () => {
       isMountedRef.current = false
     }
-  }, [commitKatalogData])
+  }, [commitKatalogData, syncKatalog])
 
-  // Pantau visibilitas tab agar auto-refresh berhenti saat tab tersembunyi
+  // Auto-refresh event-driven: hanya menyinkronkan ulang bila ada perubahan
+  // (mutasi lokal di app / BroadcastChannel antar tab / perubahan tertunda saat kembali fokus)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      const hidden = document.visibilityState === 'hidden'
+    const checkAndSyncIfChanged = () => {
+      const hidden =
+        typeof document !== 'undefined' && document.visibilityState === 'hidden'
       setIsDocumentHidden(hidden)
-
       if (hidden) return
 
-      const pausedWithoutVisibility = shouldPauseMenuAutoRefresh({
-        isModalOpen,
-        hasDeleteTarget: Boolean(deleteTarget),
-        isDeleting,
-        togglingId,
-        isDocumentHidden: false,
-      })
-      if (pausedWithoutVisibility) return
+      const latestId = getLatestKatalogChangeId()
+      if (latestId && latestId !== lastSeenChangeIdRef.current) {
+        pendingSyncRef.current = true
+      }
 
-      const elapsedMs = lastSyncedAtRef.current
-        ? Date.now() - lastSyncedAtRef.current.getTime()
-        : Number.POSITIVE_INFINITY
-      if (elapsedMs >= MENU_AUTO_REFRESH_INTERVAL_MS) {
+      if (!isAutoRefreshPausedRef.current && pendingSyncRef.current) {
         void syncKatalog()
       }
     }
 
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    const unsubscribe = subscribeKatalogChanges((event) => {
+      if (!event.isCrossTab && ignoringLocalToggleRef.current) {
+        lastSeenChangeIdRef.current = event.id
+        return
+      }
+
+      pendingSyncRef.current = true
+      const hidden =
+        typeof document !== 'undefined' && document.visibilityState === 'hidden'
+      if (!isAutoRefreshPausedRef.current && !hidden) {
+        void syncKatalog()
+      }
+    })
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || pendingSyncRef.current) {
+        checkAndSyncIfChanged()
+      } else {
+        const latestId = getLatestKatalogChangeId()
+        if (latestId && latestId !== lastSeenChangeIdRef.current) {
+          checkAndSyncIfChanged()
+        }
+      }
     }
-  }, [isModalOpen, deleteTarget, isDeleting, togglingId, syncKatalog])
 
-  // Polling otomatis setiap 30 detik selalu aktif selama tidak dijeda
-  useEffect(() => {
-    if (isAutoRefreshPaused) return
-
-    const timer = window.setInterval(() => {
-      void syncKatalog()
-    }, MENU_AUTO_REFRESH_INTERVAL_MS)
+    document.addEventListener('visibilitychange', checkAndSyncIfChanged)
+    window.addEventListener('focus', checkAndSyncIfChanged)
+    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
-      window.clearInterval(timer)
+      unsubscribe()
+      document.removeEventListener('visibilitychange', checkAndSyncIfChanged)
+      window.removeEventListener('focus', checkAndSyncIfChanged)
+      window.removeEventListener('pageshow', handlePageShow)
     }
-  }, [isAutoRefreshPaused, syncKatalog])
+  }, [syncKatalog])
 
   // Map kategoriId ke nama kategori
   const kategoriMap = useMemo(() => {
@@ -314,6 +393,7 @@ export function MenuPage() {
   const handleToggleAktif = async (item: MenuItem) => {
     const nextAktif = !item.aktif
     mutationEpochRef.current += 1
+    ignoringLocalToggleRef.current = true
     try {
       setTogglingId(item.id)
       const updated = await katalogApi.updateMenu(item.id, {
@@ -339,6 +419,7 @@ export function MenuPage() {
         error.response?.data?.message || error.message || 'Gagal memperbarui status menu'
       toast.error(message)
     } finally {
+      ignoringLocalToggleRef.current = false
       setTogglingId(null)
     }
   }
@@ -365,7 +446,7 @@ export function MenuPage() {
 
   return (
     <>
-      <Header fixed className='has-border border-b border-slate-200 dark:border-slate-800'>
+      <Header fixed>
         <div className='flex items-center gap-2 overflow-hidden me-auto'>
           <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
             Katalog Menu Kantin

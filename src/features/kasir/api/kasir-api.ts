@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client'
+import { notifyKatalogChanged } from '@/lib/katalog-sync'
 import type {
   TapTransaksiRequest,
   TapTransaksiData,
@@ -55,6 +56,7 @@ export const kasirApi = {
       '/api/kasir/tap',
       payload
     )
+    notifyKatalogChanged('kasir')
     const raw = res.data?.data
     if (!raw) return raw as unknown as TapTransaksiData
 
@@ -124,6 +126,7 @@ export const kasirApi = {
       alasan: alasan.trim(),
       kodeStruk: kodeStruk.trim(),
     })
+    notifyKatalogChanged('kasir')
   },
 
   /**

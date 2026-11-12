@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { apiClient } from '@/lib/api-client'
+import { subscribeKatalogChanges } from '@/lib/katalog-sync'
 import { katalogApi } from './api/katalog-api'
 import {
   kategoriFormSchema,
@@ -9,7 +10,6 @@ import {
   type MenuItem,
 } from './types'
 import {
-  MENU_AUTO_REFRESH_INTERVAL_MS,
   getKategoriDeleteBlockedReason,
   matchesMenuSearchQuery,
   mergeKategoriMenuCounts,
@@ -325,9 +325,7 @@ describe('Katalog Menu API Toggle Status & Hapus Menu', () => {
 })
 
 describe('Katalog Menu Auto-Refresh Guard & Formatting', () => {
-  it('menjadwalkan auto-refresh tiap 30 detik dan hanya berjalan saat aktif & tidak ada dialog/aksi', () => {
-    expect(MENU_AUTO_REFRESH_INTERVAL_MS).toBe(30_000)
-
+  it('hanya menyinkronkan ulang saat tidak ada dialog/modal/aksi aktif atau tab tersembunyi', () => {
     const baseState = {
       autoRefreshEnabled: true,
       isModalOpen: false,
@@ -344,6 +342,39 @@ describe('Katalog Menu Auto-Refresh Guard & Formatting', () => {
     expect(shouldPauseMenuAutoRefresh({ ...baseState, isDeleting: true })).toBe(true)
     expect(shouldPauseMenuAutoRefresh({ ...baseState, togglingId: 12 })).toBe(true)
     expect(shouldPauseMenuAutoRefresh({ ...baseState, isDocumentHidden: true })).toBe(true)
+  })
+
+  it('memancarkan sinyal sinkronisasi saat mutasi menu atau kategori berhasil', async () => {
+    const reasons: string[] = []
+    const unsubscribe = subscribeKatalogChanges((evt) => {
+      reasons.push(evt.reason)
+    })
+
+    try {
+      const created = await katalogApi.createMenu({
+        nama: 'Tahu Isi Event Sync',
+        kategoriId: 1,
+        hargaJual: 3500,
+        satuan: 'PCS',
+        stokMinimum: 3,
+        fotoUrl: '',
+        aktif: true,
+      })
+      await katalogApi.updateMenu(created.id, {
+        nama: created.nama,
+        kategoriId: created.kategoriId,
+        hargaJual: 4000,
+        satuan: created.satuan,
+        stokMinimum: created.stokMinimum,
+        fotoUrl: '',
+        aktif: false,
+      })
+      await katalogApi.deleteMenu(created.id)
+
+      expect(reasons).toEqual(['menu', 'menu', 'menu'])
+    } finally {
+      unsubscribe()
+    }
   })
 })
 
