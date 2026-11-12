@@ -8,12 +8,14 @@ export interface LaporanExportButtonProps
 
 export function LaporanExportButton({
   dialogDescription = 'Pilih format berkas laporan yang ingin Anda unduh:',
+  buttonVariant = 'default',
   'data-testid': dataTestId = 'btn-laporan-export',
   ...props
 }: LaporanExportButtonProps) {
   return (
     <ExportButton
       dialogDescription={dialogDescription}
+      buttonVariant={buttonVariant}
       data-testid={dataTestId}
       {...props}
     />

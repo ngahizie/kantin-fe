@@ -50,7 +50,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { ExportButton } from '@/components/export-button'
-import { formatRupiah } from '@/lib/formatters'
+import { formatDateTime, formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import {
@@ -310,6 +310,11 @@ export function KoreksiBendaharaPage() {
 
   // Export CSV
   const handleExportCSV = () => {
+    if (filteredKoreksi.length === 0) {
+      toast.warning('Tidak ada data mutasi koreksi untuk diekspor')
+      return
+    }
+
     const headers = [
       'No. Berita Acara',
       'Waktu Audit',
@@ -365,44 +370,59 @@ export function KoreksiBendaharaPage() {
       return
     }
 
-    exportTableToPdf({
-      filename: `audit_koreksi_bendahara_${new Date().toISOString().slice(0, 10)}.pdf`,
-      title: 'Log Audit Penyesuaian Saldo Bendahara',
-      subtitle: 'Rekapitulasi riwayat mutasi koreksi saldo kantin',
-      metadata: {
-        'Total Mutasi': `${filteredKoreksi.length} transaksi`,
-        'Total Koreksi Kredit (+)': formatRupiah(totalKoreksiKredit),
-        'Total Koreksi Debit (-)': formatRupiah(totalKoreksiDebit),
-      },
-      columns: [
-        { header: 'Ref ID', key: 'referensi_id' },
-        { header: 'Waktu', key: 'waktu' },
-        { header: 'Subjek', key: 'subjek' },
-        { header: 'Jenis', key: 'jenis_koreksi' },
-        { header: 'Arah', key: 'arah' },
-        { header: 'Nominal', key: 'nominal' },
-        { header: 'Saldo Sebelum', key: 'saldo_sebelum' },
-        { header: 'Saldo Setelah', key: 'saldo_setelah' },
-        { header: 'Alasan', key: 'alasan' },
-        { header: 'Bendahara', key: 'bendahara_nama' },
-      ],
-      data: filteredKoreksi.map((item) => ({
-        referensi_id: item.referensi_id,
-        waktu: item.waktu,
-        subjek: item.subjek_info
-          ? `${item.subjek_nama} (${item.subjek_info})`
-          : item.subjek_nama,
-        jenis_koreksi: item.jenis_koreksi,
-        arah: item.arah === 'KREDIT' ? '+ Kredit' : '- Debit',
-        nominal: formatRupiah(item.nominal),
-        saldo_sebelum: formatRupiah(item.saldo_sebelum),
-        saldo_setelah: formatRupiah(item.saldo_setelah),
-        alasan: item.alasan,
-        bendahara_nama: item.bendahara_nama,
-      })),
-    })
+    try {
+      const filteredKredit = filteredKoreksi
+        .filter((item) => item.arah === 'KREDIT')
+        .reduce((acc, item) => acc + item.nominal, 0)
+      const filteredDebit = filteredKoreksi
+        .filter((item) => item.arah === 'DEBIT')
+        .reduce((acc, item) => acc + item.nominal, 0)
 
-    toast.success('Log audit mutasi koreksi berhasil diekspor ke PDF')
+      exportTableToPdf({
+        filename: `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}`,
+        title: 'LOG AUDIT PENYESUAIAN SALDO BENDAHARA',
+        subtitle: 'Rekapitulasi riwayat mutasi koreksi saldo kantin',
+        metadata: {
+          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Total Mutasi': `${filteredKoreksi.length} transaksi`,
+          'Total Koreksi Kredit (+)': formatRupiah(filteredKredit),
+          'Total Koreksi Debit (-)': formatRupiah(filteredDebit),
+        },
+        columns: [
+          { header: 'Ref ID', key: 'referensi_id' },
+          { header: 'Waktu', key: 'waktu' },
+          { header: 'Subjek', key: 'subjek' },
+          { header: 'Jenis', key: 'jenis_koreksi' },
+          { header: 'Arah', key: 'arah' },
+          { header: 'Nominal', key: 'nominal' },
+          { header: 'Saldo Sebelum', key: 'saldo_sebelum' },
+          { header: 'Saldo Setelah', key: 'saldo_setelah' },
+          { header: 'Alasan', key: 'alasan' },
+          { header: 'Bendahara', key: 'bendahara_nama' },
+        ],
+        data: filteredKoreksi.map((item) => ({
+          referensi_id: item.referensi_id,
+          waktu: formatDateTime(item.waktu),
+          subjek: item.subjek_info
+            ? `${item.subjek_nama} (${item.subjek_info})`
+            : item.subjek_nama,
+          jenis_koreksi: item.jenis_koreksi,
+          arah: item.arah === 'KREDIT' ? '+ Kredit' : '- Debit',
+          nominal: formatRupiah(item.nominal),
+          saldo_sebelum: formatRupiah(item.saldo_sebelum),
+          saldo_setelah: formatRupiah(item.saldo_setelah),
+          alasan: item.alasan,
+          bendahara_nama: item.bendahara_nama,
+        })),
+      })
+
+      toast.success('Ekspor PDF Berhasil', {
+        description: 'Log audit mutasi koreksi (.pdf) berhasil diunduh.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      toast.error('Gagal Ekspor PDF', { description: msg })
+    }
   }
 
   return (
