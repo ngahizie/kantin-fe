@@ -210,6 +210,35 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
       expect(emptyRow?.className).not.toContain('hover:bg-muted/50')
     })
   })
+
+  it('menampilkan status REFUND (bukan VOID) untuk transaksi kasir yang dibatalkan', async () => {
+    mockRole = 'pengelola'
+    vi.mocked(laporanApi.getRiwayatTransaksiKeseluruhan).mockResolvedValueOnce([
+      {
+        id: '990010',
+        waktu: '2026-11-10T13:50:00+07:00',
+        jenis: 'VOID',
+        arah: 'KREDIT',
+        nominal: 12000,
+        saldoSetelah: 97000,
+        titikKasir: 'Kasir Kantin Utama',
+        petugas: '-',
+        referensiId: '960010',
+        keterangan: '',
+        items: [{ nama: 'Es Teh Manis', qty: 2, harga: 6000, subtotal: 12000 }],
+        siswaId: 206,
+        siswaNama: 'Siswa #206',
+        siswaNis: '206',
+        siswaKelas: '-',
+      },
+    ])
+
+    const screen = await render(<DashboardPage />)
+    const refundBadge = screen.getByText('REFUND', { exact: true })
+    await expect.element(refundBadge).toBeInTheDocument()
+    await expect.element(refundBadge).toHaveClass('text-rose-700')
+    await expect.element(screen.getByText('VOID', { exact: true })).not.toBeInTheDocument()
+  })
 })
 
 describe('getStatusBadgeClass color semantics', () => {
@@ -220,6 +249,7 @@ describe('getStatusBadgeClass color semantics', () => {
   })
 
   it('memberikan warna merah untuk status negatif', () => {
+    expect(getStatusBadgeClass('REFUND')).toContain('text-rose-700')
     expect(getStatusBadgeClass('VOID')).toContain('text-rose-700')
     expect(getStatusBadgeClass('GAGAL')).toContain('text-rose-700')
     expect(getStatusBadgeClass('DIBATALKAN')).toContain('text-rose-700')
