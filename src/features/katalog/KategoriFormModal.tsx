@@ -35,7 +35,7 @@ interface KategoriFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedKategori?: KategoriItem | null
-  onSuccess: () => void
+  onSuccess: (savedKategori?: KategoriItem) => void | Promise<void>
 }
 
 export function KategoriFormModal({
@@ -80,14 +80,15 @@ export function KategoriFormModal({
 
   async function onSubmit(values: KategoriFormValues) {
     try {
+      let savedKategori: KategoriItem | undefined
       if (isEditing && selectedKategori) {
-        await katalogApi.updateKategori(selectedKategori.id, values)
+        savedKategori = await katalogApi.updateKategori(selectedKategori.id, values)
         toast.success(`Kategori "${values.nama}" berhasil diperbarui`)
       } else {
-        await katalogApi.createKategori(values)
+        savedKategori = await katalogApi.createKategori(values)
         toast.success(`Kategori "${values.nama}" berhasil ditambahkan`)
       }
-      onSuccess()
+      await onSuccess(savedKategori)
       onOpenChange(false)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }

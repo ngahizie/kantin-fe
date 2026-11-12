@@ -1,5 +1,5 @@
 import { TableToolbar } from '@/components/data-table'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react'
 import {
   Tag,
   Plus,
@@ -37,6 +37,12 @@ import {
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
+import {
+  MENU_AUTO_REFRESH_INTERVAL_MS,
+  notifyKategoriChanged,
+  shouldPauseMenuAutoRefresh,
+  subscribeKategoriChanges,
+} from './menu-utils'
 import type { KategoriItem } from './types'
 
 const CARD_OUTLINE_CLASS =
@@ -53,47 +59,137 @@ export function KategoriPage() {
   const [deleteTarget, setDeleteTarget] = useState<KategoriItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [activeDeleteTarget, setActiveDeleteTarget] = useState<KategoriItem | null>(null)
+
+  const [isDocumentHidden, setIsDocumentHidden] = useState(() =>
+    typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
+  )
+
+  const syncSourceId = useId()
+  const isMountedRef = useRef(true)
+  const inFlightCountRef = useRef(0)
+  const activeSyncIdRef = useRef(0)
+  const mutationEpochRef = useRef(0)
+  const lastSyncedAtRef = useRef<Date | null>(null)
+
   const handleDeleteClick = (kat: KategoriItem) => {
     setDeleteTarget(kat)
     setActiveDeleteTarget(kat)
   }
 
-  
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const data = await katalogApi.getKategoriList(false)
-      setKategoriList(data)
-    } catch (err: unknown) {
-      const error = err as { message?: string }
-      toast.error(error.message || 'Gagal memuat daftar kategori')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
+    isModalOpen,
+    hasDeleteTarget: Boolean(deleteTarget),
+    isDeleting,
+    isDocumentHidden,
+  })
 
-  useEffect(() => {
-    let isMounted = true
-    const init = async () => {
+  const commitKategoriData = useCallback((data: KategoriItem[]) => {
+    setKategoriList(data)
+    lastSyncedAtRef.current = new Date()
+  }, [])
+
+  // Sinkronisasi latar belakang & pasca-mutasi tanpa mengganggu tampilan tabel dengan loading penuh
+  const syncKategori = useCallback(
+    async (force = false) => {
+      if (!force && inFlightCountRef.current > 0) return
+
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
+      const requestEpoch = mutationEpochRef.current
+
       try {
         const data = await katalogApi.getKategoriList(false)
-        if (isMounted) {
-          setKategoriList(data)
-          setLoading(false)
+        if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
+        if (!force && requestEpoch !== mutationEpochRef.current) return
+
+        commitKategoriData(data)
+      } catch {
+        // Abaikan kegagalan sinkronisasi latar belakang agar tidak mengganggu antarmuka
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+      }
+    },
+    [commitKategoriData]
+  )
+
+  useEffect(() => {
+    isMountedRef.current = true
+    const init = async () => {
+      inFlightCountRef.current += 1
+      const syncId = ++activeSyncIdRef.current
+      try {
+        const data = await katalogApi.getKategoriList(false)
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
+          commitKategoriData(data)
         }
       } catch (err: unknown) {
-        if (isMounted) {
+        if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           const error = err as { message?: string }
           toast.error(error.message || 'Gagal memuat daftar kategori')
+        }
+      } finally {
+        inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
+        if (isMountedRef.current && inFlightCountRef.current === 0) {
           setLoading(false)
         }
       }
     }
     void init()
     return () => {
-      isMounted = false
+      isMountedRef.current = false
     }
-  }, [])
+  }, [commitKategoriData])
+
+  // Pantau visibilitas tab agar auto-refresh berhenti saat tab tersembunyi
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const hidden = document.visibilityState === 'hidden'
+      setIsDocumentHidden(hidden)
+
+      if (hidden) return
+
+      const pausedWithoutVisibility = shouldPauseMenuAutoRefresh({
+        isModalOpen,
+        hasDeleteTarget: Boolean(deleteTarget),
+        isDeleting,
+        isDocumentHidden: false,
+      })
+      if (pausedWithoutVisibility) return
+
+      const elapsedMs = lastSyncedAtRef.current
+        ? Date.now() - lastSyncedAtRef.current.getTime()
+        : Number.POSITIVE_INFINITY
+      if (elapsedMs >= MENU_AUTO_REFRESH_INTERVAL_MS) {
+        void syncKategori()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isModalOpen, deleteTarget, isDeleting, syncKategori])
+
+  // Polling otomatis setiap 30 detik selalu aktif selama tidak dijeda
+  useEffect(() => {
+    if (isAutoRefreshPaused) return
+
+    const timer = window.setInterval(() => {
+      void syncKategori()
+    }, MENU_AUTO_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [isAutoRefreshPaused, syncKategori])
+
+  // Dengarkan perubahan kategori dari tab atau komponen lain untuk sinkronisasi otomatis
+  useEffect(() => {
+    return subscribeKategoriChanges(() => {
+      mutationEpochRef.current += 1
+      void syncKategori(true)
+    }, syncSourceId)
+  }, [syncKategori, syncSourceId])
 
   // Filter kategori berdasarkan search
   const filteredKategori = useMemo(() => {
@@ -120,15 +216,43 @@ export function KategoriPage() {
     setIsModalOpen(true)
   }
 
+  const handleFormSuccess = useCallback(
+    async (savedKategori?: KategoriItem) => {
+      mutationEpochRef.current += 1
+      if (savedKategori && typeof savedKategori === 'object') {
+        setKategoriList((prev) => {
+          const exists = prev.some((k) => k.id === savedKategori.id)
+          if (exists) {
+            return prev.map((k) =>
+              k.id === savedKategori.id ? { ...k, ...savedKategori } : k
+            )
+          }
+          return [...prev, savedKategori]
+        })
+      }
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
+    },
+    [syncKategori, syncSourceId]
+  )
+
   const confirmDelete = async () => {
     const target = activeDeleteTarget
     if (!target) return
+    mutationEpochRef.current += 1
     try {
       setIsDeleting(true)
       await katalogApi.deleteKategori(target.id)
+      mutationEpochRef.current += 1
+      setKategoriList((prev) =>
+        prev.map((k) =>
+          k.id === target.id ? { ...k, isActive: false, aktif: false } : k
+        )
+      )
       toast.success(`Kategori "${target.nama}" berhasil dinonaktifkan`)
       setDeleteTarget(null)
-      loadData()
+      notifyKategoriChanged(syncSourceId)
+      await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
       const message =
@@ -330,7 +454,7 @@ export function KategoriPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         selectedKategori={selectedKategori}
-        onSuccess={loadData}
+        onSuccess={handleFormSuccess}
       />
 
       {/* Alert Dialog Konfirmasi Nonaktifkan */}
@@ -375,7 +499,10 @@ export function KategoriPage() {
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={(e) => {
+                e.preventDefault()
+                void confirmDelete()
+              }}
               disabled={isDeleting}
               className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
