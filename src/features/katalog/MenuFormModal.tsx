@@ -202,7 +202,7 @@ export function MenuFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg bg-card'>
+      <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
             <DialogDescription className='text-xs text-muted-foreground'>
@@ -215,7 +215,7 @@ export function MenuFormModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 py-1'>
             {/* Foto Produk Section */}
-            <div className='rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-muted/30 p-3 space-y-3'>
+            <div className='rounded-xl border border-border bg-muted/30 p-3 space-y-3'>
               <Label className='text-xs font-semibold text-foreground flex items-center justify-between'>
                 <span>Foto Produk</span>
                 <span className='text-[11px] font-normal text-muted-foreground'>
@@ -224,7 +224,7 @@ export function MenuFormModal({
               </Label>
 
               <div className='flex items-center gap-4'>
-                <div className='relative size-20 rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
+                <div className='relative size-20 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
                   {previewUrl ? (
                     <>
                       <img
@@ -265,7 +265,7 @@ export function MenuFormModal({
                       type='button'
                       variant='outline'
                       size='sm'
-                      className='gap-1.5 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
+                      className='gap-1.5 text-xs'
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || isSubmitting}
                     >
@@ -314,7 +314,6 @@ export function MenuFormModal({
                       placeholder='Contoh: Nasi Goreng Spesial, Es Teh Manis'
                       {...field}
                       disabled={isSubmitting}
-                      className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
                     />
                   </FormControl>
                   <FormMessage />
@@ -342,7 +341,7 @@ export function MenuFormModal({
                           }
                         }}
                         disabled={isSubmitting}
-                        className='h-10 pl-9 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
+                        className='pl-9'
                       />
                     </div>
                   </FormControl>
@@ -370,11 +369,11 @@ export function MenuFormModal({
                       disabled={isSubmitting}
                     >
                       <FormControl>
-                        <SelectTrigger className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus:ring-0 focus-visible:ring-0 text-sm'>
+                        <SelectTrigger>
                           <SelectValue placeholder='Pilih Kategori' />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className='border-none rounded-xl shadow-none'>
+                      <SelectContent>
                         {activeKategori.map((k) => (
                           <SelectItem key={k.id} value={String(k.id)}>
                             {k.nama}
@@ -401,11 +400,11 @@ export function MenuFormModal({
                       disabled={isSubmitting}
                     >
                       <FormControl>
-                        <SelectTrigger className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus:ring-0 focus-visible:ring-0 text-sm'>
+                        <SelectTrigger>
                           <SelectValue placeholder='Pilih Satuan' />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className='border-none rounded-xl shadow-none'>
+                      <SelectContent>
                         {SATUAN_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -431,13 +430,13 @@ export function MenuFormModal({
                     </FormLabel>
                     <FormControl>
                       <div className='relative'>
-                        <span className='absolute left-3 top-2.5 text-sm font-semibold text-muted-foreground'>
+                        <span className='absolute left-3 top-2 text-sm font-semibold text-muted-foreground'>
                           Rp
                         </span>
                         <Input
                           type='text'
                           inputMode='numeric'
-                          className='h-10 pl-10 font-medium border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
+                          className='pl-10 font-medium tabular-nums'
                           placeholder='0'
                           value={field.value ? formatNumber(field.value) : ''}
                           onChange={(e) => {
@@ -471,7 +470,7 @@ export function MenuFormModal({
                         value={field.value}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                         disabled={isSubmitting}
-                        className='h-10 border-none bg-muted/60 dark:bg-muted/40 shadow-none rounded-xl focus-visible:bg-muted focus-visible:ring-0 text-sm'
+                        className='tabular-nums'
                       />
                     </FormControl>
                     <FormDescription className='text-xs'>
@@ -489,14 +488,13 @@ export function MenuFormModal({
                 variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
-                className='has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
               >
                 Batal
               </Button>
               <Button
                 type='submit'
                 disabled={isSubmitting}
-                className='gap-1.5 font-semibold border-none rounded-xl shadow-none'
+                className='gap-1.5 font-semibold'
               >
                 {isSubmitting ? (
                   <>

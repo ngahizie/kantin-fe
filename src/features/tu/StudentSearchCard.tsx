@@ -68,7 +68,7 @@ export function StudentSearchCard({
   }
 
   return (
-    <Card className='border-0 bg-muted/70 shadow-none dark:bg-muted/30'>
+    <Card>
       <CardHeader className='pb-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div>
@@ -80,7 +80,8 @@ export function StudentSearchCard({
             </CardDescription>
           </div>
           <Badge
-            className='flex items-center gap-1.5 border-0 bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-400'
+            variant='outline'
+            className='flex items-center gap-1.5 rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
           >
             <Radio className='h-3 w-3 animate-pulse text-blue-600 dark:text-blue-400' />
             Alat Pemindai Siap
@@ -99,12 +100,12 @@ export function StudentSearchCard({
                 variant='outline'
                 role='combobox'
                 aria-expanded={openCombobox}
-                className='h-11 w-full justify-between border-border text-left font-normal'
+                className='h-10 w-full justify-between text-left font-normal'
                 disabled={isLoading}
               >
                 {selectedStudent ? (
                   <span className='flex items-center gap-2 truncate text-foreground'>
-                    <span className='rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground'>
+                    <span className='rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground tabular-nums'>
                       {selectedStudent.nis}
                     </span>
                     <span className='font-medium text-foreground'>
@@ -153,13 +154,13 @@ export function StudentSearchCard({
                             <p className='text-sm leading-none font-medium text-foreground'>
                               {student.nama}
                             </p>
-                            <p className='mt-0.5 text-xs text-muted-foreground'>
+                            <p className='mt-0.5 text-xs text-muted-foreground tabular-nums'>
                               NIS: {student.nis} • {student.kelas}
                             </p>
                           </div>
                         </div>
                         <div className='flex items-center gap-2'>
-                          <span className='text-xs font-semibold text-emerald-600 dark:text-emerald-400'>
+                          <span className='text-xs font-semibold text-emerald-600 tabular-nums dark:text-emerald-400'>
                             {formatRupiah(student.saldo)}
                           </span>
                           {selectedStudent?.siswa_id === student.siswa_id && (
@@ -176,7 +177,7 @@ export function StudentSearchCard({
         </div>
 
         {/* Input Scan RFID Reader TU */}
-        <div className='space-y-2 rounded-xl border-0 bg-muted/50 p-3.5 dark:bg-muted/20'>
+        <div className='space-y-2 rounded-xl border border-border bg-muted/30 p-3.5'>
           <label className='text-xs font-medium text-foreground'>
             Tempel Kartu atau Ketik Nomor Kartu RFID
           </label>
@@ -185,7 +186,7 @@ export function StudentSearchCard({
               placeholder='Tempelkan kartu ke reader atau ketik nomor kartu...'
               value={rfidInput}
               onChange={(e) => setRfidInput(e.target.value)}
-              className='h-9 bg-background font-mono text-xs'
+              className='font-mono text-xs tabular-nums'
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
@@ -196,8 +197,8 @@ export function StudentSearchCard({
             <Button
               type='button'
               size='sm'
-              variant='secondary'
-              className='h-9 border-0 px-3 text-xs shadow-none'
+              variant='outline'
+              className='h-9 shrink-0 px-3 text-xs'
               onClick={() => handleFindRfid()}
             >
               Cari Kartu
@@ -213,9 +214,9 @@ export function StudentSearchCard({
 
         {/* Selected Student Detail View */}
         {selectedStudent ? (
-          <div className='space-y-4 rounded-xl border-0 bg-muted/50 p-4 dark:bg-muted/20'>
+          <div className='space-y-4 rounded-xl border border-border bg-muted/30 p-4'>
             <div className='flex items-start gap-4'>
-              <Avatar className='h-16 w-16 border-2 border-background'>
+              <Avatar className='h-14 w-14 border border-border'>
                 <AvatarImage
                   src={selectedStudent.foto_url}
                   alt={selectedStudent.nama || 'Siswa'}
@@ -232,14 +233,16 @@ export function StudentSearchCard({
                   </h3>
                   {selectedStudent.is_blocked ? (
                     <Badge
-                      className='flex shrink-0 items-center gap-1 border-0 bg-destructive/15 text-xs font-medium text-destructive'
+                      variant='outline'
+                      className='flex shrink-0 items-center gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                     >
                       <AlertTriangle className='h-3 w-3' />
                       Kartu Diblokir
                     </Badge>
                   ) : (
                     <Badge
-                      className='shrink-0 border-0 bg-emerald-500/15 text-xs font-medium text-emerald-700 dark:text-emerald-400'
+                      variant='outline'
+                      className='shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                     >
                       Aktif Normal
                     </Badge>
@@ -249,7 +252,7 @@ export function StudentSearchCard({
                 <div className='mt-2.5 grid grid-cols-2 gap-2 text-xs'>
                   <div>
                     <span className='text-muted-foreground'>NIS:</span>{' '}
-                    <span className='font-mono font-semibold text-foreground'>
+                    <span className='font-mono font-semibold text-foreground tabular-nums'>
                       {selectedStudent.nis}
                     </span>
                   </div>
@@ -261,13 +264,13 @@ export function StudentSearchCard({
                   </div>
                   <div>
                     <span className='text-muted-foreground'>UID RFID:</span>{' '}
-                    <span className='font-mono text-muted-foreground'>
+                    <span className='font-mono text-muted-foreground tabular-nums'>
                       {selectedStudent.uid}
                     </span>
                   </div>
                   <div>
                     <span className='text-muted-foreground'>Batas Jajan Harian:</span>{' '}
-                    <span className='font-medium text-foreground'>
+                    <span className='font-medium text-foreground tabular-nums'>
                       {formatRupiah(selectedStudent.limit_harian)}
                     </span>
                   </div>
@@ -275,17 +278,17 @@ export function StudentSearchCard({
               </div>
             </div>
 
-            <div className='flex items-center justify-between rounded-lg border-0 bg-background/80 p-3 shadow-none'>
+            <div className='flex items-center justify-between rounded-lg border border-border bg-card p-3'>
               <span className='text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
                 Saldo Saat Ini
               </span>
-              <span className='font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              <span className='font-mono text-xl font-bold text-emerald-600 tabular-nums dark:text-emerald-400'>
                 {formatRupiah(selectedStudent.saldo)}
               </span>
             </div>
           </div>
         ) : (
-          <div className='rounded-xl border-0 bg-muted/40 p-6 text-center'>
+          <div className='rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center'>
             <p className='text-sm font-medium text-muted-foreground'>
               Belum ada siswa terpilih
             </p>

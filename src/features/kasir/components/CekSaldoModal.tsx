@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Wallet, Search, AlertCircle, RefreshCw } from 'lucide-react'
+import { Wallet, Search, AlertCircle, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -133,15 +133,15 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className='max-w-md select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
+      <DialogContent className='max-w-md select-none'>
         <DialogHeader>
-          <div className='flex items-center gap-2 text-blue-600 dark:text-blue-400'>
+          <div className='flex items-center gap-2 text-primary'>
             <Wallet className='h-5 w-5' />
-            <DialogTitle className='text-base font-bold text-slate-800 dark:text-white'>
+            <DialogTitle className='text-base font-bold text-foreground'>
               Cek Saldo Siswa
             </DialogTitle>
           </div>
-          <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+          <DialogDescription className='text-xs text-muted-foreground'>
             Tap kartu RFID atau masukkan nomor UID kartu untuk memeriksa saldo dan status kartu terkini.
           </DialogDescription>
         </DialogHeader>
@@ -151,7 +151,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
           <div className='space-y-1.5'>
             <div className='flex gap-2'>
               <div className='relative flex-1'>
-                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   ref={inputRef}
                   value={searchInput}
@@ -160,16 +160,16 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                   placeholder='Tap kartu atau ketik UID kartu RFID...'
                   disabled={loading}
                   autoFocus
-                  className='text-sm font-semibold tracking-wider uppercase has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 pl-9 shadow-none focus-visible:ring-0 rounded-xl'
+                  className='h-9 pl-9 text-sm font-semibold tracking-wider uppercase'
                 />
               </div>
               <Button
                 type='submit'
                 disabled={!searchInput.trim() || loading}
-                className='shrink-0 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
+                className='h-9 shrink-0 font-semibold'
               >
                 {loading ? (
-                  <RefreshCw className='h-4 w-4 animate-spin' />
+                  <Loader2 className='h-4 w-4 animate-spin' />
                 ) : (
                   'Periksa'
                 )}
@@ -180,7 +180,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
 
         {/* Pesan Kesalahan */}
         {errorMessage && (
-          <div className='flex items-center gap-2 rounded-xl has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in-50'>
+          <div className='flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive animate-in fade-in-50'>
             <AlertCircle className='h-4 w-4 shrink-0' />
             <span>{errorMessage}</span>
           </div>
@@ -188,10 +188,10 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
 
         {/* Hasil Informasi Saldo */}
         {result && (
-          <div className='space-y-3 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-4 animate-in zoom-in-95 duration-150'>
+          <div className='space-y-3 rounded-xl border border-border bg-muted/40 p-4 animate-in zoom-in-95 duration-150'>
             <div className='flex items-start gap-3'>
               {/* Foto Profil / Avatar */}
-              <Avatar className='h-14 w-14 shrink-0 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-500 dark:text-slate-400'>
+              <Avatar className='h-14 w-14 shrink-0 rounded-xl border border-border bg-card text-muted-foreground'>
                 {result.fotoUrl && (
                   <AvatarImage
                     src={result.fotoUrl}
@@ -199,7 +199,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                     className='h-full w-full object-cover'
                   />
                 )}
-                <AvatarFallback className='rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200'>
+                <AvatarFallback className='rounded-xl bg-muted text-sm font-bold text-foreground'>
                   {getInitials(result.nama)}
                 </AvatarFallback>
               </Avatar>
@@ -207,38 +207,38 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
               {/* Data Identitas */}
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-1.5'>
-                  <h4 className='truncate text-sm font-bold text-slate-800 dark:text-white'>
+                  <h4 className='truncate text-sm font-bold text-foreground'>
                     {result.nama}
                   </h4>
                   <Badge
-                    variant='secondary'
-                    className='bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0 text-[10px] font-semibold uppercase tracking-wider rounded-full shadow-none'
+                    variant='outline'
+                    className='rounded-full border border-blue-500/20 bg-blue-500/15 px-2 py-0 text-[10px] font-semibold tracking-wider uppercase text-blue-700 dark:text-blue-300'
                   >
                     Siswa
                   </Badge>
                   {result.status === 'BLOCKED' && (
                     <Badge
                       variant='destructive'
-                      className='px-2 py-0 text-[10px] font-semibold uppercase tracking-wider rounded-full shadow-none'
+                      className='rounded-full px-2 py-0 text-[10px] font-semibold tracking-wider uppercase'
                     >
                       Diblokir
                     </Badge>
                   )}
                 </div>
 
-                <div className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
+                <div className='mt-1 text-xs text-muted-foreground'>
                   <span>
                     {result.nis ? (
                       <>
-                        NIS: <strong className='text-slate-800 dark:text-white'>{result.nis}</strong> •{' '}
+                        NIS: <strong className='tabular-nums text-foreground'>{result.nis}</strong> •{' '}
                       </>
                     ) : null}
-                    Kelas: <strong className='text-slate-800 dark:text-white'>{result.kelas || '-'}</strong>
+                    Kelas: <strong className='text-foreground'>{result.kelas || '-'}</strong>
                   </span>
                 </div>
 
                 {result.uid && (
-                  <div className='mt-0.5 text-[11px] font-mono text-slate-500 dark:text-slate-400'>
+                  <div className='mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground'>
                     UID: {result.uid}
                   </div>
                 )}
@@ -246,12 +246,12 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
             </div>
 
             {/* Sisa Saldo Display */}
-            <div className='mt-2 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3'>
+            <div className='mt-2 rounded-xl border border-border bg-card p-3'>
               <div className='flex items-baseline justify-between'>
-                <span className='text-xs font-medium text-slate-500 dark:text-slate-400'>
+                <span className='text-xs font-medium text-muted-foreground'>
                   Sisa Saldo Terkini:
                 </span>
-                <span className='text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400 tabular-nums'>
+                <span className='text-xl font-bold tracking-tight tabular-nums text-primary'>
                   {formatRupiah(result.saldo)}
                 </span>
               </div>
@@ -264,7 +264,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                 variant='ghost'
                 size='sm'
                 onClick={handleReset}
-                className='h-8 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                className='h-8 text-xs font-semibold text-muted-foreground hover:text-foreground'
               >
                 Cek Kartu Lain
               </Button>

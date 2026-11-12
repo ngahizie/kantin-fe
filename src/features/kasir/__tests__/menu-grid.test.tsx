@@ -193,6 +193,13 @@ describe('MenuGrid & MenuItemCard konsistensi ukuran kartu', () => {
       expect(rect.height).toBeCloseTo(baseline.height, 0)
     }
 
+    const cardEls = Array.from(
+      document.querySelectorAll('[data-slot="card"]')
+    ) as HTMLElement[]
+    for (const card of cardEls) {
+      expect(getComputedStyle(card).borderRadius).toBe('14px')
+    }
+
     // Berpindah ke subkumpulan hanya 1 item berjudul pendek: ukurannya harus tetap sama persis
     await screen.rerender(
       <div className='w-[960px] overflow-y-auto [scrollbar-gutter:stable]'>

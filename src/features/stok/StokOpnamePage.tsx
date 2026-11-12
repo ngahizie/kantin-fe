@@ -9,9 +9,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem, KategoriItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -123,19 +122,8 @@ export function StokOpnamePage() {
   return (
     <>
       <Header fixed>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Manajemen Stok
-            </span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Stok Opname & Rusak</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Manajemen Stok' title='Stok Opname & Rusak' />
+        <HeaderActions />
       </Header>
 
       <Main className="space-y-6">
@@ -145,6 +133,9 @@ export function StokOpnamePage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Stok Opname Fisik & Barang Rusak
             </h1>
+            <p className="text-sm text-muted-foreground">
+              Lakukan penyesuaian stok fisik, catat barang rusak harian, dan tinjau riwayat audit.
+            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -152,9 +143,9 @@ export function StokOpnamePage() {
               size="sm"
               variant="destructive"
               onClick={() => setIsQuickDamageModalOpen(true)}
-              className="h-8 gap-1.5 text-xs text-white font-semibold"
+              className="gap-1.5 font-semibold"
             >
-              <PlusCircle className="h-3.5 w-3.5" />
+              <PlusCircle className="h-4 w-4" />
               Catat Barang Rusak
             </Button>
           </div>
@@ -166,7 +157,7 @@ export function StokOpnamePage() {
           onValueChange={(v) => setActiveTab(v as 'audit' | 'rusak' | 'riwayat')}
           className="space-y-4"
         >
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/60">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
             <TabsTrigger value="audit" className="text-xs flex items-center gap-1.5">
               <FileSpreadsheet className="h-3.5 w-3.5" />
               Audit Stok Fisik

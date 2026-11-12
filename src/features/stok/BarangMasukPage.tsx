@@ -2,15 +2,16 @@ import { useState, useEffect } from 'react'
 import {
   PlusCircle,
   History,
+  UtensilsCrossed,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatNumber } from '@/lib/formatters'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -128,19 +129,8 @@ export function BarangMasukPage() {
   return (
     <>
       <Header fixed>
-        <div className='flex w-full items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
-              Manajemen Stok
-            </span>
-            <span className='text-muted-foreground text-xs'>/</span>
-            <span className='text-xs font-medium'>Barang Masuk</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Manajemen Stok' title='Barang Masuk' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
@@ -149,39 +139,67 @@ export function BarangMasukPage() {
           <h1 className='text-2xl font-bold tracking-tight text-foreground'>
             Pencatatan Barang Masuk
           </h1>
+          <p className='text-sm text-muted-foreground'>
+            Catat penerimaan stok dan harga beli dari pemasok serta pantau riwayat mutasi.
+          </p>
         </div>
 
         {/* Ringkasan Status Header Cards */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Menu Aktif di Katalog
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'>
+                <UtensilsCrossed className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <h3 className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {loadingMenus ? '...' : formatNumber(menus.length)} Menu
               </h3>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Riwayat Mutasi
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'>
+                <History className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <h3 className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {formatNumber(totalRiwayat)} Transaksi
               </h3>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Peringatan Stok Menipis
-              </p>
+              </CardTitle>
+              <div
+                className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
+                  loadingMenus
+                    ? 'border-border bg-muted/50 text-muted-foreground'
+                    : stokMenipis.length === 0
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    : stokMenipis.some((item) => item.stok === 0)
+                    ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
+                    : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                }`}
+              >
+                <AlertTriangle className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
               <h3
-                className={`mt-0.5 text-xl font-bold ${
+                className={`text-2xl font-bold tracking-tight tabular-nums ${
                   loadingMenus
                     ? 'text-foreground'
                     : stokMenipis.length === 0

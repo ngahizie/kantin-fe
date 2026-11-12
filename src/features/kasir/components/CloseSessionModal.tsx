@@ -259,20 +259,20 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             e.preventDefault()
           }
         }}
-        className='max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none select-none'
+        className='max-w-md max-h-[90vh] overflow-y-auto select-none sm:max-w-lg'
       >
         <DialogHeader>
           <div className='flex items-center gap-2.5'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'>
               <Lock className='h-5 w-5' aria-hidden='true' />
             </div>
             <div>
-              <DialogTitle className='text-lg font-bold text-slate-800 dark:text-white'>
+              <DialogTitle className='text-lg font-bold text-foreground'>
                 {step === 'INPUT_CASH'
                   ? 'Tutup Sesi Kasir Harian'
                   : 'Rekonsiliasi & Tutup Sesi Kasir'}
               </DialogTitle>
-              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+              <DialogDescription className='text-xs text-muted-foreground'>
                 {step === 'INPUT_CASH'
                   ? 'Langkah 1 dari 2: Hitung uang tunai fisik di laci kasir.'
                   : 'Langkah 2 dari 2: Verifikasi kecocokan kas fisik dengan data sistem.'}
@@ -282,21 +282,21 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         </DialogHeader>
 
         {/* Informasi Titik Kasir & Tanggal */}
-        <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3.5 py-2 text-xs'>
-          <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+        <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3.5 py-2 text-xs'>
+          <div className='flex items-center gap-1.5 text-muted-foreground'>
             <Store
-              className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400'
+              className='h-3.5 w-3.5 text-primary'
               aria-hidden='true'
             />
             <span>Titik:</span>
-            <strong className='text-slate-800 dark:text-white'>
+            <strong className='text-foreground'>
               {sesi?.titikKasirNama || `Titik #${sesi?.titikKasirId || 1}`}
             </strong>
           </div>
-          <div className='flex items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+          <div className='flex items-center gap-1.5 text-muted-foreground'>
             <Calendar className='h-3.5 w-3.5' aria-hidden='true' />
             <span>Tanggal:</span>
-            <strong className='font-semibold text-slate-800 dark:text-white tabular-nums'>
+            <strong className='font-semibold tabular-nums text-foreground'>
               {sesi?.tanggal || new Date().toISOString().split('T')[0]}
             </strong>
           </div>
@@ -319,19 +319,19 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             <div className='space-y-1.5'>
               <label
                 htmlFor='input-cash-drawer'
-                className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
+                className='block text-xs font-semibold text-foreground'
               >
                 Total Uang Tunai di Laci Kasir:
               </label>
               <p
                 id={cashLockHintId}
-                className='text-[11px] text-slate-500 dark:text-slate-400'
+                className='text-[11px] text-muted-foreground'
               >
                 Nominal uang fisik dikunci dan tidak dapat diubah setelah lanjut
                 ke rekapitulasi.
               </p>
               <div className='relative'>
-                <span className='absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 dark:text-slate-400'>
+                <span className='absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-bold text-muted-foreground'>
                   Rp
                 </span>
                 <Input
@@ -347,14 +347,14 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                   placeholder='0'
                   autoFocus
                   aria-describedby={cashLockHintId}
-                  className='pl-10 text-base font-bold tabular-nums has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl'
+                  className='h-10 pl-10 text-base font-bold tabular-nums'
                 />
               </div>
             </div>
 
             {/* Chip Preset Pecahan Cepat */}
             <div className='space-y-1.5'>
-              <span className='block text-[11px] font-medium text-slate-500 dark:text-slate-400'>
+              <span className='block text-[11px] font-medium text-muted-foreground'>
                 Tambah Cepat Pecahan:
               </span>
               <div className='flex flex-wrap items-center gap-1.5'>
@@ -365,7 +365,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                     variant='outline'
                     size='sm'
                     onClick={() => handleAddPreset(nominal)}
-                    className='h-7 text-xs font-semibold has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none px-2.5 py-0'
+                    className='h-7 px-2.5 py-0 text-xs font-semibold tabular-nums'
                   >
                     +{formatNumber(nominal)}
                   </Button>
@@ -376,22 +376,21 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                     variant='ghost'
                     size='sm'
                     onClick={handleResetCash}
-                    className='h-7 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl px-2 py-0'
+                    className='h-7 px-2 py-0 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive'
                   >
-                    <ResetIcon className='h-3 w-3 mr-1' aria-hidden='true' />{' '}
+                    <ResetIcon className='mr-1 h-3 w-3' aria-hidden='true' />{' '}
                     Reset
                   </Button>
                 )}
               </div>
             </div>
 
-            <DialogFooter className='gap-2 sm:gap-2 pt-2'>
+            <DialogFooter className='gap-2 pt-2 sm:gap-2'>
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 size='sm'
                 onClick={() => handleOpenChange(false)}
-                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
               >
                 Batal
               </Button>
@@ -399,7 +398,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 type='submit'
                 size='sm'
                 disabled={!cashInput.trim()}
-                className='gap-1.5 font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
+                className='gap-1.5 font-semibold'
               >
                 <span>Lanjut ke Rekapitulasi</span>
                 <ArrowRight className='h-3.5 w-3.5' aria-hidden='true' />
@@ -414,50 +413,50 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         {step === 'RECONCILE' && (
           <div className='space-y-3.5 pt-1'>
             {/* Rekapitulasi Metrik Sesi */}
-            <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 text-xs'>
+            <div className='grid grid-cols-2 gap-2 text-xs sm:grid-cols-3'>
               {/* Total Transaksi Sukses */}
-              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
+              <Card className='gap-0 py-0'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                  <span className='mb-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
                     <Receipt
                       className='h-3 w-3 text-emerald-600 dark:text-emerald-400'
                       aria-hidden='true'
                     />{' '}
                     Transaksi Sukses
                   </span>
-                  <span className='text-base font-bold tracking-tight text-slate-800 dark:text-white tabular-nums block'>
+                  <span className='block text-base font-bold tracking-tight tabular-nums text-foreground'>
                     {formatNumber(jumlahTransaksi)}
                   </span>
                 </CardContent>
               </Card>
 
               {/* Total Transaksi Refund */}
-              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none'>
+              <Card className='gap-0 py-0'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                  <span className='mb-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
                     <RotateCcw
-                      className='h-3 w-3 text-rose-600 dark:text-rose-400'
+                      className='h-3 w-3 text-destructive'
                       aria-hidden='true'
                     />{' '}
                     Transaksi Refund
                   </span>
-                  <span className='text-base font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums block'>
+                  <span className='block text-base font-bold tracking-tight tabular-nums text-destructive'>
                     {formatNumber(jumlahVoid)}
                   </span>
                 </CardContent>
               </Card>
 
               {/* Total Penjualan Kotor */}
-              <Card className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl shadow-none col-span-2 sm:col-span-1'>
+              <Card className='col-span-2 gap-0 py-0 sm:col-span-1'>
                 <CardContent className='p-2.5'>
-                  <span className='text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5'>
+                  <span className='mb-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
                     <Coins
-                      className='h-3 w-3 text-slate-500 dark:text-slate-400'
+                      className='h-3 w-3 text-muted-foreground'
                       aria-hidden='true'
                     />{' '}
                     Penjualan Kotor
                   </span>
-                  <span className='text-xs font-semibold text-slate-800 dark:text-white tabular-nums block'>
+                  <span className='block text-xs font-semibold tabular-nums text-foreground'>
                     {formatRupiah(totalBruto)}
                   </span>
                 </CardContent>
@@ -465,31 +464,31 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             </div>
 
             {/* Perbandingan Kas Fisik vs Pendapatan Sistem */}
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+            <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
               {/* Uang Kas Fisik Diinput (Terkunci Permanen) */}
-              <div className='rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 shadow-none'>
-                <div className='flex items-center justify-between mb-1'>
-                  <span className='text-[11px] font-semibold text-slate-500 dark:text-slate-400'>
+              <div className='rounded-xl border border-border bg-muted/40 p-3'>
+                <div className='mb-1 flex items-center justify-between'>
+                  <span className='text-[11px] font-semibold text-muted-foreground'>
                     Uang Fisik di Laci:
                   </span>
                 </div>
-                <span className='text-lg font-bold text-slate-800 dark:text-white tabular-nums block'>
+                <span className='block text-lg font-bold tabular-nums text-foreground'>
                   {formatRupiah(cashValue)}
                 </span>
               </div>
 
               {/* Pendapatan Bersih Sistem */}
-              <div className='rounded-xl has-border !border !border-blue-200 dark:!border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 p-3 shadow-none'>
-                <div className='flex items-center justify-between mb-1'>
-                  <span className='text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
+              <div className='rounded-xl border border-primary/20 bg-primary/10 p-3'>
+                <div className='mb-1 flex items-center justify-between'>
+                  <span className='text-[11px] font-semibold text-primary'>
                     Pendapatan Bersih:
                   </span>
                 </div>
-                <span className='text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums block'>
+                <span className='block text-lg font-bold tabular-nums text-primary'>
                   {formatRupiah(totalBersih)}
                 </span>
                 {totalVoid > 0 && (
-                  <span className='text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block'>
+                  <span className='mt-0.5 block text-[10px] tabular-nums text-muted-foreground'>
                     (Kotor {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
                   </span>
                 )}
@@ -498,33 +497,33 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
 
             {/* Banner Status Selisih Kas */}
             <div
-              className={`rounded-xl p-3 has-border !border shadow-none text-xs flex items-start gap-2.5 ${
+              className={`flex items-start gap-2.5 rounded-xl border p-3 text-xs ${
                 selisih === 0
-                  ? '!border-emerald-200 dark:!border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                   : selisih < 0
-                  ? '!border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
-                  : '!border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
               }`}
             >
               {selisih === 0 ? (
                 <CheckCircle2
-                  className='h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5'
+                  className='mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400'
                   aria-hidden='true'
                 />
               ) : selisih < 0 ? (
                 <AlertTriangle
-                  className='h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5'
+                  className='mt-0.5 h-4 w-4 shrink-0 text-destructive'
                   aria-hidden='true'
                 />
               ) : (
                 <AlertCircle
-                  className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5'
+                  className='mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400'
                   aria-hidden='true'
                 />
               )}
               <div className='flex-1'>
                 <div className='flex items-center justify-between'>
-                  <strong className='font-bold text-sm'>
+                  <strong className='text-sm font-bold tabular-nums'>
                     {selisih === 0
                       ? 'Kas Seimbang (Rp 0)'
                       : selisih < 0
@@ -532,19 +531,19 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                       : `Kelebihan Kas: +${formatRupiah(selisih)}`}
                   </strong>
                   <Badge
-                    variant={selisih === 0 ? 'outline' : 'destructive'}
-                    className={`rounded-full text-[10px] font-bold uppercase tracking-wider px-2 py-0 shadow-none ${
+                    variant='outline'
+                    className={`rounded-full border px-2 py-0 text-[10px] font-bold tracking-wider uppercase ${
                       selisih === 0
-                        ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                        ? 'border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                         : selisih < 0
-                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
-                        : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
+                        ? 'border-rose-500/20 bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                        : 'border-amber-500/20 bg-amber-500/15 text-amber-800 dark:text-amber-300'
                     }`}
                   >
                     {selisih === 0 ? 'Pas' : selisih < 0 ? 'Kurang' : 'Lebih'}
                   </Badge>
                 </div>
-                <p className='text-[11px] mt-0.5 opacity-90'>
+                <p className='mt-0.5 text-[11px] opacity-90'>
                   {selisih === 0
                     ? 'Uang fisik di laci kasir cocok 100% dengan pencatatan transaksi sistem.'
                     : selisih < 0
@@ -559,21 +558,21 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
               <div className='flex items-center justify-between'>
                 <label
                   htmlFor='input-catatan-selisih'
-                  className='block text-xs font-semibold text-slate-700 dark:text-slate-300'
+                  className='block text-xs font-semibold text-foreground'
                 >
                   Catatan / Keterangan Selisih:
                 </label>
                 {isSelisihAda ? (
                   <span
                     id={catatanHintId}
-                    className='text-[10px] font-semibold text-rose-600 dark:text-rose-400'
+                    className='text-[10px] font-semibold text-destructive'
                   >
                     * Wajib diisi karena ada selisih
                   </span>
                 ) : (
                   <span
                     id={catatanHintId}
-                    className='text-[10px] text-slate-500 dark:text-slate-400'
+                    className='text-[10px] text-muted-foreground'
                   >
                     Opsional
                   </span>
@@ -596,18 +595,18 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                     ? 'Wajib diisi: jelaskan alasan selisih kas fisik (mis. kembalian tertinggal, pembulatan, dll.)...'
                     : 'Tambahkan catatan penutupan sesi jika ada (opsional)...'
                 }
-                className='text-xs has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 shadow-none focus-visible:ring-0 rounded-xl resize-none'
+                className='resize-none text-xs'
               />
             </div>
 
-            <DialogFooter className='gap-2 sm:gap-2 pt-1'>
+            <DialogFooter className='gap-2 pt-1 sm:gap-2'>
               <Button
                 type='button'
                 variant='destructive'
                 size='sm'
                 onClick={handleCloseSession}
                 disabled={isSubmitting || (isSelisihAda && !catatanSelisih.trim())}
-                className='gap-1.5 font-semibold !bg-rose-600 hover:!bg-rose-500 !text-white rounded-xl shadow-none'
+                className='gap-1.5 font-semibold'
               >
                 {isSubmitting ? (
                   <>

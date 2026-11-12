@@ -1,12 +1,13 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  Phone,
+  Printer,
   Search,
   User,
-  Phone,
-  FileText,
-  Printer,
-  ArrowLeft,
   X,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -38,9 +39,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
@@ -650,42 +650,30 @@ export function LaporanRiwayatSiswaPage() {
   return (
     <>
       <Header fixed>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Laporan Keuangan
-            </span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Detail Riwayat Siswa</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Laporan Keuangan' title='Detail Riwayat Siswa' />
+        <HeaderActions />
       </Header>
 
-      <Main>
-        <div className="space-y-6 pb-12">
+      <Main className="space-y-6">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <Link to="/laporan/riwayat-keseluruhan">
-                    <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                    Kembali ke Riwayat Transaksi
-                  </Link>
-                </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                asChild
+                className="h-9 w-9 shrink-0"
+                title="Kembali ke Riwayat Transaksi"
+              >
+                <Link to="/laporan/riwayat-keseluruhan">
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  Detail Riwayat Siswa
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Detail Riwayat Siswa
-              </h1>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
@@ -704,7 +692,7 @@ export function LaporanRiwayatSiswaPage() {
                     setIsDropdownOpen(true)
                     e.target.select()
                   }}
-                  className="pl-8 pr-8 text-xs h-9 border-0 bg-background/80 dark:bg-background/40 shadow-none"
+                  className="pl-8 pr-8 text-xs h-9"
                 />
                 {searchStudentQuery && (
                   <button
@@ -719,7 +707,7 @@ export function LaporanRiwayatSiswaPage() {
 
                 {/* Dropdown Hasil Pencarian Siswa */}
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border-0 bg-popover text-popover-foreground shadow-lg">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg">
                     {filteredStudents.length === 0 ? (
                       <div className="p-3 text-center text-xs text-muted-foreground">
                         Siswa tidak ditemukan.
@@ -741,11 +729,11 @@ export function LaporanRiwayatSiswaPage() {
                               <p className="font-medium text-foreground">
                                 {s.nama}
                               </p>
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-[11px] text-muted-foreground tabular-nums">
                                 NIS: {s.nis || '-'} {s.nisn ? `• NISN: ${s.nisn}` : ''} • {s.kelas}
                               </p>
                             </div>
-                            <Badge variant="secondary" className="border-0 text-[10px]">
+                            <Badge variant="outline" className="rounded-full border border-border bg-muted px-2 py-0 text-[10px] font-medium text-muted-foreground">
                               {s.kelas}
                             </Badge>
                           </button>
@@ -767,9 +755,9 @@ export function LaporanRiwayatSiswaPage() {
           </div>
 
           {!selectedSiswaId ? (
-            <Card className="border-0 bg-muted/40 dark:bg-muted/20 py-16 text-center">
+            <Card className="py-16 text-center">
               <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <User className="h-8 w-8" />
                 </div>
                 <div className="space-y-1.5">
@@ -798,11 +786,11 @@ export function LaporanRiwayatSiswaPage() {
             <>
               {/* STUDENT PROFILE CARD */}
               {profil && (
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16 shrink-0 rounded-2xl border-0 bg-primary/10 text-primary">
+                    <Avatar className="h-16 w-16 shrink-0 rounded-xl border border-border bg-primary/10 text-primary">
                       {profil.fotoUrl && (
                         <AvatarImage
                           src={profil.fotoUrl}
@@ -810,19 +798,19 @@ export function LaporanRiwayatSiswaPage() {
                           className="object-cover"
                         />
                       )}
-                      <AvatarFallback className="rounded-2xl bg-primary/10 text-primary text-xl font-bold">
+                      <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-xl font-bold">
                         {getInitials(profil.nama)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-xl font-bold tracking-tight">
                           {profil.nama}
                         </h2>
-                        <Badge variant="secondary" className="border-0 font-mono text-xs bg-background/80 dark:bg-background/40">
+                        <Badge variant="outline" className="rounded-full border border-border bg-muted px-2.5 py-0.5 font-mono text-xs font-medium text-muted-foreground tabular-nums">
                           NIS: {profil.nis || '-'}
                         </Badge>
-                        <Badge className="border-0 bg-primary/20 text-primary hover:bg-primary/20 text-xs">
+                        <Badge variant="outline" className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                           {profil.kelas}
                         </Badge>
                       </div>
@@ -831,7 +819,7 @@ export function LaporanRiwayatSiswaPage() {
                           <User className="h-3.5 w-3.5" />
                           Wali: <strong className="text-foreground">{profil.parentName}</strong>
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 tabular-nums">
                           <Phone className="h-3.5 w-3.5" />
                           {profil.parentPhone}
                         </span>
@@ -840,29 +828,29 @@ export function LaporanRiwayatSiswaPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 pt-4 md:pt-0">
-                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-center">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Saldo Berjalan
                       </p>
-                      <p className="text-lg font-bold font-mono text-foreground">
+                      <p className="text-lg font-bold font-mono text-foreground tabular-nums">
                         {formatRupiah(profil.saldo)}
                       </p>
                     </div>
 
-                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-center">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Belanja Hari Ini
                       </p>
-                      <p className="text-lg font-bold font-mono text-foreground">
+                      <p className="text-lg font-bold font-mono text-foreground tabular-nums">
                         {formatRupiah(profil.belanjaHariIni)}
                       </p>
                     </div>
 
-                    <div className="rounded-xl border-0 bg-background/80 dark:bg-background/40 px-4 py-2.5 text-center shadow-none">
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-center">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                         Limit Harian
                       </p>
-                      <p className="text-lg font-bold font-mono text-foreground">
+                      <p className="text-lg font-bold font-mono text-foreground tabular-nums">
                         {formatRupiah(profil.limitHarian)}
                       </p>
                     </div>
@@ -870,7 +858,7 @@ export function LaporanRiwayatSiswaPage() {
                 </div>
 
                 {profil.catatanKontrol && (
-                  <div className="mt-4 rounded-lg bg-background/80 dark:bg-background/40 p-3 text-xs text-foreground/85 border-0">
+                  <div className="mt-4 rounded-xl border border-border bg-muted/30 p-3 text-xs text-foreground/85">
                     <span>
                       <strong className="text-foreground">Catatan Ortu:</strong> {profil.catatanKontrol}
                     </span>
@@ -881,64 +869,65 @@ export function LaporanRiwayatSiswaPage() {
           )}
 
           {/* TABLE RIWAYAT TRANSAKSI SISWA */}
-          <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+          <div className="space-y-4">
+            <TableToolbar
+              searchPlaceholder="Cari transaksi / menu..."
+              searchValue={searchFilter}
+              onSearchChange={setSearchFilter}
+              filters={[
+                {
+                  title: 'Mutasi',
+                  options: [
+                    { label: 'Belanja Kasir', value: 'BELANJA' },
+                    { label: 'Top-up Tunai TU', value: 'TOPUP_TUNAI' },
+                    { label: 'Koreksi Bendahara', value: 'KOREKSI' },
+                    { label: 'Void Pembatalan', value: 'VOID' },
+                  ],
+                  selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
+                  onSelect: (vals) => setJenisFilter(vals[0] || 'ALL'),
+                  isSingleSelect: true,
+                },
+              ]}
+              isFiltered={Boolean(searchFilter || jenisFilter !== 'ALL')}
+              onReset={() => {
+                setSearchFilter('')
+                setJenisFilter('ALL')
+              }}
+            />
+
+            <Card className="p-0 gap-0 overflow-hidden">
+              <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                 <CardTitle className="text-base font-bold">
                   Histori Transaksi Lengkap Siswa
                 </CardTitle>
                 <CardDescription>
                   Daftar transaksi kasir, top-up, pembatalan void, dan mutasi saldo untuk menjawab pertanyaan orang tua.
                 </CardDescription>
-              </div>
+              </CardHeader>
 
-              <TableToolbar
-                searchPlaceholder="Cari transaksi / menu..."
-                searchValue={searchFilter}
-                onSearchChange={setSearchFilter}
-                filters={[
-                  {
-                    title: 'Mutasi',
-                    options: [
-                      { label: 'Belanja Kasir', value: 'BELANJA' },
-                      { label: 'Top-up Tunai TU', value: 'TOPUP_TUNAI' },
-                      { label: 'Koreksi Bendahara', value: 'KOREKSI' },
-                      { label: 'Void Pembatalan', value: 'VOID' },
-                    ],
-                    selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
-                    onSelect: (vals) => setJenisFilter(vals[0] || 'ALL'),
-                    isSingleSelect: true,
-                  },
-                ]}
-                isFiltered={Boolean(searchFilter || jenisFilter !== 'ALL')}
-                onReset={() => {
-                  setSearchFilter('')
-                  setJenisFilter('ALL')
-                }}
-              />
-            </CardHeader>
-
-            <CardContent>
-              <div className="overflow-hidden rounded-lg">
+              <CardContent className="p-0">
                 <Table>
                   <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="w-12 text-center">No.</TableHead>
-                      <TableHead>Waktu & Tanggal</TableHead>
-                      <TableHead>No. Referensi</TableHead>
-                      <TableHead className="text-center">Jenis</TableHead>
-                      <TableHead>Titik Kasir & Petugas</TableHead>
-                      <TableHead>Rincian Menu / Deskripsi</TableHead>
-                      <TableHead className="text-right">Nominal</TableHead>
-                      <TableHead className="text-right">Saldo Sisa</TableHead>
-                      <TableHead className="text-center">Struk</TableHead>
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu & Tanggal</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Referensi</TableHead>
+                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jenis</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titik Kasir & Petugas</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rincian Menu / Deskripsi</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Sisa</TableHead>
+                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Struk</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
                         <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                          Memuat histori transaksi siswa...
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Memuat histori transaksi siswa...</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ) : filteredRiwayat.length === 0 ? (
@@ -951,27 +940,27 @@ export function LaporanRiwayatSiswaPage() {
                       </TableRow>
                     ) : (
                       filteredRiwayat.map((trx, idx) => (
-                        <TableRow key={trx.id}>
-                          <TableCell className="text-center text-xs text-muted-foreground font-mono">
+                        <TableRow key={trx.id} className="border-b border-border last:border-b-0">
+                          <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
                             {idx + 1}
                           </TableCell>
-                          <TableCell className="text-xs font-medium whitespace-nowrap">
+                          <TableCell className="text-xs font-medium whitespace-nowrap tabular-nums">
                             {formatDateTime(trx.waktu)}
                           </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
+                          <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
                             {trx.referensiId}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant="secondary"
-                              className={`border-0 text-xs font-medium ${
+                              variant="outline"
+                              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 trx.jenis === 'BELANJA'
-                                  ? 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                                  ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
                                   : trx.jenis.startsWith('TOPUP')
-                                  ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                   : trx.jenis === 'VOID'
-                                  ? 'bg-destructive/15 text-destructive dark:bg-destructive/20 dark:text-red-400'
-                                  : 'bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                                  ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
+                                  : 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
                               }`}
                             >
                               {trx.jenis}
@@ -989,7 +978,7 @@ export function LaporanRiwayatSiswaPage() {
                                     <span className="font-medium">
                                       {it.qty}x {it.nama}
                                     </span>
-                                    <span className="text-muted-foreground font-mono">
+                                    <span className="text-muted-foreground font-mono tabular-nums">
                                       {formatRupiah(it.subtotal)}
                                     </span>
                                   </div>
@@ -1000,13 +989,15 @@ export function LaporanRiwayatSiswaPage() {
                             )}
                           </TableCell>
                           <TableCell
-                            className={`text-right font-mono font-bold text-sm ${
-                              trx.arah === 'DEBIT' ? 'text-red-600' : 'text-emerald-600'
+                            className={`text-right font-mono font-bold text-sm tabular-nums ${
+                              trx.arah === 'DEBIT'
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-emerald-600 dark:text-emerald-400'
                             }`}
                           >
                             {trx.arah === 'DEBIT' ? `− ${formatRupiah(trx.nominal)}` : `+ ${formatRupiah(trx.nominal)}`}
                           </TableCell>
-                          <TableCell className="text-right font-mono font-bold text-xs text-primary">
+                          <TableCell className="text-right font-mono font-bold text-xs text-primary tabular-nums">
                             {formatRupiah(trx.saldoSetelah)}
                           </TableCell>
                           <TableCell className="text-center">
@@ -1026,9 +1017,9 @@ export function LaporanRiwayatSiswaPage() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
           </>
           )}
 
@@ -1037,10 +1028,7 @@ export function LaporanRiwayatSiswaPage() {
             open={!!selectedTrxForReceipt}
             onOpenChange={(open) => !open && setSelectedTrxForReceipt(null)}
           >
-            <DialogContent
-              className="sm:max-w-md font-sans border-0 border-none shadow-2xl p-0 overflow-hidden"
-              style={{ border: 'none' }}
-            >
+            <DialogContent className="sm:max-w-md font-sans p-0 overflow-hidden gap-0">
               <div className="p-5 space-y-4 bg-muted/30">
                 {/* Modal Title Bar (Screen Only) */}
                 <DialogHeader className="no-print">
@@ -1085,7 +1073,7 @@ export function LaporanRiwayatSiswaPage() {
                   const totalSign = selectedTrxForReceipt.arah === 'KREDIT' ? '+' : '−'
 
                   return (
-                    <div className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none">
+                    <div className="printable-slip w-full rounded-xl border border-border bg-white p-5 font-mono text-xs text-slate-900 shadow-none print:border-none">
                       {/* Header Nota */}
                       <div className="space-y-1 border-b border-dashed border-slate-300 pb-3 text-center">
                         <div className="flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase">
@@ -1204,10 +1192,9 @@ export function LaporanRiwayatSiswaPage() {
                 {/* Tombol Aksi (Screen Only) */}
                 <div className="no-print flex justify-end gap-2 pt-1">
                   <Button
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
                     onClick={() => setSelectedTrxForReceipt(null)}
-                    className="border-0"
                   >
                     Tutup
                   </Button>
@@ -1224,7 +1211,6 @@ export function LaporanRiwayatSiswaPage() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </Main>
     </>
   )

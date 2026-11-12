@@ -16,9 +16,8 @@ import {
 import { toast } from 'sonner'
 import { formatRupiah } from '@/lib/formatters'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -155,41 +154,32 @@ export const PengaturanKantinPage: React.FC = () => {
 
   return (
     <>
-      <Header>
-        <div className='flex w-full items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
-              Pengaturan Kantin
-            </span>
-            <span className='text-muted-foreground text-xs'>/</span>
-            <span className='text-xs font-medium'>Operasional Kantin</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+      <Header fixed>
+        <HeaderBreadcrumb section='Pengaturan Kantin' title='Operasional Kantin' />
+        <HeaderActions />
       </Header>
 
-      <Main fixed>
-        <div className='flex flex-1 flex-col overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6'>
-          {/* Header Title & Nav Tabs */}
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+      <Main className='space-y-6'>
+        {/* Header Title & Nav Tabs */}
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
             <div>
-              <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
+              <h1 className='text-2xl font-bold tracking-tight text-foreground'>
                 Konfigurasi Operasional Kantin
               </h1>
+              <p className='text-sm text-muted-foreground'>
+                Atur identitas kantin, jam tutup otomatis, serta batas saldo dan top-up siswa.
+              </p>
             </div>
 
             {/* Quick Audit Info Badge */}
             <div className='flex items-center gap-2'>
               <Badge
                 variant='outline'
-                className='hidden sm:flex items-center gap-1.5 py-1 px-2.5 text-xs font-mono text-muted-foreground border-0 shadow-none'
+                className='hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums'
               >
                 <Calendar className='h-3.5 w-3.5' />
                 <span>
-                  Update:{' '}
+                  Pembaruan:{' '}
                   {pengaturan.updatedAt
                     ? new Date(pengaturan.updatedAt).toLocaleDateString('id-ID', {
                         day: 'numeric',
@@ -203,7 +193,7 @@ export const PengaturanKantinPage: React.FC = () => {
           </div>
 
           {/* Alert Sinkronisasi Real-Time */}
-          <Alert className='border-0 shadow-none bg-primary/5 text-primary'>
+          <Alert className='border-primary/25 bg-primary/5'>
             <AlertTitle className='text-xs font-bold text-foreground'>
               Sinkronisasi Otomatis ke Klien Kasir POS
             </AlertTitle>
@@ -217,10 +207,12 @@ export const PengaturanKantinPage: React.FC = () => {
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
             <div className='grid gap-6 md:grid-cols-2'>
               {/* Card 1: Identitas & Jam Tutup Otomatis */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+              <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
-                    <Store className='h-5 w-5 text-primary shrink-0' />
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Store className='size-4' />
+                    </div>
                     <div>
                       <CardTitle className='text-base font-bold'>
                         Profil & Waktu Operasional
@@ -247,7 +239,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       <Input
                         id='namaKantin'
                         placeholder='Contoh: Kantin Sehat SKOOLIA'
-                        className='pl-9 text-sm bg-background'
+                        className='pl-9 text-sm'
                         disabled={isSubmitting || loadingPengaturan}
                         {...register('namaKantin')}
                       />
@@ -274,8 +266,8 @@ export const PengaturanKantinPage: React.FC = () => {
                         <span className='text-destructive'>*</span>
                       </Label>
                       <Badge
-                        variant='secondary'
-                        className='border-0 bg-background font-mono text-[11px] text-muted-foreground'
+                        variant='outline'
+                        className='rounded-full border px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums'
                       >
                         Bawaan: 23:59
                       </Badge>
@@ -286,7 +278,7 @@ export const PengaturanKantinPage: React.FC = () => {
                         id='jamTutupOtomatis'
                         type='text'
                         placeholder='23:59'
-                        className='pl-9 font-mono text-sm bg-background'
+                        className='pl-9 font-mono text-sm tabular-nums'
                         disabled={isSubmitting || loadingPengaturan}
                         {...register('jamTutupOtomatis')}
                       />
@@ -306,10 +298,12 @@ export const PengaturanKantinPage: React.FC = () => {
               </Card>
 
               {/* Card 2: Interaksi Kasir POS (Foto & Konfirmasi Manual) */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+              <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
-                    <Camera className='h-5 w-5 text-primary shrink-0' />
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Camera className='size-4' />
+                    </div>
                     <div>
                       <CardTitle className='text-base font-bold'>
                         Interaksi Kasir POS & Foto
@@ -333,10 +327,14 @@ export const PengaturanKantinPage: React.FC = () => {
                           Langkah Konfirmasi Manual
                         </Label>
                         <Badge
-                          variant={watchedKonfirmasi ? 'default' : 'secondary'}
-                          className='text-[10px]'
+                          variant='outline'
+                          className={
+                            watchedKonfirmasi
+                              ? 'rounded-full border px-2.5 py-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
+                              : 'rounded-full border px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted/50 border-border'
+                          }
                         >
-                          {watchedKonfirmasi ? 'Aktif' : 'Nonaktif (Default)'}
+                          {watchedKonfirmasi ? 'Aktif' : 'Nonaktif (Bawaan)'}
                         </Badge>
                       </div>
                       <p className='text-[11px] text-muted-foreground'>
@@ -373,7 +371,7 @@ export const PengaturanKantinPage: React.FC = () => {
                         type='number'
                         min={1}
                         max={30}
-                        className='h-9 font-mono text-sm w-24 bg-background'
+                        className='h-9 font-mono text-sm w-24 tabular-nums'
                         disabled={isSubmitting || loadingPengaturan}
                         {...register('durasiFotoDetik', {
                           valueAsNumber: true,
@@ -395,10 +393,12 @@ export const PengaturanKantinPage: React.FC = () => {
               </Card>
 
               {/* Card 3: Batas Plafon Top-Up Siswa */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+              <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
-                    <Coins className='h-5 w-5 text-primary shrink-0' />
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Coins className='size-4' />
+                    </div>
                     <div>
                       <CardTitle className='text-base font-bold'>
                         Batas Transaksi Top-Up
@@ -417,7 +417,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       <Label htmlFor='minTopup' className='text-xs font-semibold'>
                         Batas Minimum Sekali Top-Up
                       </Label>
-                      <span className='font-mono text-xs font-bold text-muted-foreground'>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
                         {formatRupiah(watchedMinTopup || 0)}
                       </span>
                     </div>
@@ -427,7 +427,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       step={1000}
                       min={1000}
                       placeholder='5000'
-                      className='font-mono text-sm bg-background'
+                      className='font-mono text-sm tabular-nums'
                       disabled={isSubmitting || loadingPengaturan}
                       {...register('minTopup', { valueAsNumber: true })}
                     />
@@ -447,7 +447,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       <Label htmlFor='maksTopup' className='text-xs font-semibold'>
                         Batas Maksimum Sekali Top-Up
                       </Label>
-                      <span className='font-mono text-xs font-bold text-muted-foreground'>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
                         {formatRupiah(watchedMaxTopup || 0)}
                       </span>
                     </div>
@@ -457,7 +457,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       step={10000}
                       min={1000}
                       placeholder='500000'
-                      className='font-mono text-sm bg-background'
+                      className='font-mono text-sm tabular-nums'
                       disabled={isSubmitting || loadingPengaturan}
                       {...register('maksTopup', { valueAsNumber: true })}
                     />
@@ -474,10 +474,12 @@ export const PengaturanKantinPage: React.FC = () => {
               </Card>
 
               {/* Card 4: Batas Saldo Maksimum */}
-              <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+              <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2.5'>
-                    <ShieldCheck className='h-5 w-5 text-primary shrink-0' />
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <ShieldCheck className='size-4' />
+                    </div>
                     <div>
                       <CardTitle className='text-base font-bold'>
                         Batas Maksimal Saldo Tersimpan
@@ -499,7 +501,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       >
                         Batas Saldo Maksimum Siswa
                       </Label>
-                      <span className='font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400'>
+                      <span className='font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                         {formatRupiah(watchedMaxSaldoSiswa || 0)}
                       </span>
                     </div>
@@ -509,7 +511,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       step={50000}
                       min={10000}
                       placeholder='1000000'
-                      className='font-mono text-sm bg-background'
+                      className='font-mono text-sm tabular-nums'
                       disabled={isSubmitting || loadingPengaturan}
                       {...register('batasSaldoSiswa', { valueAsNumber: true })}
                     />
@@ -542,7 +544,7 @@ export const PengaturanKantinPage: React.FC = () => {
                         >
                           <SelectTrigger
                             id='kebijakanSaldoMengendap'
-                            className='bg-background text-sm'
+                            className='text-sm'
                           >
                             <SelectValue placeholder='Pilih kebijakan saldo mengendap' />
                           </SelectTrigger>
@@ -579,7 +581,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       >
                         Ambang Hari Saldo Mengendap
                       </Label>
-                      <span className='font-mono text-xs font-bold text-muted-foreground'>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
                         {Number.isFinite(watchedAmbangHari) ? watchedAmbangHari : 90} hari
                       </span>
                     </div>
@@ -589,7 +591,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       step={1}
                       min={0}
                       placeholder='90'
-                      className='font-mono text-sm bg-background'
+                      className='font-mono text-sm tabular-nums'
                       disabled={isSubmitting || loadingPengaturan}
                       {...register('ambangHari', { valueAsNumber: true })}
                     />
@@ -607,10 +609,10 @@ export const PengaturanKantinPage: React.FC = () => {
             </div>
 
             {/* Bottom Action Footer */}
-            <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+            <Card className='py-0'>
               <CardFooter className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                  <UserCheck className='h-4 w-4 text-emerald-600' />
+                  <UserCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
                   <span>
                     Aktor Pengubah:{' '}
                     <strong>{pengaturan.updatedBy || 'Admin Sekolah'}</strong>
@@ -620,14 +622,14 @@ export const PengaturanKantinPage: React.FC = () => {
                 <div className='flex items-center gap-2.5 w-full sm:w-auto'>
                   <Button
                     type='button'
-                    variant='ghost'
+                    variant='outline'
                     size='sm'
                     onClick={handleResetToDefault}
                     disabled={isSubmitting || loadingPengaturan}
                     className='h-9 flex-1 sm:flex-initial text-xs gap-1.5'
                   >
                     <RotateCcw className='h-3.5 w-3.5' />
-                    <span>Kembalikan Default</span>
+                    <span>Kembalikan Bawaan</span>
                   </Button>
 
                   <Button
@@ -652,7 +654,6 @@ export const PengaturanKantinPage: React.FC = () => {
               </CardFooter>
             </Card>
           </form>
-        </div>
       </Main>
     </>
   )

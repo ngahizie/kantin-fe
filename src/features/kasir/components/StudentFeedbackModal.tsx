@@ -118,15 +118,15 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md overflow-hidden p-6 select-none has-border !border !border-slate-200 dark:!border-slate-800 shadow-none rounded-2xl bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white'>
+      <DialogContent className='max-w-md overflow-hidden p-6 select-none'>
         <DialogHeader className='pb-2 text-center'>
-          <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'>
+          <div className='mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'>
             <CheckCircle2 className='h-7 w-7' />
           </div>
-          <DialogTitle className='text-xl font-bold tracking-tight text-slate-800 dark:text-white'>
+          <DialogTitle className='text-xl font-bold tracking-tight text-foreground'>
             Transaksi Berhasil
           </DialogTitle>
-          <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+          <DialogDescription className='text-xs text-muted-foreground'>
             Verifikasi visual wajah pembeli dengan foto identitas kartu di bawah
             ini.
           </DialogDescription>
@@ -136,7 +136,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
         <div className='flex flex-col items-center gap-4 py-2'>
           {/* Foto Siswa Ukuran Besar */}
           <div className='relative'>
-            <Avatar className='h-32 w-32 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 shadow-none'>
+            <Avatar className='h-32 w-32 rounded-xl border border-border'>
               {fotoUrl && (
                 <AvatarImage
                   src={fotoUrl}
@@ -144,14 +144,14 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
                   className='object-cover'
                 />
               )}
-              <AvatarFallback className='rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500'>
+              <AvatarFallback className='rounded-xl bg-muted text-muted-foreground'>
                 <User className='h-16 w-16 stroke-[1.5]' />
               </AvatarFallback>
             </Avatar>
             <div className='absolute -bottom-2.5 left-1/2 -translate-x-1/2'>
               <Badge
-                variant='secondary'
-                className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-700 dark:text-slate-200 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full shadow-none'
+                variant='outline'
+                className='rounded-full border border-border bg-card px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase text-foreground shadow-xs'
               >
                 {pembeli?.kelas || 'Siswa'}
               </Badge>
@@ -160,42 +160,42 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
 
           {/* Nama & Rincian */}
           <div className='mt-1 space-y-1 text-center'>
-            <h3 className='text-lg font-bold tracking-tight text-slate-800 dark:text-white'>
+            <h3 className='text-lg font-bold tracking-tight text-foreground'>
               {namaPembeli}
             </h3>
             {pembeli?.nis && (
-              <p className='text-xs text-slate-500 dark:text-slate-400'>
+              <p className='text-xs tabular-nums text-muted-foreground'>
                 NIS: {pembeli.nis}
               </p>
             )}
           </div>
 
           {/* Ringkasan Saldo & Total Belanja */}
-          <div className='grid w-full grid-cols-2 gap-3 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 text-center shadow-none'>
+          <div className='grid w-full grid-cols-2 gap-3 rounded-xl border border-border bg-muted/40 p-3 text-center'>
             <div>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400'>
+              <span className='text-[11px] text-muted-foreground'>
                 Total Belanja
               </span>
-              <p className='text-sm font-bold text-slate-800 dark:text-white tabular-nums'>
+              <p className='text-sm font-bold tabular-nums text-foreground'>
                 {formatRupiah(data.total)}
               </p>
             </div>
-            <div className='pl-2'>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400'>
+            <div className='border-l border-border pl-2'>
+              <span className='text-[11px] text-muted-foreground'>
                 Sisa Saldo
               </span>
-              <p className='text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums'>
+              <p className='text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
                 {formatRupiah(sisaSaldo)}
               </p>
             </div>
           </div>
 
           {/* Indikator Countdown Otomatis 15 Detik */}
-          <div className='flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400'>
-            <Clock className='h-3.5 w-3.5 animate-pulse text-blue-600 dark:text-blue-400' />
+          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+            <Clock className='h-3.5 w-3.5 animate-pulse text-primary' />
             <span>
               Menutup otomatis dalam{' '}
-              <strong className='font-bold text-blue-600 dark:text-blue-400 tabular-nums'>
+              <strong className='font-bold tabular-nums text-primary'>
                 {countdown}
               </strong>{' '}
               detik...
@@ -211,7 +211,7 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
             variant='default'
             size='sm'
             onClick={handleDoneClick}
-            className='h-9 w-full gap-1.5 text-xs font-semibold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
+            className='h-9 w-full gap-1.5 text-xs font-semibold'
           >
             <span>Selesai</span>
             <ArrowRight className='h-3.5 w-3.5' />

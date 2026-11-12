@@ -31,14 +31,14 @@ describe('UsersDeleteDialog', () => {
 
     const title = getByRole('heading', {
       level: 2,
-      name: /Delete User/i,
+      name: /Hapus Pengguna/i,
     })
     const desc = getByText(
-      new RegExp(`Are you sure you want to delete ${MOCK_USER.username}?`, 'i')
+      new RegExp(`Apakah Anda yakin ingin menghapus ${MOCK_USER.username}\\?`, 'i')
     )
     const usernameInput = getByRole('textbox', { name: /Username/i })
-    const cancelButton = getByRole('button', { name: /Cancel/i })
-    const deleteButton = getByRole('button', { name: /Delete/i })
+    const cancelButton = getByRole('button', { name: /Batal/i })
+    const deleteButton = getByRole('button', { name: /^Hapus$/i })
 
     await expect.element(title).toBeInTheDocument()
     await expect.element(desc).toBeInTheDocument()
@@ -54,7 +54,7 @@ describe('UsersDeleteDialog', () => {
     )
 
     const usernameInput = getByRole('textbox', { name: /Username/i })
-    const deleteButton = getByRole('button', { name: /Delete/i })
+    const deleteButton = getByRole('button', { name: /^Hapus$/i })
 
     await expect.element(deleteButton).toBeDisabled()
 
@@ -75,7 +75,7 @@ describe('UsersDeleteDialog', () => {
       />
     )
 
-    const cancelButton = getByRole('button', { name: /Cancel/i })
+    const cancelButton = getByRole('button', { name: /Batal/i })
     await userEvent.click(cancelButton)
 
     expect(onOpenChange).toHaveBeenCalledOnce()
@@ -107,7 +107,7 @@ describe('UsersDeleteDialog', () => {
     await userEvent.fill(usernameInput, MOCK_USER.username)
     await expect.element(usernameInput).toHaveValue(MOCK_USER.username)
 
-    const closeButton = getByRole('button', { name: /Cancel/i })
+    const closeButton = getByRole('button', { name: /Batal/i })
     await userEvent.click(closeButton)
 
     const reopenButton = getByRole('button', { name: /Reopen/i })
@@ -126,7 +126,7 @@ describe('UsersDeleteDialog', () => {
     )
 
     const usernameInput = getByRole('textbox', { name: /Username/i })
-    const deleteButton = getByRole('button', { name: /Delete/i })
+    const deleteButton = getByRole('button', { name: /^Hapus$/i })
 
     await expect.element(deleteButton).toBeDisabled()
 
@@ -142,7 +142,7 @@ describe('UsersDeleteDialog', () => {
     expect(showSubmittedData).toHaveBeenCalledOnce()
     expect(showSubmittedData).toHaveBeenCalledWith(
       MOCK_USER,
-      'The following user has been deleted:'
+      'Pengguna berikut telah dihapus:'
     )
   })
 
@@ -157,7 +157,7 @@ describe('UsersDeleteDialog', () => {
     )
 
     const usernameInput = getByRole('textbox', { name: /Username/i })
-    const deleteButton = getByRole('button', { name: /Delete/i })
+    const deleteButton = getByRole('button', { name: /^Hapus$/i })
 
     await expect.element(deleteButton).toBeDisabled()
 
@@ -172,7 +172,7 @@ describe('UsersDeleteDialog', () => {
     expect(showSubmittedData).toHaveBeenCalledOnce()
     expect(showSubmittedData).toHaveBeenCalledWith(
       MOCK_USER,
-      'The following user has been deleted:'
+      'Pengguna berikut telah dihapus:'
     )
   })
 })

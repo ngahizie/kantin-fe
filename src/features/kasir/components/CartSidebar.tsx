@@ -63,19 +63,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
   return (
     <aside
-      className={`flex h-full w-full flex-col bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white select-none shadow-none sm:w-[350px] lg:w-[380px] xl:w-[420px] ${className}`}
+      className={`flex h-full w-full flex-col bg-card text-card-foreground select-none sm:w-[350px] lg:w-[380px] xl:w-[420px] ${className}`}
     >
       {/* Header Keranjang */}
-      <div className='flex h-14 shrink-0 items-center justify-between has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] px-4 shadow-none'>
+      <div className='flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4'>
         <div className='flex items-center gap-2'>
-          <div className='flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'>
+          <div className='flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary'>
             <ShoppingCart className='h-4 w-4' />
           </div>
           <div className='flex flex-col justify-center'>
-            <h3 className='text-sm font-bold leading-none tracking-tight text-slate-800 dark:text-white'>
+            <h3 className='text-sm font-bold leading-none tracking-tight text-foreground'>
               Keranjang Belanja
             </h3>
-            <span className='mt-0.5 text-[11px] leading-none text-slate-500 dark:text-slate-400'>
+            <span className='mt-0.5 text-[11px] leading-none text-muted-foreground tabular-nums'>
               {totalCount} item dipilih
             </span>
           </div>
@@ -88,7 +88,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
           size='sm'
           disabled={isCartEmpty}
           onClick={() => setClearDialogOpen(true)}
-          className='h-8 gap-1 px-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-rose-300 disabled:opacity-40 rounded-xl'
+          className='h-8 gap-1 rounded-lg px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive disabled:opacity-40'
           title='Kosongkan seluruh isi keranjang'
         >
           <Trash2 className='h-3.5 w-3.5' />
@@ -99,14 +99,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       {/* Daftar Item Keranjang */}
       <div className='flex-1 space-y-3 overflow-y-auto p-4'>
         {isCartEmpty ? (
-          <div className='flex h-full min-h-[240px] flex-col items-center justify-center p-6 text-center text-slate-500 dark:text-slate-400'>
-            <div className='mb-3 flex h-16 w-16 items-center justify-center rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500'>
+          <div className='flex h-full min-h-[240px] flex-col items-center justify-center p-6 text-center text-muted-foreground'>
+            <div className='mb-3 flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-muted/50 text-muted-foreground'>
               <ShoppingBag className='h-8 w-8 stroke-[1.5]' />
             </div>
-            <h4 className='text-sm font-semibold text-slate-800 dark:text-white'>
+            <h4 className='text-sm font-semibold text-foreground'>
               Keranjang Masih Kosong
             </h4>
-            <p className='mt-1 max-w-[220px] text-xs text-slate-500 dark:text-slate-400'>
+            <p className='mt-1 max-w-[220px] text-xs text-muted-foreground'>
               Pilih item dari katalog menu untuk menambahkan pesanan ke antrean
               kasir.
             </p>
@@ -119,26 +119,26 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             return (
               <div
                 key={item.menu.id}
-                className='flex flex-col gap-2 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3.5 shadow-none'
+                className='flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-3.5'
               >
                 {/* Baris Atas: Info Item & Tombol Hapus */}
                 <div className='flex items-start justify-between gap-2'>
                   <div className='min-w-0 flex-1'>
                     <h5
-                      className='truncate text-sm font-semibold text-slate-800 dark:text-white'
+                      className='truncate text-sm font-semibold text-foreground'
                       title={item.menu.nama}
                     >
                       {item.menu.nama}
                     </h5>
                     <div className='mt-0.5 flex items-center gap-2'>
-                      <span className='text-xs text-slate-500 dark:text-slate-400'>
+                      <span className='text-xs text-muted-foreground tabular-nums'>
                         {formatRupiah(item.menu.hargaJual)} /
                         {item.menu.satuan || 'porsi'}
                       </span>
                       {isMaxReached && (
                         <Badge
-                          variant='secondary'
-                          className='rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold px-2 py-0 text-[10px] uppercase tracking-wide shadow-none'
+                          variant='outline'
+                          className='rounded-full border border-amber-500/20 bg-amber-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-amber-700 dark:text-amber-300'
                         >
                           Maksimal stok
                         </Badge>
@@ -152,7 +152,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     variant='ghost'
                     size='icon'
                     onClick={() => removeItem(item.menu.id)}
-                    className='h-7 w-7 shrink-0 text-slate-400 dark:text-slate-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg'
+                    className='h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
                     title={`Hapus ${item.menu.nama}`}
                   >
                     <Trash2 className='h-3.5 w-3.5' />
@@ -162,19 +162,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 {/* Baris Bawah: Pengatur Qty & Subtotal */}
                 <div className='flex items-center justify-between gap-2 pt-1'>
                   {/* Stepper Kuantitas */}
-                  <div className='flex items-center gap-1 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-0.5 shadow-none'>
+                  <div className='flex items-center gap-1 rounded-lg border border-border bg-background p-0.5'>
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
                       onClick={() => decrementQty(item.menu.id)}
-                      className='h-7 w-7 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      className='h-7 w-7 rounded-md text-foreground hover:bg-muted'
                       title='Kurangi jumlah'
                     >
                       <Minus className='h-3.5 w-3.5' />
                     </Button>
 
-                    <span className='min-w-[2rem] text-center text-xs font-bold text-slate-800 dark:text-white tabular-nums'>
+                    <span className='min-w-[2rem] text-center text-xs font-bold tabular-nums text-foreground'>
                       {item.qty}
                     </span>
 
@@ -184,7 +184,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       size='icon'
                       disabled={isMaxReached}
                       onClick={() => incrementQty(item.menu.id)}
-                      className='h-7 w-7 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30'
+                      className='h-7 w-7 rounded-md text-foreground hover:bg-muted disabled:opacity-30'
                       title={
                         isMaxReached
                           ? 'Maksimal stok tercapai'
@@ -197,7 +197,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
                   {/* Subtotal Item (Integer Rupiah) */}
                   <div className='text-right'>
-                    <span className='text-sm font-bold text-slate-800 dark:text-white tabular-nums'>
+                    <span className='text-sm font-bold tabular-nums text-foreground'>
                       {formatRupiah(item.subtotal)}
                     </span>
                   </div>
@@ -209,18 +209,18 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       </div>
 
       {/* Footer / Panel Pembayaran */}
-      <div className='shrink-0 space-y-3 has-border !border-t !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-4 shadow-none'>
+      <div className='shrink-0 space-y-3 border-t border-border bg-muted/40 p-4'>
         {/* Ringkasan Biaya */}
         <div className='space-y-1.5 text-xs'>
-          <div className='flex justify-between text-slate-500 dark:text-slate-400'>
+          <div className='flex justify-between text-muted-foreground'>
             <span>Total Kuantitas</span>
-            <span className='font-semibold text-slate-800 dark:text-white tabular-nums'>{totalCount} Item</span>
+            <span className='font-semibold tabular-nums text-foreground'>{totalCount} Item</span>
           </div>
           <div className='flex items-baseline justify-between pt-1.5'>
-            <span className='text-sm font-bold text-slate-800 dark:text-white'>
+            <span className='text-sm font-bold text-foreground'>
               Total Belanja
             </span>
-            <span className='text-lg font-bold tracking-tight text-blue-600 dark:text-blue-400 tabular-nums sm:text-xl'>
+            <span className='text-lg font-bold tracking-tight tabular-nums text-primary sm:text-xl'>
               {formatRupiah(totalNominal)}
             </span>
           </div>
@@ -233,7 +233,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             size='lg'
             disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
             onClick={onCheckout}
-            className='h-12 w-full touch-manipulation gap-2 rounded-xl !bg-blue-600 hover:!bg-blue-500 !text-white text-sm font-bold shadow-none sm:text-base disabled:opacity-50'
+            className='h-11 w-full touch-manipulation gap-2 rounded-xl text-sm font-bold sm:text-base disabled:opacity-50'
           >
             <CreditCard className='h-5 w-5' />
             <span>
@@ -251,24 +251,24 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
       {/* Dialog Konfirmasi Kosongkan Keranjang */}
       <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-        <AlertDialogContent className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none'>
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className='flex items-center gap-2 text-slate-800 dark:text-white'>
+            <AlertDialogTitle className='flex items-center gap-2'>
               <AlertTriangle className='h-5 w-5 text-amber-500' />
               Kosongkan Keranjang Belanja?
             </AlertDialogTitle>
-            <AlertDialogDescription className='text-slate-500 dark:text-slate-400'>
+            <AlertDialogDescription>
               Seluruh ({totalCount}) item pesanan yang telah dipilih akan
               dihapus dari antrean saat ini.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'>
+            <AlertDialogCancel>
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClearConfirmed}
-              className='shadow-none rounded-xl !text-white !bg-rose-600 hover:!bg-rose-500'
+              className='bg-destructive text-white hover:bg-destructive/90'
             >
               Kosongkan
             </AlertDialogAction>

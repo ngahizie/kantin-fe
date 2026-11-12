@@ -6,6 +6,11 @@ import {
   AlertTriangle,
   Printer,
   Eye,
+  Loader2,
+  Wallet,
+  Banknote,
+  Scale,
+  ClipboardCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
@@ -35,9 +40,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import {
@@ -404,10 +408,8 @@ export function SetoranKasPage() {
   return (
     <>
       <Header fixed>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Layanan TU' title='Setoran Kas TU Harian' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
@@ -434,16 +436,21 @@ export function SetoranKasPage() {
         </div>
 
         {/* Top KPI Cards */}
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Catatan Sistem (Penerimaan TU)
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400'>
+                <Wallet className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {formatRupiah(totalPenerimaanSistem)}
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground tabular-nums'>
                 Dari{' '}
                 {filteredList.reduce((acc, c) => acc + (c.total_transaksi || 0), 0)}{' '}
                 transaksi isi saldo tunai
@@ -451,27 +458,37 @@ export function SetoranKasPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Uang Tunai Diterima
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'>
+                <Banknote className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(totalUangFisikDisetor)}
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 Uang tunai dihitung dan diterima Bendahara
               </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Selisih Uang Kas
-              </p>
-              <h3
-                className={`mt-0.5 text-xl font-bold ${
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400'>
+                <Scale className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold tracking-tight tabular-nums ${
                   totalSelisihFisik === 0
                     ? 'text-foreground'
                     : totalSelisihFisik < 0
@@ -481,8 +498,8 @@ export function SetoranKasPage() {
               >
                 {totalSelisihFisik > 0 ? '+' : ''}
                 {formatRupiah(totalSelisihFisik)}
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
                 {totalSelisihFisik === 0
                   ? 'Jumlah uang pas / cocok'
                   : totalSelisihFisik < 0
@@ -492,15 +509,20 @@ export function SetoranKasPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Status Penyerahan Kas
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-purple-200 bg-purple-50 text-purple-600 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-400'>
+                <ClipboardCheck className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {totalPetugasSelesai} / {filteredList.length} Petugas
-              </h3>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground tabular-nums'>
                 {totalPetugasSelesai === filteredList.length &&
                 filteredList.length > 0
                   ? 'Semua setoran hari ini telah diverifikasi'
@@ -544,9 +566,9 @@ export function SetoranKasPage() {
         </TableToolbar>
 
         {/* Rekapitulasi Table */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30 overflow-hidden shadow-none'>
-          <CardHeader className='border-b bg-muted/20 px-6 py-4'>
-            <div className='flex items-center justify-between'>
+        <Card className='p-0 gap-0 overflow-hidden'>
+          <CardHeader className='border-b border-border bg-muted/30 px-6 py-4'>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
               <div>
                 <CardTitle className='text-base font-semibold'>
                   Daftar Rekapitulasi Kas TU Per Petugas ({dateFilterLabel})
@@ -556,7 +578,10 @@ export function SetoranKasPage() {
                   kepada Bendahara Sekolah
                 </CardDescription>
               </div>
-              <Badge className='border-0 bg-muted/80 font-mono text-xs text-muted-foreground'>
+              <Badge
+                variant='outline'
+                className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 font-mono text-xs font-medium text-muted-foreground tabular-nums'
+              >
                 {filteredList.length} Petugas TU Terdaftar
               </Badge>
             </div>
@@ -564,36 +589,36 @@ export function SetoranKasPage() {
             <CardContent className='p-0'>
               <div className='overflow-x-auto'>
                 <Table>
-                  <TableHeader>
-                    <TableRow className='bg-muted/40'>
-                      <TableHead className='w-12 text-center text-xs font-semibold'>
+                  <TableHeader className='bg-muted/50'>
+                    <TableRow className='border-b border-border hover:bg-transparent'>
+                      <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         No.
                       </TableHead>
-                      <TableHead className='text-xs font-semibold'>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         ID & Tanggal
                       </TableHead>
-                      <TableHead className='text-xs font-semibold'>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Petugas TU
                       </TableHead>
-                      <TableHead className='text-xs font-semibold'>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Rincian Top-up
                       </TableHead>
-                      <TableHead className='text-right text-xs font-semibold'>
+                      <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Catatan Sistem
                       </TableHead>
-                      <TableHead className='text-right text-xs font-semibold'>
+                      <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Uang Tunai
                       </TableHead>
-                      <TableHead className='text-center text-xs font-semibold'>
+                      <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Selisih
                       </TableHead>
-                      <TableHead className='text-center text-xs font-semibold'>
+                      <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Status
                       </TableHead>
-                      <TableHead className='text-xs font-semibold'>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Verifikasi Bendahara
                       </TableHead>
-                      <TableHead className='pr-6 text-right text-xs font-semibold'>
+                      <TableHead className='pr-6 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                         Aksi
                       </TableHead>
                     </TableRow>
@@ -606,7 +631,7 @@ export function SetoranKasPage() {
                           className='h-32 text-center text-muted-foreground'
                         >
                           <div className='flex flex-col items-center justify-center space-y-2'>
-                            <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                            <Loader2 className='size-6 animate-spin text-muted-foreground' />
                             <p className='text-sm text-muted-foreground'>
                               Memuat data rekapitulasi setoran kas TU...
                             </p>
@@ -627,11 +652,14 @@ export function SetoranKasPage() {
                       </TableRow>
                     ) : (
                       filteredList.map((item, idx) => (
-                        <TableRow key={item.id} className='hover:bg-muted/30'>
-                          <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                        <TableRow
+                          key={item.id}
+                          className='border-b border-border last:border-b-0 hover:bg-muted/30'
+                        >
+                          <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                             {idx + 1}
                           </TableCell>
-                          <TableCell className='font-mono text-xs'>
+                          <TableCell className='font-mono text-xs tabular-nums'>
                             <div className='font-semibold text-foreground'>
                               {item.id}
                             </div>
@@ -645,26 +673,26 @@ export function SetoranKasPage() {
                               {item.petugas_nama}
                             </div>
                             {item.petugas_nip && (
-                              <div className='font-mono text-[11px] text-muted-foreground'>
+                              <div className='font-mono text-[11px] text-muted-foreground tabular-nums'>
                                 NIP: {item.petugas_nip}
                               </div>
                             )}
                           </TableCell>
 
                           <TableCell>
-                            <div className='text-xs font-medium'>
+                            <div className='text-xs font-medium tabular-nums'>
                               {item.total_transaksi} Transaksi
                             </div>
-                            <div className='text-[11px] text-muted-foreground'>
+                            <div className='text-[11px] text-muted-foreground tabular-nums'>
                               Topup Siswa: {formatRupiah(item.total_topup_siswa)}
                             </div>
                           </TableCell>
 
-                          <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
+                          <TableCell className='text-right font-mono text-xs font-semibold text-primary tabular-nums'>
                             {formatRupiah(item.total_sistem)}
                           </TableCell>
 
-                          <TableCell className='text-right font-mono text-xs font-medium'>
+                          <TableCell className='text-right font-mono text-xs font-medium tabular-nums'>
                             {item.uang_fisik !== null ? (
                               <span className='font-semibold text-emerald-700 dark:text-emerald-400'>
                                 {formatRupiah(item.uang_fisik)}
@@ -683,19 +711,22 @@ export function SetoranKasPage() {
                               </span>
                             ) : item.selisih === 0 ? (
                               <Badge
-                                className='border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
+                                variant='outline'
+                                className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 tabular-nums dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                               >
                                 Cocok (Rp 0)
                               </Badge>
                             ) : item.selisih < 0 ? (
                               <Badge
-                                className='border-0 bg-destructive/15 text-[11px] font-medium text-destructive'
+                                variant='outline'
+                                className='rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 tabular-nums dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                               >
                                 Kurang -{formatRupiah(Math.abs(item.selisih))}
                               </Badge>
                             ) : (
                               <Badge
-                                className='border-0 bg-blue-500/15 text-[11px] font-medium text-blue-700 dark:text-blue-400'
+                                variant='outline'
+                                className='rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
                               >
                                 Lebih +{formatRupiah(item.selisih)}
                               </Badge>
@@ -705,14 +736,16 @@ export function SetoranKasPage() {
                           <TableCell className='text-center'>
                             {isSetoranConfirmed(item.status) ? (
                               <Badge
-                                className='gap-1 border-0 bg-emerald-500/15 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'
+                                variant='outline'
+                                className='gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                               >
                                 <CheckCircle2 className='h-3 w-3' />
                                 Selesai
                               </Badge>
                             ) : (
                               <Badge
-                                className='gap-1 border-0 bg-amber-500/15 text-[11px] font-medium text-amber-700 dark:text-amber-400'
+                                variant='outline'
+                                className='gap-1 rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                               >
                                 <AlertTriangle className='h-3 w-3' />
                                 Menunggu Setoran
@@ -726,7 +759,7 @@ export function SetoranKasPage() {
                                 <div className='font-medium text-foreground'>
                                   {item.bendahara_nama}
                                 </div>
-                                <div className='text-[11px] text-muted-foreground'>
+                                <div className='text-[11px] text-muted-foreground tabular-nums'>
                                   {item.konfirmasi_pada
                                     ? new Date(
                                         item.konfirmasi_pada
@@ -760,7 +793,7 @@ export function SetoranKasPage() {
                                       setSelectedSetoranForConfirm(item)
                                       setIsConfirmModalOpen(true)
                                     }}
-                                    className='h-7 gap-1 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700'
+                                    className='h-8 gap-1 text-xs font-semibold'
                                   >
                                     <CheckCircle2 className='h-3.5 w-3.5' />
                                     Terima Kas
@@ -771,13 +804,13 @@ export function SetoranKasPage() {
                               {isBendaharaOrAdmin &&
                                 isSetoranConfirmed(item.status) && (
                                   <Button
-                                    variant='ghost'
+                                    variant='outline'
                                     size='sm'
                                     onClick={() => {
                                       setSelectedSetoranForConfirm(item)
                                       setIsConfirmModalOpen(true)
                                     }}
-                                    className='h-7 border-0 bg-muted/60 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    className='h-8 text-xs font-medium'
                                     title='Koreksi / Update Konfirmasi Setoran'
                                   >
                                     Ubah Kas
@@ -799,7 +832,7 @@ export function SetoranKasPage() {
                                   })
                                   setIsDetailModalOpen(true)
                                 }}
-                                className='h-7 gap-1 border-border text-xs'
+                                className='h-8 gap-1 text-xs'
                                 title='Lihat Rincian Transaksi Top-up Petugas'
                               >
                                 <Eye className='h-3.5 w-3.5' />
@@ -809,15 +842,15 @@ export function SetoranKasPage() {
                               {/* Tombol Cetak Berita Acara */}
                               <Button
                                 variant='ghost'
-                                size='sm'
+                                size='icon'
                                 onClick={() => {
                                   setSelectedSetoranForPrint(item)
                                   setIsPrintModalOpen(true)
                                 }}
-                                className='h-7 p-1.5 text-xs text-muted-foreground hover:text-foreground'
+                                className='size-8 text-muted-foreground hover:text-foreground'
                                 title='Cetak Berita Acara Setoran Kas'
                               >
-                                <Printer className='h-3.5 w-3.5' />
+                                <Printer className='h-4 w-4' />
                               </Button>
                             </div>
                           </TableCell>
@@ -874,23 +907,23 @@ export function SetoranKasPage() {
                 </DialogHeader>
 
                 <div className='space-y-4 py-2'>
-                  <div className='overflow-x-auto'>
+                  <div className='overflow-x-auto rounded-lg border border-border'>
                     <Table>
-                      <TableHeader>
-                        <TableRow className='bg-muted/30'>
-                          <TableHead className='w-12 text-center text-xs font-semibold'>
+                      <TableHeader className='bg-muted/50'>
+                        <TableRow className='border-b border-border hover:bg-transparent'>
+                          <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                             No.
                           </TableHead>
-                          <TableHead className='text-xs font-semibold'>
+                          <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                             Waktu & No. Ref
                           </TableHead>
-                          <TableHead className='text-xs font-semibold'>
+                          <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                             Subjek / Penerima
                           </TableHead>
-                          <TableHead className='text-xs font-semibold'>
+                          <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                             Penyetor
                           </TableHead>
-                          <TableHead className='text-right text-xs font-semibold'>
+                          <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                             Nominal
                           </TableHead>
                         </TableRow>
@@ -907,11 +940,11 @@ export function SetoranKasPage() {
                           </TableRow>
                         ) : (
                           displayRincian.map((tx: TransaksiTopupDetail, idx: number) => (
-                            <TableRow key={tx.id}>
-                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                            <TableRow key={tx.id} className='border-b border-border last:border-b-0'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                                 {idx + 1}
                               </TableCell>
-                              <TableCell className='text-xs'>
+                              <TableCell className='text-xs tabular-nums'>
                                 <div className='font-mono font-medium'>
                                   {new Date(tx.waktu).toLocaleTimeString('id-ID', {
                                     hour: '2-digit',
@@ -934,7 +967,7 @@ export function SetoranKasPage() {
                               <TableCell className='text-xs text-muted-foreground'>
                                 {tx.penyetor}
                               </TableCell>
-                              <TableCell className='text-right font-mono text-xs font-semibold text-primary'>
+                              <TableCell className='text-right font-mono text-xs font-semibold text-primary tabular-nums'>
                                 {formatRupiah(tx.nominal)}
                               </TableCell>
                             </TableRow>
@@ -966,9 +999,9 @@ export function SetoranKasPage() {
           {selectedSetoranForPrint && (
             <div
               id='print-area'
-              className='space-y-4 rounded-lg bg-card p-6 font-sans text-xs'
+              className='space-y-4 rounded-xl border border-border bg-card p-6 font-sans text-xs print:border-none'
             >
-              <div className='space-y-1 border-b pb-3 text-center'>
+              <div className='space-y-1 border-b border-border pb-3 text-center'>
                 <img
                   src='/logo.png'
                   alt='Logo Skoolia'
@@ -1090,9 +1123,8 @@ export function SetoranKasPage() {
 
           <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant='secondary'
+              variant='outline'
               onClick={() => setIsPrintModalOpen(false)}
-              className='border-0 bg-muted/80 hover:bg-muted text-foreground shadow-none'
             >
               Tutup
             </Button>

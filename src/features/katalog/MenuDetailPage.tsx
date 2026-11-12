@@ -8,14 +8,12 @@ import {
   Image as ImageIcon,
   Package,
   Pencil,
-  RefreshCw,
   Tag,
   Wallet,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -153,53 +151,45 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
   return (
     <>
       <Header fixed>
-        <div className='flex items-center gap-2 overflow-hidden me-auto'>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='size-8 rounded-xl'
-            onClick={() => navigate({ to: '/menu' })}
-            title='Kembali ke daftar menu'
-          >
-            <ArrowLeft className='size-4' />
-          </Button>
-          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
-            Detail Menu
-          </h1>
-        </div>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Katalog' title='Detail Menu' />
+        <HeaderActions />
       </Header>
 
-      <Main className='space-y-6 pb-12'>
-        <div className='flex items-center justify-end gap-2'>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={muatUlang}
-            // Rute tidak valid: tidak ada yang bisa disegarkan.
-            disabled={!idValid || loading}
-            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-          >
-            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Segarkan
-          </Button>
-          <Button
-            size='sm'
-            onClick={() => setIsModalOpen(true)}
-            disabled={!idValid || !menu || !kategoriSiap}
-            title={
-              kategoriSiap
-                ? 'Ubah menu'
-                : 'Daftar kategori belum siap — menu tidak bisa diubah'
-            }
-            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
-          >
-            <Pencil className='size-4' />
-            Ubah Menu
-          </Button>
+      <Main className='space-y-6'>
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Detail Menu
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Informasi harga jual, kategori, barcode, dan stok berjalan terkini dari server.
+            </p>
+          </div>
+          <div className='flex flex-wrap items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => navigate({ to: '/menu' })}
+              className='gap-1.5'
+            >
+              <ArrowLeft className='size-4' />
+              Kembali
+            </Button>
+            <Button
+              size='sm'
+              onClick={() => setIsModalOpen(true)}
+              disabled={!idValid || !menu || !kategoriSiap}
+              title={
+                kategoriSiap
+                  ? 'Ubah menu'
+                  : 'Daftar kategori belum siap — menu tidak bisa diubah'
+              }
+              className='gap-1.5 font-semibold'
+            >
+              <Pencil className='size-4' />
+              Ubah Menu
+            </Button>
+          </div>
         </div>
 
         {kategoriError && menu && (
@@ -220,10 +210,10 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
         )}
 
         {loading && (
-          <Card className='border-none shadow-sm'>
+          <Card>
             <CardContent className='p-6'>
               <div className='flex flex-col gap-6 sm:flex-row'>
-                <Skeleton className='size-44 rounded-2xl' />
+                <Skeleton className='size-44 rounded-xl' />
                 <div className='flex-1 space-y-3'>
                   <Skeleton className='h-7 w-48' />
                   <Skeleton className='h-4 w-32' />
@@ -236,7 +226,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
         )}
 
         {!loading && pesanGalat && (
-          <Card className='border-none shadow-sm'>
+          <Card>
             <CardContent className='flex flex-col items-center gap-3 p-10 text-center'>
               <div className='rounded-full bg-destructive/10 p-3'>
                 <AlertTriangle className='size-6 text-destructive' />
@@ -252,10 +242,9 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                     dicoba ulang, jadi tombolnya tidak ditampilkan. */}
                 {idValid && (
                   <Button
-                    variant='secondary'
+                    variant='outline'
                     size='sm'
                     onClick={muatUlang}
-                    className='rounded-xl'
                   >
                     Coba lagi
                   </Button>
@@ -264,7 +253,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                   variant='ghost'
                   size='sm'
                   onClick={() => navigate({ to: '/menu' })}
-                  className='rounded-xl'
                 >
                   Kembali ke daftar
                 </Button>
@@ -276,9 +264,9 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
         {!loading && !pesanGalat && menu && (
           <div className='grid gap-6 md:grid-cols-[260px_1fr]'>
             {/* Foto & status */}
-            <Card className='mx-auto w-full max-w-[260px] border-none shadow-sm md:mx-0 md:max-w-none'>
+            <Card className='mx-auto w-full max-w-[260px] md:mx-0 md:max-w-none'>
               <CardContent className='space-y-4 p-5'>
-                <div className='relative aspect-square w-full overflow-hidden rounded-2xl bg-muted/50'>
+                <div className='relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-muted/40'>
                   {fotoSrc ? (
                     <img
                       src={fotoSrc}
@@ -295,31 +283,31 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                 <div className='flex flex-wrap items-center gap-2'>
                   {menu.aktif ? (
                     <Badge
-                      variant='secondary'
-                      className='rounded-full border-none bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5'
+                      variant='outline'
+                      className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                     >
                       Aktif
                     </Badge>
                   ) : (
                     <Badge
-                      variant='secondary'
-                      className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5'
+                      variant='outline'
+                      className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'
                     >
                       Nonaktif
                     </Badge>
                   )}
                   {habis && (
                     <Badge
-                      variant='secondary'
-                      className='rounded-full border-none bg-destructive/15 text-destructive text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5'
+                      variant='outline'
+                      className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
                     >
                       Habis
                     </Badge>
                   )}
                   {menipis && (
                     <Badge
-                      variant='secondary'
-                      className='rounded-full border-none bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5'
+                      variant='outline'
+                      className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                     >
                       Stok menipis
                     </Badge>
@@ -330,7 +318,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
 
             {/* Rincian */}
             <div className='space-y-6'>
-              <Card className='border-none shadow-sm'>
+              <Card>
                 <CardHeader className='pb-2'>
                   <CardTitle className='text-xl font-bold tracking-tight'>
                     {menu.nama}
@@ -345,7 +333,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                 <CardContent className='space-y-5'>
                   <div className='flex items-center gap-2'>
                     <Wallet className='size-4 text-muted-foreground' />
-                    <span className='text-2xl font-bold tracking-tight'>
+                    <span className='text-2xl font-bold tracking-tight tabular-nums'>
                       {formatRupiah(menu.hargaJual)}
                     </span>
                     <span className='text-sm text-muted-foreground'>
@@ -384,7 +372,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                         <p className='text-xs uppercase tracking-wide text-muted-foreground'>
                           Stok berjalan
                         </p>
-                        <p className='text-sm font-semibold text-foreground'>
+                        <p className='text-sm font-semibold text-foreground tabular-nums'>
                           {formatNumber(menu.stokBerjalan)}
                         </p>
                       </div>
@@ -395,14 +383,14 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                         <p className='text-xs uppercase tracking-wide text-muted-foreground'>
                           Stok minimum
                         </p>
-                        <p className='text-sm font-semibold text-foreground'>
+                        <p className='text-sm font-semibold text-foreground tabular-nums'>
                           {formatNumber(menu.stokMinimum)}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <p className='rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground'>
+                  <p className='rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground'>
                     Data diambil langsung dari server saat halaman dibuka. Stok
                     berubah mengikuti transaksi kasir dan barang masuk.
                   </p>

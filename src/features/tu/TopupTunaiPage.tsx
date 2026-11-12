@@ -3,8 +3,11 @@ import { type KartuSiswaMock } from '@/types/kantin'
 import {
   AlertCircle,
   ArrowRight,
-  RefreshCw,
+  Loader2,
   CheckCircle2,
+  Users,
+  ShieldCheck,
+  Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
@@ -20,9 +23,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
@@ -243,10 +245,8 @@ export function TopupTunaiPage() {
   return (
     <>
       <Header fixed>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Layanan TU' title='Isi Saldo Tunai Siswa' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
@@ -258,37 +258,61 @@ export function TopupTunaiPage() {
         </div>
 
         {/* Ringkasan Status Header Cards */}
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+        <div className='grid gap-4 sm:grid-cols-3'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Siswa Terdaftar
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-400'>
+                <Users className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {students.length} Siswa
-              </h3>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Data akun kartu jajan siswa aktif
+              </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Status Kartu Siswa
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-emerald-600 dark:text-emerald-400'>
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'>
+                <ShieldCheck className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {students.filter((s) => !s.is_blocked).length} Aktif Normal
-              </h3>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Siap melakukan transaksi di kantin
+              </p>
             </CardContent>
           </Card>
 
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardContent className='p-4'>
-              <p className='text-xs font-medium text-muted-foreground'>
-                Batas Saldo Maksimal Siswa
-              </p>
-              <h3 className='mt-0.5 text-xl font-bold text-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Batas Saldo Maksimal
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400'>
+                <Wallet className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {formatRupiah(MAX_SALDO_SEKOLAH)}
-              </h3>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Plafon saldo maksimal per kartu siswa
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -307,7 +331,7 @@ export function TopupTunaiPage() {
 
           {/* Right Column: Topup Form (7 Cols) */}
           <div className='space-y-6 lg:col-span-7'>
-            <Card className='border-0 bg-muted/70 shadow-none dark:bg-muted/30'>
+            <Card>
               <CardHeader className='pb-4'>
                 <CardTitle className='text-lg font-semibold'>
                   Form Pengisian Saldo Tunai
@@ -329,13 +353,9 @@ export function TopupTunaiPage() {
                           key={preset}
                           type='button'
                           variant={
-                            nominalNum === preset ? 'default' : 'secondary'
+                            nominalNum === preset ? 'default' : 'outline'
                           }
-                          className={`h-11 text-xs font-semibold sm:text-sm border-0 shadow-none ${
-                            nominalNum === preset
-                              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                              : 'bg-background hover:bg-background/80 text-foreground'
-                          }`}
+                          className='h-10 text-xs font-semibold tabular-nums sm:text-sm'
                           onClick={() => handleSelectPreset(preset)}
                         >
                           {formatRupiah(preset)}
@@ -353,7 +373,7 @@ export function TopupTunaiPage() {
                       Jumlah Saldo yang Diisi (Rp)
                     </Label>
                     <div className='relative'>
-                      <span className='absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-bold text-muted-foreground'>
+                      <span className='absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-muted-foreground'>
                         Rp
                       </span>
                       <Input
@@ -363,7 +383,7 @@ export function TopupTunaiPage() {
                         placeholder='Masukkan nominal, contoh: 75000'
                         value={nominal}
                         onChange={(e) => setNominal(e.target.value)}
-                        className='h-11 pl-11 font-mono text-base font-bold tracking-wide'
+                        className='pl-10 font-mono text-sm font-semibold tabular-nums'
                       />
                     </div>
                   </div>
@@ -382,7 +402,6 @@ export function TopupTunaiPage() {
                       placeholder='Contoh: Bpk. Hendra (Orang Tua Budi)'
                       value={namaPenyetor}
                       onChange={(e) => setNamaPenyetor(e.target.value)}
-                      className='h-11 text-sm'
                       required
                     />
                   </div>
@@ -390,27 +409,27 @@ export function TopupTunaiPage() {
                   {/* Balance Preview & Validation Warnings */}
                   {currentStudent && (
                     <div className='space-y-3 pt-2'>
-                      <div className='space-y-3 rounded-xl border-0 bg-muted/50 p-4 dark:bg-muted/20'>
+                      <div className='space-y-3 rounded-xl border border-border bg-muted/30 p-4'>
                         <h4 className='text-xs font-bold tracking-wider text-muted-foreground uppercase'>
                           Ringkasan Perubahan Saldo
                         </h4>
                         <div className='space-y-2 text-sm'>
                           <div className='flex justify-between text-muted-foreground'>
                             <span>Saldo saat ini:</span>
-                            <span className='font-mono font-medium text-foreground'>
+                            <span className='font-mono font-medium text-foreground tabular-nums'>
                               {formatRupiah(saldoSaatIni)}
                             </span>
                           </div>
                           <div className='flex justify-between font-medium text-emerald-600 dark:text-emerald-400'>
                             <span>Jumlah Isi Saldo (+):</span>
-                            <span className='font-mono font-bold'>
+                            <span className='font-mono font-bold tabular-nums'>
                               {formatRupiah(nominalNum)}
                             </span>
                           </div>
                           <div className='flex justify-between border-t border-border pt-2 text-base font-bold text-foreground'>
                             <span>Total Saldo Menjadi:</span>
                             <span
-                              className={`font-mono font-bold ${
+                              className={`font-mono font-bold tabular-nums ${
                                 isExceedingLimit
                                   ? 'text-destructive'
                                   : 'text-emerald-600 dark:text-emerald-400'
@@ -424,22 +443,19 @@ export function TopupTunaiPage() {
 
                       {/* Warning: Exceeding Max Balance */}
                       {isExceedingLimit && (
-                        <Alert
-                          variant='destructive'
-                          className='border-0 bg-destructive/15 text-destructive'
-                        >
-                          <AlertCircle className='h-4 w-4 text-destructive' />
+                        <Alert variant='destructive'>
+                          <AlertCircle className='h-4 w-4' />
                           <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
                             Melebihi Batas Saldo Maksimal Sekolah!
                           </AlertTitle>
                           <AlertDescription className='mt-1 text-xs leading-relaxed'>
                             Saldo baru (
-                            <strong>
+                            <strong className='tabular-nums'>
                               {formatRupiah(saldoBaru)}
                             </strong>
                             ) melampaui batas maksimum yang diizinkan sekolah
                             sebesar{' '}
-                            <strong>
+                            <strong className='tabular-nums'>
                               {formatRupiah(MAX_SALDO_SEKOLAH)}
                             </strong>
                             . Kurangi jumlah pengisian saldo.
@@ -449,10 +465,8 @@ export function TopupTunaiPage() {
 
                       {/* Warning: Card Blocked */}
                       {isStudentBlocked && (
-                        <Alert
-                          variant='destructive'
-                          className='border-0 bg-destructive/15 text-destructive'
-                        >
+                        <Alert variant='destructive'>
+                          <AlertCircle className='h-4 w-4' />
                           <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
                             Kartu Siswa Diblokir!
                           </AlertTitle>
@@ -469,11 +483,11 @@ export function TopupTunaiPage() {
                   <Button
                     type='submit'
                     disabled={!isValidSubmit || isSubmitting}
-                    className='h-11 w-full gap-2 bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50'
+                    className='h-10 w-full gap-2 text-sm font-semibold'
                   >
                     {isSubmitting ? (
                       <>
-                        <RefreshCw className='h-4 w-4 animate-spin' />
+                        <Loader2 className='h-4 w-4 animate-spin' />
                         Menyimpan Transaksi...
                       </>
                     ) : (

@@ -244,7 +244,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
   return (
     <form onSubmit={handleSubmit} className='space-y-6'>
       {/* Kartu Header Faktur / Nota */}
-      <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
+      <Card>
         <CardHeader className='pb-3'>
           <CardTitle className='flex items-center gap-2 text-base font-semibold'>
             <FileText className='h-4 w-4 text-primary' />
@@ -267,7 +267,6 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                 type='date'
                 value={tanggal}
                 onChange={(e) => setTanggal(e.target.value)}
-                className='bg-background'
                 required
               />
             </div>
@@ -295,7 +294,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                 placeholder='Contoh: BM-20261006-0001'
                 value={referensiId}
                 onChange={(e) => setReferensiId(e.target.value)}
-                className='bg-background font-mono'
+                className='font-mono'
                 required
               />
             </div>
@@ -314,17 +313,16 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                 placeholder='Contoh: CV Sumber Makmur'
                 value={namaPemasok}
                 onChange={(e) => setNamaPemasok(e.target.value)}
-                className='bg-background'
               />
             </div>
           </div>
 
           {/* Upload Nota Foto */}
-          <div className='mt-4 flex flex-wrap items-center gap-4 border-t border-border/40 pt-4'>
+          <div className='mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-4'>
             <div className='flex items-center gap-2'>
               <Label
                 htmlFor={`${formId}-nota`}
-                className='inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-accent'
+                className='inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-accent'
               >
                 <Upload className='h-3.5 w-3.5 text-primary' />
                 <span>Upload Foto Nota / Faktur</span>
@@ -342,7 +340,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
             </div>
 
             {notaPreview && (
-              <div className='relative inline-flex items-center gap-2 rounded-lg border bg-background p-1'>
+              <div className='relative inline-flex items-center gap-2 rounded-lg border border-border bg-background p-1'>
                 <img
                   src={notaPreview}
                   alt='Preview Nota'
@@ -363,8 +361,8 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
       </Card>
 
       {/* Tabel Multi-Item Restock */}
-      <Card className='border-0 bg-muted/60 dark:bg-muted/25'>
-        <CardHeader className='flex flex-row items-center justify-between pb-3'>
+      <Card className='gap-0 py-0 overflow-hidden'>
+        <CardHeader className='flex flex-row items-center justify-between py-4 border-b border-border'>
           <div>
             <CardTitle className='flex items-center gap-2 text-base font-semibold'>
               <Calculator className='h-4 w-4 text-primary' />
@@ -373,10 +371,10 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
           </div>
           <Button
             type='button'
-            variant='secondary'
+            variant='outline'
             size='sm'
             onClick={handleAddRow}
-            className='flex items-center gap-1.5 text-xs border-0 bg-background hover:bg-accent'
+            className='flex items-center gap-1.5 text-xs'
           >
             <Plus className='h-3.5 w-3.5' />
             Tambah Baris Menu
@@ -386,22 +384,22 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
           <div className='overflow-x-auto'>
             <Table>
               <TableHeader>
-                <TableRow className='bg-muted/90'>
-                  <TableHead className='w-12 text-center text-xs'>No.</TableHead>
-                  <TableHead className='min-w-[240px] text-xs'>
+                <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                  <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                  <TableHead className='min-w-[240px] text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                     Pilih Menu Katalog
                   </TableHead>
-                  <TableHead className='w-32 text-xs'>Qty Masuk</TableHead>
-                  <TableHead className='w-44 text-xs'>
+                  <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Qty Masuk</TableHead>
+                  <TableHead className='w-44 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                     Harga Beli / Unit
                   </TableHead>
-                  <TableHead className='w-36 text-right text-xs'>
+                  <TableHead className='w-36 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                     Subtotal
                   </TableHead>
-                  <TableHead className='min-w-[240px] text-xs'>
+                  <TableHead className='min-w-[240px] text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                     Estimasi HPP Baru
                   </TableHead>
-                  <TableHead className='w-12 text-center text-xs'>
+                  <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                     Aksi
                   </TableHead>
                 </TableRow>
@@ -426,8 +424,8 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                     : null
 
                   return (
-                    <TableRow key={row.rowId} className='hover:bg-muted/20'>
-                      <TableCell className='text-center text-xs font-medium text-muted-foreground'>
+                    <TableRow key={row.rowId} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
+                      <TableCell className='text-center text-xs font-medium text-muted-foreground tabular-nums'>
                         {idx + 1}
                       </TableCell>
 
@@ -439,7 +437,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                             handleRowChange(row.rowId, 'menuId', Number(val))
                           }
                         >
-                          <SelectTrigger className='w-full text-xs bg-background'>
+                          <SelectTrigger className='w-full text-xs h-8'>
                             <SelectValue placeholder='-- Pilih Menu --' />
                           </SelectTrigger>
                           <SelectContent className='max-h-60'>
@@ -451,7 +449,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                               >
                                 <div className='flex w-full items-center justify-between gap-4'>
                                   <span className='font-medium'>{m.nama}</span>
-                                  <span className='text-[11px] text-muted-foreground'>
+                                  <span className='text-[11px] text-muted-foreground tabular-nums'>
                                     Stok: {formatNumber(m.stokBerjalan)}{' '}
                                     {m.satuan}
                                   </span>
@@ -468,7 +466,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                           type='number'
                           min='1'
                           step='1'
-                          className='h-8 text-right text-xs bg-background'
+                          className='h-8 text-right text-xs tabular-nums'
                           value={row.qty || ''}
                           onChange={(e) =>
                             handleRowChange(
@@ -490,7 +488,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                             type='number'
                             min='0'
                             step='100'
-                            className='h-8 pl-8 text-right text-xs bg-background'
+                            className='h-8 pl-8 text-right text-xs tabular-nums'
                             value={row.hargaBeliPerUnit || ''}
                             onChange={(e) =>
                               handleRowChange(
@@ -505,7 +503,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                       </TableCell>
 
                       {/* Subtotal */}
-                      <TableCell className='text-right text-xs font-semibold'>
+                      <TableCell className='text-right text-xs font-semibold tabular-nums'>
                         {formatRupiah(subtotal)}
                       </TableCell>
 
@@ -541,11 +539,11 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
           </div>
 
           {/* Footer Ringkasan Biaya */}
-          <div className='flex flex-col items-center justify-between gap-4 border-t border-border/40 bg-muted/40 p-4 sm:flex-row'>
+          <div className='flex flex-col items-center justify-between gap-4 border-t border-border bg-muted/30 p-4 sm:flex-row'>
             <div className='flex items-center gap-6 text-xs'>
               <div>
                 <span className='text-muted-foreground'>Total Item: </span>
-                <span className='font-bold text-foreground'>
+                <span className='font-bold text-foreground tabular-nums'>
                   {rows.length} barang
                 </span>
               </div>
@@ -553,7 +551,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                 <span className='text-muted-foreground'>
                   Total Jumlah Qty:{' '}
                 </span>
-                <span className='font-bold text-foreground'>
+                <span className='font-bold text-foreground tabular-nums'>
                   {formatNumber(totalQty)} unit
                 </span>
               </div>
@@ -561,7 +559,7 @@ export function BarangMasukForm({ menus, onSuccess }: BarangMasukFormProps) {
                 <span className='text-muted-foreground'>
                   Total Biaya Pembelian:{' '}
                 </span>
-                <span className='text-sm font-bold text-primary sm:text-base'>
+                <span className='text-sm font-bold text-primary sm:text-base tabular-nums'>
                   {formatRupiah(totalBiaya)}
                 </span>
               </div>

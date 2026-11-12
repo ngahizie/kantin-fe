@@ -169,7 +169,7 @@ export const TitikKasirFormModal: React.FC<TitikKasirFormModalProps> = ({
               control={form.control}
               name='aktif'
               render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border bg-muted/20 p-3'>
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border border-border bg-muted/30 p-3'>
                   <div className='space-y-0.5'>
                     <FormLabel className='text-xs font-semibold'>
                       Status Operasional Aktif

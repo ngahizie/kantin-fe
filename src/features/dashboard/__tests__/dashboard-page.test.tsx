@@ -97,9 +97,15 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     // Pastikan getRekonsiliasi terpanggil untuk peran bendahara
     expect(laporanApi.getRekonsiliasi).toHaveBeenCalled()
 
-    // Memverifikasi card rekonsiliasi menampilkan nominal saldo mengendap dan status seimbang
+    // Memverifikasi card rekonsiliasi menampilkan nominal saldo mengendap dan status seimbang dalam satu baris
     await expect.element(screen.getByText(/Rp\s*500\.000/)).toBeInTheDocument()
-    await expect.element(screen.getByText('Seimbang')).toBeInTheDocument()
+    const seimbangLabel = screen.getByText('Seimbang')
+    await expect.element(seimbangLabel).toBeInTheDocument()
+    await expect.element(screen.getByText(/• Selisih Rp\s*0/)).toBeInTheDocument()
+
+    const statusRow = (await seimbangLabel.element()).parentElement
+    expect(statusRow?.className).toContain('whitespace-nowrap')
+    expect(statusRow?.className).not.toContain('flex-wrap')
   })
 
   it('tidak menampilkan Rp 0 atau Seimbang palsu saat getRekonsiliasi gagal dimuat', async () => {

@@ -1,7 +1,5 @@
-import { cn } from '@/lib/utils'
 import { Header } from '@/components/layout/header'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { ProfileDropdown } from '@/components/profile-dropdown'
+import { HeaderActions } from '@/components/layout/header-actions'
 
 export interface BackofficeHeaderProps {
   className?: string
@@ -10,22 +8,14 @@ export interface BackofficeHeaderProps {
 
 export function BackofficeHeader({ className, fixed = true }: BackofficeHeaderProps) {
   return (
-    <Header fixed={fixed} className={cn('shadow-none', className)}>
-      {/* Sisi Kiri: Teks Rata Kiri */}
-      <div className='flex items-center gap-2 overflow-hidden me-auto'>
-        <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
+    <Header fixed={fixed} className={className}>
+      <div className='flex min-w-0 flex-1 items-center gap-2 overflow-hidden'>
+        <h1 className='truncate text-base sm:text-lg font-bold tracking-tight text-foreground'>
           Dashboard Ringkasan
         </h1>
       </div>
 
-      {/* Bagian Kanan: Search, Theme, Profil */}
-      <div className='flex items-center gap-2 sm:gap-3 ms-auto'>
-        {/* Theme Switcher (Dark/Light/System) */}
-        <ThemeSwitch />
-
-        {/* User Profile Dropdown */}
-        <ProfileDropdown />
-      </div>
+      <HeaderActions />
     </Header>
   )
 }

@@ -21,14 +21,14 @@ export function PasswordInput({
   return (
     <div
       className={cn(
-        'relative flex h-9 w-full items-center rounded-md border-0 bg-card dark:bg-input/30 overflow-hidden outline-none',
+        'relative flex h-9 w-full items-center rounded-md border border-border bg-background dark:bg-muted/30 overflow-hidden transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/40',
         className
       )}
     >
       <input
         type={showPassword ? 'text' : 'password'}
         id={id}
-        className='h-full w-full bg-transparent px-3 py-1 pr-10 text-sm outline-none focus:outline-none focus-visible:outline-none border-0 focus:ring-0 focus-visible:ring-0 shadow-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden'
+        className='h-full w-full bg-transparent px-3 py-1 pr-10 text-base md:text-sm outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden'
         ref={ref}
         disabled={disabled}
         {...props}
@@ -38,7 +38,7 @@ export function PasswordInput({
         tabIndex={-1}
         disabled={disabled}
         aria-label={showPassword ? 'Hide password' : 'Show password'}
-        className='absolute right-2.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus:outline-none border-0 bg-transparent cursor-pointer disabled:pointer-events-none disabled:opacity-50'
+        className='absolute right-2.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent cursor-pointer disabled:pointer-events-none disabled:opacity-50'
         onClick={() => setShowPassword((prev) => !prev)}
       >
         {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}

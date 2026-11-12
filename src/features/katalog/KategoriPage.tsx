@@ -3,19 +3,20 @@ import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react'
 import {
   Tag,
   Plus,
-  RefreshCw,
+  Loader2,
   Pencil,
   Trash2,
   AlertTriangle,
   UtensilsCrossed,
+  CheckCircle2,
+  EyeOff,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import {
   Table,
@@ -47,12 +48,6 @@ import {
   subscribeKategoriChanges,
 } from './menu-utils'
 import type { KategoriItem } from './types'
-
-const CARD_OUTLINE_CLASS =
-  'has-outline outline-2 outline-slate-200 dark:outline-slate-800'
-
-const SUMMARY_CARD_CLASS =
-  `${CARD_OUTLINE_CLASS} border-none bg-card rounded-2xl shadow-none`
 
 async function fetchKategoriWithMenuCounts(): Promise<KategoriItem[]> {
   const [kategoris, menus] = await Promise.all([
@@ -344,100 +339,127 @@ export function KategoriPage() {
   return (
     <>
       <Header fixed>
-        <div className='flex items-center gap-2 overflow-hidden me-auto'>
-          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
-            Manajemen Kategori Menu
-          </h1>
-        </div>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Katalog' title='Kategori Menu' />
+        <HeaderActions />
       </Header>
 
-      <Main className='space-y-6 pb-12'>
+      <Main className='space-y-6'>
+        {/* Page Header */}
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Manajemen Kategori Menu
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Kelola kelompok kategori makanan, minuman, dan snack pada kasir POS dan laporan.
+            </p>
+          </div>
+          <Button size='sm' onClick={handleAdd} className='gap-1.5 self-start sm:self-auto font-semibold'>
+            <Plus className='size-4' />
+            Tambah Kategori
+          </Button>
+        </div>
+
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className={SUMMARY_CARD_CLASS}>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Kategori</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Kelompok menu terdaftar</p>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Total Kategori
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'>
+                <Tag className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                {stats.total}
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>Kelompok menu terdaftar</p>
             </CardContent>
           </Card>
 
-          <Card className={SUMMARY_CARD_CLASS}>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori Aktif</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Kategori Aktif
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <CheckCircle2 className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {stats.aktif}
-              </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Aktif di kasir & laporan</p>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>Aktif di kasir & laporan</p>
             </CardContent>
           </Card>
 
-          <Card className={SUMMARY_CARD_CLASS}>
-            <CardContent className='p-4'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Nonaktif</p>
-              <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                Nonaktif
+              </CardTitle>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-muted-foreground'>
+                <EyeOff className='size-4' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
                 {stats.nonaktif}
-              </h3>
-              <p className='mt-0.5 text-xs text-muted-foreground'>Tidak digunakan</p>
+              </div>
+              <p className='mt-1 text-xs text-muted-foreground'>Tidak digunakan</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Search & Table Card */}
-        <Card className={`${CARD_OUTLINE_CLASS} border-0 bg-card shadow-xs`}>
-          <div className='p-4 border-b'>
+        <Card className='gap-0 py-0 overflow-hidden'>
+          <div className='p-4 border-b border-border'>
             <TableToolbar
               searchPlaceholder='Cari nama kategori...'
               searchValue={searchQuery}
               onSearchChange={setSearchQuery}
               isFiltered={Boolean(searchQuery)}
               onReset={() => setSearchQuery('')}
-            >
-              <Button size='sm' onClick={handleAdd} className='h-8 gap-1.5 text-xs shadow-xs'>
-                <Plus className='size-4' />
-                Tambah Kategori
-              </Button>
-            </TableToolbar>
+            />
           </div>
 
           <CardContent className='p-0'>
             <Table>
               <TableHeader>
-                <TableRow className='border-none bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'>
-                  <TableHead className='w-20 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
+                <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                  <TableHead className='w-20 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-6'>
                     No.
                   </TableHead>
-                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>
+                  <TableHead className='text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>
                     Nama Kategori
                   </TableHead>
-                  <TableHead className='w-36 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <TableHead className='w-36 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Menu Terkait
                   </TableHead>
-                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <TableHead className='w-28 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Status
                   </TableHead>
-                  <TableHead className='w-36 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
+                  <TableHead className='w-36 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>
                     Aksi
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow className='border-none'>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
-                      <div className='flex items-center justify-center gap-2'>
-                        <RefreshCw className='size-4 animate-spin' />
-                        <span>Memuat kategori menu...</span>
+                  <TableRow className='hover:bg-transparent border-b-0'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground px-6'>
+                      <div className='flex flex-col items-center justify-center gap-2'>
+                        <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                        <span className='text-xs'>Memuat kategori menu...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredKategori.length === 0 ? (
-                  <TableRow className='border-none'>
-                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground border-none px-6'>
+                  <TableRow className='hover:bg-transparent border-b-0'>
+                    <TableCell colSpan={5} className='h-32 text-center text-muted-foreground px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <Tag className='size-8 text-muted-foreground/40' />
                         <p className='font-semibold text-foreground'>Tidak ada kategori ditemukan</p>
@@ -460,43 +482,43 @@ export function KategoriPage() {
                     return (
                       <TableRow
                         key={kat.id}
-                        className='border-none hover:bg-background/60 dark:hover:bg-background/10 transition-colors'
+                        className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'
                       >
-                        <TableCell className='text-center border-none py-3.5 text-xs font-bold text-muted-foreground tabular-nums ps-6'>
+                        <TableCell className='text-center py-3.5 text-xs font-medium text-muted-foreground tabular-nums ps-6'>
                           {idx + 1}
                         </TableCell>
-                        <TableCell className='border-none py-3.5 font-semibold text-foreground text-sm ps-2'>
+                        <TableCell className='py-3.5 font-semibold text-foreground text-sm ps-2'>
                           <div className='flex items-center gap-2'>
                             <span>{kat.nama}</span>
                           </div>
                         </TableCell>
-                        <TableCell className='text-center border-none py-3.5'>
+                        <TableCell className='text-center py-3.5'>
                           <Badge
-                            variant='secondary'
-                            className='rounded-full border-none bg-background/80 dark:bg-background/20 text-foreground font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none gap-1'
+                            variant='outline'
+                            className='rounded-full border border-border bg-muted/40 text-foreground font-medium text-xs px-2.5 py-0.5 gap-1'
                           >
                             <UtensilsCrossed className='size-3 text-muted-foreground' />
                             <span className='tabular-nums'>{itemQty} menu</span>
                           </Badge>
                         </TableCell>
-                        <TableCell className='text-center border-none py-3.5'>
+                        <TableCell className='text-center py-3.5'>
                           {isAktif ? (
                             <Badge
-                              variant='secondary'
-                              className='rounded-full border-none bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                              variant='outline'
+                              className='rounded-full border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-medium px-2.5 py-0.5'
                             >
                               Aktif
                             </Badge>
                           ) : (
                             <Badge
-                              variant='secondary'
-                              className='rounded-full border-none bg-background/80 dark:bg-background/20 text-muted-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none'
+                              variant='outline'
+                              className='rounded-full border-border bg-muted/50 text-muted-foreground text-xs font-medium px-2.5 py-0.5'
                             >
                               Nonaktif
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className='text-right border-none py-3.5 pe-6'>
+                        <TableCell className='text-right py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1.5'>
                             <Switch
                               checked={isAktif}
@@ -504,12 +526,12 @@ export function KategoriPage() {
                               onCheckedChange={() => void handleToggleAktif(kat)}
                               aria-label={isAktif ? `Nonaktifkan ${kat.nama}` : `Aktifkan ${kat.nama}`}
                               title={isAktif ? 'Nonaktifkan Kategori' : 'Aktifkan Kategori'}
-                              className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
+                              className='me-1 border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
                             />
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-background/80 dark:hover:bg-background/20 shadow-none'
+                              className='size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted'
                               onClick={() => handleEdit(kat)}
                               title='Ubah Kategori'
                             >
@@ -520,7 +542,7 @@ export function KategoriPage() {
                                 variant='ghost'
                                 size='icon'
                                 disabled={isDeleteDisabled}
-                                className='size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 shadow-none'
+                                className='size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40'
                                 onClick={() => handleDeleteClick(kat)}
                                 aria-label={
                                   isDeleteDisabled
@@ -553,10 +575,10 @@ export function KategoriPage() {
 
       {/* Alert Dialog Konfirmasi Hapus Kategori */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className='border-none rounded-2xl shadow-none max-w-md bg-card'>
+        <AlertDialogContent className='max-w-md'>
           <AlertDialogHeader>
             <div className='flex items-center gap-2.5'>
-              <div className='flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive'>
+              <div className='flex size-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
                 <AlertTriangle className='size-5' />
               </div>
               <AlertDialogTitle className='text-lg font-bold'>
@@ -570,7 +592,7 @@ export function KategoriPage() {
                   <strong className='text-foreground'>{activeDeleteTarget?.nama}</strong>?
                 </p>
                 {activeDeleteTarget && (activeDeleteTarget.jumlahItem ?? 0) > 0 ? (
-                  <div className='flex items-start gap-2.5 rounded-xl border-none bg-destructive/10 p-3 text-xs text-destructive shadow-none'>
+                  <div className='flex items-start gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive'>
                     <AlertTriangle className='size-4 shrink-0 mt-0.5' />
                     <span>
                       Kategori ini masih memiliki{' '}
@@ -587,10 +609,7 @@ export function KategoriPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
-            <AlertDialogCancel
-              disabled={isDeleting}
-              className='border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-            >
+            <AlertDialogCancel disabled={isDeleting}>
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
@@ -599,7 +618,7 @@ export function KategoriPage() {
                 void confirmDelete()
               }}
               disabled={isDeleting || Boolean(getKategoriDeleteBlockedReason(activeDeleteTarget))}
-              className='border-none rounded-xl shadow-none bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
               {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>

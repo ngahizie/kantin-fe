@@ -42,12 +42,12 @@ export function HppSimulationBadge({
                       ? 'secondary'
                       : 'outline'
                 }
-                className='flex items-center gap-1 px-2 py-0.5 text-xs font-medium'
+                className='flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums'
               >
                 {selisihHpp > 0 ? (
-                  <TrendingUp className='h-3 w-3 text-emerald-400' />
+                  <TrendingUp className='h-3 w-3 text-emerald-500 dark:text-emerald-400' />
                 ) : selisihHpp < 0 ? (
-                  <TrendingDown className='h-3 w-3 text-blue-400' />
+                  <TrendingDown className='h-3 w-3 text-blue-500 dark:text-blue-400' />
                 ) : (
                   <Minus className='h-3 w-3 text-muted-foreground' />
                 )}
@@ -57,26 +57,26 @@ export function HppSimulationBadge({
             </div>
           </TooltipTrigger>
           <TooltipContent className='max-w-xs space-y-1.5 p-3 text-xs'>
-            <p className='border-b pb-1 text-sm font-semibold'>
+            <p className='border-b border-border pb-1 text-sm font-semibold'>
               Estimasi Dampak Restock
             </p>
             <div className='grid grid-cols-2 gap-x-2 gap-y-1'>
               <span className='text-muted-foreground'>Stok Berjalan:</span>
-              <span className='text-right font-medium'>
+              <span className='text-right font-medium tabular-nums'>
                 {formatNumber(stokSebelum)} &rarr; {formatNumber(stokSesudah)}{' '}
                 unit
               </span>
               <span className='text-muted-foreground'>HPP Berjalan:</span>
-              <span className='text-right font-medium'>
+              <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(hppSebelum)} &rarr; {formatRupiah(hppSesudah)}
               </span>
               <span className='text-muted-foreground'>Perubahan HPP:</span>
               <span
-                className={`text-right font-semibold ${
+                className={`text-right font-semibold tabular-nums ${
                   selisihHpp > 0
-                    ? 'text-emerald-500'
+                    ? 'text-emerald-600 dark:text-emerald-400'
                     : selisihHpp < 0
-                      ? 'text-blue-500'
+                      ? 'text-blue-600 dark:text-blue-400'
                       : 'text-muted-foreground'
                 }`}
               >
@@ -85,11 +85,11 @@ export function HppSimulationBadge({
                   : formatRupiah(selisihHpp)}
               </span>
               <span className='text-muted-foreground'>Biaya Masuk:</span>
-              <span className='text-right font-medium'>
+              <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(totalBiayaMasuk)}
               </span>
               <span className='text-muted-foreground'>Nilai Persediaan:</span>
-              <span className='text-right font-medium'>
+              <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(totalNilaiSesudah)}
               </span>
             </div>
@@ -100,10 +100,10 @@ export function HppSimulationBadge({
   }
 
   return (
-    <div className='space-y-1.5 rounded-lg border bg-card/60 p-2.5 text-xs'>
+    <div className='space-y-1.5 rounded-xl border border-border bg-card/60 p-2.5 text-xs'>
       <div className='flex items-center justify-between gap-2'>
         <span className='text-muted-foreground'>Stok Baru:</span>
-        <span className='font-semibold text-foreground'>
+        <span className='font-semibold text-foreground tabular-nums'>
           {formatNumber(stokSebelum)} &rarr;{' '}
           <span className='font-bold text-primary'>
             {formatNumber(stokSesudah)} unit
@@ -112,7 +112,7 @@ export function HppSimulationBadge({
       </div>
       <div className='flex items-center justify-between gap-2'>
         <span className='text-muted-foreground'>Estimasi HPP:</span>
-        <span className='flex items-center gap-1 font-semibold text-foreground'>
+        <span className='flex items-center gap-1 font-semibold text-foreground tabular-nums'>
           {formatRupiah(hppSebelum)} &rarr;{' '}
           <span className='font-bold text-primary'>
             {formatRupiah(hppSesudah)}
@@ -120,7 +120,7 @@ export function HppSimulationBadge({
           {selisihHpp !== 0 && (
             <span
               className={`text-[11px] font-normal ${
-                selisihHpp > 0 ? 'text-emerald-500' : 'text-blue-500'
+                selisihHpp > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'
               }`}
             >
               (

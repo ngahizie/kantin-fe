@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
-import { callTypes, roles } from '../data/data'
+import { callTypes, roles, statusLabels } from '../data/data'
 import { type User } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
 
@@ -18,7 +18,7 @@ export const usersColumns: ColumnDef<User>[] = [
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label='Select all'
+        aria-label='Pilih semua'
         className='translate-y-0.5'
       />
     ),
@@ -29,7 +29,7 @@ export const usersColumns: ColumnDef<User>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label='Select row'
+        aria-label='Pilih baris'
         className='translate-y-0.5'
       />
     ),
@@ -45,7 +45,7 @@ export const usersColumns: ColumnDef<User>[] = [
       const pageIndex = table.getState().pagination.pageIndex
       const pageSize = table.getState().pagination.pageSize
       return (
-        <span className='font-mono text-xs text-muted-foreground text-center block px-2'>
+        <span className='font-mono text-xs text-muted-foreground text-center block px-2 tabular-nums'>
           {pageIndex * pageSize + row.index + 1}
         </span>
       )
@@ -71,7 +71,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     id: 'fullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title='Nama' />
     ),
     cell: ({ row }) => {
       const { firstName, lastName } = row.original
@@ -92,9 +92,9 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'phoneNumber',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone Number' />
+      <DataTableColumnHeader column={column} title='No. Telepon' />
     ),
-    cell: ({ row }) => <div>{row.getValue('phoneNumber')}</div>,
+    cell: ({ row }) => <div className='tabular-nums'>{row.getValue('phoneNumber')}</div>,
     enableSorting: false,
   },
   {
@@ -107,8 +107,11 @@ export const usersColumns: ColumnDef<User>[] = [
       const badgeColor = callTypes.get(status)
       return (
         <div className='flex space-x-2'>
-          <Badge variant='outline' className={cn('capitalize', badgeColor)}>
-            {row.getValue('status')}
+          <Badge
+            variant='outline'
+            className={cn('rounded-full border px-2.5 py-0.5 text-xs font-medium', badgeColor)}
+          >
+            {statusLabels[status] ?? status}
           </Badge>
         </div>
       )
@@ -122,7 +125,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'role',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Role' />
+      <DataTableColumnHeader column={column} title='Peran' />
     ),
     cell: ({ row }) => {
       const { role } = row.original
@@ -137,7 +140,7 @@ export const usersColumns: ColumnDef<User>[] = [
           {userType.icon && (
             <userType.icon size={16} className='text-muted-foreground' />
           )}
-          <span className='text-sm capitalize'>{row.getValue('role')}</span>
+          <span className='text-sm'>{userType.label}</span>
         </div>
       )
     },

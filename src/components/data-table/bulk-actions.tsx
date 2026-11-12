@@ -40,7 +40,7 @@ export function DataTableBulkActions<TData>({
   // Announce selection changes to screen readers
   useEffect(() => {
     if (selectedCount > 0) {
-      const message = `${selectedCount} ${entityName}${selectedCount > 1 ? 's' : ''} selected. Bulk actions toolbar is available.`
+      const message = `${selectedCount} ${entityName} dipilih. Bilah aksi massal tersedia.`
 
       // Use queueMicrotask to defer state update and avoid cascading renders
       queueMicrotask(() => {
@@ -138,19 +138,16 @@ export function DataTableBulkActions<TData>({
       <div
         ref={toolbarRef}
         role='toolbar'
-        aria-label={`Bulk actions for ${selectedCount} selected ${entityName}${selectedCount > 1 ? 's' : ''}`}
+        aria-label={`Aksi massal untuk ${selectedCount} ${entityName} terpilih`}
         aria-describedby='bulk-actions-description'
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className={cn(
-          'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl',
-          'outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0'
-        )}
+        className='fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl outline-none'
       >
         <div
           className={cn(
             'p-2',
-            'rounded-xl border',
+            'rounded-xl border border-border shadow-lg',
             'bg-background/95 backdrop-blur-lg supports-backdrop-filter:bg-background/60',
             'flex items-center gap-x-2'
           )}
@@ -162,15 +159,15 @@ export function DataTableBulkActions<TData>({
                 size='icon'
                 onClick={handleClearSelection}
                 className='size-6 rounded-full'
-                aria-label='Clear selection'
-                title='Clear selection (Escape)'
+                aria-label='Hapus pilihan'
+                title='Hapus pilihan (Esc)'
               >
                 <X />
-                <span className='sr-only'>Clear selection</span>
+                <span className='sr-only'>Hapus pilihan</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Clear selection (Escape)</p>
+              <p>Hapus pilihan (Esc)</p>
             </TooltipContent>
           </Tooltip>
 
@@ -186,16 +183,12 @@ export function DataTableBulkActions<TData>({
           >
             <Badge
               variant='default'
-              className='min-w-8 rounded-lg'
-              aria-label={`${selectedCount} selected`}
+              className='min-w-8 rounded-lg tabular-nums'
+              aria-label={`${selectedCount} terpilih`}
             >
               {selectedCount}
             </Badge>{' '}
-            <span className='hidden sm:inline'>
-              {entityName}
-              {selectedCount > 1 ? 's' : ''}
-            </span>{' '}
-            selected
+            <span className='hidden sm:inline'>{entityName}</span> dipilih
           </div>
 
           <Separator

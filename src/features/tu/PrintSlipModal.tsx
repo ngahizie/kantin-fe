@@ -60,7 +60,7 @@ export function PrintSlipModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-md overflow-hidden border-0 p-0 shadow-lg sm:rounded-2xl'>
+      <DialogContent className='max-w-md overflow-hidden p-0'>
         {/* CSS terisolasi untuk cetak thermal print 80mm & PDF */}
         <style>{`
           @media print {
@@ -146,28 +146,26 @@ export function PrintSlipModal({
         `}</style>
 
         {/* Modal Header */}
-        <DialogHeader className='no-print bg-emerald-600 p-5 text-white dark:bg-emerald-700'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <div className='rounded-full bg-white/20 p-2 text-white'>
-                <CheckCircle2 className='h-6 w-6' />
-              </div>
-              <div>
-                <DialogTitle className='flex items-center gap-1.5 text-lg font-bold text-white'>
-                  Pengisian Saldo Berhasil!
-                </DialogTitle>
-                <p className='mt-0.5 text-xs text-emerald-100'>
-                  Saldo siswa telah ditambahkan ke sistem
-                </p>
-              </div>
+        <DialogHeader className='no-print border-b border-border bg-muted/30 px-6 py-4'>
+          <div className='flex items-center gap-3'>
+            <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'>
+              <CheckCircle2 className='h-5 w-5' />
+            </div>
+            <div className='text-left'>
+              <DialogTitle className='text-base font-semibold text-foreground'>
+                Pengisian Saldo Berhasil!
+              </DialogTitle>
+              <p className='mt-0.5 text-xs text-muted-foreground'>
+                Saldo siswa telah ditambahkan ke sistem
+              </p>
             </div>
           </div>
         </DialogHeader>
 
         {/* Outer Receipt Container (Screen & Print Wrapper) */}
-        <div className='no-print-bg flex justify-center bg-muted/40 p-5 dark:bg-background'>
+        <div className='no-print-bg flex justify-center bg-muted/30 p-5'>
           {/* Authentic Printable Thermal Receipt Slip */}
-          <div className='printable-slip w-full space-y-4 rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none'>
+          <div className='printable-slip w-full space-y-4 rounded-xl border border-border bg-white p-5 font-mono text-xs text-slate-900 shadow-xs'>
             {/* Header Nota */}
             <div className='print-border-dashed space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center'>
               <div className='flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase'>
@@ -279,19 +277,18 @@ export function PrintSlipModal({
         </div>
 
         {/* Modal Footer (Hidden when printing) */}
-        <DialogFooter className='no-print flex-row items-center justify-end gap-2 border-0 bg-card p-4'>
+        <DialogFooter className='no-print flex-row items-center justify-end gap-2 border-t border-border bg-card px-6 py-4'>
           <Button
             type='button'
-            variant='ghost'
+            variant='outline'
             onClick={() => onOpenChange(false)}
-            className='h-9 border-0 text-xs text-muted-foreground shadow-none hover:bg-muted hover:text-foreground outline-none'
           >
             Selesai
           </Button>
           <Button
             type='button'
             onClick={handlePrint}
-            className='h-9 gap-2 border-0 bg-emerald-600 text-xs font-semibold text-white shadow-none hover:bg-emerald-700'
+            className='gap-2'
           >
             <Printer className='h-4 w-4' />
             Cetak Bukti Pembayaran

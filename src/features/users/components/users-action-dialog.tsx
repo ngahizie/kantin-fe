@@ -7,6 +7,7 @@ import { showSubmittedData } from '@/lib/show-submitted-data'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -29,15 +30,15 @@ import { type User } from '../data/schema'
 
 const formSchema = z
   .object({
-    firstName: z.string().min(1, 'First Name is required.'),
-    lastName: z.string().min(1, 'Last Name is required.'),
-    username: z.string().min(1, 'Username is required.'),
-    phoneNumber: z.string().min(1, 'Phone number is required.'),
+    firstName: z.string().min(1, 'Nama Depan wajib diisi.'),
+    lastName: z.string().min(1, 'Nama Belakang wajib diisi.'),
+    username: z.string().min(1, 'Username wajib diisi.'),
+    phoneNumber: z.string().min(1, 'Nomor telepon wajib diisi.'),
     email: z.email({
-      error: (iss) => (iss.input === '' ? 'Email is required.' : undefined),
+      error: (iss) => (iss.input === '' ? 'Email wajib diisi.' : undefined),
     }),
     password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, 'Role is required.'),
+    role: z.string().min(1, 'Peran wajib dipilih.'),
     confirmPassword: z.string().transform((pwd) => pwd.trim()),
     isEdit: z.boolean(),
   })
@@ -47,7 +48,7 @@ const formSchema = z
       return data.password.length > 0
     },
     {
-      message: 'Password is required.',
+      message: 'Kata sandi wajib diisi.',
       path: ['password'],
     }
   )
@@ -57,7 +58,7 @@ const formSchema = z
       return password.length >= 8
     },
     {
-      message: 'Password must be at least 8 characters long.',
+      message: 'Kata sandi minimal 8 karakter.',
       path: ['password'],
     }
   )
@@ -67,7 +68,7 @@ const formSchema = z
       return /[a-z]/.test(password)
     },
     {
-      message: 'Password must contain at least one lowercase letter.',
+      message: 'Kata sandi harus mengandung minimal satu huruf kecil.',
       path: ['password'],
     }
   )
@@ -77,7 +78,7 @@ const formSchema = z
       return /\d/.test(password)
     },
     {
-      message: 'Password must contain at least one number.',
+      message: 'Kata sandi harus mengandung minimal satu angka.',
       path: ['password'],
     }
   )
@@ -87,7 +88,7 @@ const formSchema = z
       return password === confirmPassword
     },
     {
-      message: "Passwords don't match.",
+      message: 'Konfirmasi kata sandi tidak cocok.',
       path: ['confirmPassword'],
     }
   )
@@ -145,10 +146,12 @@ export function UsersActionDialog({
     >
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
-          <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Ubah Pengguna' : 'Tambah Pengguna Baru'}</DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the user here. ' : 'Create new user here. '}
-            Click save when you&apos;re done.
+            {isEdit
+              ? 'Perbarui data pengguna di sini. '
+              : 'Buat pengguna baru di sini. '}
+            Klik simpan setelah selesai.
           </DialogDescription>
         </DialogHeader>
         <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
@@ -164,11 +167,11 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      First Name
+                      Nama Depan
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='John'
+                        placeholder='Budi'
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -184,11 +187,11 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Last Name
+                      Nama Belakang
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Doe'
+                        placeholder='Santoso'
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -208,7 +211,7 @@ export function UsersActionDialog({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john_doe'
+                        placeholder='budi_santoso'
                         className='col-span-4'
                         {...field}
                       />
@@ -225,7 +228,7 @@ export function UsersActionDialog({
                     <FormLabel className='col-span-2 text-end'>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john.doe@gmail.com'
+                        placeholder='budi.santoso@skoolia.id'
                         className='col-span-4'
                         {...field}
                       />
@@ -240,12 +243,12 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Phone Number
+                      No. Telepon
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='+123456789'
-                        className='col-span-4'
+                        placeholder='+628123456789'
+                        className='col-span-4 tabular-nums'
                         {...field}
                       />
                     </FormControl>
@@ -258,11 +261,11 @@ export function UsersActionDialog({
                 name='role'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Role</FormLabel>
+                    <FormLabel className='col-span-2 text-end'>Peran</FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
                       onValueChange={field.onChange}
-                      placeholder='Select a role'
+                      placeholder='Pilih peran'
                       className='col-span-4'
                       items={roles.map(({ label, value }) => ({
                         label,
@@ -279,11 +282,11 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Password
+                      Kata Sandi
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
-                        placeholder='e.g., S3cur3P@ssw0rd'
+                        placeholder='contoh: S3cur3P@ssw0rd'
                         className='col-span-4'
                         {...field}
                       />
@@ -298,12 +301,12 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Confirm Password
+                      Konfirmasi Kata Sandi
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
                         disabled={!isPasswordTouched}
-                        placeholder='e.g., S3cur3P@ssw0rd'
+                        placeholder='contoh: S3cur3P@ssw0rd'
                         className='col-span-4'
                         {...field}
                       />
@@ -315,9 +318,14 @@ export function UsersActionDialog({
             </form>
           </Form>
         </div>
-        <DialogFooter>
+        <DialogFooter className='gap-2'>
+          <DialogClose asChild>
+            <Button type='button' variant='outline'>
+              Batal
+            </Button>
+          </DialogClose>
           <Button type='submit' form='user-form'>
-            Save changes
+            Simpan Perubahan
           </Button>
         </DialogFooter>
       </DialogContent>

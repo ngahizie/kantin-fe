@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   EyeOff,
   Plus,
-  RefreshCw,
+  Loader2,
   Pencil,
   Trash2,
   AlertTriangle,
@@ -17,9 +17,8 @@ import {
   Barcode,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,30 +58,27 @@ import type { MenuItem, KategoriItem } from './types'
 
 const PAGE_SIZE = 10
 
-const CARD_SURFACE_CLASS =
-  'has-border border-2 border-slate-200 dark:border-slate-800 bg-card shadow-sm'
-
 const BADGE_TONE_CLASSES = {
   kategori:
-    'has-border border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300',
+    'border-border bg-muted/50 text-foreground',
   habis:
-    'has-border border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
+    'border-rose-200 dark:border-rose-900/60 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
   menipis:
-    'has-border border border-amber-200 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+    'border-amber-200 dark:border-amber-900/60 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
   aktif:
-    'has-border border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+    'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
   nonaktif:
-    'has-border border border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-400',
+    'border-border bg-muted/50 text-muted-foreground',
 } as const
 
 const SUMMARY_ICON_CLASSES = {
-  sky: 'has-border border border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300',
+  sky: 'border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300',
   emerald:
-    'has-border border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
+    'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300',
   amber:
-    'has-border border border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
+    'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300',
   slate:
-    'has-border border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400',
+    'border border-border bg-muted/50 text-muted-foreground',
 } as const
 
 async function fetchKatalogData() {
@@ -447,26 +443,35 @@ export function MenuPage() {
   return (
     <>
       <Header fixed>
-        <div className='flex items-center gap-2 overflow-hidden me-auto'>
-          <h1 className='text-base sm:text-lg font-bold tracking-tight text-foreground'>
-            Katalog Menu Kantin
-          </h1>
-        </div>
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
+        <HeaderBreadcrumb section='Katalog' title='Daftar Menu' />
+        <HeaderActions />
       </Header>
 
-      <Main className='space-y-6 pb-12'>
+      <Main className='space-y-6'>
+        {/* Page Header */}
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Katalog Menu Kantin
+            </h1>
+            <p className='text-sm text-muted-foreground'>
+              Kelola daftar menu, harga jual, kode barcode, dan status ketersediaan di kasir POS.
+            </p>
+          </div>
+          <Button size='sm' onClick={handleAdd} className='gap-1.5 self-start sm:self-auto font-semibold'>
+            <Plus className='size-4' />
+            Tambah Menu
+          </Button>
+        </div>
+
         {/* Ringkasan Widgets */}
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-          <Card className={CARD_SURFACE_CLASS}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Total Menu
               </CardTitle>
-              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.sky}`}>
+              <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.sky}`}>
                 <UtensilsCrossed className='size-4' />
               </div>
             </CardHeader>
@@ -483,12 +488,12 @@ export function MenuPage() {
             </CardContent>
           </Card>
 
-          <Card className={CARD_SURFACE_CLASS}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Menu Aktif
               </CardTitle>
-              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.emerald}`}>
+              <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.emerald}`}>
                 <CheckCircle2 className='size-4' />
               </div>
             </CardHeader>
@@ -505,13 +510,13 @@ export function MenuPage() {
             </CardContent>
           </Card>
 
-          <Card className={CARD_SURFACE_CLASS}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Stok Menipis / Habis
               </CardTitle>
               <div
-                className={`flex size-9 items-center justify-center rounded-lg ${
+                className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
                   stats.stokMenipis === 0
                     ? SUMMARY_ICON_CLASSES.emerald
                     : SUMMARY_ICON_CLASSES.amber
@@ -541,12 +546,12 @@ export function MenuPage() {
             </CardContent>
           </Card>
 
-          <Card className={CARD_SURFACE_CLASS}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
                 Menu Nonaktif
               </CardTitle>
-              <div className={`flex size-9 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.slate}`}>
+              <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${SUMMARY_ICON_CLASSES.slate}`}>
                 <EyeOff className='size-4' />
               </div>
             </CardHeader>
@@ -555,7 +560,7 @@ export function MenuPage() {
                 {stats.nonaktif}
               </div>
               <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1'>
-                <span className='font-semibold text-slate-600 dark:text-slate-400'>
+                <span className='font-semibold text-muted-foreground'>
                   Arsip
                 </span>
                 <span>• Disembunyikan dari POS</span>
@@ -565,8 +570,8 @@ export function MenuPage() {
         </div>
 
         {/* Filter Controls & Search */}
-        <Card className={`${CARD_SURFACE_CLASS} gap-0 py-0 overflow-hidden`}>
-          <div className='p-4 has-border border-b border-slate-200 dark:border-slate-800'>
+        <Card className='gap-0 py-0 overflow-hidden'>
+          <div className='p-4 border-b border-border'>
             <TableToolbar
               searchPlaceholder='Cari nama menu atau barcode...'
               searchValue={searchQuery}
@@ -587,6 +592,7 @@ export function MenuPage() {
                     setCurrentPage(1)
                   },
                   isSingleSelect: true,
+                  triggerClassName: 'w-[175px]',
                 },
                 {
                   title: 'Status',
@@ -602,6 +608,7 @@ export function MenuPage() {
                   },
                   isSingleSelect: true,
                   showSearch: false,
+                  triggerClassName: 'w-[160px]',
                 },
               ]}
               isFiltered={Boolean(searchQuery || selectedKategoriId !== 'all' || selectedStatus !== 'all')}
@@ -611,43 +618,38 @@ export function MenuPage() {
                 setSelectedStatus('all')
                 setCurrentPage(1)
               }}
-            >
-              <Button size='sm' onClick={handleAdd} className='h-8 gap-1.5 text-xs shadow-xs'>
-                <Plus className='size-4' />
-                Tambah Menu
-              </Button>
-            </TableToolbar>
+            />
           </div>
 
-          <CardContent className='p-0 overflow-x-auto'>
-            <Table>
+          <CardContent className='p-0 min-h-[460px]'>
+            <Table className='table-fixed w-full min-w-[1160px]'>
               <TableHeader>
-                <TableRow className='bg-muted/40 hover:bg-muted/40 has-border border-b border-slate-200 dark:border-slate-800'>
-                  <TableHead className='w-12 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-4'>No.</TableHead>
-                  <TableHead className='w-16 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Foto</TableHead>
-                  <TableHead className='border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>Nama Menu</TableHead>
-                  <TableHead className='w-36 border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori</TableHead>
-                  <TableHead className='w-32 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Harga Jual</TableHead>
-                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Berjalan</TableHead>
-                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Satuan</TableHead>
-                  <TableHead className='w-28 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Min.</TableHead>
-                  <TableHead className='w-24 text-center border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</TableHead>
-                  <TableHead className='w-36 text-right border-none text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>Aksi</TableHead>
+                <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                  <TableHead className='w-14 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-4'>No.</TableHead>
+                  <TableHead className='w-16 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Foto</TableHead>
+                  <TableHead className='text-xs font-semibold text-muted-foreground uppercase tracking-wider ps-2'>Nama Menu</TableHead>
+                  <TableHead className='w-36 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori</TableHead>
+                  <TableHead className='w-32 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Harga Jual</TableHead>
+                  <TableHead className='w-28 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Berjalan</TableHead>
+                  <TableHead className='w-24 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Satuan</TableHead>
+                  <TableHead className='w-24 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Stok Min.</TableHead>
+                  <TableHead className='w-24 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</TableHead>
+                  <TableHead className='w-48 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider pe-6'>Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow className='border-none'>
-                    <TableCell colSpan={10} className='h-40 text-center text-muted-foreground border-none px-6'>
-                      <div className='flex items-center justify-center gap-2'>
-                        <RefreshCw className='size-4 animate-spin' />
-                        <span>Memuat data katalog menu...</span>
+                  <TableRow className='hover:bg-transparent border-b-0'>
+                    <TableCell colSpan={10} className='h-[420px] text-center text-muted-foreground px-6'>
+                      <div className='flex flex-col items-center justify-center gap-2'>
+                        <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                        <span className='text-xs'>Memuat data katalog menu...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredMenu.length === 0 ? (
-                  <TableRow className='border-none'>
-                    <TableCell colSpan={10} className='h-32 text-center text-muted-foreground border-none px-6'>
+                  <TableRow className='hover:bg-transparent border-b-0'>
+                    <TableCell colSpan={10} className='h-[420px] text-center text-muted-foreground px-6'>
                       <div className='flex flex-col items-center justify-center gap-1.5'>
                         <UtensilsCrossed className='size-8 text-muted-foreground/40' />
                         <p className='font-semibold text-foreground'>Tidak ada menu ditemukan</p>
@@ -669,14 +671,14 @@ export function MenuPage() {
                     return (
                       <TableRow
                         key={item.id}
-                        className='hover:bg-muted/30 has-border border-b border-slate-100 dark:border-slate-800/60 transition-colors'
+                        className='hover:bg-muted/30 border-b border-border last:border-b-0 transition-colors'
                       >
-                        <TableCell className='text-center font-mono text-xs text-muted-foreground border-none py-3.5 ps-4'>
+                        <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums py-3.5 ps-4'>
                           {(safeCurrentPage - 1) * PAGE_SIZE + idx + 1}
                         </TableCell>
                         {/* Foto Thumbnail */}
-                        <TableCell className='text-center border-none py-3.5'>
-                          <div className='size-11 rounded-xl has-border border border-slate-200 dark:border-slate-800 bg-muted/40 overflow-hidden flex items-center justify-center mx-auto shrink-0 shadow-none'>
+                        <TableCell className='text-center py-3.5'>
+                          <div className='size-11 rounded-xl border border-border bg-muted/40 overflow-hidden flex items-center justify-center mx-auto shrink-0'>
                             {item.fotoUrl ? (
                               <img
                                 src={katalogApi.getImageUrl(item.fotoUrl)}
@@ -694,33 +696,38 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Nama Menu */}
-                        <TableCell className='border-none py-3.5 ps-2'>
-                          <div className='font-semibold text-foreground text-sm'>{item.nama}</div>
+                        <TableCell className='py-3.5 ps-2 overflow-hidden'>
+                          <div className='font-semibold text-foreground text-sm truncate' title={item.nama}>
+                            {item.nama}
+                          </div>
                           {item.kodeBarcode && (
-                            <div className='mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono tabular-nums'>
+                            <div className='mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground font-mono tabular-nums'>
                               <Barcode className='size-3 shrink-0 opacity-70' />
-                              <span>{item.kodeBarcode}</span>
+                              <span className='truncate' title={item.kodeBarcode}>
+                                {item.kodeBarcode}
+                              </span>
                             </div>
                           )}
                         </TableCell>
 
                         {/* Kategori */}
-                        <TableCell className='border-none py-3.5'>
+                        <TableCell className='py-3.5 overflow-hidden'>
                           <Badge
                             variant='outline'
-                            className={`rounded-full font-semibold text-[10px] uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.kategori}`}
+                            title={kategoriNama}
+                            className={`max-w-full overflow-hidden rounded-full font-medium text-xs px-2.5 py-0.5 ${BADGE_TONE_CLASSES.kategori}`}
                           >
-                            {kategoriNama}
+                            <span className='truncate'>{kategoriNama}</span>
                           </Badge>
                         </TableCell>
 
                         {/* Harga Jual */}
-                        <TableCell className='text-right font-semibold text-foreground border-none py-3.5 tabular-nums text-sm'>
+                        <TableCell className='text-right font-semibold text-foreground py-3.5 tabular-nums text-sm'>
                           {formatRupiah(item.hargaJual)}
                         </TableCell>
 
                         {/* Stok Berjalan */}
-                        <TableCell className='text-center border-none py-3.5'>
+                        <TableCell className='text-center py-3.5'>
                           <div className='flex flex-col items-center gap-0.5'>
                             <span
                               className={`font-semibold text-sm tabular-nums ${
@@ -736,14 +743,14 @@ export function MenuPage() {
                             {isHabis ? (
                               <Badge
                                 variant='outline'
-                                className={`rounded-full text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none ${BADGE_TONE_CLASSES.habis}`}
+                                className={`rounded-full text-[10px] px-2 py-0 font-medium uppercase tracking-wide ${BADGE_TONE_CLASSES.habis}`}
                               >
                                 Habis
                               </Badge>
                             ) : isStokMenipis ? (
                               <Badge
                                 variant='outline'
-                                className={`rounded-full text-[9px] px-2 py-0.5 font-semibold uppercase tracking-wide shadow-none ${BADGE_TONE_CLASSES.menipis}`}
+                                className={`rounded-full text-[10px] px-2 py-0 font-medium uppercase tracking-wide ${BADGE_TONE_CLASSES.menipis}`}
                               >
                                 Menipis
                               </Badge>
@@ -752,28 +759,28 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Satuan */}
-                        <TableCell className='text-center text-xs font-semibold text-muted-foreground uppercase border-none py-3.5'>
+                        <TableCell className='text-center text-xs font-semibold text-muted-foreground uppercase py-3.5'>
                           {item.satuan || 'PCS'}
                         </TableCell>
 
                         {/* Stok Minimum */}
-                        <TableCell className='text-center text-xs text-muted-foreground border-none py-3.5 tabular-nums'>
+                        <TableCell className='text-center text-xs text-muted-foreground py-3.5 tabular-nums'>
                           {formatNumber(item.stokMinimum)}
                         </TableCell>
 
                         {/* Status Aktif */}
-                        <TableCell className='text-center border-none py-3.5'>
+                        <TableCell className='text-center py-3.5'>
                           {item.aktif ? (
                             <Badge
                               variant='outline'
-                              className={`rounded-full text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.aktif}`}
+                              className={`rounded-full text-xs font-medium px-2.5 py-0.5 ${BADGE_TONE_CLASSES.aktif}`}
                             >
                               Aktif
                             </Badge>
                           ) : (
                             <Badge
                               variant='outline'
-                              className={`rounded-full text-[10px] font-semibold uppercase tracking-wide px-2.5 py-0.5 shadow-none ${BADGE_TONE_CLASSES.nonaktif}`}
+                              className={`rounded-full text-xs font-medium px-2.5 py-0.5 ${BADGE_TONE_CLASSES.nonaktif}`}
                             >
                               Nonaktif
                             </Badge>
@@ -781,7 +788,7 @@ export function MenuPage() {
                         </TableCell>
 
                         {/* Aksi */}
-                        <TableCell className='text-right border-none py-3.5 pe-6'>
+                        <TableCell className='text-right py-3.5 pe-6'>
                           <div className='flex items-center justify-end gap-1.5'>
                             <Switch
                               checked={item.aktif}
@@ -789,12 +796,12 @@ export function MenuPage() {
                               onCheckedChange={() => void handleToggleAktif(item)}
                               aria-label={item.aktif ? `Nonaktifkan ${item.nama}` : `Aktifkan ${item.nama}`}
                               title={item.aktif ? 'Nonaktifkan Menu' : 'Aktifkan Menu'}
-                              className='me-1 has-border border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
+                              className='me-1 border border-slate-300 dark:border-slate-700 data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 dark:data-[state=checked]:border-emerald-500 dark:data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-slate-200 dark:data-[state=unchecked]:bg-slate-700 [&_[data-slot=switch-thumb]]:bg-white dark:[&_[data-slot=switch-thumb]]:bg-white'
                             />
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
+                              className='size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted'
                               onClick={() =>
                                 navigate({
                                   to: '/menu/$menuId',
@@ -808,7 +815,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-foreground hover:bg-muted shadow-none'
+                              className='size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted'
                               onClick={() => handleEdit(item)}
                               title='Ubah Menu'
                             >
@@ -817,7 +824,7 @@ export function MenuPage() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='size-8 rounded-lg border-none text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-none'
+                              className='size-8 rounded-lg text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                               onClick={() => handleDeleteClick(item)}
                               title='Hapus Menu'
                             >
@@ -834,33 +841,51 @@ export function MenuPage() {
           </CardContent>
 
           {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className='p-4 has-border border-t border-slate-200 dark:border-slate-800 flex items-center justify-between'>
+          {!loading && (
+            <div className='p-4 border-t border-border flex flex-wrap items-center justify-between gap-2'>
               <div className='text-xs font-medium text-muted-foreground tabular-nums'>
-                Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
-                <span className='font-semibold text-foreground'>{totalPages}</span>
+                {filteredMenu.length === 0 ? (
+                  'Menampilkan 0 menu'
+                ) : (
+                  <>
+                    Menampilkan{' '}
+                    <span className='font-semibold text-foreground'>
+                      {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
+                      {Math.min(safeCurrentPage * PAGE_SIZE, filteredMenu.length)}
+                    </span>{' '}
+                    dari{' '}
+                    <span className='font-semibold text-foreground'>{filteredMenu.length}</span>{' '}
+                    menu
+                  </>
+                )}
               </div>
-              <div className='flex items-center gap-1.5'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 1))}
-                  disabled={safeCurrentPage === 1}
-                  className='gap-1 h-8 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background hover:bg-muted text-foreground rounded-lg shadow-none'
-                >
-                  <ChevronLeft className='size-3.5' />
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
-                  disabled={safeCurrentPage === totalPages}
-                  className='gap-1 h-8 text-xs has-border border border-slate-200 dark:border-slate-800 bg-background hover:bg-muted text-foreground rounded-lg shadow-none'
-                >
-                  Selanjutnya
-                  <ChevronRight className='size-3.5' />
-                </Button>
+              <div className='flex items-center gap-3'>
+                <span className='text-xs font-medium text-muted-foreground tabular-nums'>
+                  Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
+                  <span className='font-semibold text-foreground'>{totalPages}</span>
+                </span>
+                <div className='flex items-center gap-1.5'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 1))}
+                    disabled={safeCurrentPage === 1}
+                    className='gap-1 h-8 text-xs'
+                  >
+                    <ChevronLeft className='size-3.5' />
+                    Sebelumnya
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    className='gap-1 h-8 text-xs'
+                  >
+                    Selanjutnya
+                    <ChevronRight className='size-3.5' />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -878,10 +903,10 @@ export function MenuPage() {
 
       {/* Alert Dialog Konfirmasi Hapus Menu */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className='has-border border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg max-w-md bg-card'>
+        <AlertDialogContent className='max-w-md'>
           <AlertDialogHeader>
             <div className='flex items-center gap-2.5'>
-              <div className='flex size-10 items-center justify-center rounded-xl has-border border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'>
+              <div className='flex size-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
                 <AlertTriangle className='size-5' />
               </div>
               <AlertDialogTitle className='text-lg font-bold'>Hapus Menu?</AlertDialogTitle>
@@ -898,16 +923,13 @@ export function MenuPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
-            <AlertDialogCancel
-              disabled={isDeleting}
-              className='has-border border border-slate-200 dark:border-slate-800 bg-background text-foreground hover:bg-muted rounded-xl shadow-none'
-            >
+            <AlertDialogCancel disabled={isDeleting}>
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className='border-none rounded-xl shadow-none bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 font-semibold'
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold'
             >
               {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>

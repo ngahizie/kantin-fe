@@ -15,7 +15,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -210,7 +212,7 @@ function RefundOrangTuaFormContent({
   }
 
   return (
-    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl'>
+    <DialogContent className='max-w-xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold text-foreground'>
             Refund Sisa Saldo ke Orang Tua / Wali
@@ -221,25 +223,29 @@ function RefundOrangTuaFormContent({
         </DialogHeader>
 
         {/* Info Siswa & Sisa Saldo */}
-        <div className='rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5 space-y-2'>
-          <div className='flex items-center justify-between'>
+        <div className='rounded-xl border border-border bg-muted/30 p-3.5 space-y-2'>
+          <div className='flex items-center justify-between gap-3'>
             <div className='flex items-center gap-3'>
-              <img
-                src={siswa.foto_url}
-                alt={siswa.nama}
-                className='h-12 w-12 rounded-full object-cover shrink-0'
-              />
+              <Avatar className='h-12 w-12 border border-border shrink-0'>
+                <AvatarImage src={siswa.foto_url} alt={siswa.nama} />
+                <AvatarFallback className='bg-primary/10 font-bold text-primary'>
+                  {siswa.nama.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <p className='font-bold text-sm text-foreground'>{siswa.nama}</p>
-                <p className='text-xs text-muted-foreground font-mono'>
+                <p className='text-xs text-muted-foreground font-mono tabular-nums'>
                   NIS: {siswa.nis} • {siswa.kelas_terakhir}
                 </p>
                 <div className='flex items-center gap-2 mt-1'>
-                  <Badge variant='outline' className='border-0 bg-muted text-[10px] py-0 font-medium'>
+                  <Badge
+                    variant='outline'
+                    className='rounded-full border-border bg-muted/50 px-2 py-0 text-[10px] font-medium text-muted-foreground'
+                  >
                     Status: {siswa.status_siswa}
                   </Badge>
                   <span className='text-[11px] text-muted-foreground'>
-                    RFID: <code className='font-mono'>{siswa.rfid_uid}</code>
+                    RFID: <code className='font-mono tabular-nums'>{siswa.rfid_uid}</code>
                   </span>
                 </div>
               </div>
@@ -249,7 +255,7 @@ function RefundOrangTuaFormContent({
               <p className='text-[11px] text-muted-foreground uppercase tracking-wider font-medium'>
                 Sisa Saldo
               </p>
-              <p className='text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400'>
+              <p className='text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatRupiah(siswa.saldo)}
               </p>
             </div>
@@ -269,10 +275,10 @@ function RefundOrangTuaFormContent({
             >
               <label
                 htmlFor='metode-transfer'
-                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
+                className={`flex items-center gap-2.5 rounded-xl p-3 cursor-pointer transition-all border select-none ${
                   metode === 'TRANSFER_BANK'
-                    ? 'bg-primary/15 text-primary'
-                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card hover:bg-muted/40 text-foreground'
                 }`}
               >
                 <RadioGroupItem value='TRANSFER_BANK' id='metode-transfer' />
@@ -284,10 +290,10 @@ function RefundOrangTuaFormContent({
 
               <label
                 htmlFor='metode-tunai'
-                className={`flex items-center gap-2.5 rounded-lg p-3 cursor-pointer transition-all border-0 select-none ${
+                className={`flex items-center gap-2.5 rounded-xl p-3 cursor-pointer transition-all border select-none ${
                   metode === 'TUNAI'
-                    ? 'bg-primary/15 text-primary'
-                    : 'bg-muted/60 hover:bg-muted/80 text-foreground'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card hover:bg-muted/40 text-foreground'
                 }`}
               >
                 <RadioGroupItem value='TUNAI' id='metode-tunai' />
@@ -301,14 +307,14 @@ function RefundOrangTuaFormContent({
 
           {/* Form Detail Transfer Bank jika dipilih */}
           {metode === 'TRANSFER_BANK' && (
-            <div className='rounded-xl border-0 p-3.5 space-y-3 bg-muted/50 dark:bg-muted/20'>
+            <div className='rounded-xl border border-border p-3.5 space-y-3 bg-muted/30'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div className='space-y-1.5'>
                   <Label htmlFor='bank' className='text-xs'>
                     Bank Tujuan <span className='text-destructive'>*</span>
                   </Label>
                   <Select value={bank} onValueChange={setBank}>
-                    <SelectTrigger id='bank' className='h-9 text-xs border-0 bg-background/80 shadow-none'>
+                    <SelectTrigger id='bank' className='text-xs'>
                       <SelectValue placeholder='Pilih bank' />
                     </SelectTrigger>
                     <SelectContent>
@@ -330,7 +336,7 @@ function RefundOrangTuaFormContent({
                     value={noRekening}
                     onChange={(e) => setNoRekening(e.target.value.replace(/\D/g, ''))}
                     placeholder='Misal: 142001928374'
-                    className='h-9 text-xs font-mono border-0 bg-background/80 shadow-none'
+                    className='text-xs font-mono tabular-nums'
                   />
                 </div>
               </div>
@@ -344,7 +350,7 @@ function RefundOrangTuaFormContent({
                   value={namaRekening}
                   onChange={(e) => setNamaRekening(e.target.value)}
                   placeholder='Sesuai buku tabungan / e-wallet'
-                  className='h-9 text-xs border-0 bg-background/80 shadow-none'
+                  className='text-xs'
                 />
               </div>
             </div>
@@ -357,13 +363,13 @@ function RefundOrangTuaFormContent({
                 Nama Orang Tua / Penerima <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
-                <User className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
+                <User className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground' />
                 <Input
                   id='namaPenerima'
                   value={namaPenerima}
                   onChange={(e) => setNamaPenerima(e.target.value)}
                   placeholder='Nama lengkap orang tua'
-                  className='h-9 pl-8 text-xs border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+                  className='pl-8 text-xs'
                 />
               </div>
             </div>
@@ -373,13 +379,13 @@ function RefundOrangTuaFormContent({
                 No. HP / WhatsApp Ortu <span className='text-destructive'>*</span>
               </Label>
               <div className='relative'>
-                <Phone className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground' />
+                <Phone className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground' />
                 <Input
                   id='kontakPenerima'
                   value={kontakPenerima}
                   onChange={(e) => setKontakPenerima(e.target.value)}
                   placeholder='0812xxxxxxx'
-                  className='h-9 pl-8 text-xs font-mono border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+                  className='pl-8 text-xs font-mono tabular-nums'
                 />
               </div>
             </div>
@@ -392,7 +398,7 @@ function RefundOrangTuaFormContent({
               <span className='text-[11px] text-muted-foreground font-normal'>Opsional</span>
             </Label>
             <div className='flex items-center gap-3'>
-              <label className='flex items-center gap-2 cursor-pointer border-0 bg-muted/70 hover:bg-muted/90 rounded-lg px-3 py-2 transition-colors text-xs text-muted-foreground'>
+              <label className='flex items-center gap-2 cursor-pointer border border-dashed border-border bg-muted/30 hover:bg-muted/50 rounded-lg px-3 py-2 transition-colors text-xs text-muted-foreground'>
                 <Upload className='h-3.5 w-3.5 text-primary' />
                 <span>{isUploading ? 'Mengunggah...' : 'Pilih Foto / Gambar Bukti'}</span>
                 <input
@@ -405,13 +411,13 @@ function RefundOrangTuaFormContent({
               </label>
 
               {buktiUrl && (
-                <div className='flex items-center gap-2 text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded-lg border-0'>
+                <div className='flex items-center gap-2 text-xs rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 px-2.5 py-1'>
                   <ImageIcon className='h-3.5 w-3.5' />
                   <span className='truncate max-w-[150px]'>Bukti Terlampir</span>
                   <button
                     type='button'
                     onClick={() => setBuktiUrl(null)}
-                    className='text-emerald-700 hover:text-red-600'
+                    className='text-emerald-700 hover:text-destructive dark:text-emerald-300'
                   >
                     <X className='h-3.5 w-3.5' />
                   </button>
@@ -430,25 +436,23 @@ function RefundOrangTuaFormContent({
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               placeholder='Contoh: Pengembalian sisa saldo kelulusan tahun ajaran 2025/2026'
-              className='text-xs min-h-[60px] border-0 bg-muted/70 dark:bg-muted/30 shadow-none'
+              className='text-xs min-h-[60px]'
             />
           </div>
 
           {/* Ketentuan Konfirmasi Blokir Otomatis */}
-          <div className='rounded-lg border-0 bg-muted/70 dark:bg-muted/30 px-3.5 py-2.5 text-xs text-muted-foreground'>
-            Setelah refund, saldo siswa menjadi <strong className='text-foreground'>Rp 0</strong> dan kartu RFID (<code className='font-mono font-bold text-foreground'>{siswa.rfid_uid}</code>) otomatis diblokir permanen.
+          <div className='rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs text-muted-foreground'>
+            Setelah refund, saldo siswa menjadi <strong className='text-foreground'>Rp 0</strong> dan kartu RFID (<code className='font-mono font-bold text-foreground tabular-nums'>{siswa.rfid_uid}</code>) otomatis diblokir permanen.
           </div>
 
           {/* Persetujuan Petugas */}
           <div className='flex items-center gap-2 pt-1'>
-            <input
-              type='checkbox'
+            <Checkbox
               id='agreement'
               checked={agreement}
-              onChange={(e) => setAgreement(e.target.checked)}
-              className='rounded border-gray-300 text-primary focus:ring-primary cursor-pointer'
+              onCheckedChange={(checked) => setAgreement(checked === true)}
             />
-            <Label htmlFor='agreement' className='text-xs font-normal cursor-pointer select-none'>
+            <Label htmlFor='agreement' className='text-xs font-normal cursor-pointer select-none tabular-nums'>
               Dana sebesar <strong className='text-foreground'>{formatRupiah(siswa.saldo)}</strong> telah diserahkan ke orang tua/wali.
             </Label>
           </div>
@@ -456,17 +460,16 @@ function RefundOrangTuaFormContent({
           <DialogFooter className='gap-2 pt-2'>
             <Button
               type='button'
-              variant='secondary'
+              variant='outline'
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className='border-0 bg-muted/80 shadow-none'
             >
               Batal
             </Button>
             <Button
               type='submit'
               disabled={!isValidSubmit || isSubmitting}
-              className='gap-2'
+              className='gap-2 tabular-nums'
             >
               <Lock className='h-3.5 w-3.5' />
               {isSubmitting ? 'Memproses...' : `Proses Refund ${formatRupiah(siswa.saldo)}`}

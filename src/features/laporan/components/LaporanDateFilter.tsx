@@ -168,10 +168,10 @@ export function LaporanDateFilter({
 
         <PopoverContent
           align={align}
-          className="w-84 space-y-4 rounded-xl border bg-card p-4 shadow-xl"
+          className="w-84 space-y-4 rounded-xl border border-border bg-popover p-4 shadow-lg"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b pb-2">
+          <div className="flex items-center justify-between border-b border-border pb-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Filter Tanggal / Waktu
             </div>
@@ -221,7 +221,7 @@ export function LaporanDateFilter({
             </div>
           </div>
 
-          <div className="border-t pt-3 space-y-3">
+          <div className="border-t border-border pt-3 space-y-3">
             {/* Pilih Hari Spesifik */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase">
@@ -232,12 +232,12 @@ export function LaporanDateFilter({
                   type="date"
                   value={singleDateInput}
                   onChange={(e) => setSingleDateInput(e.target.value)}
-                  className="h-8 text-xs font-mono"
+                  className="h-8 text-xs font-mono tabular-nums"
                 />
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="default"
                   onClick={handleApplySingleDate}
                   className="h-8 text-xs font-semibold px-3 shrink-0"
                 >
@@ -259,7 +259,7 @@ export function LaporanDateFilter({
                       type="date"
                       value={rangeStartInput}
                       onChange={(e) => setRangeStartInput(e.target.value)}
-                      className="h-8 text-xs font-mono"
+                      className="h-8 text-xs font-mono tabular-nums"
                     />
                   </div>
                   <div>
@@ -268,14 +268,14 @@ export function LaporanDateFilter({
                       type="date"
                       value={rangeEndInput}
                       onChange={(e) => setRangeEndInput(e.target.value)}
-                      className="h-8 text-xs font-mono"
+                      className="h-8 text-xs font-mono tabular-nums"
                     />
                   </div>
                 </div>
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="default"
                   onClick={handleApplyRange}
                   className="w-full h-8 text-xs font-semibold mt-1"
                 >

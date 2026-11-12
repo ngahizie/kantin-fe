@@ -3,6 +3,12 @@ import {
   FileSpreadsheet,
   History,
   Calendar,
+  Boxes,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Coins,
+  Wallet,
+  Loader2,
 } from 'lucide-react'
 import { Link, useSearch } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -27,9 +33,8 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { ExportButton } from '@/components/export-button'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
@@ -364,50 +369,41 @@ export function KartuStokPage() {
     switch (jenis) {
       case 'BARANG_MASUK':
       case 'OPNAME_MASUK':
-        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+        return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
       case 'PENJUALAN':
-        return 'bg-blue-500/15 text-blue-700 dark:text-blue-400'
+        return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
       case 'BARANG_RUSAK':
-        return 'bg-rose-500/15 text-rose-700 dark:text-rose-400'
+        return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
       case 'PENJUALAN_VOID':
-        return 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
       case 'OPNAME_KELUAR':
-        return 'bg-purple-500/15 text-purple-700 dark:text-purple-400'
+        return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
       case 'BARANG_MASUK_PEMBALIK':
-        return 'bg-destructive/15 text-destructive'
+        return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
       default:
         return arah === 'MASUK'
-          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-          : 'bg-muted/80 text-muted-foreground'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+          : 'border-border bg-muted/50 text-muted-foreground'
     }
   }
 
   return (
     <>
       <Header fixed>
-        <div className='flex w-full items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-semibold uppercase tracking-wider'>
-              Manajemen Stok
-            </span>
-            <span className='text-muted-foreground text-xs'>/</span>
-            <span className='text-xs font-medium'>Kartu Stok Mutasi</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Manajemen Stok' title='Kartu Stok Mutasi' />
+        <HeaderActions />
       </Header>
 
       <Main className='space-y-6'>
         {/* Top Header & Navigation Actions */}
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
               Kartu Stok Inventaris
             </h1>
-
+            <p className='text-sm text-muted-foreground'>
+              Lacak histori pergerakan keluar-masuk, saldo berjalan, dan HPP tiap item menu.
+            </p>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
             <ExportButton
@@ -417,7 +413,7 @@ export function KartuStokPage() {
               data-testid='btn-kartu-stok-export'
             />
 
-            <Button size='sm' asChild className='gap-1.5'>
+            <Button size='sm' asChild className='gap-1.5 font-semibold'>
               <Link to='/stok/inventaris'>
                 <FileSpreadsheet className='h-4 w-4' />
                 <span>Tabel Ringkasan Inventaris</span>
@@ -427,7 +423,7 @@ export function KartuStokPage() {
         </div>
 
         {/* Filter & Selector Bar */}
-        <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+        <Card>
           <CardContent className='p-4 sm:p-5 flex flex-col gap-4 sm:gap-5'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               {/* Menu Item Selector */}
@@ -448,7 +444,7 @@ export function KartuStokPage() {
                       <SelectItem key={m.id} value={String(m.id)}>
                         <div className='flex items-center justify-between gap-2 w-full'>
                           <span className='font-medium'>{m.nama}</span>
-                          <span className='text-xs text-muted-foreground'>
+                          <span className='text-xs text-muted-foreground tabular-nums'>
                             Stok: {m.stokBerjalan}
                           </span>
                         </div>
@@ -501,8 +497,8 @@ export function KartuStokPage() {
                 <Button
                   type='button'
                   size='sm'
-                  variant={periodePreset === 'ALL' ? 'default' : 'secondary'}
-                  className='h-7 text-xs px-2.5 border-0 shadow-none'
+                  variant={periodePreset === 'ALL' ? 'default' : 'outline'}
+                  className='h-8 text-xs px-2.5'
                   onClick={() => handlePresetChange('ALL')}
                 >
                   Semua
@@ -510,8 +506,8 @@ export function KartuStokPage() {
                 <Button
                   type='button'
                   size='sm'
-                  variant={periodePreset === 'TODAY' ? 'default' : 'secondary'}
-                  className='h-7 text-xs px-2.5 border-0 shadow-none'
+                  variant={periodePreset === 'TODAY' ? 'default' : 'outline'}
+                  className='h-8 text-xs px-2.5'
                   onClick={() => handlePresetChange('TODAY')}
                 >
                   Hari Ini
@@ -519,8 +515,8 @@ export function KartuStokPage() {
                 <Button
                   type='button'
                   size='sm'
-                  variant={periodePreset === '7D' ? 'default' : 'secondary'}
-                  className='h-7 text-xs px-2.5 border-0 shadow-none'
+                  variant={periodePreset === '7D' ? 'default' : 'outline'}
+                  className='h-8 text-xs px-2.5'
                   onClick={() => handlePresetChange('7D')}
                 >
                   7 Hari Terakhir
@@ -528,8 +524,8 @@ export function KartuStokPage() {
                 <Button
                   type='button'
                   size='sm'
-                  variant={periodePreset === '30D' ? 'default' : 'secondary'}
-                  className='h-7 text-xs px-2.5 border-0 shadow-none'
+                  variant={periodePreset === '30D' ? 'default' : 'outline'}
+                  className='h-8 text-xs px-2.5'
                   onClick={() => handlePresetChange('30D')}
                 >
                   30 Hari
@@ -537,8 +533,8 @@ export function KartuStokPage() {
                 <Button
                   type='button'
                   size='sm'
-                  variant={periodePreset === 'MONTH' ? 'default' : 'secondary'}
-                  className='h-7 text-xs px-2.5 border-0 shadow-none'
+                  variant={periodePreset === 'MONTH' ? 'default' : 'outline'}
+                  className='h-8 text-xs px-2.5'
                   onClick={() => handlePresetChange('MONTH')}
                 >
                   Bulan Ini
@@ -555,7 +551,7 @@ export function KartuStokPage() {
                     setTanggalDari(e.target.value)
                     setPeriodePreset('ALL')
                   }}
-                  className='h-7 w-36 text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none'
+                  className='h-8 w-36 text-xs'
                 />
                 <span className='text-muted-foreground'>s/d</span>
                 <Input
@@ -565,7 +561,7 @@ export function KartuStokPage() {
                     setTanggalSampai(e.target.value)
                     setPeriodePreset('ALL')
                   }}
-                  className='h-7 w-36 text-xs border-0 bg-background/80 dark:bg-background/40 shadow-none'
+                  className='h-8 w-36 text-xs'
                 />
               </div>
             </div>
@@ -573,36 +569,35 @@ export function KartuStokPage() {
         </Card>
 
         {/* Selected Menu KPI Card Grid */}
-        <div className='grid grid-cols-2 md:grid-cols-5 gap-3.5'>
+        <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
           {/* 1. Saldo Berjalan Saat Ini */}
-          <Card className='relative overflow-hidden border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium'>
-                Stok Berjalan Saat Ini
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold flex items-baseline gap-1.5'>
-                <span>{formatNumber(kpiData.currentStok)}</span>
-                <span className='text-xs font-normal text-muted-foreground'>
-                  unit
-                </span>
-              </CardTitle>
+          <Card className='relative overflow-hidden'>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2 gap-2'>
+              <div className='space-y-1 min-w-0'>
+                <CardDescription className='text-xs font-medium text-muted-foreground'>
+                  Stok Berjalan Saat Ini
+                </CardDescription>
+                <CardTitle className='text-2xl font-bold tracking-tight flex items-baseline gap-1.5 tabular-nums'>
+                  <span>{formatNumber(kpiData.currentStok)}</span>
+                  <span className='text-xs font-normal text-muted-foreground'>
+                    unit
+                  </span>
+                </CardTitle>
+              </div>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'>
+                <Boxes className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0'>
+            <CardContent className='pt-0'>
               <div className='flex items-center gap-1.5'>
                 <Badge
-                  variant={
+                  variant='outline'
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     kpiData.status === 'AMAN'
-                      ? 'secondary'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                       : kpiData.status === 'MENIPIS'
-                      ? 'secondary'
-                      : 'destructive'
-                  }
-                  className={`text-[10px] font-semibold border-0 ${
-                    kpiData.status === 'AMAN'
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : kpiData.status === 'MENIPIS'
-                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                      : ''
+                      ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                      : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
                   }`}
                 >
                   {kpiData.status === 'AMAN'
@@ -616,61 +611,81 @@ export function KartuStokPage() {
           </Card>
 
           {/* 2. Total Masuk Periode */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium text-emerald-600 dark:text-emerald-400'>
-                Total Masuk
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
-                {formatNumber(kpiData.totalMasuk)}
-              </CardTitle>
+          <Card>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2 gap-2'>
+              <div className='space-y-1 min-w-0'>
+                <CardDescription className='text-xs font-medium text-emerald-600 dark:text-emerald-400'>
+                  Total Masuk
+                </CardDescription>
+                <CardTitle className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
+                  {formatNumber(kpiData.totalMasuk)}
+                </CardTitle>
+              </div>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <ArrowDownLeft className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
+            <CardContent className='pt-0 text-xs text-muted-foreground'>
               Restock & opname masuk
             </CardContent>
           </Card>
 
           {/* 3. Total Keluar Periode */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium text-rose-600 dark:text-rose-400'>
-                Total Keluar
-              </CardDescription>
-              <CardTitle className='text-2xl font-bold text-rose-600 dark:text-rose-400'>
-                {formatNumber(kpiData.totalKeluar)}
-              </CardTitle>
+          <Card>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2 gap-2'>
+              <div className='space-y-1 min-w-0'>
+                <CardDescription className='text-xs font-medium text-rose-600 dark:text-rose-400'>
+                  Total Keluar
+                </CardDescription>
+                <CardTitle className='text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums'>
+                  {formatNumber(kpiData.totalKeluar)}
+                </CardTitle>
+              </div>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+                <ArrowUpRight className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
+            <CardContent className='pt-0 text-xs text-muted-foreground'>
               Penjualan, rusak, audit
             </CardContent>
           </Card>
 
           {/* 4. Snapshot HPP */}
-          <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium'>
-                Snapshot HPP Terkini
-              </CardDescription>
-              <CardTitle className='text-xl font-bold font-mono'>
-                {formatRupiah(kpiData.hpp)}
-              </CardTitle>
+          <Card>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2 gap-2'>
+              <div className='space-y-1 min-w-0'>
+                <CardDescription className='text-xs font-medium text-muted-foreground'>
+                  Snapshot HPP Terkini
+                </CardDescription>
+                <CardTitle className='text-xl font-bold tracking-tight font-mono tabular-nums'>
+                  {formatRupiah(kpiData.hpp)}
+                </CardTitle>
+              </div>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'>
+                <Coins className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
+            <CardContent className='pt-0 text-xs text-muted-foreground'>
               Rata-rata tertimbang
             </CardContent>
           </Card>
 
           {/* 5. Valuasi Nilai Persediaan */}
-          <Card className='col-span-2 md:col-span-1 border-0 bg-muted/70 dark:bg-muted/30'>
-            <CardHeader className='pb-2 pt-4 px-4'>
-              <CardDescription className='text-xs font-medium'>
-                Total Nilai Stok Item
-              </CardDescription>
-              <CardTitle className='text-xl font-bold font-mono text-foreground'>
-                {formatRupiah(kpiData.totalNilaiPersediaan)}
-              </CardTitle>
+          <Card className='col-span-2 md:col-span-1'>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2 gap-2'>
+              <div className='space-y-1 min-w-0'>
+                <CardDescription className='text-xs font-medium text-muted-foreground'>
+                  Total Nilai Stok Item
+                </CardDescription>
+                <CardTitle className='text-xl font-bold tracking-tight font-mono text-foreground tabular-nums'>
+                  {formatRupiah(kpiData.totalNilaiPersediaan)}
+                </CardTitle>
+              </div>
+              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'>
+                <Wallet className='size-4' />
+              </div>
             </CardHeader>
-            <CardContent className='px-4 pb-3 pt-0 text-xs text-muted-foreground'>
+            <CardContent className='pt-0 text-xs text-muted-foreground'>
               Stok berjalan × HPP
             </CardContent>
           </Card>
@@ -678,10 +693,10 @@ export function KartuStokPage() {
 
         {/* Saldo Consistency Audit Banner */}
         <div
-          className={`flex items-center justify-between p-3.5 rounded-lg border-0 text-xs ${
+          className={`flex items-center justify-between p-3.5 rounded-xl border text-xs ${
             isBalanceConsistent
-              ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300'
-              : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300'
+              : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300'
           }`}
         >
           <div className='flex items-center gap-2'>
@@ -695,7 +710,7 @@ export function KartuStokPage() {
               </span>
             ) : (
               <span>
-                <strong className='font-semibold text-red-700 dark:text-red-300'>
+                <strong className='font-semibold text-rose-700 dark:text-rose-300'>
                   Pemberitahuan Audit:
                 </strong>{' '}
                 Ditemukan lompatan saldo di luar kalkulasi linear (kemungkinan
@@ -710,7 +725,7 @@ export function KartuStokPage() {
             className={`h-7 text-xs ${
               isBalanceConsistent
                 ? 'text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40'
-                : 'text-red-700 hover:text-red-800 hover:bg-red-100 dark:text-red-300 dark:hover:bg-red-900/40'
+                : 'text-rose-700 hover:text-rose-800 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40'
             }`}
           >
             <Link to='/stok/masuk'>
@@ -737,57 +752,57 @@ export function KartuStokPage() {
               </TabsTrigger>
             </TabsList>
 
-            <span className='text-xs text-muted-foreground'>
+            <span className='text-xs text-muted-foreground tabular-nums'>
               Menampilkan {filteredRiwayat.length} dari {riwayat.length} transaksi
             </span>
           </div>
 
           {/* TAB 1: Tabel Mutasi */}
           <TabsContent value='table' className='space-y-4 m-0'>
-            <Card className='border-0 bg-muted/70 dark:bg-muted/30'>
+            <Card className='gap-0 py-0 overflow-hidden'>
               <CardContent className='p-0'>
                 <div className='overflow-x-auto'>
                   <Table>
-                    <TableHeader className='bg-muted/50'>
-                      <TableRow>
-                        <TableHead className='w-12 text-center text-xs'>No.</TableHead>
-                        <TableHead className='w-40'>Waktu</TableHead>
-                        <TableHead className='w-36'>No. Referensi</TableHead>
-                        <TableHead>Jenis Mutasi</TableHead>
-                        <TableHead className='text-right w-24 text-emerald-600'>
+                    <TableHeader>
+                      <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                        <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                        <TableHead className='w-40 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
+                        <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
+                        <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>
                           Masuk
                         </TableHead>
-                        <TableHead className='text-right w-24 text-rose-600'>
+                        <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400'>
                           Keluar
                         </TableHead>
-                        <TableHead className='text-right w-28 font-semibold'>
+                        <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Saldo Akhir
                         </TableHead>
-                        <TableHead className='text-right w-32'>
+                        <TableHead className='text-right w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           HPP Snapshot
                         </TableHead>
-                        <TableHead className='w-36'>Aktor</TableHead>
-                        <TableHead>Alasan / Keterangan</TableHead>
+                        <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aktor</TableHead>
+                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Alasan / Keterangan</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoadingRiwayat ? (
-                        <TableRow>
+                        <TableRow className='hover:bg-transparent border-b-0'>
                           <TableCell
                             colSpan={10}
                             className='h-32 text-center text-muted-foreground'
                           >
                             <div className='flex flex-col items-center justify-center gap-2'>
-                              <div className='h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-                              <span>Memuat data riwayat mutasi...</span>
+                              <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                              <span className='text-xs'>Memuat data riwayat mutasi...</span>
                             </div>
                           </TableCell>
                         </TableRow>
                       ) : filteredRiwayat.length === 0 ? (
-                        <TableRow>
+                        <TableRow className='hover:bg-transparent border-b-0'>
                           <TableCell
                             colSpan={10}
-                            className='h-32 text-center text-muted-foreground'
+                            className='h-32 text-center text-xs text-muted-foreground'
                           >
                             Tidak ada pergerakan stok pada filter yang dipilih.
                           </TableCell>
@@ -800,11 +815,11 @@ export function KartuStokPage() {
                             (item.aktorId ? `Aktor #${item.aktorId}` : 'Sistem')
 
                           return (
-                            <TableRow key={item.id} className='hover:bg-muted/40'>
-                              <TableCell className='text-center font-mono text-xs text-muted-foreground'>
+                            <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
                                 {idx + 1}
                               </TableCell>
-                              <TableCell className='text-xs whitespace-nowrap text-muted-foreground'>
+                              <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
                                 {formatDateTime(item.waktu)}
                               </TableCell>
                               <TableCell className='font-mono text-xs font-medium'>
@@ -812,7 +827,8 @@ export function KartuStokPage() {
                               </TableCell>
                               <TableCell>
                                 <Badge
-                                  className={`text-[11px] font-medium border-0 shadow-none ${getJenisBadgeClass(
+                                  variant='outline'
+                                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getJenisBadgeClass(
                                     item.jenis,
                                     item.arah
                                   )}`}
@@ -820,16 +836,16 @@ export function KartuStokPage() {
                                   {item.jenis.replace(/_/g, ' ')}
                                 </Badge>
                               </TableCell>
-                              <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400'>
+                              <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>
                                 {isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
-                              <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400'>
+                              <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400 tabular-nums'>
                                 {!isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
-                              <TableCell className='text-right font-mono font-bold text-foreground'>
+                              <TableCell className='text-right font-mono font-bold text-foreground tabular-nums'>
                                 {formatNumber(item.stokSetelah)}
                               </TableCell>
-                              <TableCell className='text-right font-mono text-xs text-muted-foreground'>
+                              <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
                                 {formatRupiah(item.hppSnapshot)}
                               </TableCell>
                               <TableCell className='text-xs text-muted-foreground truncate max-w-[140px]'>

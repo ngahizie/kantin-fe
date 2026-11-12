@@ -554,19 +554,19 @@ export const KasirPosPage: React.FC = () => {
   )
 
   return (
-    <div className='flex h-full w-full flex-col overflow-hidden bg-[#FDFCF8] dark:bg-[#050510] text-slate-800 dark:text-white'>
+    <div className='flex h-full w-full flex-col overflow-hidden bg-background text-foreground'>
       {/* Banner Peringatan Offline */}
       {!isOnline && <OfflineBanner className='border-none' />}
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex flex-wrap items-center justify-between gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
+        <div className='flex flex-wrap items-center justify-between gap-2 border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-xs font-medium text-destructive'>
           <div className='flex items-center gap-2'>
             <Lock className='h-4 w-4 shrink-0' />
             <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
           </div>
           {sesi?.uangFisik != null && (
-            <span className='tabular-nums font-semibold'>
+            <span className='font-semibold tabular-nums'>
               Kas Fisik: {formatRupiah(sesi.uangFisik)}
               {sesi.selisih != null &&
                 ` (Selisih: ${sesi.selisih > 0 ? '+' : ''}${formatRupiah(sesi.selisih)})`}
@@ -577,19 +577,19 @@ export const KasirPosPage: React.FC = () => {
 
       <div className='flex flex-1 overflow-hidden'>
         {/* Sisi Kiri: Katalog POS (Pencarian, Filter Kategori, Grid Menu) */}
-        <div className='flex flex-1 min-w-0 flex-col overflow-hidden'>
+        <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
           {/* Top Control Bar: Search & Status */}
-          <div className='flex flex-col gap-2.5 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none sm:p-4'>
+          <div className='flex flex-col gap-2.5 border-b border-border bg-card p-3 sm:p-4'>
             <div className='flex items-center gap-2'>
               {/* Input Pencarian dengan Shortcut '/' */}
               <div className='relative flex-1'>
-                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500' />
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder='Cari nama menu atau scan barcode...'
-                  className='h-10 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 pr-10 pl-9 text-sm text-slate-800 dark:text-white placeholder:text-slate-500/80 dark:placeholder:text-slate-400 focus-visible:ring-0 rounded-xl shadow-none'
+                  className='h-9 pr-10 pl-9 text-sm'
                 />
                 {searchQuery && (
                   <Button
@@ -597,7 +597,7 @@ export const KasirPosPage: React.FC = () => {
                     variant='ghost'
                     size='icon'
                     onClick={() => setSearchQuery('')}
-                    className='absolute top-1/2 right-1.5 h-7 w-7 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg'
+                    className='absolute top-1/2 right-1.5 h-7 w-7 -translate-y-1/2 rounded-md text-muted-foreground hover:text-foreground'
                   >
                     <X className='h-3.5 w-3.5' />
                   </Button>
@@ -607,27 +607,27 @@ export const KasirPosPage: React.FC = () => {
               {/* Tombol Cek Saldo */}
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={() => setCekSaldoOpen(true)}
-                className='h-10 gap-1.5 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
+                className='h-9 gap-1.5 px-3 text-xs font-semibold'
                 title='Cek saldo siswa'
               >
-                <Wallet className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                <Wallet className='h-4 w-4 text-primary' />
                 <span className='hidden md:inline'>Cek Saldo</span>
               </Button>
 
               {/* Tombol Riwayat Sesi */}
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={() => setHistoryModalOpen(true)}
-                className='h-10 gap-1.5 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
+                className='h-9 gap-1.5 px-3 text-xs font-semibold'
                 title='Lihat riwayat transaksi sesi hari ini'
               >
-                <History className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                <History className='h-4 w-4 text-primary' />
                 <span className='hidden sm:inline'>Riwayat Sesi</span>
                 {transactions.length > 0 && (
-                  <Badge variant='secondary' className='ml-0.5 bg-blue-100 dark:bg-blue-950/70 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-400 rounded-full shadow-none'>
+                  <Badge variant='secondary' className='ml-0.5 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold tabular-nums text-primary'>
                     {transactions.length}
                   </Badge>
                 )}
@@ -636,15 +636,15 @@ export const KasirPosPage: React.FC = () => {
               {/* Tombol Tutup Kasir */}
               <Button
                 type='button'
-                variant='secondary'
+                variant='outline'
                 onClick={() => {
                   if (!isSessionClosed) setCloseSessionModalOpen(true)
                 }}
                 disabled={isSessionClosed}
-                className={`h-10 gap-1.5 px-3 text-xs font-semibold rounded-xl shadow-none ${
+                className={`h-9 gap-1.5 px-3 text-xs font-semibold ${
                   isSessionClosed
-                    ? 'cursor-not-allowed opacity-60 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-100 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400'
-                    : 'has-border !border !border-rose-200 dark:!border-rose-900/60 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60'
+                    ? 'cursor-not-allowed opacity-60'
+                    : 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'
                 }`}
                 title='Tutup sesi kasir harian'
               >
@@ -657,7 +657,7 @@ export const KasirPosPage: React.FC = () => {
 
           {/* Banner Peringatan Tutup Otomatis */}
           {isPastClosingTime && (
-            <div className='flex items-center gap-2 rounded-xl has-border !border !border-amber-200 dark:!border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300 shadow-none'>
+            <div className='flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-800 dark:text-amber-300'>
               <AlertTriangle className='h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
               <span>
                 <strong>Perhatian:</strong> Melewati jam operasional tutup ({pengaturan.jamTutupOtomatis || '23:59'}).
@@ -670,22 +670,18 @@ export const KasirPosPage: React.FC = () => {
             <Button
               type='button'
               size='sm'
-              variant={selectedKategoriId === null ? 'default' : 'secondary'}
+              variant={selectedKategoriId === null ? 'default' : 'outline'}
               onClick={() => setSelectedKategoriId(null)}
-              className={`h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold shadow-none ${
-                selectedKategoriId === null
-                  ? '!bg-blue-600 hover:!bg-blue-500 !text-white !border !border-blue-600'
-                  : 'has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className='h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold'
             >
               <Layers className='mr-1.5 h-3.5 w-3.5' />
               Semua Menu
               <Badge
                 variant='secondary'
-                className={`ml-1.5 h-4 px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
+                className={`ml-1.5 h-4 rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
                   selectedKategoriId === null
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {menus.filter((m) => m.aktif).length}
@@ -701,21 +697,17 @@ export const KasirPosPage: React.FC = () => {
                   key={kat.id}
                   type='button'
                   size='sm'
-                  variant={isSelected ? 'default' : 'secondary'}
+                  variant={isSelected ? 'default' : 'outline'}
                   onClick={() => setSelectedKategoriId(kat.id)}
-                  className={`h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold shadow-none ${
-                    isSelected
-                      ? '!bg-blue-600 hover:!bg-blue-500 !text-white !border !border-blue-600'
-                      : 'has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                  className='h-8 shrink-0 touch-manipulation rounded-full px-3.5 text-xs font-semibold'
                 >
                   {kat.nama}
                   <Badge
                     variant='secondary'
-                    className={`ml-1.5 h-4 px-1.5 rounded-full text-[10px] font-semibold shadow-none ${
+                    className={`ml-1.5 h-4 rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
                       isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        ? 'bg-primary-foreground/20 text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {count}
@@ -727,7 +719,7 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Area Scrollable Katalog Menu */}
-        <div className='flex-1 min-w-0 overflow-y-auto [scrollbar-gutter:stable] bg-[#FDFCF8] dark:bg-[#050510]'>
+        <div className='min-w-0 flex-1 overflow-y-auto [scrollbar-gutter:stable] bg-background'>
           <MenuGrid
             menus={filteredMenus}
             loading={loading}
@@ -739,15 +731,15 @@ export const KasirPosPage: React.FC = () => {
         </div>
 
         {/* Floating Cart Trigger untuk Layar Mobile / Tablet Kecil (< lg) */}
-        <div className='flex shrink-0 has-border !border-t !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] p-3 shadow-none lg:hidden'>
+        <div className='flex shrink-0 border-t border-border bg-card p-3 lg:hidden'>
           <Button
             type='button'
-            className='h-11 w-full justify-between font-bold !bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
+            className='h-11 w-full justify-between rounded-xl font-bold'
             onClick={() => setMobileCartOpen(true)}
           >
             <div className='flex items-center gap-2'>
               <ShoppingCart className='h-4 w-4' />
-              <span>Keranjang ({totalItems()} item)</span>
+              <span className='tabular-nums'>Keranjang ({totalItems()} item)</span>
             </div>
             <span className='font-bold tabular-nums'>{formatRupiah(totalHarga())}</span>
           </Button>
@@ -755,7 +747,7 @@ export const KasirPosPage: React.FC = () => {
       </div>
 
       {/* Sisi Kanan: Panel Keranjang Belanja Desktop/Tablet Besar (>= lg) */}
-      <div className='hidden h-full shrink-0 lg:flex has-border !border-l !border-slate-200 dark:!border-slate-800'>
+      <div className='hidden h-full shrink-0 border-l border-border lg:flex'>
         <CartSidebar
           onCheckout={() => setManualRfidOpen(true)}
           onManualRfidOpen={() => setManualRfidOpen(true)}
@@ -770,7 +762,7 @@ export const KasirPosPage: React.FC = () => {
       <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
         <SheetContent
           side='right'
-          className='flex w-full flex-col gap-0 p-0 sm:max-w-md bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white has-border !border-l !border-slate-200 dark:!border-slate-800 shadow-none'
+          className='flex w-full flex-col gap-0 border-l border-border bg-card p-0 text-card-foreground sm:max-w-md'
         >
           <SheetHeader className='sr-only'>
             <SheetTitle>Keranjang Belanja Kasir</SheetTitle>
@@ -830,30 +822,29 @@ export const KasirPosPage: React.FC = () => {
         open={confirmManualOpen}
         onOpenChange={setConfirmManualOpen}
       >
-        <AlertDialogContent className='has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-800 dark:text-white rounded-2xl shadow-none'>
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className='text-slate-800 dark:text-white'>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
-            <AlertDialogDescription className='text-slate-500 dark:text-slate-400'>
+            <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
+            <AlertDialogDescription>
               Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className='space-y-2 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3.5 text-sm shadow-none'>
+          <div className='space-y-2 rounded-xl border border-border bg-muted/40 p-3.5 text-sm'>
             <div className='flex justify-between'>
-              <span className='text-slate-500 dark:text-slate-400'>UID Kartu:</span>
-              <span className='font-semibold text-slate-800 dark:text-white tracking-wider'>{pendingScannedUid}</span>
+              <span className='text-muted-foreground'>UID Kartu:</span>
+              <span className='font-semibold tracking-wider text-foreground'>{pendingScannedUid}</span>
             </div>
             <div className='flex justify-between'>
-              <span className='text-slate-500 dark:text-slate-400'>Total Item:</span>
-              <span className='font-medium text-slate-800 dark:text-white'>{totalItems()} item</span>
+              <span className='text-muted-foreground'>Total Item:</span>
+              <span className='font-medium tabular-nums text-foreground'>{totalItems()} item</span>
             </div>
-            <div className='flex justify-between has-border !border-t !border-slate-200 dark:!border-slate-800 pt-2 text-base font-bold'>
-              <span className='text-slate-800 dark:text-white'>Total Tagihan:</span>
-              <span className='text-blue-600 dark:text-blue-400 tabular-nums'>{formatRupiah(totalHarga())}</span>
+            <div className='flex justify-between border-t border-border pt-2 text-base font-bold'>
+              <span className='text-foreground'>Total Tagihan:</span>
+              <span className='tabular-nums text-primary'>{formatRupiah(totalHarga())}</span>
             </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className='has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
               onClick={() => {
                 setConfirmManualOpen(false)
                 setPendingScannedUid(null)
@@ -862,7 +853,6 @@ export const KasirPosPage: React.FC = () => {
               Batalkan
             </AlertDialogCancel>
             <AlertDialogAction
-              className='!bg-blue-600 hover:!bg-blue-500 !text-white rounded-xl shadow-none'
               onClick={async () => {
                 if (pendingScannedUid) {
                   const uid = pendingScannedUid

@@ -1,14 +1,15 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  FileText,
-  Printer,
   ArrowRight,
-  Receipt,
-  X,
+  Calculator,
   CreditCard,
-  User,
+  FileText,
+  Loader2,
+  Printer,
+  Receipt,
   ShoppingBag,
+  User,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -36,9 +37,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
@@ -446,23 +446,11 @@ export function LaporanRiwayatKeseluruhanPage() {
   return (
     <>
       <Header fixed>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-              Laporan Keuangan
-            </span>
-            <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Riwayat Transaksi</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeSwitch />
-            <ProfileDropdown />
-          </div>
-        </div>
+        <HeaderBreadcrumb section='Laporan Keuangan' title='Riwayat Transaksi' />
+        <HeaderActions />
       </Header>
 
-      <Main>
-        <div className="space-y-6 pb-12">
+      <Main className="space-y-6">
           {/* Header Action Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -503,14 +491,17 @@ export function LaporanRiwayatKeseluruhanPage() {
 
           {/* RINGKASAN STATISTIK KESELURUHAN */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Nilai Belanja Kantin
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                  <ShoppingBag className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">
                   {formatRupiah(ringkasan.totalBelanja)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -519,14 +510,17 @@ export function LaporanRiwayatKeseluruhanPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Jumlah Transaksi Tercatat
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Receipt className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {formatNumber(ringkasan.totalSemuaTrx)} Transaksi
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -535,14 +529,17 @@ export function LaporanRiwayatKeseluruhanPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="pb-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Rata-rata Nilai per Transaksi
                 </CardTitle>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                  <Calculator className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight">
+                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
                   {formatRupiah(ringkasan.rataRataBelanja)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -555,26 +552,24 @@ export function LaporanRiwayatKeseluruhanPage() {
           {/* TABEL LOG TRANSAKSI KESELURUHAN */}
           <div className="space-y-4">
             <TableToolbar
-              extraLeft={
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={jenisFilter}
-                    onChange={(e) => setJenisFilter(e.target.value)}
-                    aria-label="Filter Jenis Transaksi"
-                    className="h-8 rounded-md border border-input bg-background px-2.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="ALL">Semua Jenis Transaksi</option>
-                    <option value="BELANJA">Belanja Kasir</option>
-                    <option value="TOPUP_TUNAI">Top-up Saldo Tunai</option>
-                    <option value="TOPUP_ONLINE">Top-up Online</option>
-                    <option value="REFUND">Refund Saldo</option>
-                    <option value="KOREKSI">Penyesuaian Saldo</option>
-                  </select>
-                </div>
-              }
               searchPlaceholder="Cari siswa, NIS, kelas, referensi, menu..."
               searchValue={searchFilter}
               onSearchChange={setSearchFilter}
+              filters={[
+                {
+                  title: 'Jenis Transaksi',
+                  options: [
+                    { label: 'Belanja Kasir', value: 'BELANJA' },
+                    { label: 'Top-up Saldo Tunai', value: 'TOPUP_TUNAI' },
+                    { label: 'Top-up Online', value: 'TOPUP_ONLINE' },
+                    { label: 'Refund Saldo', value: 'REFUND' },
+                    { label: 'Penyesuaian Saldo', value: 'KOREKSI' },
+                  ],
+                  selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
+                  onSelect: (vals) => setJenisFilter(vals[0] || 'ALL'),
+                  isSingleSelect: true,
+                },
+              ]}
               isFiltered={Boolean(searchFilter || jenisFilter !== 'ALL')}
               onReset={() => {
                 setSearchFilter('')
@@ -582,169 +577,169 @@ export function LaporanRiwayatKeseluruhanPage() {
               }}
             />
 
-            <Card className="border-0 bg-muted/70 dark:bg-muted/30">
-              <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <Card className="p-0 gap-0 overflow-hidden">
+              <CardHeader className="flex flex-col gap-1 border-b border-border bg-muted/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="text-base font-bold">
                     Log Lengkap Transaksi Belanja Siswa
                   </CardTitle>
                 </div>
-                <div className="text-xs text-muted-foreground font-mono">
+                <div className="text-xs text-muted-foreground font-mono tabular-nums">
                   Menampilkan {formatNumber(filteredTransaksi.length)} transaksi
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-hidden rounded-lg">
-                  <Table>
-                    <TableHeader className="bg-muted/50">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Referensi</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</TableHead>
+                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jenis</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sisa Saldo</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titik Kasir</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rincian Menu / Info</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
                       <TableRow>
-                        <TableHead className="w-12 text-center">No.</TableHead>
-                        <TableHead>Waktu</TableHead>
-                        <TableHead>No. Referensi</TableHead>
-                        <TableHead>Siswa</TableHead>
-                        <TableHead className="text-center">Jenis</TableHead>
-                        <TableHead className="text-right">Nominal</TableHead>
-                        <TableHead className="text-right">Sisa Saldo</TableHead>
-                        <TableHead>Titik Kasir</TableHead>
-                        <TableHead>Rincian Menu / Info</TableHead>
-                        <TableHead className="text-right">Aksi</TableHead>
+                        <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Memuat riwayat transaksi keseluruhan...</span>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                            Memuat riwayat transaksi keseluruhan...
+                    ) : filteredTransaksi.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="h-28 text-center text-muted-foreground">
+                          Tidak ada transaksi yang sesuai filter.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredTransaksi.map((trx, idx) => (
+                        <TableRow key={trx.id} className="border-b border-border last:border-b-0">
+                          <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                            {idx + 1}
                           </TableCell>
-                        </TableRow>
-                      ) : filteredTransaksi.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={10} className="h-28 text-center text-muted-foreground">
-                            Tidak ada transaksi yang sesuai filter.
+                          <TableCell className="text-xs whitespace-nowrap tabular-nums">
+                            {formatDateTime(trx.waktu)}
                           </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredTransaksi.map((trx, idx) => (
-                          <TableRow key={trx.id}>
-                            <TableCell className="text-center text-xs text-muted-foreground font-mono">
-                              {idx + 1}
-                            </TableCell>
-                            <TableCell className="text-xs whitespace-nowrap">
-                              {formatDateTime(trx.waktu)}
-                            </TableCell>
-                            <TableCell className="font-mono text-xs font-semibold">
-                              {trx.referensiId}
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-semibold text-xs text-foreground">
-                                  {trx.siswaNama}
-                                </div>
-                                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                                  <span className="font-mono">{trx.siswaNis}</span>
-                                  <span>•</span>
-                                  <Badge variant="outline" className="text-[10px] py-0 px-1">
-                                    {trx.siswaKelas}
-                                  </Badge>
-                                </div>
+                          <TableCell className="font-mono text-xs font-semibold tabular-nums">
+                            {trx.referensiId}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-semibold text-xs text-foreground">
+                                {trx.siswaNama}
                               </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge
-                                variant="secondary"
-                                className={`text-[10px] font-semibold border-0 ${
-                                  trx.jenis === 'BELANJA'
-                                    ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-                                    : trx.jenis === 'TOPUP_TUNAI' || trx.jenis === 'TOPUP_ONLINE'
-                                    ? 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
-                                    : trx.jenis === 'REFUND'
-                                    ? 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
-                                    : 'bg-purple-500/15 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
-                                }`}
-                              >
-                                {trx.jenis === 'BELANJA'
-                                  ? 'Belanja'
-                                  : trx.jenis === 'TOPUP_TUNAI'
-                                  ? 'Top-up Tunai'
-                                  : trx.jenis === 'TOPUP_ONLINE'
-                                  ? 'Top-up Online'
+                              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                <span className="font-mono tabular-nums">{trx.siswaNis}</span>
+                                <span>•</span>
+                                <Badge variant="outline" className="rounded-full border border-border bg-muted px-2 py-0 text-[10px] font-medium text-muted-foreground">
+                                  {trx.siswaKelas}
+                                </Badge>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="outline"
+                              className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                                trx.jenis === 'BELANJA'
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                  : trx.jenis === 'TOPUP_TUNAI' || trx.jenis === 'TOPUP_ONLINE'
+                                  ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
                                   : trx.jenis === 'REFUND'
-                                  ? 'Refund'
-                                  : 'Koreksi'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell
-                              className={`text-right font-mono font-bold text-xs ${
-                                trx.arah === 'KREDIT'
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : 'text-foreground'
+                                  ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
+                                  : 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
                               }`}
                             >
-                              {trx.arah === 'KREDIT' ? '+' : '-'} {formatRupiah(trx.nominal)}
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                              {formatRupiah(trx.saldoSetelah)}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <div>{resolveTitikDanPetugas(trx).titik}</div>
-                              <div className="text-[10px] text-muted-foreground">{resolveTitikDanPetugas(trx).petugas}</div>
-                            </TableCell>
-                            <TableCell className="text-xs max-w-xs truncate">
-                              {trx.items && trx.items.length > 0 ? (
-                                <div className="space-y-0.5">
-                                  {trx.items.map((item, i) => (
-                                    <div key={i} className="text-xs flex items-center gap-1">
-                                      <ShoppingBag className="h-3 w-3 text-muted-foreground shrink-0" />
-                                      <span className="font-medium">{item.nama}</span>
-                                      <span className="text-muted-foreground">({item.qty}x)</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground italic">
-                                  {trx.keterangan}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setSelectedTrxForReceipt(trx)}
-                                  className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
-                                  title="Lihat Struk Transaksi"
-                                >
-                                  <Receipt className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span>Struk</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                  className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary font-medium"
-                                  title="Lihat Detail Riwayat Siswa"
-                                >
-                                  <Link
-                                    to="/laporan/riwayat-siswa"
-                                    search={{ siswaId: trx.siswaId }}
-                                  >
-                                    <span>Detail</span>
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                  </Link>
-                                </Button>
+                              {trx.jenis === 'BELANJA'
+                                ? 'Belanja'
+                                : trx.jenis === 'TOPUP_TUNAI'
+                                ? 'Top-up Tunai'
+                                : trx.jenis === 'TOPUP_ONLINE'
+                                ? 'Top-up Online'
+                                : trx.jenis === 'REFUND'
+                                ? 'Refund'
+                                : 'Koreksi'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell
+                            className={`text-right font-mono font-bold text-xs tabular-nums ${
+                              trx.arah === 'KREDIT'
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-foreground'
+                            }`}
+                          >
+                            {trx.arah === 'KREDIT' ? '+' : '-'} {formatRupiah(trx.nominal)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                            {formatRupiah(trx.saldoSetelah)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            <div>{resolveTitikDanPetugas(trx).titik}</div>
+                            <div className="text-[10px] text-muted-foreground">{resolveTitikDanPetugas(trx).petugas}</div>
+                          </TableCell>
+                          <TableCell className="text-xs max-w-xs truncate">
+                            {trx.items && trx.items.length > 0 ? (
+                              <div className="space-y-0.5">
+                                {trx.items.map((item, i) => (
+                                  <div key={i} className="text-xs flex items-center gap-1">
+                                    <ShoppingBag className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="font-medium">{item.nama}</span>
+                                    <span className="text-muted-foreground tabular-nums">({item.qty}x)</span>
+                                  </div>
+                                ))}
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                            ) : (
+                              <span className="text-muted-foreground italic">
+                                {trx.keterangan}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedTrxForReceipt(trx)}
+                                className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                                title="Lihat Struk Transaksi"
+                              >
+                                <Receipt className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <span>Struk</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary font-medium"
+                                title="Lihat Detail Riwayat Siswa"
+                              >
+                                <Link
+                                  to="/laporan/riwayat-siswa"
+                                  search={{ siswaId: trx.siswaId }}
+                                >
+                                  <span>Detail</span>
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>
-        </div>
       </Main>
 
       {/* DIALOG MODAL STRUK DIGITAL THERMAL */}
@@ -752,23 +747,13 @@ export function LaporanRiwayatKeseluruhanPage() {
         open={Boolean(selectedTrxForReceipt)}
         onOpenChange={(open) => !open && setSelectedTrxForReceipt(null)}
       >
-        <DialogContent className="max-w-sm p-0 overflow-hidden bg-background border shadow-2xl">
-          <DialogHeader className="p-4 pb-2 border-b bg-muted/40">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <DialogTitle className="text-sm font-bold">
-                  Struk Transaksi Digital
-                </DialogTitle>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => setSelectedTrxForReceipt(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+        <DialogContent className="max-w-sm p-0 overflow-hidden gap-0">
+          <DialogHeader className="border-b border-border bg-muted/30 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <DialogTitle className="text-sm font-bold">
+                Struk Transaksi Digital
+              </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
               Tanda terima resmi transaksi belanja kantin sekolah
@@ -800,10 +785,10 @@ export function LaporanRiwayatKeseluruhanPage() {
             const totalSign = selectedTrxForReceipt.arah === 'KREDIT' ? '+' : '-'
 
             return (
-              <div className="p-4">
+              <div className="p-5 bg-muted/30 space-y-4">
                 <div
                   ref={printAreaRef}
-                  className="printable-slip w-full rounded-xl border-0 bg-white p-5 font-mono text-xs text-slate-900 shadow-none"
+                  className="printable-slip w-full rounded-xl border border-border bg-white p-5 font-mono text-xs text-slate-900 shadow-none"
                 >
                   {/* Header Nota */}
                   <div className="space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center">
@@ -919,7 +904,7 @@ export function LaporanRiwayatKeseluruhanPage() {
                 </div>
 
                 {/* Tombol Aksi */}
-                <div className="flex justify-end gap-2 pt-3">
+                <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -938,7 +923,7 @@ export function LaporanRiwayatKeseluruhanPage() {
                     variant="default"
                     size="sm"
                     onClick={handlePrintReceipt}
-                    className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="h-8 gap-1.5 text-xs"
                   >
                     <Printer className="h-3.5 w-3.5" />
                     <span>Cetak Struk</span>

@@ -352,7 +352,7 @@ describe('Alur berurutan Transaksi Berhasil -> Cetak Struk di KasirPosPage', () 
       .toBeInTheDocument()
 
     // Klik Tutup -> dialog Cetak Struk menutup kembali
-    await userEvent.click(screen.getByRole('button', { name: /^Tutup$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^Tutup$/i }).first())
     await expect
       .element(screen.getByRole('heading', { name: 'Cetak Struk' }))
       .not.toBeInTheDocument()

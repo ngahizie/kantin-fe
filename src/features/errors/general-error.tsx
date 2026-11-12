@@ -27,18 +27,18 @@ export function GeneralError({
   const errorStack = error instanceof Error ? error.stack : null
 
   return (
-    <div className={cn('h-svh w-full', className)}>
+    <div className={cn('h-svh w-full bg-background text-foreground', className)}>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center'>
         {!minimal && (
-          <h1 className='text-[7rem] leading-tight font-bold'>500</h1>
+          <h1 className='text-[7rem] leading-tight font-bold tabular-nums'>500</h1>
         )}
-        <span className='font-medium text-lg'>Oops! Something went wrong {`:')`}</span>
+        <span className='font-semibold text-lg'>Terjadi Kesalahan</span>
         <p className='text-center text-muted-foreground text-sm max-w-md'>
           Terjadi kesalahan saat memproses permintaan ini. Silakan coba kembali atau muat ulang halaman.
         </p>
 
         {errorMessage && (
-          <div className='mt-3 max-w-lg w-full text-left bg-destructive/10 text-destructive p-3 rounded-lg text-xs font-mono overflow-auto max-h-48 border border-destructive/20'>
+          <div className='mt-3 max-w-lg w-full text-left bg-destructive/10 text-destructive p-3 rounded-lg text-xs font-mono overflow-auto max-h-48 border border-destructive/30'>
             <p className='font-bold mb-1'>Pesan Kesalahan:</p>
             <p className='break-words'>{errorMessage}</p>
             {errorStack && (

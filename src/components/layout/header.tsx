@@ -26,16 +26,16 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
   return (
     <header
       className={cn(
-        'z-50 h-[65px] bg-background has-border border-b border-slate-200 dark:border-slate-800',
+        'z-50 h-[65px] bg-background has-border border-b border-border',
         fixed && 'header-fixed peer/header sticky top-0 w-[inherit]',
         offset > 10 && fixed ? 'shadow-none' : '',
         className
       )}
       {...props}
     >
-      <div className='relative flex h-full items-center gap-3 p-4 sm:gap-4'>
-        <SidebarTrigger variant='secondary' className='size-8 max-md:scale-110 border-0 shadow-none' />
-        <Separator orientation='vertical' className='h-6' />
+      <div className='relative flex h-full items-center gap-3 px-4 py-4 sm:gap-4 sm:px-6'>
+        <SidebarTrigger variant='ghost' className='size-8 shrink-0 max-md:scale-110' />
+        <Separator orientation='vertical' className='h-6 shrink-0' />
         {children}
       </div>
     </header>

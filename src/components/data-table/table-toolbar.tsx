@@ -22,6 +22,7 @@ export type TableToolbarFilter = {
   allLabel?: string
   searchPlaceholder?: string
   showSearch?: boolean
+  triggerClassName?: string
 }
 
 export type TableToolbarProps = {
@@ -62,7 +63,7 @@ export function TableToolbar({
               placeholder={searchPlaceholder}
               value={searchValue ?? ''}
               onChange={(e) => onSearchChange(e.target.value)}
-              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs bg-background'
+              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs'
             />
           </div>
         )}
@@ -79,6 +80,7 @@ export function TableToolbar({
             allLabel={filter.allLabel}
             searchPlaceholder={filter.searchPlaceholder}
             showSearch={filter.showSearch}
+            triggerClassName={filter.triggerClassName}
           />
         ))}
         {isFiltered && onReset && (

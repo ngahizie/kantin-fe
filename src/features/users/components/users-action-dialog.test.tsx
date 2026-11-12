@@ -6,17 +6,17 @@ import { type User } from '../data/schema'
 import { UsersActionDialog } from './users-action-dialog'
 
 const VALIDATION_MESSAGES = {
-  firstName: 'First Name is required.',
-  lastName: 'Last Name is required.',
-  username: 'Username is required.',
-  phoneNumber: 'Phone number is required.',
-  email: 'Email is required.',
-  role: 'Role is required.',
-  password: 'Password is required.',
-  passwordMismatch: "Passwords don't match.",
-  passwordLength: 'Password must be at least 8 characters long.',
-  passwordNumber: 'Password must contain at least one number.',
-  passwordLowercase: 'Password must contain at least one lowercase letter.',
+  firstName: 'Nama Depan wajib diisi.',
+  lastName: 'Nama Belakang wajib diisi.',
+  username: 'Username wajib diisi.',
+  phoneNumber: 'Nomor telepon wajib diisi.',
+  email: 'Email wajib diisi.',
+  role: 'Peran wajib dipilih.',
+  password: 'Kata sandi wajib diisi.',
+  passwordMismatch: 'Konfirmasi kata sandi tidak cocok.',
+  passwordLength: 'Kata sandi minimal 8 karakter.',
+  passwordNumber: 'Kata sandi harus mengandung minimal satu angka.',
+  passwordLowercase: 'Kata sandi harus mengandung minimal satu huruf kecil.',
 } as const
 
 const MOCK_USER: User = {
@@ -45,10 +45,10 @@ describe('UsersActionDialog', () => {
 
       const title = getByRole('heading', {
         level: 2,
-        name: /Add New User/i,
+        name: /Tambah Pengguna Baru/i,
       })
       const description = getByText(
-        /Create new user here. Click save when you're done./i
+        /Buat pengguna baru di sini. Klik simpan setelah selesai./i
       )
 
       await expect.element(title).toBeInTheDocument()
@@ -60,7 +60,7 @@ describe('UsersActionDialog', () => {
         <UsersActionDialog open onOpenChange={vi.fn()} />
       )
 
-      const submitButton = getByRole('button', { name: /Save Changes/i })
+      const submitButton = getByRole('button', { name: /Simpan Perubahan/i })
       await userEvent.click(submitButton)
 
       await expect
@@ -91,9 +91,9 @@ describe('UsersActionDialog', () => {
         <UsersActionDialog open onOpenChange={vi.fn()} />
       )
 
-      const password = getByRole('textbox', { name: /^Password$/i })
+      const password = getByRole('textbox', { name: /^Kata Sandi$/i })
       const confirmPassword = getByRole('textbox', {
-        name: /Confirm Password/i,
+        name: /Konfirmasi Kata Sandi/i,
       })
       await expect.element(confirmPassword).toBeDisabled()
 
@@ -106,13 +106,13 @@ describe('UsersActionDialog', () => {
         <UsersActionDialog open onOpenChange={vi.fn()} />
       )
 
-      const password = getByRole('textbox', { name: /^Password$/i })
+      const password = getByRole('textbox', { name: /^Kata Sandi$/i })
       const confirmPassword = getByRole('textbox', {
-        name: /Confirm Password/i,
+        name: /Konfirmasi Kata Sandi/i,
       })
       await userEvent.type(password, 'a')
       await userEvent.type(confirmPassword, 'b')
-      const submitButton = getByRole('button', { name: /Save Changes/i })
+      const submitButton = getByRole('button', { name: /Simpan Perubahan/i })
 
       await userEvent.click(submitButton)
 
@@ -163,7 +163,7 @@ describe('UsersActionDialog', () => {
 
       await fillPasswords(userEvent, screen, 'S3cur3P@ssw0rd', 'S3cur3P@ssw0rd')
 
-      const submitButton = screen.getByRole('button', { name: /Save Changes/i })
+      const submitButton = screen.getByRole('button', { name: /Simpan Perubahan/i })
       await userEvent.click(submitButton)
 
       expect(onOpenChange).toHaveBeenCalledOnce()
@@ -192,10 +192,10 @@ describe('UsersActionDialog', () => {
 
       const title = getByRole('heading', {
         level: 2,
-        name: /Edit User/i,
+        name: /Ubah Pengguna/i,
       })
       const description = getByText(
-        /Update the user here\. Click save when you're done\./i
+        /Perbarui data pengguna di sini\. Klik simpan setelah selesai\./i
       )
 
       await expect.element(title).toBeInTheDocument()
@@ -212,7 +212,7 @@ describe('UsersActionDialog', () => {
         />
       )
 
-      const submitButton = screen.getByRole('button', { name: /Save Changes/i })
+      const submitButton = screen.getByRole('button', { name: /Simpan Perubahan/i })
       await userEvent.click(submitButton)
 
       expect(onOpenChange).toHaveBeenCalledOnce()
@@ -237,15 +237,15 @@ describe('UsersActionDialog', () => {
         <UsersActionDialog open onOpenChange={vi.fn()} currentRow={MOCK_USER} />
       )
 
-      const password = getByRole('textbox', { name: /^Password$/i })
+      const password = getByRole('textbox', { name: /^Kata Sandi$/i })
       const confirmPassword = getByRole('textbox', {
-        name: /Confirm Password/i,
+        name: /Konfirmasi Kata Sandi/i,
       })
 
       await userEvent.fill(password, 'S3cur3P@ssw0rd')
       await expect.element(confirmPassword).toBeEnabled()
 
-      const submitButton = getByRole('button', { name: /Save Changes/i })
+      const submitButton = getByRole('button', { name: /Simpan Perubahan/i })
       await userEvent.click(submitButton)
 
       await expect
@@ -267,7 +267,7 @@ describe('UsersActionDialog', () => {
       const EDIT_SUCCESS_PASSWORD = 'S3cur3P@ssw0rd'
 
       await userEvent.fill(
-        screen.getByLabelText(/first name/i),
+        screen.getByLabelText(/nama depan/i),
         EDIT_SUCCESS_FIRST_NAME
       )
       await fillPasswords(
@@ -277,7 +277,7 @@ describe('UsersActionDialog', () => {
         EDIT_SUCCESS_PASSWORD
       )
 
-      const submitButton = screen.getByRole('button', { name: /Save Changes/i })
+      const submitButton = screen.getByRole('button', { name: /Simpan Perubahan/i })
       await userEvent.click(submitButton)
 
       expect(onOpenChange).toHaveBeenCalledOnce()
@@ -312,11 +312,11 @@ async function fillRequiredProfileFields(
   }
 ) {
   const entries = [
-    [/first name/i, overrides?.firstName ?? 'John'],
-    [/last name/i, overrides?.lastName ?? 'Doe'],
+    [/nama depan/i, overrides?.firstName ?? 'John'],
+    [/nama belakang/i, overrides?.lastName ?? 'Doe'],
     [/username/i, overrides?.username ?? 'john_doe'],
     [/^email$/i, overrides?.email ?? 'a@b.co'],
-    [/phone number/i, overrides?.phoneNumber ?? '+19999999999'],
+    [/no\. telepon/i, overrides?.phoneNumber ?? '+19999999999'],
   ] as const
 
   for (const [label, value] of entries) {
@@ -325,7 +325,7 @@ async function fillRequiredProfileFields(
     await user.fill(el, value)
   }
 
-  const roleSelect = screen.getByRole('combobox', { name: /Role/i })
+  const roleSelect = screen.getByRole('combobox', { name: /Peran/i })
   await user.click(roleSelect)
   await user.click(
     screen.getByRole('option', { name: overrides?.roleOption ?? 'Superadmin' })
@@ -338,8 +338,8 @@ async function fillPasswords(
   a: string,
   b: string
 ) {
-  const password = screen.getByLabelText(/^Password$/i)
-  const confirmPassword = screen.getByLabelText(/^Confirm Password$/i)
+  const password = screen.getByLabelText(/^Kata Sandi$/i)
+  const confirmPassword = screen.getByLabelText(/^Konfirmasi Kata Sandi$/i)
   await user.fill(password, a)
   await user.fill(confirmPassword, b)
 }
