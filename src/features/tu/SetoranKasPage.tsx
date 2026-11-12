@@ -43,7 +43,9 @@ import { exportTableToPdf } from '@/lib/pdfExport'
 import {
   LaporanDateFilter,
   getDefaultDateFilter,
+  formatYmd,
 } from '@/features/laporan/components'
+import type { LaporanFilterParams } from '@/features/laporan/types'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import {
   type SetoranKasItem,
@@ -64,14 +66,33 @@ const isSetoranConfirmed = (status: string) =>
 const isSetoranWaiting = (status: string) =>
   status === 'MENUNGGU_KONFIRMASI' || status === 'MENUNGGU'
 
+function resolveFilterDates(params: LaporanFilterParams): string[] {
+  if (params.tanggal) return [params.tanggal]
+  if (params.dari && params.sampai) {
+    const startYmd = params.dari.slice(0, 10)
+    const endYmd = params.sampai.slice(0, 10)
+    const [sy, sm, sd] = startYmd.split('-').map(Number)
+    const [ey, em, ed] = endYmd.split('-').map(Number)
+    if (sy && sm && sd && ey && em && ed) {
+      const cursor = new Date(sy, sm - 1, sd)
+      const end = new Date(ey, em - 1, ed)
+      const dates: string[] = []
+      while (cursor < end && dates.length < 62) {
+        dates.push(formatYmd(cursor))
+        cursor.setDate(cursor.getDate() + 1)
+      }
+      if (dates.length > 0) return dates
+    }
+  }
+  return [formatYmd(new Date())]
+}
+
 export function SetoranKasPage() {
   const { auth } = useAuthStore()
   const isBendaharaOrAdmin = auth.hasRole(['admin', 'bendahara'])
 
-  const [selectedDate, setSelectedDate] = useState<string>(
-    () =>
-      getDefaultDateFilter().params.tanggal ||
-      new Date().toLocaleDateString('en-CA')
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
   )
   const [dateFilterLabel, setDateFilterLabel] = useState<string>(
     () => getDefaultDateFilter().label
@@ -98,6 +119,10 @@ export function SetoranKasPage() {
 
   useEffect(() => {
     let isMounted = true
+    const targetDates = resolveFilterDates(dateFilterParams)
+    const defaultFallbackDate =
+      dateFilterParams.tanggal || targetDates[0] || formatYmd(new Date())
+
     const load = async () => {
       setIsLoading(true)
       try {
@@ -105,23 +130,29 @@ export function SetoranKasPage() {
 
         try {
           const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
-            params: { tanggal: selectedDate },
+            params: dateFilterParams,
           })
           const rawItems = res.data?.data
           if (Array.isArray(rawItems) && rawItems.length > 0) {
             items = rawItems.map((item: RawRekapTu) =>
-              mapRekapSetoranTuItem(item, selectedDate)
+              mapRekapSetoranTuItem(
+                item,
+                typeof item.tanggal === 'string' && item.tanggal
+                  ? item.tanggal
+                  : defaultFallbackDate
+              )
             )
           }
         } catch {
           // Abaikan jika live query rekap backend mengembalikan error atau 404
         }
 
-        // Ambil transaksi top-up lokal untuk tanggal yang dipilih agar mutasi top-up
-        // terbaru (termasuk pada akun TU sekolah 2 / multi-tenant) selalu terangkum di rekapitulasi setoran kas TU
-        const localTxs = getStoredTopupTransactions(selectedDate)
+        // Ambil transaksi top-up lokal untuk setiap tanggal pada periode yang dipilih agar mutasi top-up
+        // terbaru selalu terangkum di rekapitulasi setoran kas TU
+        for (const tgl of targetDates) {
+          const localTxs = getStoredTopupTransactions(tgl)
+          if (localTxs.length === 0) continue
 
-        if (localTxs.length > 0) {
           const groupedByPetugas = new Map<number, TransaksiTopupDetail[]>()
           for (const tx of localTxs) {
             const pId =
@@ -133,7 +164,9 @@ export function SetoranKasPage() {
           }
 
           for (const [pId, txs] of groupedByPetugas.entries()) {
-            const existingIdx = items.findIndex((it) => it.petugas_id === pId)
+            const existingIdx = items.findIndex(
+              (it) => it.petugas_id === pId && it.tanggal === tgl
+            )
             const totalSiswa = txs.reduce(
               (sum, t) => sum + (t.nominal || 0),
               0
@@ -166,8 +199,8 @@ export function SetoranKasPage() {
               const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
 
               items.push({
-                id: `SETOR-${selectedDate.replace(/-/g, '')}-${pId}`,
-                tanggal: selectedDate,
+                id: `SETOR-${tgl.replace(/-/g, '')}-${pId}`,
+                tanggal: tgl,
                 petugas_id: pId,
                 petugas_nama: petugasNama,
                 petugas_nip: petugasNip,
@@ -182,6 +215,12 @@ export function SetoranKasPage() {
             }
           }
         }
+
+        // Urutkan terbaru lebih dulu untuk mode rentang
+        items.sort((a, b) => {
+          if (a.tanggal !== b.tanggal) return b.tanggal.localeCompare(a.tanggal)
+          return a.petugas_id - b.petugas_id
+        })
 
         // Terapkan data konfirmasi yang tersimpan di storage lokal jika ada
         items = applyStoredSetoranConfirmations(items)
@@ -201,7 +240,7 @@ export function SetoranKasPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedDate, auth.user])
+  }, [dateFilterParams, auth.user])
 
   // Handle successful confirmation from modal
   const handleConfirmSuccess = (updatedItem: SetoranKasItem) => {
@@ -292,10 +331,13 @@ export function SetoranKasPage() {
       'data:text/csv;charset=utf-8,' +
       [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
 
+    const fileSlug =
+      dateFilterParams.tanggal ||
+      `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${selectedDate}.csv`)
+    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${fileSlug}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -321,10 +363,14 @@ export function SetoranKasPage() {
         status: item.status,
       }))
 
+      const fileSlug =
+        dateFilterParams.tanggal ||
+        `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
+
       exportTableToPdf({
-        filename: `Rekap_Setoran_Kas_TU_${selectedDate}`,
+        filename: `Rekap_Setoran_Kas_TU_${fileSlug}`,
         title: 'REKAPITULASI & SETORAN KAS TU KANTIN SKOOLIA',
-        subtitle: `Tanggal Periode: ${selectedDate}`,
+        subtitle: `Periode: ${dateFilterLabel}`,
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Setoran Sistem': formatRupiah(totalPenerimaanSistem),
@@ -379,11 +425,8 @@ export function SetoranKasPage() {
           <div className='flex flex-wrap items-center gap-2.5'>
             <LaporanDateFilter
               initialPreset='TODAY'
-              singleDayOnly
               onChange={(params, label) => {
-                if (params.tanggal) {
-                  setSelectedDate(params.tanggal)
-                }
+                setDateFilterParams(params)
                 setDateFilterLabel(label)
               }}
             />
@@ -506,7 +549,7 @@ export function SetoranKasPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <CardTitle className='text-base font-semibold'>
-                  Daftar Rekapitulasi Kas TU Per Petugas ({selectedDate})
+                  Daftar Rekapitulasi Kas TU Per Petugas ({dateFilterLabel})
                 </CardTitle>
                 <CardDescription className='mt-0.5 text-xs'>
                   Rincian setoran uang tunai dari seluruh titik loket TU

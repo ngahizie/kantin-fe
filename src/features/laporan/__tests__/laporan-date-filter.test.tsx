@@ -4,6 +4,29 @@ import { userEvent } from 'vitest/browser'
 import { LaporanDateFilter } from '../components/LaporanDateFilter'
 
 describe('LaporanDateFilter', () => {
+  it('menampilkan seluruh preset termasuk rentang multi-hari secara default', async () => {
+    const onChange = vi.fn()
+
+    const screen = await render(
+      <LaporanDateFilter initialPreset='TODAY' onChange={onChange} />
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /Hari Ini/i }))
+
+    await expect.element(screen.getByRole('button', { name: '7 Hari Terakhir', exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: '30 Hari Terakhir', exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: 'Bulan Ini', exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Rentang Tanggal Kustom')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '7 Hari Terakhir', exact: true }))
+
+    expect(onChange).toHaveBeenCalledOnce()
+    expect(onChange.mock.calls[0]?.[0]).toEqual({
+      dari: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T00:00:00/),
+      sampai: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T00:00:00/),
+    })
+  })
+
   it('menyembunyikan preset rentang multi-hari ketika singleDayOnly aktif dan memicu onChange tanggal', async () => {
     const onChange = vi.fn()
 
