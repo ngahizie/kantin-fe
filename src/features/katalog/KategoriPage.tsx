@@ -39,6 +39,9 @@ import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
 import type { KategoriItem } from './types'
 
+const CARD_OUTLINE_CLASS =
+  'has-outline outline-2 outline-slate-200 dark:outline-slate-800'
+
 export function KategoriPage() {
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -177,7 +180,7 @@ export function KategoriPage() {
 
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Kategori</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
@@ -185,7 +188,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori Aktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
@@ -195,7 +198,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className='border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none'>
+          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Nonaktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
@@ -207,7 +210,7 @@ export function KategoriPage() {
         </div>
 
         {/* Search & Table Card */}
-        <Card className='border border-border bg-card shadow-xs'>
+        <Card className={`${CARD_OUTLINE_CLASS} border-0 bg-card shadow-xs`}>
           <div className='p-4 border-b'>
             <TableToolbar
               searchPlaceholder='Cari nama kategori...'
