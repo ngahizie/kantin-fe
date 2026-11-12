@@ -193,7 +193,7 @@ export const getStatusBadgeClass = (status: string) => {
   if (['SUKSES', 'BERHASIL', 'SELESAI', 'SEIMBANG', 'AMAN', 'AKTIF', 'TERKONFIRMASI'].includes(normalized)) {
     return 'has-border border border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
   }
-  if (['VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
+  if (['REFUND', 'VOID', 'GAGAL', 'BATAL', 'DIBATALKAN', 'DITOLAK', 'HABIS', 'DIBLOKIR', 'KURANG'].includes(normalized)) {
     return 'has-border border border-rose-200 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
   }
   if (['PENDING', 'MENUNGGU', 'MENIPIS', 'DIKOREKSI', 'PROSES'].includes(normalized)) {
@@ -314,7 +314,7 @@ export function DashboardPage() {
               item: itemSummary,
               total: Number(trx.nominal ?? 0),
               metode: 'RFID Tap',
-              status: trx.jenis === 'VOID' ? 'VOID' : 'SUKSES',
+              status: trx.jenis === 'VOID' ? 'REFUND' : 'SUKSES',
             }
           })
           setRecentTransactions(mapped)
