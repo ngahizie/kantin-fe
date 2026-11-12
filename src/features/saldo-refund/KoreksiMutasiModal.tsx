@@ -1,16 +1,10 @@
-import { useState, useId } from 'react'
-import {
-  MOCK_SISWA,
-  MOCK_KARTU_TAMU,
-  type KartuSiswaMock,
-  type KartuTamuMock,
-} from '@/mocks/mock-data'
+import { useState, useEffect, useId } from 'react'
+import { type KartuSiswaMock } from '@/types/kantin'
 import {
   ShieldAlert,
   ArrowDownRight,
   ArrowUpRight,
   User,
-  CreditCard,
   FileCheck2,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,7 +24,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
@@ -40,7 +33,6 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type {
-  SubjekTipe,
   JenisKoreksi,
   ArahMutasi,
   MutasiKoreksiItem,
@@ -52,6 +44,7 @@ interface KoreksiMutasiModalProps {
   onOpenChange: (open: boolean) => void
   initialTransaction?: TransaksiSesiTutupItem | null
   initialSiswa?: KartuSiswaMock | null
+  students?: KartuSiswaMock[]
   onSuccess?: (created: MutasiKoreksiItem) => void
 }
 
@@ -59,7 +52,6 @@ interface FormContentProps {
   initialTransaction?: TransaksiSesiTutupItem | null
   initialSiswa?: KartuSiswaMock | null
   students: KartuSiswaMock[]
-  cards: KartuTamuMock[]
   onSuccess?: (created: MutasiKoreksiItem) => void
   onCancel: () => void
 }
@@ -68,21 +60,16 @@ function KoreksiMutasiFormContent({
   initialTransaction,
   initialSiswa,
   students,
-  cards,
   onSuccess,
   onCancel,
 }: FormContentProps) {
   const { auth } = useAuthStore()
-  const bendaharaNama = auth.user?.nama || 'Siti Rahma (Bendahara)'
+  const bendaharaNama = auth.user?.nama || 'Bendahara'
 
-  const [subjekTipe, setSubjekTipe] = useState<SubjekTipe>(
-    initialTransaction ? initialTransaction.subjek_tipe : 'SISWA'
-  )
-
-  const [selectedSubjekId, setSelectedSubjekId] = useState<string>(() => {
-    if (initialTransaction) return initialTransaction.subjek_id.toString()
+  const [selectedSiswaId, setSelectedSiswaId] = useState<string>(() => {
+    if (initialTransaction) return initialTransaction.siswa_id.toString()
     if (initialSiswa) return initialSiswa.siswa_id.toString()
-    return students[0]?.siswa_id.toString() || '101'
+    return students[0]?.siswa_id.toString() || ''
   })
 
   const [jenisKoreksi, setJenisKoreksi] = useState<JenisKoreksi>(() => {
@@ -123,25 +110,23 @@ function KoreksiMutasiFormContent({
   const alasanInputId = useId()
   const agreementCheckboxId = useId()
 
-  // Currently selected subject details
+  // Currently selected student details
   const selectedStudent = students.find(
-    (s) => s.siswa_id === Number(selectedSubjekId)
+    (s) => s.siswa_id === Number(selectedSiswaId)
   )
-  const selectedCard = cards.find((c) => c.id === Number(selectedSubjekId))
 
-  const subjekNama =
-    subjekTipe === 'SISWA'
-      ? selectedStudent?.nama || '-'
-      : selectedCard?.label_pemegang ||
-        `Kartu ${selectedCard?.nomor_kartu || '-'}`
-  const subjekInfo =
-    subjekTipe === 'SISWA'
-      ? `${selectedStudent?.kelas || '-'} (NIS: ${selectedStudent?.nis || '-'})`
-      : `Kartu: ${selectedCard?.nomor_kartu || '-'}`
-  const saldoSaatIni =
-    subjekTipe === 'SISWA'
-      ? selectedStudent?.saldo || 0
-      : selectedCard?.saldo || 0
+  const siswaNama =
+    selectedStudent?.nama ||
+    (initialTransaction && Number(selectedSiswaId) === initialTransaction.siswa_id
+      ? initialTransaction.siswa_nama
+      : '-')
+  const siswaInfo =
+    selectedStudent
+      ? `${selectedStudent.kelas || '-'} (NIS: ${selectedStudent.nis || '-'})`
+      : initialTransaction && Number(selectedSiswaId) === initialTransaction.siswa_id
+        ? initialTransaction.siswa_info
+        : '-'
+  const saldoSaatIni = selectedStudent?.saldo || 0
 
   const nominalNum = Number(nominalStr) || 0
   const saldoSetelah =
@@ -149,7 +134,7 @@ function KoreksiMutasiFormContent({
   const isSaldoMinus = arah === 'DEBIT' && nominalNum > saldoSaatIni
 
   const isValidSubmit =
-    Boolean(selectedSubjekId) &&
+    Boolean(selectedSiswaId) &&
     nominalNum > 0 &&
     !isSaldoMinus &&
     alasan.trim().length >= 5 &&
@@ -172,8 +157,8 @@ function KoreksiMutasiFormContent({
     setIsSubmitting(true)
     try {
       const payload = {
-        subjekTipe,
-        subjekId: Number(selectedSubjekId),
+        subjekTipe: 'SISWA' as const,
+        siswaId: Number(selectedSiswaId),
         arah,
         nominal: nominalNum,
         alasan: alasan.trim(),
@@ -190,17 +175,16 @@ function KoreksiMutasiFormContent({
         id: fallbackId,
         referensi_id: referensiId.trim(),
         waktu: new Date().toISOString(),
-        subjek_tipe: subjekTipe,
-        subjek_id: Number(selectedSubjekId),
-        subjek_nama: subjekNama,
-        subjek_info: subjekInfo,
+        siswa_id: Number(selectedSiswaId),
+        siswa_nama: siswaNama,
+        siswa_info: siswaInfo,
         jenis_koreksi: jenisKoreksi,
         arah,
         nominal: nominalNum,
         saldo_sebelum: saldoSaatIni,
         saldo_setelah: saldoSetelah,
         alasan: alasan.trim(),
-        bendahara_id: 10,
+        bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
         bendahara_nama: bendaharaNama,
         transaksi_terkait_id: initialTransaction?.id,
         sesi_kasir_id: initialTransaction?.sesi_kasir_id,
@@ -266,53 +250,29 @@ function KoreksiMutasiFormContent({
         </div>
       </div>
 
-      {/* Pemilihan Subjek (Siswa / Kartu Tamu) */}
+      {/* Pemilihan Siswa Pemilik Saldo */}
       <div className='space-y-3 rounded-xl border-0 bg-muted/70 dark:bg-muted/30 p-3.5'>
         <div className='flex items-center justify-between'>
           <Label className='text-xs font-semibold'>
-            Pilih Subjek Pemilik Saldo:
+            Pilih Siswa Pemilik Saldo:
           </Label>
-          <RadioGroup
-            value={subjekTipe}
-            onValueChange={(val) => {
-              setSubjekTipe(val as SubjekTipe)
-              if (val === 'SISWA') {
-                setSelectedSubjekId(students[0]?.siswa_id.toString() || '')
-              } else {
-                setSelectedSubjekId(cards[0]?.id.toString() || '')
-              }
-            }}
-            className='flex items-center gap-4'
-          >
-            <div className='flex items-center space-x-1.5'>
-              <RadioGroupItem value='SISWA' id='subjek-siswa' />
-              <Label
-                htmlFor='subjek-siswa'
-                className='flex cursor-pointer items-center gap-1 text-xs font-normal'
-              >
-                <User className='h-3.5 w-3.5' /> Siswa
-              </Label>
-            </div>
-            <div className='flex items-center space-x-1.5'>
-              <RadioGroupItem value='KARTU_TAMU' id='subjek-kartu-tamu' />
-              <Label
-                htmlFor='subjek-kartu-tamu'
-                className='flex cursor-pointer items-center gap-1 text-xs font-normal'
-              >
-                <CreditCard className='h-3.5 w-3.5' /> Kartu Tamu
-              </Label>
-            </div>
-          </RadioGroup>
+          <span className='flex items-center gap-1 text-xs text-muted-foreground'>
+            <User className='h-3.5 w-3.5' /> Siswa
+          </span>
         </div>
 
-        {/* Select Box Subjek */}
-        {subjekTipe === 'SISWA' ? (
-          <Select value={selectedSubjekId} onValueChange={setSelectedSubjekId}>
-            <SelectTrigger className='text-xs'>
-              <SelectValue placeholder='Pilih Siswa...' />
-            </SelectTrigger>
-            <SelectContent className='max-h-60'>
-              {students.map((s) => (
+        {/* Select Box Siswa */}
+        <Select value={selectedSiswaId} onValueChange={setSelectedSiswaId}>
+          <SelectTrigger className='text-xs'>
+            <SelectValue placeholder='Pilih Siswa...' />
+          </SelectTrigger>
+          <SelectContent className='max-h-60'>
+            {students.length === 0 ? (
+              <SelectItem value='empty' disabled className='text-xs'>
+                Belum ada data siswa
+              </SelectItem>
+            ) : (
+              students.map((s) => (
                 <SelectItem
                   key={s.siswa_id}
                   value={s.siswa_id.toString()}
@@ -320,35 +280,16 @@ function KoreksiMutasiFormContent({
                 >
                   {s.nama} — {s.kelas} (Saldo: {formatRupiah(s.saldo)})
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Select value={selectedSubjekId} onValueChange={setSelectedSubjekId}>
-            <SelectTrigger className='text-xs'>
-              <SelectValue placeholder='Pilih Kartu Tamu...' />
-            </SelectTrigger>
-            <SelectContent className='max-h-60'>
-              {cards.map((c) => (
-                <SelectItem
-                  key={c.id}
-                  value={c.id.toString()}
-                  className='text-xs'
-                >
-                  {c.nomor_kartu}{' '}
-                  {c.label_pemegang ? `(${c.label_pemegang})` : ''} — Saldo:{' '}
-                  {formatRupiah(c.saldo)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+              ))
+            )}
+          </SelectContent>
+        </Select>
 
-        {/* Detail Subjek Card */}
+        {/* Detail Siswa Card */}
         <div className='flex items-center justify-between rounded-lg border-0 bg-background/80 dark:bg-background/40 p-2.5 text-xs'>
           <div>
-            <span className='font-semibold text-foreground'>{subjekNama}</span>
-            <p className='text-[11px] text-muted-foreground'>{subjekInfo}</p>
+            <span className='font-semibold text-foreground'>{siswaNama}</span>
+            <p className='text-[11px] text-muted-foreground'>{siswaInfo}</p>
           </div>
           <div className='text-right'>
             <span className='block text-[11px] text-muted-foreground'>
@@ -567,12 +508,54 @@ export function KoreksiMutasiModal({
   onOpenChange,
   initialTransaction,
   initialSiswa,
+  students: externalStudents,
   onSuccess,
 }: KoreksiMutasiModalProps) {
-  const [students] = useState<KartuSiswaMock[]>(MOCK_SISWA)
-  const [cards] = useState<KartuTamuMock[]>(MOCK_KARTU_TAMU)
+  const [fetchedStudents, setFetchedStudents] = useState<KartuSiswaMock[]>([])
 
-  const formKey = `${initialTransaction?.id || 'new'}-${initialSiswa?.siswa_id || 'none'}-${open ? 'open' : 'closed'}`
+  useEffect(() => {
+    if (!open || (externalStudents && externalStudents.length > 0)) return
+    let isMounted = true
+    const loadStudents = async () => {
+      try {
+        const res = await apiClient.get('/api/siswa', { params: { batas: 200 } })
+        if (isMounted && Array.isArray(res.data?.data)) {
+          const mapped: KartuSiswaMock[] = (
+            res.data.data as Record<string, unknown>[]
+          ).map((raw) => {
+            const sid = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
+            const nis = String(raw.nis ?? '')
+            return {
+              uid: String(raw.uid ?? raw.rfidUid ?? (nis ? `UID-${nis}` : `UID-${sid}`)),
+              siswa_id: sid,
+              nis,
+              nama: String(raw.nama ?? `Siswa #${sid}`),
+              kelas: String(raw.kelas ?? '-'),
+              foto_url: String(raw.fotoUrl ?? raw.foto_url ?? ''),
+              saldo: Number(raw.saldo ?? 0),
+              limit_harian: 0,
+              belanja_hari_ini: 0,
+              is_blocked: Boolean(raw.diblokir ?? raw.tidakAktif),
+            }
+          })
+          setFetchedStudents(mapped)
+        }
+      } catch {
+        if (isMounted) setFetchedStudents([])
+      }
+    }
+    void loadStudents()
+    return () => {
+      isMounted = false
+    }
+  }, [open, externalStudents])
+
+  const students =
+    externalStudents && externalStudents.length > 0
+      ? externalStudents
+      : fetchedStudents
+
+  const formKey = `${initialTransaction?.id || 'new'}-${initialSiswa?.siswa_id || 'none'}-${students.length}-${open ? 'open' : 'closed'}`
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -593,7 +576,6 @@ export function KoreksiMutasiModal({
             initialTransaction={initialTransaction}
             initialSiswa={initialSiswa}
             students={students}
-            cards={cards}
             onSuccess={onSuccess}
             onCancel={() => onOpenChange(false)}
           />

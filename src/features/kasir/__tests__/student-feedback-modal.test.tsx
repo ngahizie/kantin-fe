@@ -9,7 +9,6 @@ describe('StudentFeedbackModal', () => {
     const backendData = {
       transaksiId: 9988,
       nomorStruk: 'TRX-20261110-9988',
-      subjekTipe: 'SISWA' as const,
       nama: 'Budi Handoko',
       kelas: 'VIII-B',
       fotoUrl: 'https://example.com/foto.jpg',
@@ -48,8 +47,6 @@ describe('StudentFeedbackModal', () => {
       total: 10000,
       waktu: new Date().toISOString(),
       pembeli: {
-        tipe: 'SISWA' as const,
-        subjekTipe: 'SISWA' as const,
         nama: 'Siti Rahma',
         kelas: 'IX-A',
         nis: '12345',
@@ -78,8 +75,6 @@ describe('StudentFeedbackModal', () => {
       total: 10000,
       waktu: new Date().toISOString(),
       pembeli: {
-        tipe: 'SISWA' as const,
-        subjekTipe: 'SISWA' as const,
         nama: 'Ahmad Faiz',
         kelas: 'VII-C',
         nis: '9876',
@@ -107,8 +102,6 @@ describe('StudentFeedbackModal', () => {
       total: 10000,
       waktu: new Date().toISOString(),
       pembeli: {
-        tipe: 'SISWA' as const,
-        subjekTipe: 'SISWA' as const,
         nama: 'Ahmad Faiz',
         kelas: 'VII-C',
         nis: '9876',

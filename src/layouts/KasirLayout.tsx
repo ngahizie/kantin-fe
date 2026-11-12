@@ -83,7 +83,7 @@ export function KasirLayout() {
           <div>
             <span className='block font-bold text-sm tracking-tight text-slate-800 dark:text-white'>SKOOLIA Kantin POS</span>
             <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1'>
-              <User className='h-3 w-3' /> Petugas: {user?.nama || 'Ahmad Kasir'} (Aktif)
+              <User className='h-3 w-3' /> Petugas: {user?.nama || 'Petugas Kasir'} (Aktif)
             </p>
           </div>
         </div>

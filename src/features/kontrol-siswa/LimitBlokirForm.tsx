@@ -27,12 +27,10 @@ import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
 import {
-  MOCK_MENU,
-  MOCK_KATEGORI,
   type KartuSiswaMock,
   type MenuItemMock,
   type KategoriMock,
-} from '@/mocks/mock-data'
+} from '@/types/kantin'
 
 interface LimitBlokirFormProps {
   open: boolean
@@ -187,13 +185,13 @@ function LimitBlokirFormContent({
       const requests: Promise<unknown>[] = [
         apiClient.put('/api/kontrol-kartu/limit-harian', {
           subjekTipe: 'SISWA',
-          subjekId: student.siswa_id,
+          siswaId: student.siswa_id,
           nominal: limitEnabled ? nominalLimitNum : null,
         }),
         ...itemsToBlock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
-            subjekId: student.siswa_id,
+            siswaId: student.siswa_id,
             menuId: id,
             diblokir: true,
           })
@@ -201,7 +199,7 @@ function LimitBlokirFormContent({
         ...itemsToUnblock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
-            subjekId: student.siswa_id,
+            siswaId: student.siswa_id,
             menuId: id,
             diblokir: false,
           })
@@ -209,7 +207,7 @@ function LimitBlokirFormContent({
         ...catsToBlock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
-            subjekId: student.siswa_id,
+            siswaId: student.siswa_id,
             kategoriId: id,
             diblokir: true,
           })
@@ -217,7 +215,7 @@ function LimitBlokirFormContent({
         ...catsToUnblock.map((id) =>
           apiClient.post('/api/kontrol-kartu/blokir-item', {
             subjekTipe: 'SISWA',
-            subjekId: student.siswa_id,
+            siswaId: student.siswa_id,
             kategoriId: id,
             diblokir: false,
           })
@@ -709,8 +707,8 @@ export function LimitBlokirForm({
   student,
   onSaveSuccess,
 }: LimitBlokirFormProps) {
-  const [categories, setCategories] = useState<KategoriMock[]>(MOCK_KATEGORI)
-  const [menuList, setMenuList] = useState<MenuItemMock[]>(MOCK_MENU)
+  const [categories, setCategories] = useState<KategoriMock[]>([])
+  const [menuList, setMenuList] = useState<MenuItemMock[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -724,7 +722,7 @@ export function LimitBlokirForm({
           const loadedCategories: KategoriMock[] =
             catRes?.data?.data && Array.isArray(catRes.data.data)
               ? catRes.data.data
-              : MOCK_KATEGORI
+              : []
           setCategories(loadedCategories)
 
           if (menuRes?.data?.data && Array.isArray(menuRes.data.data)) {
@@ -750,7 +748,10 @@ export function LimitBlokirForm({
           }
         }
       } catch {
-        // Fallback to initial mock constants
+        if (isMounted) {
+          setCategories([])
+          setMenuList([])
+        }
       }
     }
     void loadCatalog()

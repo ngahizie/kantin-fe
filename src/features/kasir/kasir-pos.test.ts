@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest'
+import apiClient from '@/lib/api-client'
 import { useCartStore } from '@/stores/useCartStore'
 import { kasirApi } from './api/kasir-api'
 import type { MenuItem } from '@/features/katalog/types'
@@ -177,34 +178,80 @@ describe('Integrasi Keranjang Kasir POS & Aturan Stok', () => {
   })
 })
 
-describe('Fitur Cek Saldo Siswa & Kartu Tamu', () => {
+describe('Fitur Cek Saldo Siswa', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('berhasil menemukan data siswa dan sisa saldo berdasarkan RFID UID', async () => {
+    const getSpy = vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/siswa') {
+        return {
+          data: {
+            data: [
+              {
+                siswaId: 1,
+                nis: '2026001',
+                nama: 'Budi Santoso',
+                kelas: 'X IPA 1',
+                rfidUid: '04A1B2C3D4',
+                saldo: 50000,
+              },
+            ],
+          },
+        }
+      }
+      if (url === '/api/saldo') {
+        return { data: { data: { saldo: 55000 } } }
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
     const res = await kasirApi.cekSaldo('04A1B2C3D4')
-    expect(res.tipe).toBe('SISWA')
     expect(res.nama).toBe('Budi Santoso')
     expect(res.nis).toBe('2026001')
     expect(res.kelas).toBe('X IPA 1')
-    expect(res.saldo).toBeGreaterThanOrEqual(0)
+    expect(res.saldo).toBe(55000)
     expect(res.status).toBe('ACTIVE')
+    expect(getSpy).toHaveBeenCalledWith(
+      '/api/saldo',
+      expect.objectContaining({ params: { siswaId: 1 } })
+    )
   })
 
   it('berhasil menemukan data siswa dan sisa saldo berdasarkan NIS', async () => {
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/siswa') {
+        return {
+          data: {
+            data: [
+              {
+                siswaId: 2,
+                nis: '2026002',
+                nama: 'Siti Rahmawati',
+                kelas: 'XI IPS 2',
+                saldo: 75000,
+              },
+            ],
+          },
+        }
+      }
+      if (url === '/api/saldo') {
+        return { data: { data: { saldo: 75000 } } }
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
     const res = await kasirApi.cekSaldo('2026002')
-    expect(res.tipe).toBe('SISWA')
     expect(res.nama).toBe('Siti Rahmawati')
     expect(res.nis).toBe('2026002')
     expect(res.kelas).toBe('XI IPS 2')
-    expect(res.saldo).toBeGreaterThanOrEqual(0)
-  })
-
-  it('berhasil menemukan data kartu tamu dan sisa saldo berdasarkan nomor kartu', async () => {
-    const res = await kasirApi.cekSaldo('KT-001')
-    expect(res.tipe).toBe('KARTU_TAMU')
-    expect(res.nomorKartu).toBe('KT-001')
     expect(res.saldo).toBe(75000)
   })
 
-  it('menolak pencarian dengan melempar error saat UID atau kartu tidak terdaftar', async () => {
+  it('menolak pencarian dengan melempar error saat UID atau NIS siswa tidak terdaftar', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { data: [] } })
+
     await expect(kasirApi.cekSaldo('INVALID_UID_99999')).rejects.toThrow(
       'Kartu atau siswa tidak ditemukan'
     )

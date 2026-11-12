@@ -1,5 +1,4 @@
 import apiClient from '@/lib/api-client'
-import { MOCK_SISWA, MOCK_KARTU_TAMU } from '@/mocks/mock-data'
 import { getStoredSaldoOverrides } from '@/features/tu/saldo-storage'
 import type {
   TapTransaksiRequest,
@@ -60,15 +59,7 @@ export const kasirApi = {
     const raw = res.data?.data
     if (!raw) return raw as unknown as TapTransaksiData
 
-    const subjekTipe =
-      raw.pembeli?.subjekTipe ||
-      raw.pembeli?.tipe ||
-      raw.subjekTipe ||
-      (raw.kelas ? 'SISWA' : 'KARTU_TAMU')
-
     const pembeli: TapBuyerInfo = {
-      tipe: subjekTipe === 'KARTU_TAMU' ? 'KARTU_TAMU' : 'SISWA',
-      subjekTipe: subjekTipe === 'KARTU_TAMU' ? 'KARTU_TAMU' : 'SISWA',
       nama: raw.pembeli?.nama || raw.nama || 'Pembeli',
       kelas: raw.pembeli?.kelas || raw.kelas || null,
       nis: raw.pembeli?.nis || raw.nis || null,
@@ -98,23 +89,9 @@ export const kasirApi = {
           raw.sisa_saldo ??
           0
       ),
-      nomor_kartu:
-        raw.pembeli?.nomor_kartu ||
-        raw.pembeli?.nomorKartu ||
-        raw.nomorKartu ||
-        raw.nomor_kartu ||
-        undefined,
-      label_pemegang:
-        raw.pembeli?.label_pemegang ||
-        raw.pembeli?.labelPemegang ||
-        raw.labelPemegang ||
-        raw.label_pemegang ||
-        undefined,
     }
 
-    // Identitas pembeli murni dari BE. Dulu nama/kelas bisa "diperkaya" dari
-    // MOCK_SISWA saat nama kosong — itu menampilkan identitas palsu di layar
-    // kasir, jadi jalur tersebut dihapus (issue #294).
+    // Identitas pembeli murni dari respons BE (issue #294).
 
     return {
       transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
@@ -219,26 +196,15 @@ export const kasirApi = {
   },
 
   /**
-   * Cek saldo terkini siswa atau kartu tamu berdasarkan UID, NIS, atau Nama
+   * Cek saldo terkini siswa berdasarkan UID, NIS, atau Nama
    */
   async cekSaldo(query: string): Promise<InfoSaldoData> {
     const q = query.trim()
     const qUpper = q.toUpperCase()
 
-    interface RawKartuTamuItem {
-      id?: number
-      rfidUid?: string
-      uid?: string
-      nomorKartu?: string
-      nomor_kartu?: string
-      labelPemegang?: string
-      label_pemegang?: string
-      saldo?: number
-      status?: string
-    }
-
     interface RawSiswaItem {
       id?: number
+      siswaId?: number
       siswa_id?: number
       nis?: string
       nama?: string
@@ -247,115 +213,46 @@ export const kasirApi = {
       foto_url?: string
       fotoUrl?: string
       saldo?: number
+      tidakAktif?: boolean
       is_blocked?: boolean
       uid?: string
+      rfidUid?: string
       rfid_uid?: string
     }
 
-    // 1. Cek apakah cocok dengan Kartu Tamu
-    try {
-      const ktRes = await apiClient.get<ApiResponse<RawKartuTamuItem[]>>('/api/kartu-tamu', {
-        silent: true,
-        skipToast: true,
-      })
-      const ktList = ktRes.data?.data || []
-      const foundKt = ktList.find(
-        (k) =>
-          (k.rfidUid || k.uid || '').toUpperCase() === qUpper ||
-          (k.nomorKartu || k.nomor_kartu || '').toUpperCase() === qUpper ||
-          (k.labelPemegang || k.label_pemegang || '')
-            .toLowerCase()
-            .includes(q.toLowerCase())
-      )
-      if (foundKt) {
-        return {
-          tipe: 'KARTU_TAMU',
-          id: foundKt.id,
-          nama:
-            foundKt.labelPemegang ||
-            foundKt.label_pemegang ||
-            foundKt.nomorKartu ||
-            foundKt.nomor_kartu ||
-            'Kartu Tamu',
-          nomorKartu: foundKt.nomorKartu || foundKt.nomor_kartu,
-          labelPemegang: foundKt.labelPemegang || foundKt.label_pemegang,
-          saldo: Number(foundKt.saldo || 0),
-          status: foundKt.status || 'ACTIVE',
-          uid: foundKt.rfidUid || foundKt.uid,
-        }
-      }
-    } catch {
-      // Fallback cek mock kartu tamu jika endpoint gagal / role kasir tidak berhak
-      const mockKt = MOCK_KARTU_TAMU.find(
-        (k) =>
-          (k.uid || '').toUpperCase() === qUpper ||
-          (k.nomor_kartu || '').toUpperCase() === qUpper ||
-          (k.label_pemegang || '').toLowerCase().includes(q.toLowerCase())
-      )
-      if (mockKt) {
-        return {
-          tipe: 'KARTU_TAMU',
-          id: mockKt.id,
-          nama: mockKt.label_pemegang || mockKt.nomor_kartu,
-          nomorKartu: mockKt.nomor_kartu,
-          labelPemegang: mockKt.label_pemegang,
-          saldo: mockKt.saldo,
-          status: mockKt.status,
-          uid: mockKt.uid,
-        }
-      }
-    }
-
-    // 2. Cek apakah cocok dengan Siswa
-    let foundStudent: RawSiswaItem | undefined
-
-    try {
-      const siswaRes = await apiClient.get<ApiResponse<RawSiswaItem[]>>('/api/siswa', {
-        params: { q, batas: 20 },
-        silent: true,
-        skipToast: true,
-      })
-      const siswaList = siswaRes.data?.data || []
-      foundStudent = siswaList.find(
-        (s) =>
-          (s.rfid_uid || s.uid || '').toUpperCase() === qUpper ||
-          (s.nis || '').toUpperCase() === qUpper ||
-          (s.nama || '').toLowerCase().includes(q.toLowerCase())
-      )
-    } catch {
-      // Backend /api/siswa error atau role kasir tidak berhak
-    }
-
-    // Fallback pencarian di MOCK_SISWA jika tidak ditemukan di backend
-    if (!foundStudent) {
-      foundStudent = MOCK_SISWA.find(
-        (s) =>
-          (s.uid || '').toUpperCase() === qUpper ||
-          (s.nis || '').toUpperCase() === qUpper ||
-          (s.nama || '').toLowerCase().includes(q.toLowerCase())
-      )
-    }
+    const siswaRes = await apiClient.get<ApiResponse<RawSiswaItem[]>>('/api/siswa', {
+      params: { q, batas: 20 },
+      silent: true,
+      skipToast: true,
+    })
+    const siswaList = siswaRes.data?.data || []
+    const foundStudent = siswaList.find(
+      (s) =>
+        (s.rfidUid || s.rfid_uid || s.uid || '').toUpperCase() === qUpper ||
+        (s.nis || '').toUpperCase() === qUpper ||
+        (s.nama || '').toLowerCase().includes(q.toLowerCase())
+    )
 
     if (foundStudent) {
-      const studentId = foundStudent.siswa_id || foundStudent.id
+      const studentId = foundStudent.siswaId || foundStudent.siswa_id || foundStudent.id
       let finalSaldo = Number(foundStudent.saldo || 0)
 
-      // Coba ambil saldo live dari /api/saldo jika tersedia
-      try {
-        const saldoRes = await apiClient.get<ApiResponse<{ saldo?: number }>>('/api/saldo', {
-          params: {
-            subjekTipe: 'SISWA',
-            subjekId: studentId,
-          },
-          silent: true,
-          skipToast: true,
-        })
-        const liveSaldo = saldoRes.data?.data?.saldo
-        if (typeof liveSaldo === 'number' && liveSaldo > 0) {
-          finalSaldo = liveSaldo
+      if (studentId) {
+        try {
+          const saldoRes = await apiClient.get<ApiResponse<{ saldo?: number }>>('/api/saldo', {
+            params: {
+              siswaId: studentId,
+            },
+            silent: true,
+            skipToast: true,
+          })
+          const liveSaldo = saldoRes.data?.data?.saldo
+          if (typeof liveSaldo === 'number' && liveSaldo >= 0) {
+            finalSaldo = liveSaldo
+          }
+        } catch {
+          // Gunakan saldo dari /api/siswa jika /api/saldo gagal
         }
-      } catch {
-        // Gunakan saldo tersimpan lokal jika ada
       }
 
       const overrides = getStoredSaldoOverrides()
@@ -364,35 +261,14 @@ export const kasirApi = {
       }
 
       return {
-        tipe: 'SISWA',
         id: studentId,
         nis: foundStudent.nis || null,
         nama: foundStudent.nama || 'Siswa',
         kelas: foundStudent.kelas || foundStudent.kelas_terakhir || null,
-        fotoUrl: foundStudent.foto_url || foundStudent.fotoUrl || null,
+        fotoUrl: foundStudent.fotoUrl || foundStudent.foto_url || null,
         saldo: finalSaldo,
         status: foundStudent.is_blocked ? 'BLOCKED' : 'ACTIVE',
-        uid: foundStudent.uid || foundStudent.rfid_uid || null,
-      }
-    }
-
-    // Cek juga fallback mock kartu tamu jika langkah 1 terlewati
-    const fallbackKt = MOCK_KARTU_TAMU.find(
-      (k) =>
-        (k.uid || '').toUpperCase() === qUpper ||
-        (k.nomor_kartu || '').toUpperCase() === qUpper ||
-        (k.label_pemegang || '').toLowerCase().includes(q.toLowerCase())
-    )
-    if (fallbackKt) {
-      return {
-        tipe: 'KARTU_TAMU',
-        id: fallbackKt.id,
-        nama: fallbackKt.label_pemegang || fallbackKt.nomor_kartu,
-        nomorKartu: fallbackKt.nomor_kartu,
-        labelPemegang: fallbackKt.label_pemegang,
-        saldo: fallbackKt.saldo,
-        status: fallbackKt.status,
-        uid: fallbackKt.uid,
+        uid: foundStudent.rfidUid || foundStudent.uid || foundStudent.rfid_uid || null,
       }
     }
 

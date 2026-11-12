@@ -1,5 +1,6 @@
 import apiClient from '@/lib/api-client'
 import type {
+  KebijakanSaldoMengendap,
   PengaturanKantin,
   PengaturanKantinFormValues,
   TitikKasir,
@@ -22,7 +23,8 @@ interface PengaturanBackendDto {
   minTopup?: number
   maksTopup?: number
   batasSaldoSiswa?: number
-  batasSaldoKartuTamu?: number
+  kebijakanSaldoMengendap?: string
+  ambangHari?: number
   disimpan?: boolean
   updatedAt?: string
   updatedBy?: string
@@ -42,6 +44,14 @@ interface TitikKasirBackendDto {
   updated_at?: string
 }
 
+function normalizeKebijakan(val?: string): KebijakanSaldoMengendap {
+  const upper = val?.trim().toUpperCase()
+  if (upper === 'PINDAH_SAUDARA' || upper === 'TETAP_MENGENDAP' || upper === 'REFUND') {
+    return upper
+  }
+  return 'REFUND'
+}
+
 function mapPengaturanFromBackend(dto: PengaturanBackendDto): PengaturanKantin {
   return {
     sekolahId: dto.sekolahId ?? 1,
@@ -52,7 +62,8 @@ function mapPengaturanFromBackend(dto: PengaturanBackendDto): PengaturanKantin {
     minTopup: dto.minTopup ?? 5000,
     maksTopup: dto.maksTopup ?? 500000,
     batasSaldoSiswa: dto.batasSaldoSiswa ?? 1000000,
-    batasSaldoKartuTamu: dto.batasSaldoKartuTamu ?? 500000,
+    kebijakanSaldoMengendap: normalizeKebijakan(dto.kebijakanSaldoMengendap),
+    ambangHari: dto.ambangHari ?? 90,
     disimpan: dto.disimpan ?? true,
     updatedAt: dto.updatedAt,
     updatedBy: dto.updatedBy,
@@ -96,7 +107,8 @@ export const pengaturanApi = {
       minTopup: data.minTopup,
       maksTopup: data.maksTopup,
       batasSaldoSiswa: data.batasSaldoSiswa,
-      batasSaldoKartuTamu: data.batasSaldoKartuTamu,
+      kebijakanSaldoMengendap: data.kebijakanSaldoMengendap,
+      ambangHari: data.ambangHari,
     }
 
     const res = await apiClient.put<ApiResponse<PengaturanBackendDto>>(

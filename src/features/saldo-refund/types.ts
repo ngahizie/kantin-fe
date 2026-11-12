@@ -1,7 +1,11 @@
 import { z } from 'zod'
-import type { SiswaNonaktifMock, SiblingMock } from '@/mocks/mock-data'
+import type {
+  KartuSiswaMock,
+  SiswaNonaktifMock,
+  SiblingMock,
+} from '@/types/kantin'
 
-export type { SiswaNonaktifMock, SiblingMock }
+export type { KartuSiswaMock, SiswaNonaktifMock, SiblingMock }
 
 // --- Types untuk Refund Siswa Keluar / Lulus (PRD §9.3 & §9.5) ---
 export const refundOrangTuaSchema = z.object({
@@ -115,7 +119,6 @@ export interface RefundSlipData {
 }
 
 // --- Types untuk Koreksi Bendahara (PRD §9.2) ---
-export type SubjekTipe = 'SISWA' | 'KARTU_TAMU'
 export type JenisKoreksi =
   | 'SALAH_INPUT_TOPUP'
   | 'PEMBALIK_TRANSAKSI_KASIR'
@@ -126,10 +129,9 @@ export interface MutasiKoreksiItem {
   id: string | number
   referensi_id: string
   waktu: string
-  subjek_tipe: SubjekTipe
-  subjek_id: number
-  subjek_nama: string
-  subjek_info: string
+  siswa_id: number
+  siswa_nama: string
+  siswa_info: string
   jenis_koreksi: JenisKoreksi
   arah: ArahMutasi
   nominal: number
@@ -143,8 +145,8 @@ export interface MutasiKoreksiItem {
 }
 
 export interface KoreksiSaldoPayload {
-  subjekTipe: SubjekTipe
-  subjekId: number
+  subjekTipe: 'SISWA'
+  siswaId: number
   arah: ArahMutasi
   nominal: number
   alasan: string
@@ -159,10 +161,9 @@ export interface TransaksiSesiTutupItem {
   sesi_kasir_id: number
   titik_kasir: string
   petugas_kasir: string
-  subjek_tipe: SubjekTipe
-  subjek_id: number
-  subjek_nama: string
-  subjek_info: string
+  siswa_id: number
+  siswa_nama: string
+  siswa_info: string
   kartu_uid?: string
   total: number
   items?: Array<{
@@ -197,9 +198,8 @@ export interface TransaksiKasirItemResponse {
   titikKasirId?: number | null
   titikKasirNama?: string | null
   petugasId?: number | null
-  subjekTipe: SubjekTipe
-  subjekId: number
-  subjekNama?: string | null
+  siswaId?: number | null
+  siswaNama?: string | null
   kartuUid?: string | null
   total: number
   status: 'SUKSES' | 'VOID'
@@ -222,45 +222,40 @@ export function mapTransaksiKasirItemToSesiTutup(
   )
   const petugasKasir = String(
     r.petugas_kasir ??
+    r.petugasNama ??
     (r.petugasId ? `Petugas #${String(r.petugasId)}` : 'Kasir')
   )
-  const subjekTipe = (r.subjekTipe ?? r.subjek_tipe ?? 'SISWA') as SubjekTipe
-  const subjekId = Number(r.subjekId ?? r.subjek_id ?? 0)
+  const siswaId = Number(r.siswaId ?? r.siswa_id ?? 0)
   const kartuUid = r.kartuUid
     ? String(r.kartuUid)
     : r.kartu_uid
       ? String(r.kartu_uid)
       : undefined
 
-  const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
-  let subjekNama = r.subjekNama
-    ? String(r.subjekNama)
-    : r.subjek_nama
-      ? String(r.subjek_nama)
+  const matchedSiswa = siswaList?.find((s) => s.siswa_id === siswaId)
+  let siswaNama = r.siswaNama
+    ? String(r.siswaNama)
+    : r.siswa_nama
+      ? String(r.siswa_nama)
       : ''
-  if (!subjekNama) {
-    if (subjekTipe === 'SISWA') {
-      subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
-    } else {
-      subjekNama = `Kartu Tamu #${subjekId}`
-    }
+  if (!siswaNama) {
+    siswaNama =
+      matchedSiswa?.nama || (siswaId > 0 ? `Siswa #${siswaId}` : 'Pelanggan Tunai')
   }
 
-  let subjekInfo = r.subjekInfo
-    ? String(r.subjekInfo)
-    : r.subjek_info
-      ? String(r.subjek_info)
+  let siswaInfo = r.siswaInfo
+    ? String(r.siswaInfo)
+    : r.siswa_info
+      ? String(r.siswa_info)
       : ''
-  if (!subjekInfo) {
-    if (subjekTipe === 'SISWA') {
-      subjekInfo = matchedSiswa
-        ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
-        : kartuUid
-          ? `Kartu: ${kartuUid}`
-          : `ID: ${subjekId}`
-    } else {
-      subjekInfo = kartuUid ? `Kartu: ${kartuUid}` : `ID: ${subjekId}`
-    }
+  if (!siswaInfo) {
+    siswaInfo = matchedSiswa
+      ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
+      : kartuUid
+        ? `Kartu: ${kartuUid}`
+        : siswaId > 0
+          ? `ID: ${siswaId}`
+          : 'Pembayaran Tunai'
   }
 
   const rawStatus = String(r.status || '').toUpperCase()
@@ -302,10 +297,9 @@ export function mapTransaksiKasirItemToSesiTutup(
     sesi_kasir_id: sesiKasirId,
     titik_kasir: titikKasir,
     petugas_kasir: petugasKasir,
-    subjek_tipe: subjekTipe,
-    subjek_id: subjekId,
-    subjek_nama: subjekNama,
-    subjek_info: subjekInfo,
+    siswa_id: siswaId,
+    siswa_nama: siswaNama,
+    siswa_info: siswaInfo,
     kartu_uid: kartuUid,
     total: Number(r.total) || 0,
     items,
@@ -343,36 +337,27 @@ export function mapMutasiKoreksiItem(
         : String(r.id)
       : ''
   const referensiId = String(r.referensiId ?? r.referensi_id ?? '')
-  const subjekTipe = (r.subjekTipe ?? r.subjek_tipe ?? 'SISWA') as SubjekTipe
-  const subjekId = Number(r.subjekId ?? r.subjek_id ?? 0)
+  const siswaId = Number(r.siswaId ?? r.siswa_id ?? 0)
 
-  const matchedSiswa = siswaList?.find((s) => s.siswa_id === subjekId)
-  let subjekNama = r.subjekNama
-    ? String(r.subjekNama)
-    : r.subjek_nama
-      ? String(r.subjek_nama)
+  const matchedSiswa = siswaList?.find((s) => s.siswa_id === siswaId)
+  let siswaNama = r.siswaNama
+    ? String(r.siswaNama)
+    : r.siswa_nama
+      ? String(r.siswa_nama)
       : ''
-  if (!subjekNama) {
-    if (subjekTipe === 'SISWA') {
-      subjekNama = matchedSiswa?.nama || `Siswa #${subjekId}`
-    } else {
-      subjekNama = `Kartu Tamu #${subjekId}`
-    }
+  if (!siswaNama) {
+    siswaNama = matchedSiswa?.nama || `Siswa #${siswaId}`
   }
 
-  let subjekInfo = r.subjekInfo
-    ? String(r.subjekInfo)
-    : r.subjek_info
-      ? String(r.subjek_info)
+  let siswaInfo = r.siswaInfo
+    ? String(r.siswaInfo)
+    : r.siswa_info
+      ? String(r.siswa_info)
       : ''
-  if (!subjekInfo) {
-    if (subjekTipe === 'SISWA') {
-      subjekInfo = matchedSiswa
-        ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
-        : `ID: ${subjekId}`
-    } else {
-      subjekInfo = `ID: ${subjekId}`
-    }
+  if (!siswaInfo) {
+    siswaInfo = matchedSiswa
+      ? `${matchedSiswa.kelas || ''} (NIS: ${matchedSiswa.nis || '-'})`.trim()
+      : `ID: ${siswaId}`
   }
 
   const arah = (r.arah ?? 'DEBIT') as ArahMutasi
@@ -405,10 +390,9 @@ export function mapMutasiKoreksiItem(
     id,
     referensi_id: referensiId,
     waktu: r.waktu ? String(r.waktu) : new Date().toISOString(),
-    subjek_tipe: subjekTipe,
-    subjek_id: subjekId,
-    subjek_nama: subjekNama,
-    subjek_info: subjekInfo,
+    siswa_id: siswaId,
+    siswa_nama: siswaNama,
+    siswa_info: siswaInfo,
     jenis_koreksi: jenisKoreksi,
     arah,
     nominal,

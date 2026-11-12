@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { KartuSiswaMock, MenuItemMock, KategoriMock } from '@/mocks/mock-data'
+import type { KartuSiswaMock, MenuItemMock, KategoriMock } from '@/types/kantin'
 
 export type { KartuSiswaMock, MenuItemMock, KategoriMock }
 

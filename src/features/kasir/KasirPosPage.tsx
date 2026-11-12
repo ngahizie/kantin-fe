@@ -370,17 +370,13 @@ export const KasirPosPage: React.FC = () => {
         }))
         const buyer = result.pembeli
         const rawResult = result as TapTransaksiData & {
-          subjekTipe?: 'SISWA' | 'KARTU_TAMU'
           nama?: string
           kelas?: string | null
+          nis?: string | null
+          fotoUrl?: string | null
           saldoSisa?: number
           nomorReferensi?: string | null
         }
-        const resolvedTipe: 'SISWA' | 'KARTU_TAMU' =
-          buyer?.tipe ||
-          buyer?.subjekTipe ||
-          rawResult.subjekTipe ||
-          (buyer?.kelas || rawResult.kelas ? 'SISWA' : 'KARTU_TAMU')
         const activeTitik = getActiveTitikKasir()
 
         const nextReceipt: ReceiptData = {
@@ -393,11 +389,11 @@ export const KasirPosPage: React.FC = () => {
             activeTitik?.nama ||
             sesi?.titikKasirNama ||
             null,
-          pembeliTipe: resolvedTipe,
           pembeliNama: buyer?.nama || rawResult.nama || 'Pembeli',
           pembeliKelas: buyer?.kelas ?? rawResult.kelas ?? null,
-          pembeliNis: buyer?.nis ?? null,
-          pembeliNomorKartu: buyer?.nomor_kartu || buyer?.nomorKartu || null,
+          pembeliNis: buyer?.nis ?? rawResult.nis ?? null,
+          pembeliFotoUrl:
+            buyer?.fotoUrl || buyer?.foto_url || rawResult.fotoUrl || null,
           items: snapshotItems,
           namaItemFallback: result.namaItem,
           total: Number(result.total ?? 0),
@@ -564,9 +560,18 @@ export const KasirPosPage: React.FC = () => {
 
       {/* Banner Sesi Kasir Ditutup */}
       {isSessionClosed && (
-        <div className='flex items-center gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
-          <Lock className='h-4 w-4 shrink-0' />
-          <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
+        <div className='flex flex-wrap items-center justify-between gap-2 has-border !border-b !border-slate-200 dark:!border-slate-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 text-xs font-medium text-rose-700 dark:text-rose-300'>
+          <div className='flex items-center gap-2'>
+            <Lock className='h-4 w-4 shrink-0' />
+            <span>Sesi kasir hari ini telah ditutup. Transaksi baru dikunci dan tidak dapat diproses.</span>
+          </div>
+          {sesi?.uangFisik != null && (
+            <span className='tabular-nums font-semibold'>
+              Kas Fisik: {formatRupiah(sesi.uangFisik)}
+              {sesi.selisih != null &&
+                ` (Selisih: ${sesi.selisih > 0 ? '+' : ''}${formatRupiah(sesi.selisih)})`}
+            </span>
+          )}
         </div>
       )}
 
@@ -605,7 +610,7 @@ export const KasirPosPage: React.FC = () => {
                 variant='secondary'
                 onClick={() => setCekSaldoOpen(true)}
                 className='h-10 gap-1.5 has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl shadow-none'
-                title='Cek saldo siswa atau kartu tamu'
+                title='Cek saldo siswa'
               >
                 <Wallet className='h-4 w-4 text-blue-600 dark:text-blue-400' />
                 <span className='hidden md:inline'>Cek Saldo</span>
@@ -781,7 +786,7 @@ export const KasirPosPage: React.FC = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Modal Cek Saldo Siswa & Kartu Tamu */}
+      {/* Modal Cek Saldo Siswa */}
       <CekSaldoModal
         open={cekSaldoOpen}
         onOpenChange={setCekSaldoOpen}

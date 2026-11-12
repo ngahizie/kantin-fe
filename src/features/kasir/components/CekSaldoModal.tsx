@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Wallet, Search, User, CreditCard, AlertCircle, RefreshCw } from 'lucide-react'
+import { Wallet, Search, AlertCircle, RefreshCw } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, getInitials } from '@/lib/formatters'
 import { kasirApi, type InfoSaldoData } from '../api/kasir-api'
 import { useRfidScanner } from '@/hooks/useRfidScanner'
 
@@ -68,7 +69,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     enabled: open,
   })
 
-  // Deteksi otomatis saat kartu di-scan (misal UID 8-16 digit desimal/hex atau kartu tamu)
+  // Deteksi otomatis saat kartu di-scan (misal UID 8-16 digit desimal/hex)
   useEffect(() => {
     const trimmed = searchInput.trim()
     if (!trimmed) return
@@ -77,8 +78,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     if (
       result &&
       (result.uid?.toLowerCase() === trimmed.toLowerCase() ||
-        result.nis?.toLowerCase() === trimmed.toLowerCase() ||
-        result.nomorKartu?.toLowerCase() === trimmed.toLowerCase())
+        result.nis?.toLowerCase() === trimmed.toLowerCase())
     ) {
       return
     }
@@ -87,11 +87,9 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
       return
     }
 
-    // Pola kartu RFID: 8-16 digit desimal (Mifare desimal), 8-16 hex chars, atau nomor kartu tamu KT-xx
+    // Pola kartu RFID: 8-16 digit desimal (Mifare desimal) atau 8-16 hex chars
     const isCompletedUid =
-      /^\d{8,16}$/.test(trimmed) ||
-      /^[0-9a-fA-F]{8,16}$/.test(trimmed) ||
-      /^KT-\d+$/i.test(trimmed)
+      /^\d{8,16}$/.test(trimmed) || /^[0-9a-fA-F]{8,16}$/.test(trimmed)
 
     // Jika UID lengkap dari scan kartu, eksekusi hampir instan (60ms) tanpa perlu klik tombol
     // Jika input manual (nama atau NIS), debounce 350ms
@@ -147,7 +145,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
           <div className='flex items-center gap-2 text-blue-600 dark:text-blue-400'>
             <Wallet className='h-5 w-5' />
             <DialogTitle className='text-base font-bold text-slate-800 dark:text-white'>
-              Cek Saldo Siswa & Kartu Tamu
+              Cek Saldo Siswa
             </DialogTitle>
           </div>
           <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
@@ -200,19 +198,18 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
           <div className='space-y-3 rounded-2xl has-border !border !border-slate-200 dark:!border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-4 animate-in zoom-in-95 duration-150'>
             <div className='flex items-start gap-3'>
               {/* Foto Profil / Avatar */}
-              <div className='relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-500 dark:text-slate-400'>
-                {result.fotoUrl ? (
-                  <img
+              <Avatar className='h-14 w-14 shrink-0 rounded-xl has-border !border !border-slate-200 dark:!border-slate-800 bg-white dark:bg-[#0a0a0a] text-slate-500 dark:text-slate-400'>
+                {result.fotoUrl && (
+                  <AvatarImage
                     src={result.fotoUrl}
                     alt={result.nama}
                     className='h-full w-full object-cover'
                   />
-                ) : result.tipe === 'KARTU_TAMU' ? (
-                  <CreditCard className='h-7 w-7 text-blue-600 dark:text-blue-400' />
-                ) : (
-                  <User className='h-7 w-7 text-slate-400 dark:text-slate-500' />
                 )}
-              </div>
+                <AvatarFallback className='rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200'>
+                  {getInitials(result.nama)}
+                </AvatarFallback>
+              </Avatar>
 
               {/* Data Identitas */}
               <div className='min-w-0 flex-1'>
@@ -224,19 +221,15 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                     variant='secondary'
                     className='bg-blue-100/80 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0 text-[10px] font-semibold uppercase tracking-wider rounded-full shadow-none'
                   >
-                    {result.tipe === 'KARTU_TAMU' ? 'Kartu Tamu' : 'Siswa'}
+                    Siswa
                   </Badge>
                 </div>
 
                 <div className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
-                  {result.tipe === 'KARTU_TAMU' ? (
-                    <span>No. Kartu: <strong className='text-slate-800 dark:text-white'>{result.nomorKartu || '-'}</strong></span>
-                  ) : (
-                    <span>
-                      NIS: <strong className='text-slate-800 dark:text-white'>{result.nis || '-'}</strong> • Kelas:{' '}
-                      <strong className='text-slate-800 dark:text-white'>{result.kelas || '-'}</strong>
-                    </span>
-                  )}
+                  <span>
+                    NIS: <strong className='text-slate-800 dark:text-white'>{result.nis || '-'}</strong> • Kelas:{' '}
+                    <strong className='text-slate-800 dark:text-white'>{result.kelas || '-'}</strong>
+                  </span>
                 </div>
 
                 {result.uid && (

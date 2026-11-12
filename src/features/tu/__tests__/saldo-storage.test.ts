@@ -3,16 +3,15 @@ import {
   applyStoredSaldoOverrides,
   applyStoredSetoranConfirmations,
   clearStoredSaldoOverrides,
-  getInitialStudents,
   getStoredSaldoOverrides,
   getStoredSetoranConfirmations,
   getStoredTopupTransactions,
   KANTIN_SALDO_STORAGE_KEY,
+  KANTIN_TOPUP_TRANSACTIONS_KEY,
   saveStoredSaldo,
   saveStoredSetoranConfirmation,
   saveTopupTransaction,
 } from '../saldo-storage'
-import { MOCK_SISWA } from '@/mocks/mock-data'
 
 // Mock localStorage jika dijalankan di environment Node tanpa browser runner
 class LocalStorageMock {
@@ -64,13 +63,6 @@ describe('saldo-storage', () => {
     expect(JSON.parse(rawInStorage!)).toEqual({ 102: 205000 })
   })
 
-  it('memperbarui saldo siswa yang ada di MOCK_SISWA secara in-memory', () => {
-    saveStoredSaldo(102, 250000)
-
-    const siti = MOCK_SISWA.find((s) => s.siswa_id === 102)
-    expect(siti?.saldo).toBe(250000)
-  })
-
   it('menerapkan stored overrides pada daftar siswa', () => {
     saveStoredSaldo(101, 90000)
     saveStoredSaldo(102, 300000)
@@ -85,14 +77,6 @@ describe('saldo-storage', () => {
     expect(updated[0].saldo).toBe(90000)
     expect(updated[1].saldo).toBe(300000)
     expect(updated[2].saldo).toBe(10000) // Siswa tanpa override tetap mempertahankan saldo aslinya
-  })
-
-  it('getInitialStudents mengembalikan MOCK_SISWA dengan saldo yang telah ter-override', () => {
-    saveStoredSaldo(102, 200000)
-
-    const initial = getInitialStudents()
-    const siti = initial.find((s) => s.siswa_id === 102)
-    expect(siti?.saldo).toBe(200000)
   })
 
   it('menangani data JSON korup di localStorage secara defensif', () => {
@@ -110,20 +94,52 @@ describe('saldo-storage', () => {
     expect(getStoredSaldoOverrides()).toEqual({})
   })
 
-  it('getStoredTopupTransactions mengembalikan seed default hari ini jika belum ada di storage', () => {
-    const list = getStoredTopupTransactions('2026-10-26', 2)
-    expect(list.length).toBe(8)
-    const total = list.reduce((sum, t) => sum + t.nominal, 0)
-    expect(total).toBe(480000)
+  it('getStoredTopupTransactions mengembalikan array kosong jika belum ada di storage dan membuang entri non-siswa lama', () => {
+    expect(getStoredTopupTransactions('2026-10-26', 2)).toEqual([])
+
+    window.localStorage.setItem(
+      KANTIN_TOPUP_TRANSACTIONS_KEY,
+      JSON.stringify([
+        {
+          id: 'TX-LAMA-TAMU',
+          waktu: '2026-10-26T03:00:00Z',
+          subjek_tipe: 'KARTU_TAMU',
+          subjek_nama: 'Tamu Lama',
+          subjek_info: 'Kartu Tamu',
+          nominal: 50000,
+          penyetor: 'Tamu',
+          referensi_id: 'TX-LAMA-TAMU',
+          tanggal: '2026-10-26',
+          petugas_id: 2,
+        },
+        {
+          id: 'TX-LAMA-SISWA',
+          waktu: '2026-10-26T04:00:00Z',
+          subjek_tipe: 'SISWA',
+          subjek_nama: 'Budi Santoso',
+          subjek_info: 'X IPA 1',
+          nominal: 75000,
+          penyetor: 'Orang Tua',
+          referensi_id: 'TX-LAMA-SISWA',
+          tanggal: '2026-10-26',
+          petugas_id: 2,
+        },
+      ])
+    )
+
+    const migrated = getStoredTopupTransactions('2026-10-26', 2)
+    expect(migrated).toHaveLength(1)
+    expect(migrated[0].siswa_nama).toBe('Budi Santoso')
+    expect(migrated[0].siswa_info).toBe('X IPA 1')
+    expect(migrated[0].nominal).toBe(75000)
   })
 
   it('saveTopupTransaction menyimpan transaksi baru ke storage dan tidak menduplikasi jika referensi_id sama', () => {
     saveTopupTransaction({
       id: 'TX-TEST-001',
       waktu: '2026-10-26T10:00:00Z',
-      subjek_tipe: 'SISWA',
-      subjek_nama: 'Ahmad Fauzi',
-      subjek_info: 'XII IPA 3',
+      siswa_nama: 'Ahmad Fauzi',
+      siswa_info: 'XII IPA 3',
       nominal: 25000,
       penyetor: 'Siswa Langsung',
       referensi_id: 'TX-TEST-001',
@@ -132,7 +148,7 @@ describe('saldo-storage', () => {
     })
 
     const list = getStoredTopupTransactions('2026-10-26', 2)
-    expect(list.length).toBe(9)
+    expect(list.length).toBe(1)
     expect(list[0].id).toBe('TX-TEST-001')
     expect(list[0].nominal).toBe(25000)
 
@@ -140,9 +156,8 @@ describe('saldo-storage', () => {
     saveTopupTransaction({
       id: 'TX-TEST-001',
       waktu: '2026-10-26T10:00:00Z',
-      subjek_tipe: 'SISWA',
-      subjek_nama: 'Ahmad Fauzi',
-      subjek_info: 'XII IPA 3',
+      siswa_nama: 'Ahmad Fauzi',
+      siswa_info: 'XII IPA 3',
       nominal: 25000,
       penyetor: 'Siswa Langsung',
       referensi_id: 'TX-TEST-001',
@@ -151,7 +166,7 @@ describe('saldo-storage', () => {
     })
 
     const listAfterDuplicate = getStoredTopupTransactions('2026-10-26', 2)
-    expect(listAfterDuplicate.length).toBe(9)
+    expect(listAfterDuplicate.length).toBe(1)
   })
 
   it('getStoredTopupTransactions menyaring transaksi berdasarkan tanggal dan petugas', () => {

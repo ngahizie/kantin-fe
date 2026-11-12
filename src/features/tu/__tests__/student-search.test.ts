@@ -44,9 +44,9 @@ describe('mapInfoSiswaToKartuSiswa', () => {
     expect(mapped.is_blocked).toBe(true)
   })
 
-  it('menangani fallback properti alternatif seperti subjekId dan snake_case', () => {
+  it('menangani fallback properti alternatif seperti siswa_id dan snake_case', () => {
     const rawFallback: RawInfoSiswa = {
-      subjekId: 202,
+      siswa_id: 202,
       nis: '2024099',
       nama: 'Andi Wijaya',
       kelas: '8B',

@@ -33,6 +33,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import {
   pengaturanKantinSchema,
@@ -47,7 +54,8 @@ const DEFAULT_FORM_VALUES: PengaturanKantinFormValues = {
   minTopup: 5000,
   maksTopup: 500000,
   batasSaldoSiswa: 1000000,
-  batasSaldoKartuTamu: 500000,
+  kebijakanSaldoMengendap: 'REFUND',
+  ambangHari: 90,
 }
 
 export const PengaturanKantinPage: React.FC = () => {
@@ -76,7 +84,7 @@ export const PengaturanKantinPage: React.FC = () => {
   const watchedMinTopup = useWatch({ control, name: 'minTopup', defaultValue: 5000 })
   const watchedMaxTopup = useWatch({ control, name: 'maksTopup', defaultValue: 500000 })
   const watchedMaxSaldoSiswa = useWatch({ control, name: 'batasSaldoSiswa', defaultValue: 1000000 })
-  const watchedMaxSaldoKartuTamu = useWatch({ control, name: 'batasSaldoKartuTamu', defaultValue: 500000 })
+  const watchedAmbangHari = useWatch({ control, name: 'ambangHari', defaultValue: 90 })
 
   // Muat data dari server saat mount
   useEffect(() => {
@@ -94,7 +102,8 @@ export const PengaturanKantinPage: React.FC = () => {
             minTopup: data.minTopup,
             maksTopup: data.maksTopup,
             batasSaldoSiswa: data.batasSaldoSiswa,
-            batasSaldoKartuTamu: data.batasSaldoKartuTamu,
+            kebijakanSaldoMengendap: data.kebijakanSaldoMengendap,
+            ambangHari: data.ambangHari,
           })
         }
       } catch {
@@ -121,7 +130,8 @@ export const PengaturanKantinPage: React.FC = () => {
         minTopup: updated.minTopup,
         maksTopup: updated.maksTopup,
         batasSaldoSiswa: updated.batasSaldoSiswa,
-        batasSaldoKartuTamu: updated.batasSaldoKartuTamu,
+        kebijakanSaldoMengendap: updated.kebijakanSaldoMengendap,
+        ambangHari: updated.ambangHari,
       })
       toast.success(
         'Pengaturan operasional kantin berhasil disimpan dan tersinkronisasi ke klien kasir!'
@@ -473,7 +483,7 @@ export const PengaturanKantinPage: React.FC = () => {
                         Batas Maksimal Saldo Tersimpan
                       </CardTitle>
                       <CardDescription className='text-xs'>
-                        Plafon saldo digital yang boleh mengendap di kartu siswa & tamu.
+                        Plafon saldo digital maksimal dan kebijakan saldo mengendap siswa.
                       </CardDescription>
                     </div>
                   </div>
@@ -513,36 +523,83 @@ export const PengaturanKantinPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Max Saldo Kartu Tamu */}
+                  {/* Kebijakan Saldo Mengendap */}
                   <div className='space-y-1.5'>
-                    <div className='flex items-center justify-between'>
-                      <Label
-                        htmlFor='batasSaldoKartuTamu'
-                        className='text-xs font-semibold'
-                      >
-                        Batas Saldo Maksimum Kartu Tamu
-                      </Label>
-                      <span className='font-mono text-xs font-bold text-amber-600 dark:text-amber-400'>
-                        {formatRupiah(watchedMaxSaldoKartuTamu || 0)}
-                      </span>
-                    </div>
-                    <Input
-                      id='batasSaldoKartuTamu'
-                      type='number'
-                      step={50000}
-                      min={10000}
-                      placeholder='500000'
-                      className='font-mono text-sm bg-background'
-                      disabled={isSubmitting || loadingPengaturan}
-                      {...register('batasSaldoKartuTamu', { valueAsNumber: true })}
+                    <Label
+                      htmlFor='kebijakanSaldoMengendap'
+                      className='text-xs font-semibold'
+                    >
+                      Kebijakan Saldo Mengendap (Lulus/Keluar)
+                    </Label>
+                    <Controller
+                      control={control}
+                      name='kebijakanSaldoMengendap'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isSubmitting || loadingPengaturan}
+                        >
+                          <SelectTrigger
+                            id='kebijakanSaldoMengendap'
+                            className='bg-background text-sm'
+                          >
+                            <SelectValue placeholder='Pilih kebijakan saldo mengendap' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='REFUND'>
+                              Refund ke Orang Tua
+                            </SelectItem>
+                            <SelectItem value='PINDAH_SAUDARA'>
+                              Pindahkan ke Saudara Kandung
+                            </SelectItem>
+                            <SelectItem value='TETAP_MENGENDAP'>
+                              Tetap Mengendap (Kewajiban Sekolah)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
-                    {errors.batasSaldoKartuTamu && (
+                    {errors.kebijakanSaldoMengendap && (
                       <p className='text-xs text-destructive'>
-                        {errors.batasSaldoKartuTamu.message}
+                        {errors.kebijakanSaldoMengendap.message}
                       </p>
                     )}
                     <p className='text-[11px] text-muted-foreground'>
-                      Maksimal saldo pada Kartu Tamu untuk guru tamu, vendor, atau staf sementara.
+                      Tindakan default jika sisa saldo siswa nonaktif belum diklaim setelah ambang hari.
+                    </p>
+                  </div>
+
+                  {/* Ambang Hari Saldo Mengendap */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label
+                        htmlFor='ambangHari'
+                        className='text-xs font-semibold'
+                      >
+                        Ambang Hari Saldo Mengendap
+                      </Label>
+                      <span className='font-mono text-xs font-bold text-muted-foreground'>
+                        {Number.isFinite(watchedAmbangHari) ? watchedAmbangHari : 90} hari
+                      </span>
+                    </div>
+                    <Input
+                      id='ambangHari'
+                      type='number'
+                      step={1}
+                      min={0}
+                      placeholder='90'
+                      className='font-mono text-sm bg-background'
+                      disabled={isSubmitting || loadingPengaturan}
+                      {...register('ambangHari', { valueAsNumber: true })}
+                    />
+                    {errors.ambangHari && (
+                      <p className='text-xs text-destructive'>
+                        {errors.ambangHari.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Jumlah hari sejak siswa nonaktif sebelum status saldo masuk daftar tindak lanjut.
                     </p>
                   </div>
                 </CardContent>

@@ -77,8 +77,6 @@ export function LaporanSaldoMengendapPage() {
         if (resRingkasan) {
           setRingkasan({
             ...resRingkasan,
-            saldoKartuTamu: 0,
-            jumlahKartuTamu: 0,
             total: resRingkasan.saldoSiswa ?? resRingkasan.total ?? 0,
           })
         } else {
@@ -445,7 +443,7 @@ export function LaporanSaldoMengendapPage() {
                                 <div>
                                   <div className="font-semibold text-sm">{siswa.nama}</div>
                                   <div className="font-mono text-xs text-muted-foreground">
-                                    NIS: {siswa.nis}
+                                    NIS: {siswa.nis || '-'}
                                   </div>
                                 </div>
                               </TableCell>

@@ -1,10 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
-  MOCK_KOREKSI_BENDAHARA,
-  MOCK_TRANSAKSI_SESI_TUTUP,
-  MOCK_SISWA,
-} from '@/mocks/mock-data'
-import {
   Plus,
   ArrowDownRight,
   ArrowUpRight,
@@ -52,6 +47,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { ExportButton } from '@/components/export-button'
 import { formatDateTime, formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { type KartuSiswaMock } from '@/types/kantin'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import {
   type MutasiKoreksiItem,
@@ -60,14 +56,11 @@ import {
   mapMutasiKoreksiItem,
 } from './types'
 
-const useMock = import.meta.env.VITE_USE_MOCK === 'true'
-
 export function KoreksiBendaharaPage() {
-  const [koreksiList, setKoreksiList] = useState<MutasiKoreksiItem[]>(() =>
-    useMock ? MOCK_KOREKSI_BENDAHARA.map((item) => mapMutasiKoreksiItem(item, MOCK_SISWA)) : []
-  )
-  const [transaksiList, setTransaksiList] = useState<TransaksiSesiTutupItem[]>(() =>
-    useMock ? MOCK_TRANSAKSI_SESI_TUTUP.map((item) => mapTransaksiKasirItemToSesiTutup(item, MOCK_SISWA)) : []
+  const [students, setStudents] = useState<KartuSiswaMock[]>([])
+  const [koreksiList, setKoreksiList] = useState<MutasiKoreksiItem[]>([])
+  const [transaksiList, setTransaksiList] = useState<TransaksiSesiTutupItem[]>(
+    []
   )
 
   const [isLoading, setIsLoading] = useState(true)
@@ -76,7 +69,6 @@ export function KoreksiBendaharaPage() {
 
   // Filters state Tab 1 (Mutasi Koreksi)
   const [searchQuery, setSearchQuery] = useState('')
-  const [subjekFilter, setSubjekFilter] = useState<string>('ALL')
   const [arahFilter, setArahFilter] = useState<string>('ALL')
   const [activeTab, setActiveTab] = useState<string>('riwayat')
 
@@ -99,7 +91,8 @@ export function KoreksiBendaharaPage() {
   const canAccessSesiTutup = !isKepsek
 
   const executeFetch = useCallback(async () => {
-    const [resKoreksi, resTx] = await Promise.allSettled([
+    const [resSiswa, resKoreksi, resTx] = await Promise.allSettled([
+      apiClient.get('/api/siswa', { params: { batas: 200 } }),
       apiClient.get('/api/saldo/koreksi'),
       canAccessSesiTutup
         ? apiClient.get('/api/kasir/transaksi', {
@@ -107,6 +100,32 @@ export function KoreksiBendaharaPage() {
           } as unknown as Record<string, unknown>)
         : Promise.resolve({ data: { data: { items: [] } } }),
     ])
+
+    let loadedStudents: KartuSiswaMock[] = []
+    if (
+      resSiswa.status === 'fulfilled' &&
+      Array.isArray(resSiswa.value.data?.data)
+    ) {
+      loadedStudents = (
+        resSiswa.value.data.data as Record<string, unknown>[]
+      ).map((raw) => {
+        const sid = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
+        const nis = String(raw.nis ?? '')
+        return {
+          uid: String(raw.uid ?? raw.rfidUid ?? (nis ? `UID-${nis}` : `UID-${sid}`)),
+          siswa_id: sid,
+          nis,
+          nama: String(raw.nama ?? `Siswa #${sid}`),
+          kelas: String(raw.kelas ?? '-'),
+          foto_url: String(raw.fotoUrl ?? raw.foto_url ?? ''),
+          saldo: Number(raw.saldo ?? 0),
+          limit_harian: 0,
+          belanja_hari_ini: 0,
+          is_blocked: Boolean(raw.diblokir ?? raw.tidakAktif),
+        }
+      })
+      setStudents(loadedStudents)
+    }
 
     // 1. Process GET /api/saldo/koreksi
     if (resKoreksi.status === 'fulfilled') {
@@ -120,28 +139,20 @@ export function KoreksiBendaharaPage() {
             : [])
       setKoreksiList(
         items.map((it: unknown) =>
-          mapMutasiKoreksiItem(it as Record<string, unknown>, MOCK_SISWA)
+          mapMutasiKoreksiItem(it as Record<string, unknown>, loadedStudents)
         )
       )
       setErrorKoreksi(null)
     } else {
-      if (useMock) {
-        setKoreksiList(
-          MOCK_KOREKSI_BENDAHARA.map((item) =>
-            mapMutasiKoreksiItem(item, MOCK_SISWA)
-          )
-        )
-      } else {
-        const err = resKoreksi.reason as
-          | { response?: { data?: { message?: string } }; message?: string }
-          | undefined
-        const msg =
-          err?.response?.data?.message ||
-          err?.message ||
-          'Gagal memuat log mutasi koreksi bendahara'
-        setErrorKoreksi(msg)
-        setKoreksiList([])
-      }
+      const err = resKoreksi.reason as
+        | { response?: { data?: { message?: string } }; message?: string }
+        | undefined
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Gagal memuat log mutasi koreksi bendahara'
+      setErrorKoreksi(msg)
+      setKoreksiList([])
     }
 
     // 2. Process GET /api/kasir/transaksi
@@ -159,29 +170,21 @@ export function KoreksiBendaharaPage() {
         items.map((it: unknown) =>
           mapTransaksiKasirItemToSesiTutup(
             it as Record<string, unknown>,
-            MOCK_SISWA
+            loadedStudents
           )
         )
       )
       setErrorTransaksi(null)
     } else {
-      if (useMock) {
-        setTransaksiList(
-          MOCK_TRANSAKSI_SESI_TUTUP.map((item) =>
-            mapTransaksiKasirItemToSesiTutup(item, MOCK_SISWA)
-          )
-        )
-      } else {
-        const err = resTx.reason as
-          | { response?: { data?: { message?: string } }; message?: string }
-          | undefined
-        const msg =
-          err?.response?.data?.message ||
-          err?.message ||
-          'Gagal memuat daftar transaksi sesi tutup'
-        setErrorTransaksi(msg)
-        setTransaksiList([])
-      }
+      const err = resTx.reason as
+        | { response?: { data?: { message?: string } }; message?: string }
+        | undefined
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Gagal memuat daftar transaksi sesi tutup'
+      setErrorTransaksi(msg)
+      setTransaksiList([])
     }
   }, [canAccessSesiTutup])
 
@@ -244,24 +247,19 @@ export function KoreksiBendaharaPage() {
       const q = searchQuery.toLowerCase()
       const matchSearch =
         k.referensi_id.toLowerCase().includes(q) ||
-        k.subjek_nama.toLowerCase().includes(q) ||
-        k.subjek_info.toLowerCase().includes(q) ||
+        k.siswa_nama.toLowerCase().includes(q) ||
+        k.siswa_info.toLowerCase().includes(q) ||
         k.alasan.toLowerCase().includes(q) ||
         k.bendahara_nama.toLowerCase().includes(q)
-
-      let matchSubjek = true
-      if (subjekFilter !== 'ALL') {
-        matchSubjek = k.subjek_tipe === subjekFilter
-      }
 
       let matchArah = true
       if (arahFilter !== 'ALL') {
         matchArah = k.arah === arahFilter
       }
 
-      return matchSearch && matchSubjek && matchArah
+      return matchSearch && matchArah
     })
-  }, [koreksiList, searchQuery, subjekFilter, arahFilter])
+  }, [koreksiList, searchQuery, arahFilter])
 
   // Filtered transaksi sesi tutup list
   const filteredTransaksi = useMemo(() => {
@@ -270,8 +268,8 @@ export function KoreksiBendaharaPage() {
       const matchSearch =
         String(tx.id).toLowerCase().includes(q) ||
         String(tx.sesi_kasir_id).toLowerCase().includes(q) ||
-        tx.subjek_nama.toLowerCase().includes(q) ||
-        tx.subjek_info.toLowerCase().includes(q) ||
+        tx.siswa_nama.toLowerCase().includes(q) ||
+        tx.siswa_info.toLowerCase().includes(q) ||
         tx.titik_kasir.toLowerCase().includes(q) ||
         (tx.kartu_uid && tx.kartu_uid.toLowerCase().includes(q)) ||
         (tx.petugas_kasir && tx.petugas_kasir.toLowerCase().includes(q))
@@ -318,9 +316,8 @@ export function KoreksiBendaharaPage() {
     const headers = [
       'No. Berita Acara',
       'Waktu Audit',
-      'Tipe Subjek',
-      'Nama Subjek',
-      'Info / NIS / Kartu',
+      'Nama Siswa',
+      'Info / NIS',
       'Jenis Masalah',
       'Arah Mutasi',
       'Nominal (Rp)',
@@ -334,9 +331,8 @@ export function KoreksiBendaharaPage() {
     const rows = filteredKoreksi.map((k) => [
       k.referensi_id,
       k.waktu,
-      k.subjek_tipe,
-      k.subjek_nama,
-      k.subjek_info,
+      k.siswa_nama,
+      k.siswa_info,
       k.jenis_koreksi,
       k.arah,
       k.nominal,
@@ -391,7 +387,7 @@ export function KoreksiBendaharaPage() {
         columns: [
           { header: 'Ref ID', key: 'referensi_id' },
           { header: 'Waktu', key: 'waktu' },
-          { header: 'Subjek', key: 'subjek' },
+          { header: 'Siswa', key: 'siswa' },
           { header: 'Jenis', key: 'jenis_koreksi' },
           { header: 'Arah', key: 'arah' },
           { header: 'Nominal', key: 'nominal' },
@@ -403,9 +399,9 @@ export function KoreksiBendaharaPage() {
         data: filteredKoreksi.map((item) => ({
           referensi_id: item.referensi_id,
           waktu: formatDateTime(item.waktu),
-          subjek: item.subjek_info
-            ? `${item.subjek_nama} (${item.subjek_info})`
-            : item.subjek_nama,
+          siswa: item.siswa_info
+            ? `${item.siswa_nama} (${item.siswa_info})`
+            : item.siswa_nama,
           jenis_koreksi: item.jenis_koreksi,
           arah: item.arah === 'KREDIT' ? '+ Kredit' : '- Debit',
           nominal: formatRupiah(item.nominal),
@@ -570,16 +566,6 @@ export function KoreksiBendaharaPage() {
               onSearchChange={setSearchQuery}
               filters={[
                 {
-                  title: 'Subjek',
-                  options: [
-                    { label: 'Siswa', value: 'SISWA' },
-                    { label: 'Kartu Tamu', value: 'KARTU_TAMU' },
-                  ],
-                  selectedValues: subjekFilter !== 'ALL' ? [subjekFilter] : [],
-                  onSelect: (vals) => setSubjekFilter(vals[0] || 'ALL'),
-                  isSingleSelect: true,
-                },
-                {
                   title: 'Arah Mutasi',
                   options: [
                     { label: 'Kurangi Saldo Siswa (-)', value: 'DEBIT' },
@@ -590,10 +576,9 @@ export function KoreksiBendaharaPage() {
                   isSingleSelect: true,
                 },
               ]}
-              isFiltered={Boolean(searchQuery || subjekFilter !== 'ALL' || arahFilter !== 'ALL')}
+              isFiltered={Boolean(searchQuery || arahFilter !== 'ALL')}
               onReset={() => {
                 setSearchQuery('')
-                setSubjekFilter('ALL')
                 setArahFilter('ALL')
               }}
             />
@@ -704,10 +689,10 @@ export function KoreksiBendaharaPage() {
 
                             <TableCell className='text-xs'>
                               <div className='font-semibold text-foreground'>
-                                {k.subjek_nama}
+                                {k.siswa_nama}
                               </div>
                               <div className='text-[11px] text-muted-foreground'>
-                                {k.subjek_info}
+                                {k.siswa_info}
                               </div>
                             </TableCell>
 
@@ -847,7 +832,7 @@ export function KoreksiBendaharaPage() {
 
             {/* Toolbar Filter Tab 2 */}
             <TableToolbar
-              searchPlaceholder='Cari ID Transaksi, Sesi, nama subjek, kartu UID...'
+              searchPlaceholder='Cari ID Transaksi, Sesi, nama siswa, kartu UID...'
               searchValue={txSearchQuery}
               onSearchChange={setTxSearchQuery}
               filters={[
@@ -978,10 +963,10 @@ export function KoreksiBendaharaPage() {
 
                             <TableCell className='text-xs'>
                               <div className='font-semibold text-foreground'>
-                                {tx.subjek_nama}
+                                {tx.siswa_nama}
                               </div>
                               <div className='text-[11px] text-muted-foreground'>
-                                {tx.subjek_info}
+                                {tx.siswa_info}
                               </div>
                             </TableCell>
 
@@ -1073,6 +1058,7 @@ export function KoreksiBendaharaPage() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         initialTransaction={selectedTxForKoreksi}
+        students={students}
         onSuccess={handleCreateSuccess}
       />
 
@@ -1122,11 +1108,11 @@ export function KoreksiBendaharaPage() {
                 </div>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>
-                    Subjek Penerima Koreksi:
+                    Siswa Penerima Koreksi:
                   </span>
                   <span className='font-semibold'>
-                    {selectedKoreksiForPrint.subjek_nama} (
-                    {selectedKoreksiForPrint.subjek_info})
+                    {selectedKoreksiForPrint.siswa_nama} (
+                    {selectedKoreksiForPrint.siswa_info})
                   </span>
                 </div>
                 <div className='flex justify-between'>

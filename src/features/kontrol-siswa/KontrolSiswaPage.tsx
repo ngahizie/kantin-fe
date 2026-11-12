@@ -22,14 +22,59 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { TableToolbar } from '@/components/data-table'
 import { formatRupiah } from '@/lib/formatters'
-import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { type KartuSiswaMock } from '@/types/kantin'
 import { LimitBlokirForm } from './LimitBlokirForm'
 
+interface RawInfoSiswaItem {
+  siswaId?: number
+  siswa_id?: number
+  id?: number
+  nis?: string
+  nama?: string
+  kelas?: string
+  fotoUrl?: string
+  foto_url?: string
+  saldo?: number
+  tidakAktif?: boolean
+  tidak_aktif?: boolean
+  diblokir?: boolean
+  namaOrangTua?: string
+  parentName?: string
+  teleponOrangTua?: string
+  parentPhone?: string
+  punyaAplikasi?: boolean
+  parentAppRegistered?: boolean
+  uid?: string
+  rfidUid?: string
+}
+
+interface RawKontrolBulkItem {
+  siswaId?: number
+  diblokir?: boolean
+  limitHarian?: number | null
+  adaLimit?: boolean
+  menuDiblokir?: number[]
+  kategoriDiblokir?: number[]
+  alasanBlokir?: string | null
+}
+
+function getInitials(name?: string): string {
+  if (!name) return 'S'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+  return parts[0].slice(0, 2).toUpperCase()
+}
+
 export function KontrolSiswaPage() {
-  const [students, setStudents] = useState<KartuSiswaMock[]>(MOCK_SISWA)
+  const [students, setStudents] = useState<KartuSiswaMock[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [appFilter, setAppFilter] = useState<string>('ALL')
@@ -41,48 +86,103 @@ export function KontrolSiswaPage() {
 
   useEffect(() => {
     let isMounted = true
-    const syncKontrolStatus = async () => {
+    const loadStudentsAndKontrol = async () => {
+      setIsLoading(true)
       try {
-        const synced = await Promise.all(
-          MOCK_SISWA.map(async (siswa) => {
-            try {
-              const res = await apiClient.get(
-                `/api/kontrol-kartu/SISWA/${siswa.siswa_id}`
-              )
-              if (res.data?.data) {
-                const kontrol = res.data.data
-                const hasLimit = Boolean(
-                  kontrol.adaLimit && (kontrol.limitHarian ?? 0) > 0
-                )
-                return {
-                  ...siswa,
-                  limit_harian: kontrol.limitHarian ?? 0,
-                  limit_harian_enabled: hasLimit,
-                  blocked_items: Array.isArray(kontrol.menuDiblokir)
-                    ? kontrol.menuDiblokir
-                    : [],
-                  blocked_categories: Array.isArray(kontrol.kategoriDiblokir)
-                    ? kontrol.kategoriDiblokir
-                    : [],
-                  is_blocked: Boolean(kontrol.diblokir),
-                }
+        const siswaRes = await apiClient.get('/api/siswa', {
+          params: { batas: 200 },
+        })
+        const rawList = Array.isArray(siswaRes.data?.data)
+          ? (siswaRes.data.data as RawInfoSiswaItem[])
+          : []
+
+        const baseStudents: KartuSiswaMock[] = rawList.map((raw) => {
+          const sId = Number(raw.siswaId ?? raw.siswa_id ?? raw.id ?? 0)
+          const nis = String(raw.nis ?? '')
+          return {
+            uid: raw.uid || raw.rfidUid || (nis ? `UID-${nis}` : `UID-${sId}`),
+            siswa_id: sId,
+            nis,
+            nama: String(raw.nama || `Siswa #${sId}`),
+            kelas: String(raw.kelas || '-'),
+            foto_url: raw.fotoUrl || raw.foto_url || '',
+            saldo: Number(raw.saldo ?? 0),
+            limit_harian: 0,
+            limit_harian_enabled: false,
+            belanja_hari_ini: 0,
+            is_blocked: Boolean(raw.diblokir ?? raw.tidakAktif ?? raw.tidak_aktif),
+            blocked_items: [],
+            blocked_categories: [],
+            parent_name: raw.namaOrangTua || raw.parentName,
+            parent_phone: raw.teleponOrangTua || raw.parentPhone,
+            parent_app_registered:
+              typeof raw.punyaAplikasi === 'boolean'
+                ? raw.punyaAplikasi
+                : typeof raw.parentAppRegistered === 'boolean'
+                  ? raw.parentAppRegistered
+                  : undefined,
+          }
+        })
+
+        let merged = baseStudents
+        const validIds = baseStudents
+          .map((s) => s.siswa_id)
+          .filter((id) => Number.isFinite(id) && id > 0)
+
+        if (validIds.length > 0) {
+          try {
+            const bulkRes = await apiClient.get('/api/kontrol-kartu/bulk', {
+              params: { siswaIds: validIds.join(',') },
+            })
+            const bulkItems = Array.isArray(bulkRes.data?.data)
+              ? (bulkRes.data.data as RawKontrolBulkItem[])
+              : []
+            const kontrolBySiswa = new Map<number, RawKontrolBulkItem>()
+            for (const item of bulkItems) {
+              if (item.siswaId != null) {
+                kontrolBySiswa.set(Number(item.siswaId), item)
               }
-            } catch {
-              // Jika query kontrol gagal untuk siswa tertentu, gunakan data dasar
             }
-            return siswa
-          })
-        )
+
+            merged = baseStudents.map((siswa) => {
+              const kontrol = kontrolBySiswa.get(siswa.siswa_id)
+              if (!kontrol) return siswa
+              const limitNominal = Number(kontrol.limitHarian ?? 0)
+              const hasLimit = Boolean(kontrol.adaLimit && limitNominal > 0)
+              return {
+                ...siswa,
+                limit_harian: limitNominal,
+                limit_harian_enabled: hasLimit,
+                blocked_items: Array.isArray(kontrol.menuDiblokir)
+                  ? kontrol.menuDiblokir
+                  : [],
+                blocked_categories: Array.isArray(kontrol.kategoriDiblokir)
+                  ? kontrol.kategoriDiblokir
+                  : [],
+                is_blocked: Boolean(kontrol.diblokir),
+              }
+            })
+          } catch {
+            // Gunakan data dasar siswa jika bulk kontrol belum tersedia
+          }
+        }
 
         if (isMounted) {
-          setStudents(synced)
+          setStudents(merged)
         }
       } catch {
-        // Fallback tetap ke MOCK_SISWA
+        if (isMounted) {
+          setStudents([])
+          toast.error('Gagal memuat daftar kontrol siswa dari server.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
-    void syncKontrolStatus()
+    void loadStudentsAndKontrol()
     return () => {
       isMounted = false
     }
@@ -285,10 +385,18 @@ export function KontrolSiswaPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.length === 0 ? (
+                  {isLoading ? (
                     <TableRow>
                       <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
-                        Tidak ada siswa yang sesuai dengan filter pencarian.
+                        Memuat data kontrol siswa...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredStudents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className='h-32 text-center text-muted-foreground text-xs'>
+                        {students.length === 0
+                          ? 'Belum ada data siswa.'
+                          : 'Tidak ada siswa yang sesuai dengan filter pencarian.'}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -307,11 +415,16 @@ export function KontrolSiswaPage() {
                           {/* Data Siswa */}
                           <TableCell>
                             <div className='flex items-center gap-3'>
-                              <img
-                                src={siswa.foto_url}
-                                alt={siswa.nama}
-                                className='h-10 w-10 rounded-full object-cover'
-                              />
+                              <Avatar className='h-10 w-10'>
+                                <AvatarImage
+                                  src={siswa.foto_url || undefined}
+                                  alt={siswa.nama}
+                                  className='object-cover'
+                                />
+                                <AvatarFallback className='text-xs font-semibold'>
+                                  {getInitials(siswa.nama)}
+                                </AvatarFallback>
+                              </Avatar>
                               <div>
                                 <p className='font-bold text-foreground flex items-center gap-1.5'>
                                   {siswa.nama}
@@ -322,10 +435,10 @@ export function KontrolSiswaPage() {
                                   )}
                                 </p>
                                 <p className='text-muted-foreground font-mono text-[11px]'>
-                                  NIS: {siswa.nis} • {siswa.kelas}
+                                  NIS: {siswa.nis || '-'} • {siswa.kelas}
                                 </p>
                                 <p className='text-[10px] text-muted-foreground'>
-                                  Ortu: {siswa.parent_name || 'Orang Tua'}
+                                  Ortu: {siswa.parent_name || '-'}
                                 </p>
                               </div>
                             </div>

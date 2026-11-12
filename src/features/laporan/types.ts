@@ -35,7 +35,6 @@ export interface RingkasanRekonsiliasi {
   // Saldo Mengendap & Kumulatif Ledger
   saldoMengendap: number
   saldoSiswa: number
-  saldoKartuTamu: number
   totalKreditSemua: number
   totalDebitSemua: number
 
@@ -43,7 +42,7 @@ export interface RingkasanRekonsiliasi {
   selisih: number
   seimbang: boolean
 
-  // Metrik Evaluasi Invariant (Topup - Refund = Saldo Siswa + Saldo Kartu Tamu + Penjualan Bersih)
+  // Metrik Evaluasi Invariant (Topup - Refund = Saldo Siswa + Penjualan Bersih)
   totalTopupSemua: number
   totalRefundSemua: number
   topupBersih: number
@@ -134,10 +133,8 @@ export interface BarisPenjualanKasir {
 
 export interface RingkasanSaldoMengendap {
   saldoSiswa: number
-  saldoKartuTamu: number
   total: number
   jumlahSiswa: number
-  jumlahKartuTamu: number
 }
 
 export interface SiswaSaldoDetail {
@@ -146,6 +143,7 @@ export interface SiswaSaldoDetail {
   nisn?: string
   nama: string
   kelas: string
+  fotoUrl?: string | null
   saldo: number
   belanjaHariIni: number
   limitHarian: number
@@ -153,16 +151,6 @@ export interface SiswaSaldoDetail {
   parentName: string
   parentPhone: string
   terakhirTransaksi?: string
-}
-
-export interface KartuTamuSaldoDetail {
-  id: number
-  nomorKartu: string
-  uid: string
-  labelPemegang: string
-  saldo: number
-  status: string
-  createdAt: string
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -193,6 +181,7 @@ export interface RiwayatBelanjaSiswaItem {
   saldoSetelah: number
   titikKasir: string
   petugas: string
+  metodeBayar?: 'SALDO' | 'TUNAI' | string | null
   referensiId: string
   keterangan: string
   items?: RincianItemBelanja[]

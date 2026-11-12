@@ -1,5 +1,3 @@
-import { MOCK_SISWA, type KartuSiswaMock } from '@/mocks/mock-data'
-
 export const KANTIN_SALDO_STORAGE_KEY = 'kantin_siswa_saldo_overrides'
 
 /**
@@ -72,7 +70,7 @@ export function getStoredSaldoOverrides(
 }
 
 /**
- * Menyimpan saldo terbaru siswa ke localStorage dan memperbarui data mock di memori.
+ * Menyimpan saldo terbaru siswa ke localStorage.
  */
 export function saveStoredSaldo(
   siswaId: number,
@@ -81,13 +79,6 @@ export function saveStoredSaldo(
 ): void {
   if (Number.isNaN(siswaId) || Number.isNaN(newSaldo)) return
 
-  // 1. Update in-memory MOCK_SISWA agar komponen lain yang membaca MOCK_SISWA langsung sinkron
-  const found = MOCK_SISWA.find((s) => s.siswa_id === siswaId)
-  if (found) {
-    found.saldo = newSaldo
-  }
-
-  // 2. Simpan ke localStorage agar tidak hilang saat pengguna melakukan refresh halaman
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       const tenantKey = getTenantSaldoStorageKey(sekolahId)
@@ -138,15 +129,6 @@ export function applyStoredSaldoOverrides<
 }
 
 /**
- * Mengambil daftar siswa awal dengan saldo yang telah disinkronkan dari penyimpanan lokal.
- */
-export function getInitialStudents(
-  sekolahId?: number | null
-): KartuSiswaMock[] {
-  return applyStoredSaldoOverrides(MOCK_SISWA, sekolahId)
-}
-
-/**
  * Menghapus cache saldo di storage lokal (berguna untuk pengujian unit atau reset data).
  */
 export function clearStoredSaldoOverrides(sekolahId?: number | null): void {
@@ -166,9 +148,8 @@ export const KANTIN_TOPUP_TRANSACTIONS_KEY = 'kantin_topup_transactions'
 export interface StoredTopupTransaction {
   id: string | number
   waktu: string
-  subjek_tipe: 'SISWA' | 'KARTU_TAMU'
-  subjek_nama: string
-  subjek_info: string
+  siswa_nama: string
+  siswa_info: string
   nominal: number
   penyetor: string
   referensi_id: string
@@ -176,108 +157,24 @@ export interface StoredTopupTransaction {
   petugas_id?: number
 }
 
-// Data transaksi awal hari ini (2026-10-26) yang sinkron dengan ledger database kantin_db (Total: Rp 480.000)
-const SEED_TOPUP_TODAY: StoredTopupTransaction[] = [
-  {
-    id: 'TU-TOPUP-20261026-3746',
-    waktu: '2026-10-26T03:23:23.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Siti Rahmawati',
-    subjek_info: 'XI IPS 2 (NIS: 2026002)',
-    nominal: 200000,
-    penyetor: 'Siswa Langsung',
-    referensi_id: 'TU-TOPUP-20261026-3746',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'TU-TOPUP-20261026-9091',
-    waktu: '2026-10-26T04:37:15.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
-    nominal: 100000,
-    penyetor: 'Orang Tua',
-    referensi_id: 'TU-TOPUP-20261026-9091',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'KT-TOPUP-20261026-1927',
-    waktu: '2026-10-26T03:21:19.000Z',
-    subjek_tipe: 'KARTU_TAMU',
-    subjek_nama: 'Budi (Guru)',
-    subjek_info: 'Kartu: KT-DEMO-001',
-    nominal: 50000,
-    penyetor: 'Tamu Langsung',
-    referensi_id: 'KT-TOPUP-20261026-1927',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'TU-TOPUP-20261026-1340',
-    waktu: '2026-10-26T03:18:42.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
-    nominal: 50000,
-    penyetor: 'Siswa Langsung',
-    referensi_id: 'TU-TOPUP-20261026-1340',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'KT-TOPUP-20261026-9285',
-    waktu: '2026-10-26T03:32:45.000Z',
-    subjek_tipe: 'KARTU_TAMU',
-    subjek_nama: 'Sari (Staf TU)',
-    subjek_info: 'Kartu: KT-DEMO-002',
-    nominal: 20000,
-    penyetor: 'Tamu Langsung',
-    referensi_id: 'KT-TOPUP-20261026-9285',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'TU-TOPUP-20261026-7879',
-    waktu: '2026-10-26T04:36:56.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
-    nominal: 20000,
-    penyetor: 'Siswa Langsung',
-    referensi_id: 'TU-TOPUP-20261026-7879',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'TU-TOPUP-20261026-9019',
-    waktu: '2026-10-26T04:37:44.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
-    nominal: 20000,
-    penyetor: 'Siswa Langsung',
-    referensi_id: 'TU-TOPUP-20261026-9019',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-  {
-    id: 'TEST-REF-9999',
-    waktu: '2026-10-26T02:42:18.000Z',
-    subjek_tipe: 'SISWA',
-    subjek_nama: 'Budi Santoso',
-    subjek_info: 'X IPA 1 (NIS: 2026001)',
-    nominal: 20000,
-    penyetor: 'Petugas TU',
-    referensi_id: 'TEST-REF-9999',
-    tanggal: '2026-10-26',
-    petugas_id: 2,
-  },
-]
+interface LegacyStoredTopupRaw {
+  id?: string | number
+  waktu?: string
+  subjek_tipe?: string
+  subjek_nama?: string
+  subjek_info?: string
+  siswa_nama?: string
+  siswa_info?: string
+  nominal?: number
+  penyetor?: string
+  referensi_id?: string
+  tanggal?: string
+  petugas_id?: number
+}
 
 /**
- * Mengambil daftar rincian transaksi top-up dari localStorage (atau seed default).
+ * Mengambil daftar rincian transaksi top-up siswa dari localStorage.
+ * Entri lama non-siswa (kartu tamu) otomatis diabaikan & dimigrasikan.
  */
 export function getStoredTopupTransactions(
   tanggal?: string,
@@ -291,17 +188,40 @@ export function getStoredTopupTransactions(
       if (raw) {
         const parsed = JSON.parse(raw)
         if (Array.isArray(parsed)) {
-          all = parsed
+          let needsMigration = false
+          const migrated: StoredTopupTransaction[] = []
+          for (const item of parsed as LegacyStoredTopupRaw[]) {
+            if (item?.subjek_tipe && item.subjek_tipe !== 'SISWA') {
+              needsMigration = true
+              continue
+            }
+            if (item?.subjek_tipe || item?.subjek_nama || item?.subjek_info) {
+              needsMigration = true
+            }
+            migrated.push({
+              id: item.id ?? item.referensi_id ?? '',
+              waktu: item.waktu ?? '',
+              siswa_nama: item.siswa_nama ?? item.subjek_nama ?? '-',
+              siswa_info: item.siswa_info ?? item.subjek_info ?? '-',
+              nominal: Number(item.nominal ?? 0),
+              penyetor: item.penyetor ?? '-',
+              referensi_id: item.referensi_id ?? String(item.id ?? ''),
+              tanggal: item.tanggal,
+              petugas_id: item.petugas_id,
+            })
+          }
+          if (needsMigration) {
+            window.localStorage.setItem(
+              KANTIN_TOPUP_TRANSACTIONS_KEY,
+              JSON.stringify(migrated)
+            )
+          }
+          all = migrated
         }
       }
     } catch {
       // noop
     }
-  }
-
-  // Jika belum ada di storage, inisialisasi dengan seed default hari ini
-  if (all.length === 0) {
-    all = [...SEED_TOPUP_TODAY]
   }
 
   return all.filter((tx) => {
@@ -363,13 +283,19 @@ export function saveTopupTransaction(
 
 export const KANTIN_SETORAN_CONFIRMATIONS_KEY = 'kantin_setoran_confirmations'
 
+export type StatusSetoranKas =
+  | 'MENUNGGU'
+  | 'MENUNGGU_KONFIRMASI'
+  | 'DIKONFIRMASI'
+  | 'TERKONFIRMASI'
+
 export interface StoredSetoranConfirmation {
   id: string
   tanggal: string
   petugas_id: number
   uang_fisik: number
   selisih: number
-  status: 'TERKONFIRMASI'
+  status: 'DIKONFIRMASI' | 'TERKONFIRMASI'
   catatan?: string
   bendahara_nama?: string
   konfirmasi_pada?: string
@@ -441,7 +367,7 @@ export function applyStoredSetoranConfirmations<
     petugas_id: number
     uang_fisik?: number | null
     selisih?: number | null
-    status: 'MENUNGGU_KONFIRMASI' | 'TERKONFIRMASI'
+    status: StatusSetoranKas
     catatan?: string
     bendahara_nama?: string | null
     konfirmasi_pada?: string | null
