@@ -22,6 +22,8 @@ export interface LaporanDateFilterProps {
   onChange: (params: LaporanFilterParams, label: string) => void
   className?: string
   align?: 'start' | 'end' | 'center'
+  /** Sembunyikan pilihan rentang multi-hari (khusus endpoint harian satu tanggal) */
+  singleDayOnly?: boolean
 }
 
 export function LaporanDateFilter({
@@ -29,6 +31,7 @@ export function LaporanDateFilter({
   onChange,
   className,
   align = 'start',
+  singleDayOnly = false,
 }: LaporanDateFilterProps) {
   const [open, setOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<DateFilterPreset>(initialPreset)
@@ -194,9 +197,13 @@ export function LaporanDateFilter({
               {[
                 { preset: 'TODAY' as const, label: 'Hari Ini' },
                 { preset: 'YESTERDAY' as const, label: 'Kemarin' },
-                { preset: 'LAST_7_DAYS' as const, label: '7 Hari Terakhir' },
-                { preset: 'LAST_30_DAYS' as const, label: '30 Hari Terakhir' },
-                { preset: 'THIS_MONTH' as const, label: 'Bulan Ini' },
+                ...(!singleDayOnly
+                  ? [
+                      { preset: 'LAST_7_DAYS' as const, label: '7 Hari Terakhir' },
+                      { preset: 'LAST_30_DAYS' as const, label: '30 Hari Terakhir' },
+                      { preset: 'THIS_MONTH' as const, label: 'Bulan Ini' },
+                    ]
+                  : []),
               ].map((item) => (
                 <Button
                   key={item.preset}
@@ -240,40 +247,42 @@ export function LaporanDateFilter({
             </div>
 
             {/* Rentang Tanggal Kustom */}
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase">
-                Rentang Tanggal Kustom
-              </Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <div className="text-[10px] text-muted-foreground mb-1">Mulai</div>
-                  <Input
-                    type="date"
-                    value={rangeStartInput}
-                    onChange={(e) => setRangeStartInput(e.target.value)}
-                    className="h-8 text-xs font-mono"
-                  />
+            {!singleDayOnly && (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold text-muted-foreground uppercase">
+                  Rentang Tanggal Kustom
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-[10px] text-muted-foreground mb-1">Mulai</div>
+                    <Input
+                      type="date"
+                      value={rangeStartInput}
+                      onChange={(e) => setRangeStartInput(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground mb-1">Sampai</div>
+                    <Input
+                      type="date"
+                      value={rangeEndInput}
+                      onChange={(e) => setRangeEndInput(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[10px] text-muted-foreground mb-1">Sampai</div>
-                  <Input
-                    type="date"
-                    value={rangeEndInput}
-                    onChange={(e) => setRangeEndInput(e.target.value)}
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleApplyRange}
+                  className="w-full h-8 text-xs font-semibold mt-1"
+                >
+                  Terapkan Rentang
+                </Button>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={handleApplyRange}
-                className="w-full h-8 text-xs font-semibold mt-1"
-              >
-                Terapkan Rentang
-              </Button>
-            </div>
+            )}
           </div>
         </PopoverContent>
       </Popover>

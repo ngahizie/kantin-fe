@@ -26,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -41,6 +40,10 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import {
+  LaporanDateFilter,
+  getDefaultDateFilter,
+} from '@/features/laporan/components'
 import { KonfirmasiSetoranModal } from './KonfirmasiSetoranModal'
 import {
   type SetoranKasItem,
@@ -65,8 +68,14 @@ export function SetoranKasPage() {
   const { auth } = useAuthStore()
   const isBendaharaOrAdmin = auth.hasRole(['admin', 'bendahara'])
 
-  const todayStr = new Date().toLocaleDateString('en-CA')
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr)
+  const [selectedDate, setSelectedDate] = useState<string>(
+    () =>
+      getDefaultDateFilter().params.tanggal ||
+      new Date().toLocaleDateString('en-CA')
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [setoranList, setSetoranList] = useState<SetoranKasItem[]>([])
@@ -357,10 +366,28 @@ export function SetoranKasPage() {
 
       <Main className='space-y-6'>
         {/* Title Header */}
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Setoran Kas TU Harian
-          </h1>
+        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Setoran Kas TU Harian
+            </h1>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Periode: <strong className='text-foreground'>{dateFilterLabel}</strong>
+            </p>
+          </div>
+
+          <div className='flex flex-wrap items-center gap-2.5'>
+            <LaporanDateFilter
+              initialPreset='TODAY'
+              singleDayOnly
+              onChange={(params, label) => {
+                if (params.tanggal) {
+                  setSelectedDate(params.tanggal)
+                }
+                setDateFilterLabel(label)
+              }}
+            />
+          </div>
         </div>
 
         {/* Top KPI Cards */}
@@ -442,14 +469,6 @@ export function SetoranKasPage() {
 
         {/* Filter Bar */}
         <TableToolbar
-          extraLeft={
-            <Input
-              type='date'
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className='h-8 w-[155px] px-2.5 text-xs font-medium bg-background'
-            />
-          }
           searchPlaceholder='Cari nama petugas atau No. Setoran...'
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
