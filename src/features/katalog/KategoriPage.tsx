@@ -156,28 +156,6 @@ export function KategoriPage() {
       </Header>
 
       <Main className='space-y-6 pb-12'>
-        {/* Actions */}
-        <div className='flex items-center justify-end gap-2'>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={loadData}
-            disabled={loading}
-            className='gap-1.5 border-none bg-muted/70 dark:bg-muted/30 text-foreground hover:bg-muted rounded-xl shadow-none'
-          >
-            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Segarkan
-          </Button>
-          <Button
-            size='sm'
-            onClick={handleAdd}
-            className='gap-1.5 border-none rounded-xl shadow-none font-semibold'
-          >
-            <Plus className='size-4' />
-            Tambah Kategori
-          </Button>
-        </div>
-
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
           <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
