@@ -85,7 +85,7 @@ export function LaporanSaldoMengendapPage() {
         setSiswaList(resSiswa || [])
       } catch (err: unknown) {
         if (!isMounted) return
-        const msg = err instanceof Error ? err.message : 'Gagal memuat saldo mengendap'
+        const msg = err instanceof Error ? err.message : 'Gagal memuat total saldo siswa'
         toast.error('Gagal Memuat Laporan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
@@ -133,10 +133,10 @@ export function LaporanSaldoMengendapPage() {
       if (canAccessSiswa) {
         sheets.push({
           sheetName: 'Saldo Siswa',
-          title: 'LAPORAN SALDO MENGENDAP SISWA (DANA TITIPAN ORTU)',
+          title: 'LAPORAN TOTAL SALDO SISWA (DANA TITIPAN ORTU)',
           metadata: {
             'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-            'Total Saldo Mengendap Siswa': formatRupiah(ringkasan.saldoSiswa),
+            'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
             'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
           },
           columns: [
@@ -163,7 +163,7 @@ export function LaporanSaldoMengendapPage() {
       if (sheets.length === 0) {
         sheets.push({
           sheetName: 'Ringkasan Eksekutif',
-          title: 'LAPORAN RINGKASAN SALDO MENGENDAP (KEWAJIBAN SEKOLAH)',
+          title: 'LAPORAN RINGKASAN TOTAL SALDO SISWA (KEWAJIBAN SEKOLAH)',
           metadata: {
             'Tanggal Cetak': new Date().toLocaleString('id-ID'),
             'Total Dana Titipan': formatRupiah(ringkasan.saldoSiswa),
@@ -171,11 +171,11 @@ export function LaporanSaldoMengendapPage() {
           columns: [
             { header: 'Kategori', key: 'kategori', width: 28 },
             { header: 'Jumlah', key: 'jumlah', width: 18 },
-            { header: 'Total Saldo Mengendap (Rp)', key: 'total', width: 25 },
+            { header: 'Total Saldo Siswa (Rp)', key: 'total', width: 25 },
           ],
           data: [
             {
-              kategori: 'Saldo Mengendap Siswa',
+              kategori: 'Total Saldo Siswa',
               jumlah: `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
               total: formatRupiah(ringkasan.saldoSiswa),
             },
@@ -184,12 +184,12 @@ export function LaporanSaldoMengendapPage() {
       }
 
       exportMultiSheetExcel({
-        filename: `Laporan_Saldo_Mengendap_${new Date().toISOString().split('T')[0]}`,
+        filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
         sheets,
       })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: `Laporan Saldo Mengendap berhasil diunduh.`,
+        description: `Laporan Total Saldo Siswa berhasil diunduh.`,
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
@@ -210,7 +210,7 @@ export function LaporanSaldoMengendapPage() {
       // Section: Saldo Siswa
       if (canAccessSiswa) {
         sections.push({
-          sectionTitle: 'Rincian Saldo Mengendap Siswa (Dana Titipan Murid)',
+          sectionTitle: 'Rincian Total Saldo Siswa (Dana Titipan Murid)',
           columns: [
             { header: 'NIS', key: 'nis' },
             { header: 'Nama Siswa', key: 'nama' },
@@ -244,15 +244,15 @@ export function LaporanSaldoMengendapPage() {
       // Section Ringkasan jika Kepala Sekolah atau rincian kosong
       if (sections.length === 0) {
         sections.push({
-          sectionTitle: 'Ringkasan Eksekutif Saldo Mengendap (Kewajiban Sekolah)',
+          sectionTitle: 'Ringkasan Eksekutif Total Saldo Siswa (Kewajiban Sekolah)',
           columns: [
             { header: 'Kategori Akun', key: 'kategori' },
             { header: 'Jumlah Pemegang', key: 'jumlah' },
-            { header: 'Total Saldo Mengendap', key: 'total' },
+            { header: 'Total Saldo Siswa', key: 'total' },
           ],
           data: [
             {
-              kategori: 'Saldo Mengendap Siswa',
+              kategori: 'Total Saldo Siswa',
               jumlah: `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
               total: formatRupiah(ringkasan.saldoSiswa),
             },
@@ -261,19 +261,19 @@ export function LaporanSaldoMengendapPage() {
       }
 
       exportMultiSectionPdf({
-        filename: `Laporan_Saldo_Mengendap_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN SALDO MENGENDAP & KEWAJIBAN DANA TITIPAN',
+        filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN TOTAL SALDO SISWA & KEWAJIBAN DANA TITIPAN',
         subtitle: 'Audit Akuntabilitas Dana Titipan Siswa Kantin SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-          'Total Saldo Mengendap Siswa': formatRupiah(ringkasan.saldoSiswa),
+          'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
           'Jumlah Siswa': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
         },
         sections,
       })
 
       toast.success('Ekspor PDF Berhasil', {
-        description: 'Laporan Saldo Mengendap (.pdf) berhasil diunduh.',
+        description: 'Laporan Total Saldo Siswa (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
@@ -290,7 +290,7 @@ export function LaporanSaldoMengendapPage() {
               Laporan Keuangan
             </span>
             <span className="text-muted-foreground text-xs">/</span>
-            <span className="text-xs font-medium">Saldo Mengendap</span>
+            <span className="text-xs font-medium">Total Saldo Siswa</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitch />
@@ -305,7 +305,7 @@ export function LaporanSaldoMengendapPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Laporan Saldo Mengendap Siswa
+                Laporan Total Saldo Siswa
               </h1>
             </div>
 
@@ -323,7 +323,7 @@ export function LaporanSaldoMengendapPage() {
             <Card className="border-0 bg-muted/70 dark:bg-muted/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Saldo Mengendap Siswa
+                  Total Saldo Siswa
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -347,7 +347,7 @@ export function LaporanSaldoMengendapPage() {
                   {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Total siswa yang memiliki saldo mengendap berjalan
+                  Total siswa yang memiliki saldo berjalan
                 </p>
               </CardContent>
             </Card>
@@ -364,7 +364,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardTitle>
                 </div>
                 <CardDescription className="mt-1">
-                  Sebagai Kepala Sekolah, hak akses Anda difokuskan pada ringkasan akumulasi saldo mengendap dan kewajiban sekolah di atas. Rincian data siswa dikelola secara operasional oleh Petugas TU dan Admin Sekolah.
+                  Sebagai Kepala Sekolah, hak akses Anda difokuskan pada ringkasan akumulasi total saldo siswa dan kewajiban sekolah di atas. Rincian data siswa dikelola secara operasional oleh Petugas TU dan Admin Sekolah.
                 </CardDescription>
               </CardHeader>
             </Card>

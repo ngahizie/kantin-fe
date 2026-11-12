@@ -29,7 +29,7 @@ const ROUTE_LABELS: Record<string, string> = {
   'rekonsiliasi': 'Cek Selisih Uang',
   'penjualan': 'Penjualan & Laba',
   'laba-kotor': 'Analisis Laba Kotor',
-  'saldo-mengendap': 'Saldo Mengendap',
+  'saldo-mengendap': 'Total Saldo Siswa',
   'riwayat-keseluruhan': 'Riwayat Transaksi',
   'riwayat-siswa': 'Detail Riwayat Siswa',
   'kerugian-stok': 'Laporan Kerugian Stok',
