@@ -49,6 +49,9 @@ import type { KategoriItem } from './types'
 const CARD_OUTLINE_CLASS =
   'has-outline outline-2 outline-slate-200 dark:outline-slate-800'
 
+const SUMMARY_CARD_CLASS =
+  `${CARD_OUTLINE_CLASS} border-none bg-card rounded-2xl shadow-none`
+
 export function KategoriPage() {
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -322,7 +325,7 @@ export function KategoriPage() {
       <Main className='space-y-6 pb-12'>
         {/* Ringkasan Widget */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total Kategori</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-foreground tabular-nums'>{stats.total}</h3>
@@ -330,7 +333,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Kategori Aktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
@@ -340,7 +343,7 @@ export function KategoriPage() {
             </CardContent>
           </Card>
 
-          <Card className={`${CARD_OUTLINE_CLASS} border-none bg-muted/70 dark:bg-muted/30 rounded-2xl shadow-none`}>
+          <Card className={SUMMARY_CARD_CLASS}>
             <CardContent className='p-4'>
               <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Nonaktif</p>
               <h3 className='mt-1 text-2xl font-bold tracking-tight text-muted-foreground tabular-nums'>
