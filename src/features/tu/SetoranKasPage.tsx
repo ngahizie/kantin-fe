@@ -1,12 +1,11 @@
 import { TableToolbar } from '@/components/data-table'
+import { ExportButton } from '@/components/export-button'
 import { useState, useEffect, useMemo } from 'react'
 import { MOCK_SETORAN_KAS } from '@/mocks/mock-data'
 import {
   CheckCircle2,
   AlertTriangle,
   Printer,
-  FileSpreadsheet,
-  Download,
   Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -258,6 +257,10 @@ export function SetoranKasPage() {
 
   // Export to CSV
   const handleExportCSV = () => {
+    if (filteredList.length === 0) {
+      toast.warning('Tidak ada data untuk diekspor')
+      return
+    }
     const headers = [
       'ID Setoran',
       'Tanggal',
@@ -487,26 +490,13 @@ export function SetoranKasPage() {
             setStatusFilter('ALL')
           }}
         >
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={handleExportCSV}
-              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none'
-            >
-              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600' />
-              Ekspor CSV
-            </Button>
-            <Button
-              variant='secondary'
-              size='sm'
-              onClick={handleExportPdf}
-              className='h-8 gap-1.5 text-xs border-0 bg-muted/80 hover:bg-muted shadow-none text-rose-600 dark:text-rose-400'
-            >
-              <Download className='h-3.5 w-3.5 text-rose-600' />
-              Ekspor PDF
-            </Button>
-          </div>
+          <ExportButton
+            onExportCsv={handleExportCSV}
+            onExportPdf={handleExportPdf}
+            disabled={filteredList.length === 0}
+            className='h-8 text-xs'
+            data-testid='btn-setoran-kas-export'
+          />
         </TableToolbar>
 
         {/* Rekapitulasi Table */}
