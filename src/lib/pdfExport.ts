@@ -10,6 +10,7 @@
 
 import { jsPDF } from 'jspdf'
 import autoTable, { type UserOptions } from 'jspdf-autotable'
+import { useAuthStore } from '@/stores/auth-store'
 
 export interface PdfColumn<T = any> {
   header: string
@@ -28,6 +29,8 @@ export interface ExportTablePdfOptions<T = any> {
   filename: string
   title?: string
   subtitle?: string
+  schoolName?: string
+  schoolAddress?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: PdfColumn<T>[]
   data: T[]
@@ -38,6 +41,8 @@ export interface MultiSectionPdfExportOptions {
   filename: string
   title?: string
   subtitle?: string
+  schoolName?: string
+  schoolAddress?: string
   metadata?: Record<string, string | number | undefined | null>
   sections: PdfTableSection<any>[]
   orientation?: 'portrait' | 'landscape'
@@ -96,48 +101,61 @@ function resolveColumnAlignment<T>(col: PdfColumn<T>): 'left' | 'center' | 'righ
 }
 
 /**
- * Menggambar Kop Resmi Kantin Skoolia dan Informasi Metadata
+ * Mengambil data sekolah aktif dari auth store
+ */
+function getSchoolProfile(): { name: string; address: string } {
+  try {
+    const user = useAuthStore.getState().auth.user
+    const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
+    const address = 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
+    return { name, address }
+  } catch {
+    return {
+      name: 'SMP NEGERI 1 SKOOLIA',
+      address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
+    }
+  }
+}
+
+/**
+ * Menggambar Kop Resmi Kantin Skoolia dan Informasi Metadata sesuai template Navy #123463
  */
 function drawHeaderAndMetadata(
   doc: jsPDF,
   title?: string,
   subtitle?: string,
-  metadata?: Record<string, string | number | undefined | null>
+  metadata?: Record<string, string | number | undefined | null>,
+  customSchoolName?: string,
+  customSchoolAddress?: string
 ): number {
   const pageWidth = doc.internal.pageSize.getWidth()
   let y = 14
+  const profile = getSchoolProfile()
 
-  // Brand Name / Kop Title
+  const finalTitle = (title || 'LAPORAN KANTIN CASHLESS').toUpperCase()
+  const finalSchool = (customSchoolName || profile.name).toUpperCase()
+  const finalAddress = customSchoolAddress || subtitle || profile.address
+
+  // Baris 1: Judul Laporan (Navy #123463)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
-  doc.setTextColor(22, 101, 52) // Emerald-800
-  doc.text('KANTIN CASHLESS SKOOLIA', 14, y)
+  doc.setTextColor(18, 52, 99) // Navy #123463
+  doc.text(finalTitle, 14, y)
   y += 6
 
-  // Subtitle Aplikasi
+  // Baris 2: Nama Sekolah (Navy #123463)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(18, 52, 99)
+  doc.text(finalSchool, 14, y)
+  y += 5
+
+  // Baris 3: Alamat Sekolah / Subjudul
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.5)
   doc.setTextColor(100, 116, 139) // Slate-500
-  doc.text('Sistem Transaksi & Akuntansi Kantin Sekolah Digital', 14, y)
+  doc.text(finalAddress, 14, y)
   y += 6
-
-  // Judul Laporan
-  if (title) {
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(11)
-    doc.setTextColor(30, 41, 59) // Slate-800
-    doc.text(title.toUpperCase(), 14, y)
-    y += 5
-  }
-
-  // Subtitle Tambahan
-  if (subtitle) {
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.5)
-    doc.setTextColor(71, 85, 105) // Slate-600
-    doc.text(subtitle, 14, y)
-    y += 5
-  }
 
   // Garis Pemisah Kop (Separator line)
   doc.setDrawColor(203, 213, 225) // Slate-300
@@ -166,7 +184,7 @@ function drawHeaderAndMetadata(
           : currentMetaY
 
         doc.setFont('helvetica', 'bold')
-        doc.setTextColor(71, 85, 105)
+        doc.setTextColor(18, 52, 99) // Navy
         const label = `${key}: `
         doc.text(label, posX, posY)
 
@@ -291,7 +309,9 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
     doc,
     options.title,
     options.subtitle,
-    options.metadata
+    options.metadata,
+    options.schoolName,
+    options.schoolAddress
   )
 
   // Styling Perataan Kolom
@@ -309,7 +329,7 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
     body: rows,
     theme: 'grid',
     headStyles: {
-      fillColor: [15, 23, 42], // Slate-900
+      fillColor: [18, 52, 99], // Navy #123463
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 8,
@@ -322,7 +342,7 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
       valign: 'middle',
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252], // Slate-50
+      fillColor: [240, 244, 251], // Blue light #F0F4FB
     },
     columnStyles,
     margin: { left: 14, right: 14, bottom: 18 },
@@ -356,7 +376,9 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
     doc,
     options.title,
     options.subtitle,
-    options.metadata
+    options.metadata,
+    options.schoolName,
+    options.schoolAddress
   )
 
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -373,7 +395,7 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
     if (section.sectionTitle) {
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(9.5)
-      doc.setTextColor(30, 41, 59)
+      doc.setTextColor(18, 52, 99) // Navy #123463
       doc.text(section.sectionTitle, 14, currentY + 4)
       currentY += 7
     }
@@ -392,7 +414,7 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
       body: rows,
       theme: 'grid',
       headStyles: {
-        fillColor: [15, 23, 42],
+        fillColor: [18, 52, 99], // Navy #123463
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 8,
@@ -405,7 +427,7 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
         valign: 'middle',
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252],
+        fillColor: [240, 244, 251], // Blue light #F0F4FB
       },
       columnStyles,
       margin: { left: 14, right: 14, bottom: 18 },

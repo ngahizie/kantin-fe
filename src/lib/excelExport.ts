@@ -3,34 +3,52 @@
  * Utility Ekspor Data ke Format Microsoft Excel (.xlsx)
  * Modul Laporan SKOOLIA Kantin
  *
- * Menggunakan library 'xlsx' (SheetJS) untuk mengekspor tabel laporan,
- * mutasi, dan ringkasan keuangan secara rapi dengan auto-width kolom.
+ * Menggunakan library 'exceljs' untuk menghasilkan berkas Excel
+ * resmi yang elegan sesuai template acuan docs/Ekspor excel.xlsx:
+ * - Margin kolom A kosong (lebar 3.0)
+ * - Kop 3 baris (Judul Laporan, Nama Sekolah, Alamat)
+ * - Metadata periode & tanggal cetak
+ * - Header tabel biru Navy (#123463) dengan teks putih tebal
+ * - Baris data zebra striping (#F0F4FB) dengan auto-alignment
+ * - Baris total berlatar biru (#22559B)
+ * - Catatan kaki keterangan
  */
 
+import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
+import { useAuthStore } from '@/stores/auth-store'
 
 export interface ExcelColumn<T = any> {
   header: string
   key?: keyof T | string
   formatter?: (val: unknown, row: T) => string | number | boolean | null | undefined
   width?: number
+  align?: 'left' | 'center' | 'right'
 }
 
 export interface ExportTableOptions<T = any> {
   filename: string
   sheetName?: string
   title?: string
+  schoolName?: string
+  schoolAddress?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: ExcelColumn<T>[]
   data: T[]
+  summaryRow?: Record<string, string | number | null | undefined>
+  footnote?: string
 }
 
 export interface SheetConfig<T = any> {
   sheetName: string
   title?: string
+  schoolName?: string
+  schoolAddress?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: ExcelColumn<T>[]
   data: T[]
+  summaryRow?: Record<string, string | number | null | undefined>
+  footnote?: string
 }
 
 export interface MultiSheetExportOptions {
@@ -38,176 +56,499 @@ export interface MultiSheetExportOptions {
   sheets: SheetConfig<any>[]
 }
 
-/**
- * Membersihkan nama file dari karakter ilegal
- */
-function sanitizeFilename(filename: string): string {
-  const clean = filename.replace(/[\\/:*?"<>|]/g, '_').trim()
-  return clean.endsWith('.xlsx') ? clean : `${clean}.xlsx`
+export type StyledWorkbook = ExcelJS.Workbook & {
+  SheetNames?: string[]
+  Sheets?: Record<string, any>
+}
+
+export interface ExportExcelResult {
+  workbook: StyledWorkbook
+  filename: string
+  bufferPromise: Promise<Uint8Array | undefined>
 }
 
 /**
- * Membangun worksheet dari tabel data
+ * Membersihkan nama file dari karakter ilegal
  */
-function buildWorksheet<T>(config: {
-  title?: string
-  metadata?: Record<string, string | number | undefined | null>
-  columns: ExcelColumn<T>[]
-  data: T[]
-}): XLSX.WorkSheet {
-  const rows: (string | number | boolean | null | undefined)[][] = []
+export function sanitizeFilename(filename: string): string {
+  const clean = filename.replace(/[\\/:*?"<>|]/g, '_').trim()
+  return clean.toLowerCase().endsWith('.xlsx') ? clean : `${clean}.xlsx`
+}
 
-  // Judul Laporan jika ada
-  if (config.title) {
-    rows.push([config.title])
-    rows.push([]) // baris kosong
+/**
+ * Mendeteksi perataan kolom berdasarkan header / key jika tidak dispesifikasikan manual
+ */
+function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'right' {
+  if (col.align) return col.align
+
+  const str = `${col.header} ${String(col.key || '')}`.toLowerCase()
+
+  if (
+    str.includes('rp') ||
+    str.includes('harga') ||
+    str.includes('total') ||
+    str.includes('hpp') ||
+    str.includes('laba') ||
+    str.includes('qty') ||
+    str.includes('jumlah') ||
+    str.includes('saldo') ||
+    str.includes('nominal') ||
+    str.includes('margin') ||
+    str.includes('omzet') ||
+    str.includes('omset') ||
+    str.includes('bruto') ||
+    str.includes('disetor') ||
+    str.includes('fisik') ||
+    str.includes('sistem') ||
+    str.includes('selisih') ||
+    str.includes('terjual')
+  ) {
+    return 'right'
   }
 
-  // Metadata / Info Tambahan (mis. Periode, Sekolah, Dicetak Pada)
-  if (config.metadata) {
-    for (const [key, value] of Object.entries(config.metadata)) {
-      if (value !== undefined && value !== null) {
-        rows.push([key, value])
+  if (
+    str === 'no' ||
+    str === 'id' ||
+    str.includes('kode') ||
+    str.includes('status') ||
+    str.includes('tipe') ||
+    str.includes('waktu') ||
+    str.includes('tanggal') ||
+    str.includes('kelas') ||
+    str.includes('jenjang') ||
+    str.includes('nis')
+  ) {
+    return 'center'
+  }
+
+  return 'left'
+}
+
+/**
+ * Mengambil informasi sekolah aktif dari auth store dengan fallback yang aman
+ */
+function getSchoolProfile(): { name: string; address: string } {
+  try {
+    const user = useAuthStore.getState().auth.user
+    const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
+    const address = 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
+    return { name, address }
+  } catch {
+    return {
+      name: 'SMP NEGERI 1 SKOOLIA',
+      address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
+    }
+  }
+}
+
+const COLOR_NAVY = 'FF123463'
+const COLOR_ZEBRA = 'FFF0F4FB'
+const COLOR_TOTAL = 'FF22559B'
+const COLOR_GRAY_TEXT = 'FF646464'
+const COLOR_BORDER = 'FFE0E0E0'
+const COLOR_HEADER_BORDER = 'FFD3D3D3'
+
+/**
+ * Membangun worksheet pada workbook ExcelJS sesuai format template docs/Ekspor excel.xlsx
+ */
+function populateWorksheet<T>(
+  ws: ExcelJS.Worksheet,
+  config: {
+    title?: string
+    schoolName?: string
+    schoolAddress?: string
+    metadata?: Record<string, string | number | undefined | null>
+    columns: ExcelColumn<T>[]
+    data: T[]
+    summaryRow?: Record<string, string | number | null | undefined>
+    footnote?: string
+  }
+) {
+  const schoolProfile = getSchoolProfile()
+  const title = (config.title || 'LAPORAN KANTIN CASHLESS').toUpperCase()
+  const schoolName = (config.schoolName || schoolProfile.name).toUpperCase()
+  const schoolAddress = config.schoolAddress || schoolProfile.address
+
+  const numCols = config.columns.length
+  // Tabel dimulai dari kolom B (indeks kolom 2), kolom A (indeks 1) adalah padding
+  const startCol = 2
+  const endCol = startCol + numCols - 1
+
+  // Set lebar kolom A sebagai padding visual (lebar 3.0 sesuai template)
+  ws.getColumn(1).width = 3.0
+
+  // Set lebar kolom tabel
+  config.columns.forEach((col, idx) => {
+    const colNumber = startCol + idx
+    let maxLen = col.header.length
+
+    for (const item of config.data) {
+      let val: unknown = undefined
+      if (col.key) val = (item as Record<string, unknown>)[col.key as string]
+      if (col.formatter) val = col.formatter(val, item)
+      const str = val !== undefined && val !== null ? String(val) : ''
+      if (str.length > maxLen) {
+        maxLen = str.length
       }
     }
-    rows.push([]) // baris kosong pemisah
-  }
 
-  // Header Kolom
-  const headerRow = config.columns.map((c) => c.header)
-  rows.push(headerRow)
+    const calculatedWidth = col.width
+      ? col.width
+      : Math.min(Math.max(maxLen + 4, 11), 45)
+    ws.getColumn(colNumber).width = calculatedWidth
+  })
 
-  // Data Baris
-  for (const item of config.data) {
-    const rowValues = config.columns.map((col) => {
+  // Baris 1: Judul Laporan
+  ws.mergeCells(1, startCol, 1, endCol)
+  const cellB1 = ws.getCell(1, startCol)
+  cellB1.value = title
+  cellB1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: COLOR_NAVY } }
+  cellB1.alignment = { horizontal: 'center', vertical: 'middle' }
+  ws.getRow(1).height = 26
+
+  // Baris 2: Nama Sekolah
+  ws.mergeCells(2, startCol, 2, endCol)
+  const cellB2 = ws.getCell(2, startCol)
+  cellB2.value = schoolName
+  cellB2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: COLOR_NAVY } }
+  cellB2.alignment = { horizontal: 'center', vertical: 'middle' }
+  ws.getRow(2).height = 20
+
+  // Baris 3: Alamat Sekolah
+  ws.mergeCells(3, startCol, 3, endCol)
+  const cellB3 = ws.getCell(3, startCol)
+  cellB3.value = schoolAddress
+  cellB3.font = { name: 'Calibri', size: 10, bold: false, color: { argb: COLOR_GRAY_TEXT } }
+  cellB3.alignment = { horizontal: 'center', vertical: 'middle' }
+  ws.getRow(3).height = 16
+
+  // Baris 4: Baris Pemisah Kosong (tinggi 4)
+  ws.getRow(4).height = 4
+
+  // Baris 5: Metadata (Dicetak Pada | Periode)
+  const metaText = config.metadata
+    ? (() => {
+        const parts: string[] = []
+        const printDate =
+          config.metadata['Tanggal Cetak'] ||
+          config.metadata['Dicetak'] ||
+          new Date().toLocaleString('id-ID')
+        parts.push(`Dicetak: ${printDate}`)
+
+        const periode = config.metadata['Periode'] || config.metadata['Tanggal']
+        if (periode) {
+          parts.push(`Periode: ${periode}`)
+        }
+
+        for (const [key, val] of Object.entries(config.metadata)) {
+          if (
+            key !== 'Tanggal Cetak' &&
+            key !== 'Dicetak' &&
+            key !== 'Periode' &&
+            key !== 'Tanggal' &&
+            val !== undefined &&
+            val !== null &&
+            val !== ''
+          ) {
+            parts.push(`${key}: ${val}`)
+          }
+        }
+        return parts.join('   |   ')
+      })()
+    : `Dicetak: ${new Date().toLocaleString('id-ID')}`
+
+  ws.mergeCells(5, startCol, 5, endCol)
+  const cellB5 = ws.getCell(5, startCol)
+  cellB5.value = metaText
+  cellB5.font = { name: 'Calibri', size: 10, bold: false, color: { argb: COLOR_NAVY } }
+  cellB5.alignment = { horizontal: 'left', vertical: 'middle' }
+  ws.getRow(5).height = 16
+
+  // Baris 6: Header Kolom Tabel
+  const headerRow = ws.getRow(6)
+  headerRow.height = 22
+
+  config.columns.forEach((col, idx) => {
+    const colNumber = startCol + idx
+    const cell = ws.getCell(6, colNumber)
+    cell.value = col.header
+    cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } }
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: COLOR_NAVY },
+    }
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+    cell.border = {
+      top: { style: 'thin', color: { argb: COLOR_HEADER_BORDER } },
+      bottom: { style: 'thin', color: { argb: COLOR_HEADER_BORDER } },
+      left: { style: 'thin', color: { argb: COLOR_NAVY } },
+      right: { style: 'thin', color: { argb: COLOR_NAVY } },
+    }
+  })
+
+  // Baris 7+: Data Rows (Zebra Striping)
+  let currentRowNum = 7
+  config.data.forEach((item, rowIdx) => {
+    const row = ws.getRow(currentRowNum)
+    row.height = 18
+    const isZebra = rowIdx % 2 === 1
+
+    config.columns.forEach((col, colIdx) => {
+      const colNumber = startCol + colIdx
+      const cell = ws.getCell(currentRowNum, colNumber)
+
       let val: unknown = undefined
       if (col.key) {
         val = (item as Record<string, unknown>)[col.key as string]
       }
       if (col.formatter) {
-        return col.formatter(val, item)
+        val = col.formatter(val, item)
       }
       if (val === undefined || val === null) {
-        return ''
+        val = ''
       }
-      return val as string | number | boolean
+
+      cell.value = val as any
+      cell.font = { name: 'Calibri', size: 11, bold: false, color: { argb: 'FF000000' } }
+
+      if (isZebra) {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLOR_ZEBRA },
+        }
+      }
+
+      const align = resolveColumnAlignment(col)
+      cell.alignment = { horizontal: align, vertical: 'middle' }
+
+      cell.border = {
+        top: { style: 'thin', color: { argb: COLOR_BORDER } },
+        bottom: { style: 'thin', color: { argb: COLOR_BORDER } },
+        left: { style: 'thin', color: { argb: COLOR_BORDER } },
+        right: { style: 'thin', color: { argb: COLOR_BORDER } },
+      }
     })
-    rows.push(rowValues)
-  }
 
-  const ws = XLSX.utils.aoa_to_sheet(rows)
-
-  // Hitung lebar kolom otomatis (Auto column widths)
-  const colWidths = config.columns.map((col, _colIdx) => {
-    let maxLen = col.header.length
-
-    // Cari nilai terpanjang pada kolom ini
-    for (const item of config.data) {
-      let val: unknown = undefined
-      if (col.key) val = (item as Record<string, unknown>)[col.key as string]
-      if (col.formatter) val = col.formatter(val, item)
-      const strVal = val !== undefined && val !== null ? String(val) : ''
-      if (strVal.length > maxLen) {
-        maxLen = strVal.length
-      }
-    }
-
-    return {
-      wch: col.width ? col.width : Math.min(Math.max(maxLen + 4, 12), 45),
-    }
+    currentRowNum++
   })
 
-  ws['!cols'] = colWidths
-  return ws
+  // Baris Total / Summary jika ada
+  if (config.summaryRow) {
+    const summaryRowNum = currentRowNum
+    const row = ws.getRow(summaryRowNum)
+    row.height = 20
+
+    config.columns.forEach((col, colIdx) => {
+      const colNumber = startCol + colIdx
+      const cell = ws.getCell(summaryRowNum, colNumber)
+
+      let val: unknown = ''
+      if (col.key && config.summaryRow?.[col.key as string] !== undefined) {
+        val = config.summaryRow[col.key as string]
+      } else if (colIdx === 0) {
+        val = 'Total'
+      }
+
+      cell.value = val as any
+      cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLOR_TOTAL },
+      }
+
+      const align = resolveColumnAlignment(col)
+      cell.alignment = {
+        horizontal: colIdx === 0 ? 'center' : align,
+        vertical: 'middle',
+      }
+
+      cell.border = {
+        top: { style: 'thin', color: { argb: COLOR_HEADER_BORDER } },
+        bottom: { style: 'double', color: { argb: COLOR_HEADER_BORDER } },
+      }
+    })
+    currentRowNum++
+  }
+
+  // Catatan Kaki / Footnote jika ada
+  if (config.footnote) {
+    const footnoteRowNum = currentRowNum + 1
+    ws.mergeCells(footnoteRowNum, startCol, footnoteRowNum, endCol)
+    const cell = ws.getCell(footnoteRowNum, startCol)
+    cell.value = config.footnote
+    cell.font = { name: 'Calibri', size: 8, bold: true, italic: true, color: { argb: COLOR_GRAY_TEXT } }
+    cell.alignment = { horizontal: 'left', vertical: 'middle' }
+    ws.getRow(footnoteRowNum).height = 16
+  }
 }
 
 /**
- * Menyimpan workbook ke file dan memicu download browser, serta mengembalikan workbook & byte array
+ * Menambahkan layer kompatibilitas SheetNames & Sheets agar kompatibel dengan pembaca SheetJS
  */
-function triggerDownload(workbook: XLSX.WorkBook, fullFilename: string) {
+function wrapWorkbookCompatibility(wb: ExcelJS.Workbook): StyledWorkbook {
+  const styled = wb as StyledWorkbook
+
+  Object.defineProperty(styled, 'SheetNames', {
+    get: () => styled.worksheets.map((w) => w.name),
+    configurable: true,
+  })
+
+  Object.defineProperty(styled, 'Sheets', {
+    get: () => {
+      const map: Record<string, any> = {}
+      styled.worksheets.forEach((w) => {
+        const rows: any[][] = []
+        w.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+          const rVals: any[] = []
+          row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            rVals[colNumber - 1] = cell.value
+          })
+          rows[rowNumber - 1] = rVals
+        })
+        map[w.name] = XLSX.utils.aoa_to_sheet(rows)
+      })
+      return map
+    },
+    configurable: true,
+  })
+
+  return styled
+}
+
+/**
+ * Memicu unduhan berkas Excel di browser
+ */
+async function triggerDownload(workbook: ExcelJS.Workbook, fullFilename: string): Promise<Uint8Array | undefined> {
   let buffer: Uint8Array | undefined
+
   try {
-    buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const rawBuffer = await workbook.xlsx.writeBuffer()
+    buffer = new Uint8Array(rawBuffer)
   } catch {
-    // fallback jika environment tidak mendukung
+    // Fallback jika lingkungan tidak mendukung writeBuffer
   }
 
-  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof document !== 'undefined' && buffer) {
     try {
-      XLSX.writeFile(workbook, fullFilename, {
-        bookType: 'xlsx',
-        compression: true,
+      const blob = new Blob([buffer as any], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', fullFilename)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
     } catch {
-      // Jika di lingkungan test browser yang memblokir dialog unduh
+      // Abaikan jika dialog unduhan dibatasi lingkungan pengujian
     }
   }
 
-  return {
-    workbook,
-    filename: fullFilename,
-    buffer,
-  }
+  return buffer
 }
 
 /**
- * Mengekspor satu tabel data ke file Excel (.xlsx)
+ * Mengekspor satu tabel data ke file Excel (.xlsx) sesuai template acuan
  */
-export function exportTableToExcel<T = any>(
-  options: ExportTableOptions<T>
-) {
-  const wb = XLSX.utils.book_new()
-  const sheetName = options.sheetName || 'Laporan'
-  const ws = buildWorksheet({
+export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): ExportExcelResult {
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'SKOOLIA Kantin'
+  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.created = new Date()
+  wb.modified = new Date()
+
+  const sheetName = (options.sheetName || 'Laporan').substring(0, 31)
+  const ws = wb.addWorksheet(sheetName)
+
+  populateWorksheet(ws, {
     title: options.title,
+    schoolName: options.schoolName,
+    schoolAddress: options.schoolAddress,
     metadata: options.metadata,
     columns: options.columns,
     data: options.data,
+    summaryRow: options.summaryRow,
+    footnote: options.footnote,
   })
 
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31)) // Sheet name max 31 chars
+  const wrappedWb = wrapWorkbookCompatibility(wb)
   const finalFilename = sanitizeFilename(options.filename)
-  return triggerDownload(wb, finalFilename)
+  const bufferPromise = triggerDownload(wb, finalFilename)
+
+  return {
+    workbook: wrappedWb,
+    filename: finalFilename,
+    bufferPromise,
+  }
 }
 
 /**
  * Mengekspor beberapa sheet sekaligus ke dalam satu file Excel (.xlsx)
  */
-export function exportMultiSheetExcel(options: MultiSheetExportOptions) {
-  const wb = XLSX.utils.book_new()
+export function exportMultiSheetExcel(options: MultiSheetExportOptions): ExportExcelResult {
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'SKOOLIA Kantin'
+  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.created = new Date()
+  wb.modified = new Date()
 
   for (const sheet of options.sheets) {
-    const ws = buildWorksheet({
+    const sheetName = (sheet.sheetName || 'Sheet').substring(0, 31)
+    const ws = wb.addWorksheet(sheetName)
+    populateWorksheet(ws, {
       title: sheet.title,
+      schoolName: sheet.schoolName,
+      schoolAddress: sheet.schoolAddress,
       metadata: sheet.metadata,
       columns: sheet.columns,
       data: sheet.data,
+      summaryRow: sheet.summaryRow,
+      footnote: sheet.footnote,
     })
-    const sheetName = (sheet.sheetName || 'Sheet').substring(0, 31)
-    XLSX.utils.book_append_sheet(wb, ws, sheetName)
   }
 
+  const wrappedWb = wrapWorkbookCompatibility(wb)
   const finalFilename = sanitizeFilename(options.filename)
-  return triggerDownload(wb, finalFilename)
+  const bufferPromise = triggerDownload(wb, finalFilename)
+
+  return {
+    workbook: wrappedWb,
+    filename: finalFilename,
+    bufferPromise,
+  }
 }
 
 /**
- * Mengekspor data mentah (Array of Arrays) ke Excel
+ * Mengekspor data mentah (Array of Arrays) ke Excel dengan header Navy dan zebra stripe
  */
 export function exportRawDataToExcel(
   filename: string,
   sheetName: string,
   headers: string[],
   rows: (string | number | boolean | null | undefined)[][]
-) {
-  const wb = XLSX.utils.book_new()
-  const aoa = [headers, ...rows]
-  const ws = XLSX.utils.aoa_to_sheet(aoa)
+): ExportExcelResult {
+  const columns: ExcelColumn<Record<string, any>>[] = headers.map((h, i) => ({
+    header: h,
+    key: `col_${i}`,
+  }))
 
-  // Lebar kolom
-  ws['!cols'] = headers.map((h) => ({ wch: Math.max(h.length + 4, 14) }))
+  const data = rows.map((r) => {
+    const item: Record<string, any> = {}
+    r.forEach((val, i) => {
+      item[`col_${i}`] = val
+    })
+    return item
+  })
 
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31))
-  const finalFilename = sanitizeFilename(filename)
-  return triggerDownload(wb, finalFilename)
+  return exportTableToExcel({
+    filename,
+    sheetName,
+    columns,
+    data,
+  })
 }
