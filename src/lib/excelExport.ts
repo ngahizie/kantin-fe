@@ -245,6 +245,19 @@ function cleanBase64ForExcel(raw: string): string {
 }
 
 /**
+ * Menghapus embel-embel "Kantin Skoolia" dari judul, subjudul, atau catatan
+ */
+export function stripKantinSkoolia(text?: string | null): string {
+  if (!text) return ''
+  return text
+    .replace(/\s*[-–—:]?\s*kantin\s+skoolia\b/gi, '')
+    .replace(/\bkantin\s+skoolia\s*[-–—:]?\s*/gi, '')
+    .replace(/^[-–—:\s]+|[-–—:\s]+$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+/**
  * Membangun worksheet pada workbook ExcelJS sesuai format template docs/Ekspor excel.xlsx
  */
 function populateWorksheet<T>(
@@ -264,9 +277,10 @@ function populateWorksheet<T>(
   }
 ) {
   const schoolProfile = getSchoolProfile()
-  const title = config.title || 'LAPORAN KANTIN CASHLESS'
+  const rawTitle = config.title || 'LAPORAN KANTIN'
+  const title = stripKantinSkoolia(rawTitle) || 'LAPORAN KANTIN'
   const schoolName = (config.schoolName || schoolProfile.name).toUpperCase()
-  const schoolAddress = config.schoolAddress || schoolProfile.address
+  const schoolAddress = stripKantinSkoolia(config.schoolAddress || schoolProfile.address)
   const activeLogoBase64 =
     config.schoolLogoBase64 || schoolProfile.logoBase64 || SCHOOL_LOGO_BASE64
 
@@ -569,7 +583,7 @@ function populateWorksheet<T>(
     const footnoteRowNum = currentRowNum + 1
     ws.mergeCells(footnoteRowNum, startCol, footnoteRowNum, endCol)
     const cell = ws.getCell(footnoteRowNum, startCol)
-    cell.value = config.footnote
+    cell.value = stripKantinSkoolia(config.footnote)
     cell.font = { name: 'Calibri', size: 8, bold: true, italic: true, color: { argb: COLOR_GRAY_TEXT } }
     cell.alignment = { horizontal: 'left', vertical: 'middle' }
     ws.getRow(footnoteRowNum).height = 16
@@ -648,8 +662,8 @@ async function triggerDownload(workbook: ExcelJS.Workbook, fullFilename: string)
  */
 export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): ExportExcelResult {
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'SKOOLIA Kantin'
-  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.creator = 'Sistem Kasir Sekolah'
+  wb.lastModifiedBy = 'Sistem Kasir Sekolah'
   wb.created = new Date()
   wb.modified = new Date()
 
@@ -686,8 +700,8 @@ export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): Exp
  */
 export function exportMultiSheetExcel(options: MultiSheetExportOptions): ExportExcelResult {
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'SKOOLIA Kantin'
-  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.creator = 'Sistem Kasir Sekolah'
+  wb.lastModifiedBy = 'Sistem Kasir Sekolah'
   wb.created = new Date()
   wb.modified = new Date()
 

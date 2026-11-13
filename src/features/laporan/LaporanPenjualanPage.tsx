@@ -227,7 +227,7 @@ export function LaporanPenjualanPage() {
         sheets: [
           {
             sheetName: 'Penjualan per Item',
-            title: 'LAPORAN PENJUALAN PER ITEM MENU KANTIN SKOOLIA',
+            title: 'LAPORAN PENJUALAN PER ITEM MENU',
             metadata: {
               'Tanggal Cetak': new Date().toLocaleString('id-ID'),
               'Periode Laporan': dateFilterLabel,
@@ -365,7 +365,7 @@ export function LaporanPenjualanPage() {
 
       exportMultiSectionPdf({
         filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN PENJUALAN & LABA KOTOR KANTIN SKOOLIA',
+        title: 'LAPORAN PENJUALAN & LABA KOTOR',
         subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),

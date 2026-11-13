@@ -114,7 +114,7 @@ export function LaporanKerugianStokPage() {
       exportTableToExcel({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Kerugian Stok',
-        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA',
+        title: 'LAPORAN KERUGIAN STOK',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Periode': dateFilterLabel,
@@ -176,7 +176,7 @@ export function LaporanKerugianStokPage() {
     try {
       exportTableToPdf({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA',
+        title: 'LAPORAN KERUGIAN STOK',
         subtitle: 'Daftar Selisih Stok Opname dan Barang Rusak/Kadaluarsa',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),

@@ -235,7 +235,7 @@ export function LaporanRiwayatKeseluruhanPage() {
       exportTableToPdf({
         filename: `Riwayat_Transaksi_Keseluruhan_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN',
-        subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+        subtitle: 'Sistem Kasir & Pembukuan',
         orientation: 'landscape',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),

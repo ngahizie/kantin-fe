@@ -300,7 +300,7 @@ export function LaporanSaldoMengendapPage() {
       exportMultiSectionPdf({
         filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN TOTAL SALDO SISWA & KEWAJIBAN DANA TITIPAN',
-        subtitle: 'Audit Akuntabilitas Dana Titipan Siswa Kantin SKOOLIA',
+        subtitle: 'Audit Akuntabilitas Dana Titipan Siswa',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),

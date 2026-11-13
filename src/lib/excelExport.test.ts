@@ -3,6 +3,7 @@ import {
   exportTableToExcel,
   exportMultiSheetExcel,
   exportRawDataToExcel,
+  stripKantinSkoolia,
 } from './excelExport'
 
 describe('excelExport utility (ExcelJS template resmi)', () => {
@@ -250,5 +251,24 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
     // Font putih bold
     expect(ws?.getCell('G9').font?.color?.argb).toBe('FFFFFFFF')
     expect(ws?.getCell('G9').font?.bold).toBe(true)
+  })
+
+  it('menghapus embel-embel Kantin Skoolia secara otomatis dari judul dan subjudul', async () => {
+    expect(stripKantinSkoolia('LAPORAN KERUGIAN STOK KANTIN SKOOLIA')).toBe('LAPORAN KERUGIAN STOK')
+    expect(stripKantinSkoolia('LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO KANTIN SKOOLIA')).toBe(
+      'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO'
+    )
+    expect(stripKantinSkoolia('Sistem Kasir & Pembukuan Kantin SKOOLIA')).toBe('Sistem Kasir & Pembukuan')
+    expect(stripKantinSkoolia('Kantin Skoolia - Laporan Penjualan')).toBe('Laporan Penjualan')
+
+    const result = await exportTableToExcel({
+      filename: 'test-strip-embel-embel',
+      title: 'LAPORAN PENJUALAN KANTIN SKOOLIA',
+      columns: [{ header: 'No', key: 'id' }],
+      data: [{ id: 1 }],
+    })
+
+    const ws = result.workbook.getWorksheet('Laporan')
+    expect(ws?.getCell('B1').value).toBe('LAPORAN PENJUALAN')
   })
 })

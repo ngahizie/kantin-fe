@@ -129,7 +129,20 @@ function getSchoolProfile(): { name: string; address: string; logoBase64: string
 }
 
 /**
- * Menggambar Kop Resmi Kantin Skoolia dan Informasi Metadata sesuai template Navy #123463
+ * Menghapus embel-embel "Kantin Skoolia" dari judul, subjudul, atau catatan
+ */
+export function stripKantinSkoolia(text?: string | null): string {
+  if (!text) return ''
+  return text
+    .replace(/\s*[-–—:]?\s*kantin\s+skoolia\b/gi, '')
+    .replace(/\bkantin\s+skoolia\s*[-–—:]?\s*/gi, '')
+    .replace(/^[-–—:\s]+|[-–—:\s]+$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+/**
+ * Menggambar Kop Resmi dan Informasi Metadata sesuai template Navy #123463
  */
 function drawHeaderAndMetadata(
   doc: jsPDF,
@@ -144,9 +157,10 @@ function drawHeaderAndMetadata(
   let y = 14
   const profile = getSchoolProfile()
 
-  const finalTitle = (title || 'LAPORAN KANTIN CASHLESS').toUpperCase()
+  const rawTitle = title || 'LAPORAN KANTIN'
+  const finalTitle = (stripKantinSkoolia(rawTitle) || 'LAPORAN KANTIN').toUpperCase()
   const finalSchool = (customSchoolName || profile.name).toUpperCase()
-  const finalAddress = customSchoolAddress || subtitle || profile.address
+  const finalAddress = stripKantinSkoolia(customSchoolAddress || subtitle || profile.address)
   const finalLogo =
     customSchoolLogoBase64 || profile.logoBase64 || SCHOOL_LOGO_BASE64
 
@@ -249,7 +263,7 @@ function attachFooters(doc: jsPDF) {
     doc.setFontSize(7.5)
     doc.setTextColor(148, 163, 184) // Slate-400
     doc.text(
-      'Dokumen ini dicetak otomatis oleh Sistem Kantin Cashless SKOOLIA',
+      'Dokumen ini dicetak otomatis oleh Sistem Kasir & Keuangan Sekolah',
       14,
       pageHeight - 6.5
     )

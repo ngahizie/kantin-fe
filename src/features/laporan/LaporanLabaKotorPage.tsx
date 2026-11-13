@@ -182,7 +182,7 @@ export function LaporanLabaKotorPage() {
       exportTableToExcel({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Laba Kotor',
-        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
+        title: 'LAPORAN ANALISIS LABA KOTOR',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
@@ -253,7 +253,7 @@ export function LaporanLabaKotorPage() {
 
       exportTableToPdf({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
+        title: 'LAPORAN ANALISIS LABA KOTOR',
         subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
