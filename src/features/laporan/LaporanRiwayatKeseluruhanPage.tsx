@@ -266,6 +266,7 @@ export function LaporanRiwayatKeseluruhanPage() {
             align: 'right',
           },
           { header: 'Titik Kasir', key: 'titikKasir', align: 'left' },
+          { header: 'Petugas', key: 'petugas', align: 'left' },
           {
             header: 'Rincian Belanja',
             key: 'items',
@@ -288,6 +289,7 @@ export function LaporanRiwayatKeseluruhanPage() {
           nominal: formatRupiah(totalNominal),
           saldoSetelah: '',
           titikKasir: '',
+          petugas: '',
           items: '',
         },
       })
