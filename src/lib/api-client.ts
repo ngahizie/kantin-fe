@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 
 import { getCookie, removeCookie } from '@/lib/cookies'
 import { extractValidationMessage } from '@/lib/validation-error'
+import { useCartStore } from '@/stores/useCartStore'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
@@ -111,7 +112,8 @@ apiClient.interceptors.response.use(
     )
 
     if (status === 401) {
-      // Token expired atau unauthenticated
+      // Token expired atau unauthenticated - bersihkan auth & keranjang kasir (issue #143)
+      useCartStore.getState().clearCart()
       localStorage.removeItem('kantin_token')
       localStorage.removeItem('kantin_user')
       sessionStorage.removeItem('kantin_token')

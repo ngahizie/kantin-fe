@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
+import { useCartStore } from '@/stores/useCartStore'
 import { SignOutDialog } from './sign-out-dialog'
 
 const navigate = vi.fn()
@@ -25,18 +26,21 @@ describe('SignOutDialog', () => {
     vi.clearAllMocks()
   })
 
-  it('calls auth.reset and navigates directly to sign-in', async () => {
+  it('calls useCartStore.clearCart, auth.reset and navigates directly to sign-in', async () => {
+    const clearCartSpy = vi.spyOn(useCartStore.getState(), 'clearCart')
     const { getByRole } = await render(
       <SignOutDialog open onOpenChange={vi.fn()} />
     )
 
     await userEvent.click(getByRole('button', { name: /^(Keluar|Sign out)$/i }))
 
+    expect(clearCartSpy).toHaveBeenCalledOnce()
     expect(reset).toHaveBeenCalledOnce()
     expect(navigate).toHaveBeenCalledWith({
       to: '/sign-in',
       replace: true,
     })
+    clearCartSpy.mockRestore()
   })
 
   it('does not call reset or navigate when Cancel is clicked', async () => {

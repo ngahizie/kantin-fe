@@ -158,4 +158,44 @@ describe('useCartStore', () => {
     expect(useCartStore.getState().totalHarga()).toBe(43000)
     expect(Number.isInteger(useCartStore.getState().totalHarga())).toBe(true)
   })
+
+  it('mengosongkan keranjang saat pemilik kasir atau sesi kasir berubah (issue #143)', () => {
+    // Set pemilik kasir1 dengan sesi 101
+    useCartStore.getState().setCartOwner({
+      kasirId: 1,
+      sesiKasirId: 101,
+      titikKasirId: 1,
+    })
+
+    useCartStore.getState().addItem(dummyMenu1, 2)
+    expect(useCartStore.getState().items).toHaveLength(1)
+    expect(useCartStore.getState().kasirId).toBe(1)
+    expect(useCartStore.getState().sesiKasirId).toBe(101)
+
+    // Set pemilik yang sama tidak mengosongkan keranjang
+    useCartStore.getState().setCartOwner({
+      kasirId: 1,
+      sesiKasirId: 101,
+    })
+    expect(useCartStore.getState().items).toHaveLength(1)
+
+    // Ganti kasir ke kasir 2 -> keranjang otomatis dikosongkan
+    useCartStore.getState().setCartOwner({
+      kasirId: 2,
+      sesiKasirId: 102,
+    })
+    expect(useCartStore.getState().items).toHaveLength(0)
+    expect(useCartStore.getState().kasirId).toBe(2)
+    expect(useCartStore.getState().sesiKasirId).toBe(102)
+
+    // Tambah item lagi untuk kasir 2
+    useCartStore.getState().addItem(dummyMenu3, 1)
+    expect(useCartStore.getState().items).toHaveLength(1)
+
+    // clearCart mereset items dan owner
+    useCartStore.getState().clearCart()
+    expect(useCartStore.getState().items).toHaveLength(0)
+    expect(useCartStore.getState().kasirId).toBeNull()
+    expect(useCartStore.getState().sesiKasirId).toBeNull()
+  })
 })
