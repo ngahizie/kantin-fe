@@ -11,7 +11,7 @@
 import { jsPDF } from 'jspdf'
 import autoTable, { type UserOptions } from 'jspdf-autotable'
 import { useAuthStore } from '@/stores/auth-store'
-import { SCHOOL_LOGO_BASE64 } from '@/assets/schoolLogoBase64'
+import { SCHOOL_LOGO_BASE64, getSchoolLogoBase64 } from '@/assets/schoolLogoBase64'
 
 export interface PdfColumn<T = any> {
   header: string
@@ -33,6 +33,7 @@ export interface ExportTablePdfOptions<T = any> {
   subtitle?: string
   schoolName?: string
   schoolAddress?: string
+  schoolLogoBase64?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: PdfColumn<T>[]
   data: T[]
@@ -46,6 +47,7 @@ export interface MultiSectionPdfExportOptions {
   subtitle?: string
   schoolName?: string
   schoolAddress?: string
+  schoolLogoBase64?: string
   metadata?: Record<string, string | number | undefined | null>
   sections: PdfTableSection<any>[]
   orientation?: 'portrait' | 'landscape'
@@ -106,16 +108,22 @@ function resolveColumnAlignment<T>(col: PdfColumn<T>): 'left' | 'center' | 'righ
 /**
  * Mengambil data sekolah aktif dari auth store
  */
-function getSchoolProfile(): { name: string; address: string } {
+function getSchoolProfile(): { name: string; address: string; logoBase64: string } {
   try {
     const user = useAuthStore.getState().auth.user
+    const sekolahId = user?.sekolahId
     const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
-    const address = 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
-    return { name, address }
+    const address =
+      sekolahId === 10 || /10/.test(name)
+        ? 'Jl. Diponegoro No. 10, Lingkungan Pendidikan SKOOLIA'
+        : 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
+    const logoBase64 = getSchoolLogoBase64(sekolahId, name)
+    return { name, address, logoBase64 }
   } catch {
     return {
       name: 'SMP NEGERI 1 SKOOLIA',
       address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
+      logoBase64: SCHOOL_LOGO_BASE64,
     }
   }
 }
@@ -129,7 +137,8 @@ function drawHeaderAndMetadata(
   subtitle?: string,
   metadata?: Record<string, string | number | undefined | null>,
   customSchoolName?: string,
-  customSchoolAddress?: string
+  customSchoolAddress?: string,
+  customSchoolLogoBase64?: string
 ): number {
   const pageWidth = doc.internal.pageSize.getWidth()
   let y = 14
@@ -138,10 +147,12 @@ function drawHeaderAndMetadata(
   const finalTitle = (title || 'LAPORAN KANTIN CASHLESS').toUpperCase()
   const finalSchool = (customSchoolName || profile.name).toUpperCase()
   const finalAddress = customSchoolAddress || subtitle || profile.address
+  const finalLogo =
+    customSchoolLogoBase64 || profile.logoBase64 || SCHOOL_LOGO_BASE64
 
   // Baris 1: Judul Laporan (Navy #123463)
   try {
-    doc.addImage(SCHOOL_LOGO_BASE64, 'PNG', pageWidth - 26, 8, 14, 14)
+    doc.addImage(finalLogo, 'PNG', pageWidth - 26, 8, 14, 14)
   } catch (_e) {
     // Abaikan jika tidak didukung di lingkungan uji
   }
@@ -327,7 +338,8 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
     options.subtitle,
     options.metadata,
     options.schoolName,
-    options.schoolAddress
+    options.schoolAddress,
+    options.schoolLogoBase64
   )
 
   // Styling Perataan Kolom
@@ -422,7 +434,8 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
     options.subtitle,
     options.metadata,
     options.schoolName,
-    options.schoolAddress
+    options.schoolAddress,
+    options.schoolLogoBase64
   )
 
   const pageHeight = doc.internal.pageSize.getHeight()
