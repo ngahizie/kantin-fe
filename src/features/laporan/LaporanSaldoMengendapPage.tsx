@@ -134,7 +134,6 @@ export function LaporanSaldoMengendapPage() {
       // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
       if (canAccessSiswa) {
         const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalLimitHarian = siswaList.reduce((acc, s) => acc + (Number(s.limitHarian) || 0), 0)
         const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
 
         sheets.push({
@@ -151,7 +150,12 @@ export function LaporanSaldoMengendapPage() {
             { header: 'Kelas', key: 'kelas', width: 12 },
             { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
             { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
-            { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
+            {
+              header: 'Limit Harian (Rp)',
+              key: 'limitHarian',
+              formatter: (v: unknown) => (Number(v) > 0 ? Number(v) : ''),
+              width: 16,
+            },
             { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
             {
               header: 'Status Kartu',
@@ -168,7 +172,7 @@ export function LaporanSaldoMengendapPage() {
             kelas: '',
             parentName: '',
             saldo: totalSaldo,
-            limitHarian: totalLimitHarian,
+            limitHarian: '',
             belanjaHariIni: totalBelanjaHariIni,
             isBlocked: '',
           },
