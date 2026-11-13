@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
-import * as XLSX from 'xlsx'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { apiClient } from '@/lib/api-client'
 import { laporanApi } from '../api/laporan-api'
@@ -115,9 +114,9 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(result.filename).toBe('Laporan_Rekonsiliasi_Harian_Test.xlsx')
       expect(result.workbook.SheetNames).toContain('Rekonsiliasi')
 
-      const ws = result.workbook.Sheets['Rekonsiliasi']
-      const sheetData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][]
-      expect((sheetData[0] as unknown[])[0]).toBe('LAPORAN REKONSILIASI HARIAN KANTIN')
+      const ws = result.workbook.getWorksheet('Rekonsiliasi')
+      expect(ws).toBeDefined()
+      expect(ws?.getCell('B1').value).toBe('LAPORAN REKONSILIASI HARIAN KANTIN')
     })
 
     it('dapat mengekspor laporan rekonsiliasi ke format PDF (.pdf)', () => {

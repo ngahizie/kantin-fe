@@ -114,7 +114,7 @@ export function LaporanKerugianStokPage() {
       exportTableToExcel({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Kerugian Stok',
-        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA (PRD §9.5)',
+        title: 'LAPORAN KERUGIAN STOK KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Periode': dateFilterLabel,
@@ -124,8 +124,8 @@ export function LaporanKerugianStokPage() {
           'Kerugian Barang Rusak': formatRupiah(ringkasan?.kerugianBarangRusak || 0),
         },
         columns: [
-          { header: 'No', key: 'id', width: 8 },
-          { header: 'Waktu Kejadian', key: 'waktu', formatter: (v) => formatDateTime(v as string | Date), width: 22 },
+          { header: 'No', width: 6 },
+          { header: 'Waktu Kejadian', key: 'waktu', formatter: (v) => formatDateTime(v as string | Date), width: 20 },
           { header: 'No. Berita Acara', key: 'beritaAcaraId', width: 22 },
           { header: 'Nama Menu / Item', key: 'namaMenu', width: 26 },
           { header: 'Kategori', key: 'kategoriNama', width: 16 },
@@ -133,15 +133,28 @@ export function LaporanKerugianStokPage() {
             header: 'Jenis Kerugian',
             key: 'jenis',
             formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Opname Keluar (Audit)' : 'Barang Rusak / Basi'),
-            width: 22,
+            width: 20,
           },
           { header: 'Qty Hilang', key: 'qty', width: 12 },
           { header: 'HPP Unit (Rp)', key: 'hppSnapshot', width: 16 },
           { header: 'Total Kerugian (Rp)', key: 'totalNilai', width: 18 },
-          { header: 'Alasan / Berita Acara', key: 'alasan', width: 40 },
-          { header: 'Petugas Pencatat', key: 'petugas', width: 22 },
+          { header: 'Alasan / Berita Acara', key: 'alasan', width: 35 },
+          { header: 'Petugas Pencatat', key: 'petugas', width: 20 },
         ],
         data: filteredList,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          beritaAcaraId: '',
+          namaMenu: '',
+          kategoriNama: '',
+          jenis: '',
+          qty: filteredList.reduce((acc, k) => acc + (k.qty || 0), 0),
+          hppSnapshot: '',
+          totalNilai: ringkasan?.totalKerugian || 0,
+          alasan: '',
+          petugas: '',
+        },
       })
 
       toast.success('Ekspor Excel Berhasil', {
@@ -174,7 +187,7 @@ export function LaporanKerugianStokPage() {
           'Kerugian Barang Rusak': formatRupiah(ringkasan?.kerugianBarangRusak || 0),
         },
         columns: [
-          { header: 'No', key: 'id' },
+          { header: 'No' },
           {
             header: 'Waktu Kejadian',
             key: 'waktu',
@@ -203,6 +216,19 @@ export function LaporanKerugianStokPage() {
           { header: 'Petugas Pencatat', key: 'petugas' },
         ],
         data: filteredList,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          beritaAcaraId: '',
+          namaMenu: '',
+          kategoriNama: '',
+          jenis: '',
+          qty: `${filteredList.reduce((acc, k) => acc + (k.qty || 0), 0)} Unit`,
+          hppSnapshot: '',
+          totalNilai: formatRupiah(ringkasan?.totalKerugian || 0),
+          alasan: '',
+          petugas: '',
+        },
       })
 
       toast.success('Ekspor PDF Berhasil', {

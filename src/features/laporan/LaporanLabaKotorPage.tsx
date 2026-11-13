@@ -181,7 +181,7 @@ export function LaporanLabaKotorPage() {
       exportTableToExcel({
         filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Laba Kotor',
-        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA (PRD §9.5)',
+        title: 'LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
@@ -190,13 +190,13 @@ export function LaporanLabaKotorPage() {
           'Rata-rata Margin Kotor': `${summaryMargin}%`,
         },
         columns: [
-          { header: 'No', key: 'menuId', width: 8 },
+          { header: 'No', width: 6 },
           { header: 'Nama Menu', key: 'nama', width: 28 },
-          { header: 'Kategori', key: 'kategoriNama', width: 18 },
+          { header: 'Kategori', key: 'kategoriNama', width: 16 },
           { header: 'Qty Terjual', key: 'qty', width: 12 },
           { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
           { header: 'Modal Unit (Rp)', key: 'hpp', width: 14 },
-          { header: 'Total Penjualan (Rp)', key: 'total', width: 20 },
+          { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
           { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
           { header: 'Laba (Rp)', key: 'laba', width: 18 },
           {
@@ -207,6 +207,18 @@ export function LaporanLabaKotorPage() {
           },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          nama: '',
+          kategoriNama: '',
+          qty: filteredItems.reduce((acc, item) => acc + (item.qty || 0), 0),
+          hargaSatuan: '',
+          hpp: '',
+          total: ringkasan.penjualanBersih ?? 0,
+          modal: summaryTotalModal,
+          laba: summaryLaba,
+          marginPersen: '',
+        },
       })
 
       toast.success('Ekspor Excel Berhasil', {
@@ -250,7 +262,7 @@ export function LaporanLabaKotorPage() {
           'Rata-rata Margin Kotor': `${summaryMargin}%`,
         },
         columns: [
-          { header: 'No', key: 'menuId' },
+          { header: 'No' },
           { header: 'Nama Menu', key: 'nama' },
           { header: 'Kategori', key: 'kategoriNama' },
           { header: 'Qty Terjual', key: 'qty' },
@@ -286,6 +298,18 @@ export function LaporanLabaKotorPage() {
           },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          nama: '',
+          kategoriNama: '',
+          qty: `${filteredItems.reduce((acc, item) => acc + (item.qty || 0), 0)}`,
+          hargaSatuan: '',
+          hpp: '',
+          total: formatRupiah(ringkasan.penjualanBersih ?? 0),
+          modal: formatRupiah(summaryTotalModal),
+          laba: formatRupiah(summaryLaba),
+          marginPersen: '',
+        },
       })
 
       toast.success('Ekspor PDF Berhasil', {
