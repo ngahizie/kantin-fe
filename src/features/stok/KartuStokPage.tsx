@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   FileSpreadsheet,
-  History,
   Boxes,
   ArrowDownLeft,
   ArrowUpRight,
@@ -20,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
@@ -28,7 +26,6 @@ import { ExportButton } from '@/components/export-button'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { stokApi } from './api/stok-api'
-import { KartuStokTimeline } from './components/KartuStokTimeline'
 import type { RiwayatStokItem } from './types'
 
 export function KartuStokPage() {
@@ -38,7 +35,6 @@ export function KartuStokPage() {
 
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)
-  const [activeView, setActiveView] = useState<'table' | 'timeline'>('table')
 
   // Muat data mutasi stok seluruh menu
   useEffect(() => {
@@ -320,151 +316,132 @@ export function KartuStokPage() {
           </Card>
         </div>
 
-        {/* Tab Switcher: Table View vs Timeline View */}
-        <Tabs
-          value={activeView}
-          onValueChange={(v) => setActiveView(v as 'table' | 'timeline')}
-          className='w-full space-y-4'
-        >
+        {/* Tabel Mutasi Stok */}
+        <div className='space-y-4'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-            <TabsList>
-              <TabsTrigger value='table' className='gap-1.5'>
-                <FileSpreadsheet className='h-4 w-4' />
-                <span>Tabel Mutasi Akuntansi</span>
-              </TabsTrigger>
-              <TabsTrigger value='timeline' className='gap-1.5'>
-                <History className='h-4 w-4' />
-                <span>Linimasa Kronologis</span>
-              </TabsTrigger>
-            </TabsList>
+            <div>
+              <h2 className='text-lg font-semibold tracking-tight'>
+                Tabel Mutasi Akuntansi
+              </h2>
+              <p className='text-xs text-muted-foreground'>
+                Daftar pergerakan keluar-masuk stok dan saldo berjalan seluruh menu
+              </p>
+            </div>
 
             <span className='text-xs text-muted-foreground tabular-nums'>
               Menampilkan {riwayat.length} transaksi mutasi
             </span>
           </div>
 
-          {/* TAB 1: Tabel Mutasi */}
-          <TabsContent value='table' className='space-y-4 m-0'>
-            <Card className='gap-0 py-0 overflow-hidden'>
-              <CardContent className='p-0'>
-                <div className='overflow-x-auto'>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
-                        <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
-                        <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
-                        <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
-                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu / Produk</TableHead>
-                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
-                        <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>
-                          Masuk
-                        </TableHead>
-                        <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400'>
-                          Keluar
-                        </TableHead>
-                        <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                          Saldo Akhir
-                        </TableHead>
-                        <TableHead className='text-right w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                          HPP Snapshot
-                        </TableHead>
-                        <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aktor</TableHead>
-                        <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Alasan / Keterangan</TableHead>
+          <Card className='gap-0 py-0 overflow-hidden'>
+            <CardContent className='p-0'>
+              <div className='overflow-x-auto'>
+                <Table>
+                  <TableHeader>
+                    <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
+                      <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                      <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
+                      <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu / Produk</TableHead>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
+                      <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>
+                        Masuk
+                      </TableHead>
+                      <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400'>
+                        Keluar
+                      </TableHead>
+                      <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                        Saldo Akhir
+                      </TableHead>
+                      <TableHead className='text-right w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                        HPP Snapshot
+                      </TableHead>
+                      <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aktor</TableHead>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Alasan / Keterangan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoadingRiwayat ? (
+                      <TableRow className='hover:bg-transparent border-b-0'>
+                        <TableCell
+                          colSpan={11}
+                          className='h-32 text-center text-muted-foreground'
+                        >
+                          <div className='flex flex-col items-center justify-center gap-2'>
+                            <Loader2 className='size-6 animate-spin text-muted-foreground' />
+                            <span className='text-xs'>Memuat data riwayat mutasi...</span>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoadingRiwayat ? (
-                        <TableRow className='hover:bg-transparent border-b-0'>
-                          <TableCell
-                            colSpan={11}
-                            className='h-32 text-center text-muted-foreground'
-                          >
-                            <div className='flex flex-col items-center justify-center gap-2'>
-                              <Loader2 className='size-6 animate-spin text-muted-foreground' />
-                              <span className='text-xs'>Memuat data riwayat mutasi...</span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : riwayat.length === 0 ? (
-                        <TableRow className='hover:bg-transparent border-b-0'>
-                          <TableCell
-                            colSpan={11}
-                            className='h-32 text-center text-xs text-muted-foreground'
-                          >
-                            Tidak ada pergerakan stok tercatat.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        riwayat.map((item, idx) => {
-                          const isMasuk = item.arah === 'MASUK'
-                          const aktorDisplay =
-                            item.aktorNama ||
-                            (item.aktorId ? `Aktor #${item.aktorId}` : 'Sistem')
+                    ) : riwayat.length === 0 ? (
+                      <TableRow className='hover:bg-transparent border-b-0'>
+                        <TableCell
+                          colSpan={11}
+                          className='h-32 text-center text-xs text-muted-foreground'
+                        >
+                          Tidak ada pergerakan stok tercatat.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      riwayat.map((item, idx) => {
+                        const isMasuk = item.arah === 'MASUK'
+                        const aktorDisplay =
+                          item.aktorNama ||
+                          (item.aktorId ? `Aktor #${item.aktorId}` : 'Sistem')
 
-                          return (
-                            <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
-                              <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
-                                {idx + 1}
-                              </TableCell>
-                              <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
-                                {formatDateTime(item.waktu)}
-                              </TableCell>
-                              <TableCell className='font-mono text-xs font-medium'>
-                                {item.referensiId}
-                              </TableCell>
-                              <TableCell className='text-xs font-semibold text-foreground'>
-                                {item.menuNama || `Menu #${item.menuId}`}
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant='outline'
-                                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getJenisBadgeClass(
-                                    item.jenis,
-                                    item.arah
-                                  )}`}
-                                >
-                                  {item.jenis.replace(/_/g, ' ')}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>
-                                {isMasuk ? formatNumber(item.qty) : '-'}
-                              </TableCell>
-                              <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400 tabular-nums'>
-                                {!isMasuk ? formatNumber(item.qty) : '-'}
-                              </TableCell>
-                              <TableCell className='text-right font-mono font-bold text-foreground tabular-nums'>
-                                {formatNumber(item.stokSetelah)}
-                              </TableCell>
-                              <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
-                                {formatRupiah(item.hppSnapshot)}
-                              </TableCell>
-                              <TableCell className='text-xs text-muted-foreground truncate max-w-[140px]'>
-                                {aktorDisplay}
-                              </TableCell>
-                              <TableCell className='text-xs text-muted-foreground max-w-xs truncate'>
-                                {item.alasan || '-'}
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TAB 2: Timeline View */}
-          <TabsContent value='timeline' className='m-0'>
-            <div className='py-1'>
-              <KartuStokTimeline
-                items={riwayat}
-                isLoading={isLoadingRiwayat}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
+                        return (
+                          <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
+                            <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
+                              {formatDateTime(item.waktu)}
+                            </TableCell>
+                            <TableCell className='font-mono text-xs font-medium'>
+                              {item.referensiId}
+                            </TableCell>
+                            <TableCell className='text-xs font-semibold text-foreground'>
+                              {item.menuNama || `Menu #${item.menuId}`}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant='outline'
+                                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getJenisBadgeClass(
+                                  item.jenis,
+                                  item.arah
+                                )}`}
+                              >
+                                {item.jenis.replace(/_/g, ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>
+                              {isMasuk ? formatNumber(item.qty) : '-'}
+                            </TableCell>
+                            <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400 tabular-nums'>
+                              {!isMasuk ? formatNumber(item.qty) : '-'}
+                            </TableCell>
+                            <TableCell className='text-right font-mono font-bold text-foreground tabular-nums'>
+                              {formatNumber(item.stokSetelah)}
+                            </TableCell>
+                            <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
+                              {formatRupiah(item.hppSnapshot)}
+                            </TableCell>
+                            <TableCell className='text-xs text-muted-foreground truncate max-w-[140px]'>
+                              {aktorDisplay}
+                            </TableCell>
+                            <TableCell className='text-xs text-muted-foreground max-w-xs truncate'>
+                              {item.alasan || '-'}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </Main>
     </>
   )
