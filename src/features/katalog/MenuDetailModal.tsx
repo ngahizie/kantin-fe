@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   AlertTriangle,
   Barcode,
   Boxes,
+  History,
   Image as ImageIcon,
   Package,
   Pencil,
@@ -319,27 +321,46 @@ export function MenuDetailModal({
           </div>
         )}
 
-        <DialogFooter className='pt-2 sm:justify-end gap-2 sm:gap-3'>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
-            Tutup
-          </Button>
-          {menu && onEdit && (
+        <DialogFooter className='pt-2 sm:justify-between items-center gap-2 sm:gap-3'>
+          {menu && (
             <Button
               type='button'
-              onClick={() => {
-                onOpenChange(false)
-                onEdit(menu)
-              }}
-              className='gap-1.5 font-semibold'
+              variant='outline'
+              size='sm'
+              asChild
+              className='gap-1.5'
+              onClick={() => onOpenChange(false)}
             >
-              <Pencil className='size-4' />
-              Ubah Menu
+              <Link to='/menu/$menuId' params={{ menuId: String(menu.id) }}>
+                <History className='size-3.5' />
+                <span>Buka Riwayat Mutasi Lengkap</span>
+              </Link>
             </Button>
           )}
+          <div className='flex items-center gap-2 ml-auto'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => onOpenChange(false)}
+            >
+              Tutup
+            </Button>
+            {menu && onEdit && (
+              <Button
+                type='button'
+                size='sm'
+                onClick={() => {
+                  onOpenChange(false)
+                  onEdit(menu)
+                }}
+                className='gap-1.5 font-semibold'
+              >
+                <Pencil className='size-3.5' />
+                Ubah Menu
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
