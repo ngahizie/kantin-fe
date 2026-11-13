@@ -357,7 +357,7 @@ export function KartuStokPage() {
       })
 
       toast.success('Ekspor PDF Berhasil', {
-        description: 'Kartu Stok (.pdf) berhasil diunduh.',
+        description: 'Mutasi Stok (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
@@ -390,7 +390,7 @@ export function KartuStokPage() {
   return (
     <>
       <Header fixed>
-        <HeaderBreadcrumb section='Manajemen Stok' title='Kartu Stok Mutasi' />
+        <HeaderBreadcrumb section='Manajemen Stok' title='Mutasi Stok' />
         <HeaderActions />
       </Header>
 
@@ -399,7 +399,7 @@ export function KartuStokPage() {
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Kartu Stok Inventaris
+              Mutasi Stok
             </h1>
             <p className='text-sm text-muted-foreground'>
               Lacak histori pergerakan keluar-masuk, saldo berjalan, dan HPP tiap item menu.
@@ -728,8 +728,8 @@ export function KartuStokPage() {
                 : 'text-rose-700 hover:text-rose-800 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40'
             }`}
           >
-            <Link to='/stok/masuk'>
-              Restock Menu Ini
+            <Link to='/menu'>
+              Restock di Katalog Menu
             </Link>
           </Button>
         </div>
