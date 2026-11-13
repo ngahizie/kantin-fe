@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   Barcode,
   X,
+  Layers,
 } from 'lucide-react'
 import {
   Dialog,
@@ -19,7 +20,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -39,6 +42,7 @@ import {
 import { toast } from 'sonner'
 import { formatNumber } from '@/lib/formatters'
 import { katalogApi } from './api/katalog-api'
+import { stokApi } from '@/features/stok/api/stok-api'
 import {
   menuFormSchema,
   type MenuFormValues,
@@ -102,10 +106,51 @@ export function MenuFormModal({
   const watchedFotoUrl = useWatch({ control: form.control, name: 'fotoUrl' })
   const previewUrl = watchedFotoUrl || ''
 
+  // State untuk mutasi stok fisik terintegrasi
+  const [currentStok, setCurrentStok] = useState<number>(0)
+  const [loadingStok, setLoadingStok] = useState(false)
+  const [aksiStok, setAksiStok] = useState<'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'>('NONE')
+  const [qtyMasuk, setQtyMasuk] = useState<number | ''>('')
+  const [hargaBeliMasuk, setHargaBeliMasuk] = useState<number | ''>('')
+  const [alasanMasuk, setAlasanMasuk] = useState('')
+  const [qtyOpnameFisik, setQtyOpnameFisik] = useState<number | ''>('')
+  const [alasanOpname, setAlasanOpname] = useState('')
+  const [qtyRusak, setQtyRusak] = useState<number | ''>('')
+  const [alasanRusak, setAlasanRusak] = useState('')
+
   // Sinkronisasi data awal saat modal dibuka
   useEffect(() => {
     if (open) {
+      // Reset input mutasi stok
+      setAksiStok('NONE')
+      setQtyMasuk('')
+      setHargaBeliMasuk('')
+      setAlasanMasuk('')
+      setAlasanOpname('')
+      setQtyRusak('')
+      setAlasanRusak('')
+
       if (selectedMenu) {
+        const initialStok = Number(selectedMenu.stokBerjalan) || 0
+        setCurrentStok(initialStok)
+        setQtyOpnameFisik(initialStok)
+
+        // Muat data stok terkini dari backend
+        setLoadingStok(true)
+        stokApi
+          .getStokMenu(selectedMenu.id)
+          .then((res) => {
+            if (res) {
+              const liveStok = Number(res.stok) || 0
+              setCurrentStok(liveStok)
+              setQtyOpnameFisik(liveStok)
+            }
+          })
+          .catch(() => {
+            // Abaikan error jaringan, gunakan fallback selectedMenu.stokBerjalan
+          })
+          .finally(() => setLoadingStok(false))
+
         form.reset({
           nama: selectedMenu.nama,
           kodeBarcode: selectedMenu.kodeBarcode || '',
@@ -117,6 +162,8 @@ export function MenuFormModal({
           aktif: selectedMenu.aktif !== false,
         })
       } else {
+        setCurrentStok(0)
+        setQtyOpnameFisik('')
         form.reset({
           nama: '',
           kodeBarcode: '',
@@ -172,6 +219,42 @@ export function MenuFormModal({
 
   async function onSubmit(values: MenuFormValues) {
     try {
+      // Validasi mutasi stok jika dipilih (khusus saat edit menu)
+      if (isEditing && selectedMenu) {
+        if (aksiStok === 'MASUK') {
+          if (typeof qtyMasuk !== 'number' || qtyMasuk <= 0) {
+            toast.error('Jumlah barang masuk harus lebih dari 0')
+            return
+          }
+          if (!alasanMasuk || alasanMasuk.trim().length < 3) {
+            toast.error('Alasan barang masuk wajib diisi (minimal 3 karakter)')
+            return
+          }
+        } else if (aksiStok === 'OPNAME') {
+          if (typeof qtyOpnameFisik !== 'number' || qtyOpnameFisik < 0) {
+            toast.error('Stok fisik opname tidak boleh kosong atau negatif')
+            return
+          }
+          if (!alasanOpname || alasanOpname.trim().length < 3) {
+            toast.error('Alasan penyesuaian opname fisik wajib diisi (minimal 3 karakter)')
+            return
+          }
+        } else if (aksiStok === 'RUSAK') {
+          if (typeof qtyRusak !== 'number' || qtyRusak <= 0) {
+            toast.error('Jumlah barang rusak harus lebih dari 0')
+            return
+          }
+          if (qtyRusak > currentStok) {
+            toast.error(`Jumlah barang rusak (${qtyRusak}) melebihi stok tersedia (${currentStok})`)
+            return
+          }
+          if (!alasanRusak || alasanRusak.trim().length < 3) {
+            toast.error('Alasan barang rusak/basi wajib diisi (minimal 3 karakter)')
+            return
+          }
+        }
+      }
+
       // Pastikan harga jual murni integer rupiah
       const payload: MenuFormValues = {
         ...values,
@@ -183,7 +266,41 @@ export function MenuFormModal({
 
       if (isEditing && selectedMenu) {
         await katalogApi.updateMenu(selectedMenu.id, payload)
-        toast.success(`Menu "${payload.nama}" berhasil diperbarui`)
+
+        // Jalankan mutasi stok jika ada aksi penyesuaian yang dipilih
+        if (aksiStok === 'MASUK') {
+          const timestamp = Date.now()
+          const cleanRef = alasanMasuk.trim().replace(/[^a-zA-Z0-9]/g, '-').slice(0, 25)
+          const referensiId = `BM-${timestamp}-${cleanRef}`.slice(0, 60)
+          await stokApi.catatBarangMasuk({
+            menuId: selectedMenu.id,
+            qty: Number(qtyMasuk),
+            hargaBeliPerUnit: Number(hargaBeliMasuk) || 0,
+            referensiId,
+          })
+          toast.success(`Menu "${payload.nama}" diperbarui & stok bertambah +${qtyMasuk}`)
+        } else if (aksiStok === 'OPNAME') {
+          const referensiId = `OPN-${Date.now()}`.slice(0, 60)
+          await stokApi.sesuaikanOpname({
+            menuId: selectedMenu.id,
+            qtyFisik: Number(qtyOpnameFisik),
+            alasan: alasanOpname.trim(),
+            referensiId,
+          })
+          toast.success(`Menu "${payload.nama}" diperbarui & stok disesuaikan ke ${qtyOpnameFisik}`)
+        } else if (aksiStok === 'RUSAK') {
+          const referensiId = `RSK-${Date.now()}`.slice(0, 60)
+          await stokApi.catatBarangRusak({
+            menuId: selectedMenu.id,
+            qtyRusak: Number(qtyRusak),
+            stokSistem: currentStok,
+            alasan: alasanRusak.trim(),
+            referensiId,
+          })
+          toast.success(`Menu "${payload.nama}" diperbarui & dicatat ${qtyRusak} barang rusak`)
+        } else {
+          toast.success(`Menu "${payload.nama}" berhasil diperbarui`)
+        }
       } else {
         await katalogApi.createMenu(payload)
         toast.success(`Menu "${payload.nama}" berhasil ditambahkan`)
@@ -481,6 +598,233 @@ export function MenuFormModal({
                 )}
               />
             </div>
+
+            {/* Kelola Penyesuaian Stok Terintegrasi (Khusus Edit Menu) */}
+            {isEditing && selectedMenu && (
+              <div className='rounded-xl border border-border/80 bg-muted/20 p-4 space-y-3.5'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Layers className='size-4 text-primary' />
+                    <span className='text-xs font-semibold uppercase tracking-wider text-foreground'>
+                      Kelola Penyesuaian Stok
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-1.5'>
+                    <span className='text-xs text-muted-foreground'>Stok Saat Ini:</span>
+                    <Badge
+                      variant={currentStok <= (form.watch('stokMinimum') ?? 5) ? 'destructive' : 'secondary'}
+                      className='tabular-nums font-semibold'
+                    >
+                      {loadingStok ? 'Memuat...' : `${currentStok} unit`}
+                    </Badge>
+                  </div>
+                </div>
+
+                <p className='text-xs text-muted-foreground leading-relaxed'>
+                  Pilih aksi penyesuaian jika ingin menambah barang masuk, audit stok fisik (opname), atau mencatat barang rusak. Setiap mutasi wajib mengisi alasan dan akan tercatat permanen di Kartu Stok Mutasi.
+                </p>
+
+                {/* Tombol Pilihan Aksi Mutasi */}
+                <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setAksiStok('NONE')}
+                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                      aksiStok === 'NONE'
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-background hover:bg-muted/70 text-muted-foreground'
+                    }`}
+                  >
+                    Tanpa Mutasi
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setAksiStok('MASUK')}
+                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                      aksiStok === 'MASUK'
+                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
+                        : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300'
+                    }`}
+                  >
+                    + Barang Masuk
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setAksiStok('OPNAME')}
+                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                      aksiStok === 'OPNAME'
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                        : 'border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 text-blue-800 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-300'
+                    }`}
+                  >
+                    = Stok Opname
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setAksiStok('RUSAK')}
+                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                      aksiStok === 'RUSAK'
+                        ? 'border-rose-600 bg-rose-600 text-white shadow-sm'
+                        : 'border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-300'
+                    }`}
+                  >
+                    - Barang Rusak
+                  </button>
+                </div>
+
+                {/* Form Input Dinamis Berdasarkan Aksi yang Dipilih */}
+                {aksiStok === 'MASUK' && (
+                  <div className='space-y-3 rounded-lg border border-emerald-200/90 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-900/60 p-3.5'>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                      <div className='space-y-1.5'>
+                        <Label className='text-xs font-semibold text-emerald-900 dark:text-emerald-200'>
+                          Jumlah Barang Masuk <span className='text-destructive'>*</span>
+                        </Label>
+                        <Input
+                          type='number'
+                          min={1}
+                          placeholder='Contoh: 10'
+                          value={qtyMasuk}
+                          onChange={(e) =>
+                            setQtyMasuk(
+                              e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0)
+                            )
+                          }
+                          disabled={isSubmitting}
+                          className='bg-background tabular-nums'
+                        />
+                      </div>
+                      <div className='space-y-1.5'>
+                        <Label className='text-xs font-semibold text-emerald-900 dark:text-emerald-200'>
+                          Harga Beli per Unit (Rp, Opsional)
+                        </Label>
+                        <Input
+                          type='number'
+                          min={0}
+                          placeholder='Contoh: 5000'
+                          value={hargaBeliMasuk}
+                          onChange={(e) =>
+                            setHargaBeliMasuk(
+                              e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0)
+                            )
+                          }
+                          disabled={isSubmitting}
+                          className='bg-background tabular-nums'
+                        />
+                      </div>
+                    </div>
+                    <div className='space-y-1.5'>
+                      <Label className='text-xs font-semibold text-emerald-900 dark:text-emerald-200'>
+                        Alasan / Keterangan Restock <span className='text-destructive'>*</span>
+                      </Label>
+                      <Textarea
+                        rows={2}
+                        placeholder='Contoh: Pembelian stok baru dari Toko Grosir Jaya'
+                        value={alasanMasuk}
+                        onChange={(e) => setAlasanMasuk(e.target.value)}
+                        disabled={isSubmitting}
+                        className='bg-background text-xs'
+                      />
+                    </div>
+                    {typeof qtyMasuk === 'number' && qtyMasuk > 0 && (
+                      <div className='text-xs text-emerald-800 dark:text-emerald-300 font-medium bg-emerald-100/50 dark:bg-emerald-900/30 p-2 rounded-md'>
+                        Estimasi stok setelah restock: {currentStok} + {qtyMasuk} ={' '}
+                        <span className='font-bold'>{currentStok + qtyMasuk} unit</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {aksiStok === 'OPNAME' && (
+                  <div className='space-y-3 rounded-lg border border-blue-200/90 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900/60 p-3.5'>
+                    <div className='space-y-1.5'>
+                      <Label className='text-xs font-semibold text-blue-900 dark:text-blue-200'>
+                        Hasil Hitung Stok Fisik Aktual <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        type='number'
+                        min={0}
+                        placeholder='Contoh: 25'
+                        value={qtyOpnameFisik}
+                        onChange={(e) =>
+                          setQtyOpnameFisik(
+                            e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0)
+                          )
+                        }
+                        disabled={isSubmitting}
+                        className='bg-background tabular-nums'
+                      />
+                    </div>
+                    <div className='space-y-1.5'>
+                      <Label className='text-xs font-semibold text-blue-900 dark:text-blue-200'>
+                        Alasan Penyesuaian Fisik (Opname) <span className='text-destructive'>*</span>
+                      </Label>
+                      <Textarea
+                        rows={2}
+                        placeholder='Contoh: Penyesuaian hasil audit fisik rutin mingguan'
+                        value={alasanOpname}
+                        onChange={(e) => setAlasanOpname(e.target.value)}
+                        disabled={isSubmitting}
+                        className='bg-background text-xs'
+                      />
+                    </div>
+                    {typeof qtyOpnameFisik === 'number' && (
+                      <div className='text-xs text-blue-800 dark:text-blue-300 font-medium bg-blue-100/50 dark:bg-blue-900/30 p-2 rounded-md'>
+                        Stok berjalan ({currentStok}) akan disesuaikan menjadi{' '}
+                        <span className='font-bold'>{qtyOpnameFisik} unit</span> (Selisih:{' '}
+                        {qtyOpnameFisik - currentStok >= 0
+                          ? `+${qtyOpnameFisik - currentStok}`
+                          : qtyOpnameFisik - currentStok}{' '}
+                        unit)
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {aksiStok === 'RUSAK' && (
+                  <div className='space-y-3 rounded-lg border border-rose-200/90 bg-rose-50/50 dark:bg-rose-950/20 dark:border-rose-900/60 p-3.5'>
+                    <div className='space-y-1.5'>
+                      <Label className='text-xs font-semibold text-rose-900 dark:text-rose-200'>
+                        Jumlah Barang Rusak / Kadaluarsa <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        type='number'
+                        min={1}
+                        max={currentStok}
+                        placeholder='Contoh: 3'
+                        value={qtyRusak}
+                        onChange={(e) =>
+                          setQtyRusak(
+                            e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0)
+                          )
+                        }
+                        disabled={isSubmitting}
+                        className='bg-background tabular-nums'
+                      />
+                    </div>
+                    <div className='space-y-1.5'>
+                      <Label className='text-xs font-semibold text-rose-900 dark:text-rose-200'>
+                        Alasan Kerusakan / Basi <span className='text-destructive'>*</span>
+                      </Label>
+                      <Textarea
+                        rows={2}
+                        placeholder='Contoh: Kemasan bocor saat pengiriman / melewati batas kadaluarsa'
+                        value={alasanRusak}
+                        onChange={(e) => setAlasanRusak(e.target.value)}
+                        disabled={isSubmitting}
+                        className='bg-background text-xs'
+                      />
+                    </div>
+                    {typeof qtyRusak === 'number' && qtyRusak > 0 && (
+                      <div className='text-xs text-rose-800 dark:text-rose-300 font-medium bg-rose-100/50 dark:bg-rose-900/30 p-2 rounded-md'>
+                        Stok saat ini ({currentStok}) akan dikurangi {qtyRusak} unit menjadi{' '}
+                        <span className='font-bold'>{Math.max(0, currentStok - qtyRusak)} unit</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter className='pt-3 sm:justify-end gap-2 sm:gap-2.5'>
               <Button
