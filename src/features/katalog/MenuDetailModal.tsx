@@ -56,21 +56,29 @@ export function MenuDetailModal({
 
   const idValid = typeof menuId === 'number' && Number.isInteger(menuId) && menuId > 0
 
-  useEffect(() => {
-    if (!open || !idValid) {
+  const [prevOpenKey, setPrevOpenKey] = useState<string | null>(null)
+  const currentOpenKey = open && idValid ? `${menuId}-${versiMuat}` : null
+  if (currentOpenKey !== prevOpenKey) {
+    setPrevOpenKey(currentOpenKey)
+    if (!currentOpenKey) {
       setMenu(null)
       setError(null)
       setLoading(false)
-      return
+      setFotoGagal(false)
     }
+  }
+
+  useEffect(() => {
+    if (!open || !idValid) return
 
     let masihAktif = true
-    setLoading(true)
-    setError(null)
-    setFotoGagal(false)
 
     void (async () => {
       try {
+        setLoading(true)
+        setError(null)
+        setFotoGagal(false)
+
         const needsKategoriFetch = !kategoriListProp || kategoriListProp.length === 0
         const [detail, kategoriRes] = await Promise.all([
           katalogApi.getMenuDetail(menuId),
