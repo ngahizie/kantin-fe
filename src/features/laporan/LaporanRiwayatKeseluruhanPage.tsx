@@ -163,7 +163,7 @@ export function LaporanRiwayatKeseluruhanPage() {
             formatter: (v: unknown) => formatDateTime(String(v)),
             width: 20,
           },
-          { header: 'No. Referensi', key: 'referensiId', width: 22 },
+          { header: 'No. Transaksi', key: 'referensiId', width: 22 },
           { header: 'NIS', key: 'siswaNis', width: 14 },
           { header: 'Nama Siswa', key: 'siswaNama', width: 25 },
           { header: 'Kelas', key: 'siswaKelas', width: 12 },
@@ -228,7 +228,7 @@ export function LaporanRiwayatKeseluruhanPage() {
             formatter: (v: unknown) => formatDateTime(String(v)),
             align: 'left',
           },
-          { header: 'No. Ref', key: 'referensiId', align: 'left' },
+          { header: 'No. Transaksi', key: 'referensiId', align: 'left' },
           { header: 'NIS', key: 'siswaNis', align: 'left' },
           { header: 'Nama Siswa', key: 'siswaNama', align: 'left' },
           { header: 'Kelas', key: 'siswaKelas', align: 'center' },
@@ -552,7 +552,7 @@ export function LaporanRiwayatKeseluruhanPage() {
           {/* TABEL LOG TRANSAKSI KESELURUHAN */}
           <div className="space-y-4">
             <TableToolbar
-              searchPlaceholder="Cari siswa, NIS, kelas, referensi, menu..."
+              searchPlaceholder="Cari siswa, NIS, kelas, no. transaksi, menu..."
               searchValue={searchFilter}
               onSearchChange={setSearchFilter}
               filters={[
@@ -581,7 +581,7 @@ export function LaporanRiwayatKeseluruhanPage() {
               <CardHeader className="flex flex-col gap-1 border-b border-border bg-muted/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="text-base font-bold">
-                    Log Lengkap Transaksi Belanja Siswa
+                    Riwayat Transaksi Siswa
                   </CardTitle>
                 </div>
                 <div className="text-xs text-muted-foreground font-mono tabular-nums">
@@ -594,7 +594,7 @@ export function LaporanRiwayatKeseluruhanPage() {
                     <TableRow className="border-b border-border hover:bg-transparent">
                       <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Waktu</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Referensi</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Transaksi</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</TableHead>
                       <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jenis</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal</TableHead>
@@ -806,7 +806,7 @@ export function LaporanRiwayatKeseluruhanPage() {
 
                     <div className="pt-1.5">
                       <span className="block font-sans text-[9px] text-slate-400 uppercase tracking-wide">
-                        No. Referensi Transaksi
+                        No. Transaksi
                       </span>
                       <span className="mt-0.5 inline-block rounded border border-slate-200 bg-slate-100 px-2.5 py-0.5 font-mono text-xs font-bold tracking-wide text-slate-900">
                         {selectedTrxForReceipt.referensiId}
