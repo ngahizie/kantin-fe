@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { useRoleStore, type UserRole } from '@/stores/useRoleStore'
+import { useCartStore } from '@/stores/useCartStore'
 
 export const ACCESS_TOKEN_COOKIE = 'kantin_access_token'
 export const ACCESS_TOKEN_STORAGE = 'kantin_token'
@@ -83,6 +84,8 @@ export const useAuthStore = create<AuthState>()((set, get) => {
           useRoleStore.getState().setUserName('')
           useRoleStore.getState().setUserEmail('')
         }
+        // Kosongkan keranjang agar tidak membawa item dari sesi sebelumnya (issue #143)
+        useCartStore.getState().clearCart()
         set((state) => ({ ...state, auth: { ...state.auth, user } }))
       },
 
@@ -110,6 +113,8 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         useRoleStore.getState().setRole('admin')
         useRoleStore.getState().setUserName('')
         useRoleStore.getState().setUserEmail('')
+        // Kosongkan keranjang saat pengguna keluar / reset auth (issue #143)
+        useCartStore.getState().clearCart()
         set((state) => ({
           ...state,
           auth: { ...state.auth, user: null, accessToken: '' },

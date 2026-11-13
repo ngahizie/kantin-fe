@@ -19,6 +19,15 @@ export interface CartStoreState {
   decrementQty: (menuId: number) => void
   clearCart: () => void
 
+  kasirId: string | number | null
+  sesiKasirId: number | null
+  titikKasirId: number | null
+  setCartOwner: (owner: {
+    kasirId?: string | number | null
+    sesiKasirId?: number | null
+    titikKasirId?: number | null
+  }) => void
+
   totalItems: () => number
   totalHarga: () => number
   getItemQty: (menuId: number) => number
@@ -26,6 +35,9 @@ export interface CartStoreState {
 
 export const useCartStore = create<CartStoreState>((set, get) => ({
   items: [],
+  kasirId: null,
+  sesiKasirId: null,
+  titikKasirId: null,
 
   addItem: (menu: MenuItem, qty = 1) => {
     // Validasi stok awal
@@ -138,7 +150,42 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
   },
 
   clearCart: () => {
-    set({ items: [] })
+    set({
+      items: [],
+      kasirId: null,
+      sesiKasirId: null,
+      titikKasirId: null,
+    })
+  },
+
+  setCartOwner: (owner) => {
+    const { kasirId, sesiKasirId, titikKasirId } = get()
+    const isNewKasir =
+      owner.kasirId !== undefined &&
+      kasirId !== null &&
+      String(owner.kasirId) !== String(kasirId)
+    const isNewSesi =
+      owner.sesiKasirId !== undefined &&
+      sesiKasirId !== null &&
+      owner.sesiKasirId !== sesiKasirId
+
+    if (isNewKasir || isNewSesi) {
+      set({
+        items: [],
+        kasirId: owner.kasirId ?? null,
+        sesiKasirId: owner.sesiKasirId ?? null,
+        titikKasirId: owner.titikKasirId ?? null,
+      })
+      return
+    }
+
+    set({
+      kasirId: owner.kasirId !== undefined ? owner.kasirId : kasirId,
+      sesiKasirId:
+        owner.sesiKasirId !== undefined ? owner.sesiKasirId : sesiKasirId,
+      titikKasirId:
+        owner.titikKasirId !== undefined ? owner.titikKasirId : titikKasirId,
+    })
   },
 
   totalItems: () => {

@@ -87,4 +87,45 @@ describe('useAuthStore', () => {
     expect(useAuthStoreAfterReload.getState().auth.user).toBeNull()
     expect(useAuthStoreAfterReload.getState().auth.accessToken).toBe('')
   })
+
+  it('mengosongkan keranjang belanja kasir saat auth.reset dan auth.setUser dipanggil (issue #143)', async () => {
+    const useAuthStore = await importAuthStore()
+    const { useCartStore } = await import('./useCartStore')
+
+    // Isi keranjang
+    useCartStore.getState().addItem({
+      id: 99,
+      kategoriId: 1,
+      nama: 'Item Kasir Lama',
+      hargaJual: 10000,
+      satuan: 'PORSI',
+      fotoUrl: null,
+      stokMinimum: 1,
+      stokBerjalan: 5,
+      aktif: true,
+    })
+    expect(useCartStore.getState().items).toHaveLength(1)
+
+    // auth.reset harus mengosongkan keranjang
+    useAuthStore.getState().auth.reset()
+    expect(useCartStore.getState().items).toHaveLength(0)
+
+    // Isi keranjang kembali
+    useCartStore.getState().addItem({
+      id: 99,
+      kategoriId: 1,
+      nama: 'Item Kasir Lama',
+      hargaJual: 10000,
+      satuan: 'PORSI',
+      fotoUrl: null,
+      stokMinimum: 1,
+      stokBerjalan: 5,
+      aktif: true,
+    })
+    expect(useCartStore.getState().items).toHaveLength(1)
+
+    // auth.setUser saat kasir baru login juga harus mengosongkan keranjang
+    useAuthStore.getState().auth.setUser({ ...sampleUser, userId: '2', nama: 'Kasir Baru' })
+    expect(useCartStore.getState().items).toHaveLength(0)
+  })
 })
