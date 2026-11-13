@@ -26,10 +26,30 @@
   html {
     @apply overflow-x-hidden bg-background;
     scrollbar-gutter: stable;
+    scrollbar-width: none;
+  }
+
+  /* Sembunyikan scrollbar bawaan/track pada root agar tidak ada baris/celah nyantol di sisi kanan */
+  html::-webkit-scrollbar {
+    display: none;
   }
 
   html:has([data-kasir-layout]) {
     scrollbar-gutter: auto;
+  }
+
+  /* Hindari react-remove-scroll menambahkan margin-right pada body karena tata letak sudah stabil */
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Saat modal/dialog/sheet terbuka, selaraskan warna latar root agar menggelap sempurna */
+  html:has(body[data-scroll-locked]),
+  html:has([data-slot='dialog-overlay']),
+  html:has([data-slot='alert-dialog-overlay']),
+  html:has([data-slot='sheet-overlay']) {
+    background-color: color-mix(in srgb, var(--background) 50%, black 50%) !important;
   }
 
   body {

@@ -1,6 +1,5 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import {
   UtensilsCrossed,
   CheckCircle2,
@@ -48,6 +47,7 @@ import {
   subscribeKatalogChanges,
 } from '@/lib/katalog-sync'
 import { katalogApi } from './api/katalog-api'
+import { MenuDetailModal } from './MenuDetailModal'
 import { MenuFormModal } from './MenuFormModal'
 import {
   matchesMenuSearchQuery,
@@ -93,7 +93,6 @@ async function fetchKatalogData() {
 }
 
 export function MenuPage() {
-  const navigate = useNavigate()
   const [menuList, setMenuList] = useState<MenuItem[]>([])
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -108,6 +107,10 @@ export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null)
 
+  // Modal detail popup state
+  const [detailMenuId, setDetailMenuId] = useState<number | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+
   // Delete & status toggle states
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -119,7 +122,7 @@ export function MenuPage() {
   )
 
   const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
-    isModalOpen,
+    isModalOpen: isModalOpen || isDetailOpen,
     hasDeleteTarget: Boolean(deleteTarget),
     isDeleting,
     togglingId,
@@ -376,6 +379,11 @@ export function MenuPage() {
   const handleEdit = (menu: MenuItem) => {
     setSelectedMenu(menu)
     setIsModalOpen(true)
+  }
+
+  const handleViewDetail = (item: MenuItem) => {
+    setDetailMenuId(item.id)
+    setIsDetailOpen(true)
   }
 
   const handleFormSuccess = () => {
@@ -802,12 +810,7 @@ export function MenuPage() {
                               variant='ghost'
                               size='icon'
                               className='size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted'
-                              onClick={() =>
-                                navigate({
-                                  to: '/menu/$menuId',
-                                  params: { menuId: String(item.id) },
-                                })
-                              }
+                              onClick={() => handleViewDetail(item)}
                               title='Lihat Detail'
                             >
                               <Eye className='size-4' />
@@ -899,6 +902,15 @@ export function MenuPage() {
         selectedMenu={selectedMenu}
         kategoriList={kategoriList}
         onSuccess={handleFormSuccess}
+      />
+
+      {/* Modal Detail Popup */}
+      <MenuDetailModal
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        menuId={detailMenuId}
+        kategoriList={kategoriList}
+        onEdit={(item) => handleEdit(item)}
       />
 
       {/* Alert Dialog Konfirmasi Hapus Menu */}

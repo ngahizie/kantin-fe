@@ -45,6 +45,7 @@ import {
   mergeKategoriMenuCounts,
   notifyKategoriChanged,
   shouldPauseMenuAutoRefresh,
+  sortCategoriesNewestFirst,
   subscribeKategoriChanges,
 } from './menu-utils'
 import type { KategoriItem } from './types'
@@ -100,7 +101,7 @@ export function KategoriPage() {
   })
 
   const commitKategoriData = useCallback((data: KategoriItem[]) => {
-    setKategoriList(data)
+    setKategoriList(sortCategoriesNewestFirst(data))
     lastSyncedAtRef.current = new Date()
   }, [])
 
@@ -251,8 +252,8 @@ export function KategoriPage() {
             )
           }
           return [
-            ...prev,
             { ...savedKategori, jumlahItem: savedKategori.jumlahItem ?? 0 },
+            ...prev,
           ]
         })
       }
