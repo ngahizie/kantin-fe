@@ -146,6 +146,8 @@ export function LaporanRiwayatKeseluruhanPage() {
     }
 
     try {
+      const totalNominal = filteredTransaksi.reduce((acc, t) => acc + (Number(t.nominal) || 0), 0)
+
       exportTableToExcel({
         filename: `Riwayat_Transaksi_Keseluruhan_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Riwayat Transaksi',
@@ -157,6 +159,7 @@ export function LaporanRiwayatKeseluruhanPage() {
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Data`,
         },
         columns: [
+          { header: 'No', width: 6 },
           {
             header: 'Waktu Transaksi',
             key: 'waktu',
@@ -166,8 +169,8 @@ export function LaporanRiwayatKeseluruhanPage() {
           { header: 'No. Transaksi', key: 'referensiId', width: 22 },
           { header: 'NIS', key: 'siswaNis', width: 14 },
           { header: 'Nama Siswa', key: 'siswaNama', width: 25 },
-          { header: 'Kelas', key: 'siswaKelas', width: 12 },
-          { header: 'Jenis', key: 'jenis', width: 15 },
+          { header: 'Kelas', key: 'siswaKelas', width: 10 },
+          { header: 'Jenis', key: 'jenis', width: 14 },
           {
             header: 'Nominal (Rp)',
             key: 'nominal',
@@ -180,8 +183,8 @@ export function LaporanRiwayatKeseluruhanPage() {
             formatter: (v: unknown) => Number(v) || 0,
             width: 16,
           },
-          { header: 'Titik Kasir', key: 'titikKasir', width: 22 },
-          { header: 'Petugas', key: 'petugas', width: 20 },
+          { header: 'Titik Kasir', key: 'titikKasir', width: 20 },
+          { header: 'Petugas', key: 'petugas', width: 18 },
           {
             header: 'Rincian Menu',
             key: 'items',
@@ -189,10 +192,24 @@ export function LaporanRiwayatKeseluruhanPage() {
               row.items && row.items.length > 0
                 ? row.items.map((i) => `${i.nama} (${i.qty}x)`).join(', ')
                 : row.keterangan,
-            width: 35,
+            width: 32,
           },
         ],
         data: filteredTransaksi,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          referensiId: '',
+          siswaNis: '',
+          siswaNama: '',
+          siswaKelas: '',
+          jenis: '',
+          nominal: totalNominal,
+          saldoSetelah: '',
+          titikKasir: '',
+          petugas: '',
+          items: '',
+        },
       })
       toast.success('Ekspor Excel Berhasil', {
         description: 'Berkas riwayat transaksi keseluruhan (.xlsx) berhasil diunduh.',
@@ -210,6 +227,8 @@ export function LaporanRiwayatKeseluruhanPage() {
     }
 
     try {
+      const totalNominal = filteredTransaksi.reduce((acc, t) => acc + (Number(t.nominal) || 0), 0)
+
       exportTableToPdf({
         filename: `Riwayat_Transaksi_Keseluruhan_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN',
@@ -222,6 +241,7 @@ export function LaporanRiwayatKeseluruhanPage() {
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Catatan`,
         },
         columns: [
+          { header: 'No' },
           {
             header: 'Waktu',
             key: 'waktu',
@@ -257,6 +277,19 @@ export function LaporanRiwayatKeseluruhanPage() {
           },
         ],
         data: filteredTransaksi,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          referensiId: '',
+          siswaNis: '',
+          siswaNama: '',
+          siswaKelas: '',
+          jenis: '',
+          nominal: formatRupiah(totalNominal),
+          saldoSetelah: '',
+          titikKasir: '',
+          items: '',
+        },
       })
       toast.success('Ekspor PDF Berhasil', {
         description: 'Berkas riwayat transaksi keseluruhan (.pdf) berhasil diunduh.',

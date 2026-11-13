@@ -11,11 +11,12 @@
 import { jsPDF } from 'jspdf'
 import autoTable, { type UserOptions } from 'jspdf-autotable'
 import { useAuthStore } from '@/stores/auth-store'
+import { SCHOOL_LOGO_BASE64 } from '@/assets/schoolLogoBase64'
 
 export interface PdfColumn<T = any> {
   header: string
   key?: keyof T | string
-  formatter?: (val: unknown, row: T) => string | number | boolean | null | undefined
+  formatter?: (val: unknown, row: T, rowIndex: number) => string | number | boolean | null | undefined
   align?: 'left' | 'center' | 'right'
 }
 
@@ -23,6 +24,7 @@ export interface PdfTableSection<T = any> {
   sectionTitle?: string
   columns: PdfColumn<T>[]
   data: T[]
+  summaryRow?: Record<string, string | number | null | undefined>
 }
 
 export interface ExportTablePdfOptions<T = any> {
@@ -34,6 +36,7 @@ export interface ExportTablePdfOptions<T = any> {
   metadata?: Record<string, string | number | undefined | null>
   columns: PdfColumn<T>[]
   data: T[]
+  summaryRow?: Record<string, string | number | null | undefined>
   orientation?: 'portrait' | 'landscape'
 }
 
@@ -137,6 +140,12 @@ function drawHeaderAndMetadata(
   const finalAddress = customSchoolAddress || subtitle || profile.address
 
   // Baris 1: Judul Laporan (Navy #123463)
+  try {
+    doc.addImage(SCHOOL_LOGO_BASE64, 'PNG', pageWidth - 26, 8, 14, 14)
+  } catch (_e) {
+    // Abaikan jika tidak didukung di lingkungan uji
+  }
+
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(18, 52, 99) // Navy #123463
@@ -245,14 +254,21 @@ function attachFooters(doc: jsPDF) {
  * Mengonversi baris data objek ke baris string untuk autoTable
  */
 function formatTableRows<T>(columns: PdfColumn<T>[], data: T[]): string[][] {
-  return data.map((item) => {
+  return data.map((item, rowIdx) => {
     return columns.map((col) => {
       let val: unknown = undefined
       if (col.key) {
         val = (item as Record<string, unknown>)[col.key as string]
       }
       if (col.formatter) {
-        val = col.formatter(val, item)
+        val = col.formatter(val, item, rowIdx)
+      }
+      const isNoCol =
+        col.header.toLowerCase() === 'no' ||
+        col.header.toLowerCase() === 'no.' ||
+        col.key === 'no'
+      if (isNoCol && (val === undefined || val === null || val === '')) {
+        return String(rowIdx + 1)
       }
       if (val === undefined || val === null) {
         return '-'
@@ -323,10 +339,31 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
   const headers = [options.columns.map((c) => c.header)]
   const rows = formatTableRows(options.columns, options.data)
 
+  let foot: string[][] | undefined = undefined
+  if (options.summaryRow) {
+    foot = [
+      options.columns.map((col) => {
+        const isNoCol =
+          col.header.toLowerCase() === 'no' ||
+          col.header.toLowerCase() === 'no.' ||
+          col.key === 'no'
+        if (isNoCol) return ''
+        const val =
+          col.key && options.summaryRow?.[col.key as string] !== undefined
+            ? options.summaryRow[col.key as string]
+            : options.summaryRow?.[col.header] !== undefined
+              ? options.summaryRow[col.header]
+              : ''
+        return val !== null && val !== undefined && val !== '' ? String(val) : ''
+      }),
+    ]
+  }
+
   const autoTableConfig: UserOptions = {
     startY: startY + 2,
     head: headers,
     body: rows,
+    foot,
     theme: 'grid',
     headStyles: {
       fillColor: [18, 52, 99], // Navy #123463
@@ -334,6 +371,13 @@ export function exportTableToPdf<T = any>(options: ExportTablePdfOptions<T>) {
       fontStyle: 'bold',
       fontSize: 8,
       halign: 'center',
+      valign: 'middle',
+    },
+    footStyles: {
+      fillColor: [34, 85, 155], // #22559B Royal Navy
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
       valign: 'middle',
     },
     bodyStyles: {
@@ -408,10 +452,31 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
     const headers = [section.columns.map((c) => c.header)]
     const rows = formatTableRows(section.columns, section.data)
 
+    let foot: string[][] | undefined = undefined
+    if (section.summaryRow) {
+      foot = [
+        section.columns.map((col) => {
+          const isNoCol =
+            col.header.toLowerCase() === 'no' ||
+            col.header.toLowerCase() === 'no.' ||
+            col.key === 'no'
+          if (isNoCol) return ''
+          const val =
+            col.key && section.summaryRow?.[col.key as string] !== undefined
+              ? section.summaryRow[col.key as string]
+              : section.summaryRow?.[col.header] !== undefined
+                ? section.summaryRow[col.header]
+                : ''
+          return val !== null && val !== undefined && val !== '' ? String(val) : ''
+        }),
+      ]
+    }
+
     const autoTableConfig: UserOptions = {
       startY: currentY,
       head: headers,
       body: rows,
+      foot,
       theme: 'grid',
       headStyles: {
         fillColor: [18, 52, 99], // Navy #123463
@@ -419,6 +484,13 @@ export function exportMultiSectionPdf(options: MultiSectionPdfExportOptions) {
         fontStyle: 'bold',
         fontSize: 8,
         halign: 'center',
+        valign: 'middle',
+      },
+      footStyles: {
+        fillColor: [34, 85, 155], // #22559B Royal Navy
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
         valign: 'middle',
       },
       bodyStyles: {

@@ -17,11 +17,12 @@
 import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
 import { useAuthStore } from '@/stores/auth-store'
+import { SCHOOL_LOGO_BASE64 } from '@/assets/schoolLogoBase64'
 
 export interface ExcelColumn<T = any> {
   header: string
   key?: keyof T | string
-  formatter?: (val: unknown, row: T) => string | number | boolean | null | undefined
+  formatter?: (val: unknown, row: T, rowIndex: number) => string | number | boolean | null | undefined
   width?: number
   align?: 'left' | 'center' | 'right'
 }
@@ -112,6 +113,7 @@ function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'ri
 
   if (
     str === 'no' ||
+    str === 'no.' ||
     str === 'id' ||
     str.includes('kode') ||
     str.includes('status') ||
@@ -126,6 +128,80 @@ function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'ri
   }
 
   return 'left'
+}
+
+/**
+ * Menentukan apakah suatu kolom layak/bagus dijumlahkan pada baris footer (total)
+ */
+export function shouldColumnBeSummed(key: string, header: string): boolean {
+  const str = `${key} ${header}`.toLowerCase().trim()
+
+  // Kolom nomor urut, ID, kode, harga satuan, limit, persentase, tanggal dsb. tidak dijumlahkan
+  if (
+    str === 'no' ||
+    str === 'no.' ||
+    str.startsWith('no.') ||
+    str.startsWith('no ') ||
+    str === 'id' ||
+    str.endsWith('id') ||
+    str.includes('nis') ||
+    str.includes('kode') ||
+    str.includes('referensi') ||
+    str.includes('transaksi') ||
+    str.includes('harga') ||
+    str.includes('hpp') ||
+    str.includes('modalunit') ||
+    str.includes('modal unit') ||
+    str.includes('persen') ||
+    str.includes('margin') ||
+    str.includes('limit') ||
+    str.includes('rate') ||
+    str.includes('saldoakhir') ||
+    str.includes('saldo akhir') ||
+    str.includes('saldosetelah') ||
+    str.includes('saldo setelah') ||
+    str.includes('sisasaldo') ||
+    str.includes('sisa saldo') ||
+    str.includes('status') ||
+    str.includes('kelas') ||
+    str.includes('tanggal') ||
+    str.includes('waktu') ||
+    str.includes('petugas') ||
+    str.includes('kasir') ||
+    str.includes('orang') ||
+    str.includes('wali') ||
+    str.includes('kategori') ||
+    str.includes('jenis') ||
+    str.includes('alasan') ||
+    str.includes('berita') ||
+    str.includes('nama') ||
+    str.includes('item')
+  ) {
+    return false
+  }
+
+  // Kolom akumulasi kuantitatif / moneter yang bagus dijumlahkan
+  if (
+    str.includes('total') ||
+    str.includes('nominal') ||
+    str.includes('omzet') ||
+    str.includes('omset') ||
+    str.includes('laba') ||
+    str.includes('qty') ||
+    str.includes('jumlah') ||
+    str.includes('belanja') ||
+    str.includes('bruto') ||
+    str.includes('void') ||
+    str.includes('bersih') ||
+    str.includes('selisih') ||
+    str.includes('disetor') ||
+    str.includes('kerugian') ||
+    (str.includes('saldo') && !str.includes('sisa') && !str.includes('akhir') && !str.includes('setelah'))
+  ) {
+    return true
+  }
+
+  return false
 }
 
 /**
@@ -148,8 +224,6 @@ function getSchoolProfile(): { name: string; address: string } {
 const COLOR_NAVY = 'FF123463'
 const COLOR_ZEBRA = 'FFF0F4FB'
 const COLOR_TOTAL = 'FF22559B'
-const COLOR_GRAY_SUMMARY = 'FFD9D9D9'
-const COLOR_GRAY_SUMMARY_BORDER = 'FFA6A6A6'
 const COLOR_GRAY_TEXT = 'FF646464'
 const COLOR_BORDER = 'FFE0E0E0'
 const COLOR_HEADER_BORDER = 'FFD3D3D3'
@@ -188,12 +262,22 @@ function populateWorksheet<T>(
   // Set lebar kolom tabel
   config.columns.forEach((col, idx) => {
     const colNumber = startCol + idx
+    const isNoCol =
+      col.header.toLowerCase() === 'no' ||
+      col.header.toLowerCase() === 'no.' ||
+      col.key === 'no'
+
+    if (isNoCol) {
+      ws.getColumn(colNumber).width = col.width || 6
+      return
+    }
+
     let maxLen = col.header.length
 
     for (const item of config.data) {
       let val: unknown = undefined
       if (col.key) val = (item as Record<string, unknown>)[col.key as string]
-      if (col.formatter) val = col.formatter(val, item)
+      if (col.formatter) val = col.formatter(val, item, 0)
       const str = val !== undefined && val !== null ? String(val) : ''
       if (str.length > maxLen) {
         maxLen = str.length
@@ -202,9 +286,35 @@ function populateWorksheet<T>(
 
     const calculatedWidth = col.width
       ? col.width
-      : Math.min(Math.max(maxLen + 4, 11), 45)
+      : Math.min(Math.max(maxLen + 4, 12), 45)
     ws.getColumn(colNumber).width = calculatedWidth
   })
+
+  // Tambahkan Logo Sekolah Resmi dari template docs/Ekspor excel.xlsx
+  try {
+    const logoId = ws.workbook.addImage({
+      base64: SCHOOL_LOGO_BASE64,
+      extension: 'png',
+    })
+
+    // Logo kiri di Kolom B (index 1), Baris 1-4
+    ws.addImage(logoId, {
+      tl: { col: 1, row: 0 },
+      br: { col: 2, row: 4 },
+      editAs: 'oneCell',
+    } as any)
+
+    // Logo kanan di Kolom paling kanan jika kolom tabel >= 5
+    if (endCol - 1 >= 4) {
+      ws.addImage(logoId, {
+        tl: { col: endCol - 1, row: 0 },
+        br: { col: endCol, row: 4 },
+        editAs: 'oneCell',
+      } as any)
+    }
+  } catch (_imgErr) {
+    // Abaikan jika tidak didukung oleh lingkungan tertentu
+  }
 
   // Baris 1: Judul Laporan
   ws.mergeCells(1, startCol, 1, endCol)
@@ -299,7 +409,7 @@ function populateWorksheet<T>(
   let currentRowNum = 7
   config.data.forEach((item, rowIdx) => {
     const row = ws.getRow(currentRowNum)
-    row.height = 18
+    row.height = 19
     const isZebra = rowIdx % 2 === 1
 
     config.columns.forEach((col, colIdx) => {
@@ -311,7 +421,14 @@ function populateWorksheet<T>(
         val = (item as Record<string, unknown>)[col.key as string]
       }
       if (col.formatter) {
-        val = col.formatter(val, item)
+        val = col.formatter(val, item, rowIdx)
+      }
+      const isNoCol =
+        col.header.toLowerCase() === 'no' ||
+        col.header.toLowerCase() === 'no.' ||
+        col.key === 'no'
+      if (isNoCol && (val === undefined || val === null || val === '')) {
+        val = rowIdx + 1
       }
       if (val === undefined || val === null) {
         val = ''
@@ -342,33 +459,34 @@ function populateWorksheet<T>(
     currentRowNum++
   })
 
-  // Baris Total / Summary jika ada atau autoSummaryRow diaktifkan
+  // Baris Total / Summary: Ditambahkan pada semua eksporan
   let summaryData = config.summaryRow
-  if (!summaryData && config.autoSummaryRow) {
+  if (!summaryData && config.autoSummaryRow !== false) {
     summaryData = {}
     config.columns.forEach((col) => {
-      if (!col.key) return
-      let isNumeric = false
+      const colKey = (col.key as string) || col.header
+      const canSum = shouldColumnBeSummed(colKey, col.header)
+      if (!canSum) {
+        summaryData![colKey] = ''
+        return
+      }
+
       let sum = 0
       let hasValues = false
-
       for (const item of config.data) {
-        const raw = (item as Record<string, unknown>)[col.key as string]
+        const raw = col.key ? (item as Record<string, unknown>)[col.key as string] : undefined
         if (typeof raw === 'number' && !isNaN(raw)) {
-          isNumeric = true
-          hasValues = true
           sum += raw
+          hasValues = true
         } else if (raw !== undefined && raw !== null && raw !== '') {
-          isNumeric = false
-          break
+          const parsed = Number(raw)
+          if (!isNaN(parsed)) {
+            sum += parsed
+            hasValues = true
+          }
         }
       }
-
-      if (isNumeric && hasValues) {
-        summaryData![col.key as string] = sum
-      } else {
-        summaryData![col.key as string] = ''
-      }
+      summaryData![colKey] = hasValues ? sum : ''
     })
   }
 
@@ -377,22 +495,10 @@ function populateWorksheet<T>(
     const row = ws.getRow(summaryRowNum)
     row.height = 20
 
-    const isGray =
-      config.summaryRowColor === 'gray' ||
-      config.summaryRowColor === 'abu-abu' ||
-      (typeof config.summaryRowColor === 'string' &&
-        config.summaryRowColor.toLowerCase().includes('gray'))
-
-    const fillColor = isGray
-      ? COLOR_GRAY_SUMMARY
-      : config.summaryRowColor && config.summaryRowColor !== 'navy'
-        ? (config.summaryRowColor.startsWith('FF')
-            ? config.summaryRowColor
-            : `FF${config.summaryRowColor.replace('#', '')}`)
-        : COLOR_TOTAL
-
-    const fontColor = isGray ? 'FF000000' : 'FFFFFFFF'
-    const borderColor = isGray ? COLOR_GRAY_SUMMARY_BORDER : COLOR_HEADER_BORDER
+    // Warna footer: Navy royal FF22559B (agak lebih cerah dari header FF123463 tapi tidak terlalu terang)
+    const fillColor = COLOR_TOTAL
+    const fontColor = 'FFFFFFFF'
+    const borderColor = COLOR_HEADER_BORDER
 
     config.columns.forEach((col, colIdx) => {
       const colNumber = startCol + colIdx
@@ -401,11 +507,20 @@ function populateWorksheet<T>(
       let val: unknown = ''
       if (col.key && summaryData?.[col.key as string] !== undefined) {
         val = summaryData[col.key as string]
-      } else if (!config.autoSummaryRow && colIdx === 0 && !isGray) {
-        val = 'Total'
+      } else if (summaryData?.[col.header] !== undefined) {
+        val = summaryData[col.header]
       }
 
-      cell.value = (val !== null && val !== undefined && val !== '') ? (val as any) : ''
+      const isNoCol =
+        col.header.toLowerCase() === 'no' ||
+        col.header.toLowerCase() === 'no.' ||
+        col.key === 'no'
+      if (isNoCol) {
+        val = ''
+      }
+
+      const isNum = typeof val === 'number' && !isNaN(val)
+      cell.value = (isNum ? val : '') as any
       cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: fontColor } }
       cell.fill = {
         type: 'pattern',
@@ -415,15 +530,15 @@ function populateWorksheet<T>(
 
       const align = resolveColumnAlignment(col)
       cell.alignment = {
-        horizontal: typeof val === 'number' ? 'right' : (colIdx === 0 && val === 'Total') ? 'center' : align,
+        horizontal: isNum ? 'right' : align,
         vertical: 'middle',
       }
 
       cell.border = {
         top: { style: 'thin', color: { argb: borderColor } },
         bottom: { style: 'double', color: { argb: borderColor } },
-        left: { style: 'thin', color: { argb: borderColor } },
-        right: { style: 'thin', color: { argb: borderColor } },
+        left: { style: 'thin', color: { argb: fillColor } },
+        right: { style: 'thin', color: { argb: fillColor } },
       }
     })
     currentRowNum++

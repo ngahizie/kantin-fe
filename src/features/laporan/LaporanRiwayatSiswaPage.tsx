@@ -271,11 +271,15 @@ export function LaporanRiwayatSiswaPage() {
           petugas: trx.petugas,
           daftarItem: itemStr,
           keterangan: trx.keterangan,
-          arah: trx.arah,
           nominal: trx.arah === 'DEBIT' ? -trx.nominal : trx.nominal,
           saldoSetelah: trx.saldoSetelah,
         }
       })
+
+      const totalNominal = filteredRiwayat.reduce(
+        (acc, trx) => acc + (trx.arah === 'DEBIT' ? -trx.nominal : trx.nominal),
+        0
+      )
 
       exportTableToExcel({
         filename: `Rekening_Koran_${profil.nis}_${profil.nama.replace(/\s+/g, '_')}`,
@@ -291,18 +295,30 @@ export function LaporanRiwayatSiswaPage() {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
         },
         columns: [
-          { header: 'Waktu Transaksi', key: 'waktu', width: 22 },
-          { header: 'No. Bukti / Referensi', key: 'referensiId', width: 22 },
+          { header: 'No', width: 6 },
+          { header: 'Waktu Transaksi', key: 'waktu', width: 20 },
+          { header: 'No. Transaksi', key: 'referensiId', width: 22 },
           { header: 'Jenis Mutasi', key: 'jenis', width: 14 },
-          { header: 'Titik Kasir / Loket', key: 'titikKasir', width: 22 },
+          { header: 'Titik Kasir / Loket', key: 'titikKasir', width: 20 },
           { header: 'Petugas', key: 'petugas', width: 18 },
-          { header: 'Menu / Item yang Dibeli', key: 'daftarItem', width: 35 },
-          { header: 'Keterangan', key: 'keterangan', width: 30 },
-          { header: 'Arah', key: 'arah', width: 10 },
+          { header: 'Rincian Menu / Info', key: 'daftarItem', width: 32 },
+          { header: 'Keterangan', key: 'keterangan', width: 26 },
           { header: 'Nominal (Rp)', key: 'nominal', width: 16 },
           { header: 'Saldo Akhir (Rp)', key: 'saldoSetelah', width: 16 },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          referensiId: '',
+          jenis: '',
+          titikKasir: '',
+          petugas: '',
+          daftarItem: '',
+          keterangan: '',
+          nominal: totalNominal,
+          saldoSetelah: '',
+        },
       })
 
       toast.success('Ekspor Excel Berhasil', {
@@ -340,11 +356,15 @@ export function LaporanRiwayatSiswaPage() {
           petugas: trx.petugas,
           daftarItem: itemStr,
           keterangan: trx.keterangan,
-          arah: trx.arah,
           nominal: trx.arah === 'DEBIT' ? `-${formatRupiah(trx.nominal)}` : `+${formatRupiah(trx.nominal)}`,
           saldoSetelah: formatRupiah(trx.saldoSetelah),
         }
       })
+
+      const totalNominal = filteredRiwayat.reduce(
+        (acc, trx) => acc + (trx.arah === 'DEBIT' ? -trx.nominal : trx.nominal),
+        0
+      )
 
       exportTableToPdf({
         filename: `Rekening_Koran_${profil.nis}_${profil.nama.replace(/\s+/g, '_')}`,
@@ -360,18 +380,30 @@ export function LaporanRiwayatSiswaPage() {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
         },
         columns: [
+          { header: 'No' },
           { header: 'Waktu Transaksi', key: 'waktu' },
-          { header: 'No. Bukti / Referensi', key: 'referensiId' },
+          { header: 'No. Transaksi', key: 'referensiId' },
           { header: 'Jenis Mutasi', key: 'jenis' },
           { header: 'Titik Kasir', key: 'titikKasir' },
           { header: 'Petugas', key: 'petugas' },
           { header: 'Item / Menu yang Dibeli', key: 'daftarItem' },
           { header: 'Keterangan', key: 'keterangan' },
-          { header: 'Arah', key: 'arah' },
           { header: 'Nominal', key: 'nominal' },
           { header: 'Saldo Akhir', key: 'saldoSetelah' },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          waktu: '',
+          referensiId: '',
+          jenis: '',
+          titikKasir: '',
+          petugas: '',
+          daftarItem: '',
+          keterangan: '',
+          nominal: (totalNominal < 0 ? '-' : '+') + formatRupiah(Math.abs(totalNominal)),
+          saldoSetelah: '',
+        },
       })
 
       toast.success('Ekspor PDF Berhasil', {

@@ -145,9 +145,10 @@ export function LaporanSaldoMengendapPage() {
             'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
           },
           columns: [
+            { header: 'No', width: 6 },
             { header: 'NIS', key: 'nis', width: 14 },
             { header: 'Nama Siswa', key: 'nama', width: 25 },
-            { header: 'Kelas', key: 'kelas', width: 12 },
+            { header: 'Kelas', key: 'kelas', width: 10 },
             { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
             { header: 'Saldo Terkini (Rp)', key: 'saldo', width: 18 },
             {
@@ -165,8 +166,8 @@ export function LaporanSaldoMengendapPage() {
             },
           ],
           data: siswaList,
-          summaryRowColor: 'gray',
           summaryRow: {
+            no: '',
             nis: '',
             nama: '',
             kelas: '',
@@ -229,9 +230,13 @@ export function LaporanSaldoMengendapPage() {
 
       // Section: Saldo Siswa
       if (canAccessSiswa) {
+        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+
         sections.push({
           sectionTitle: 'Laporan Total Saldo Siswa',
           columns: [
+            { header: 'No' },
             { header: 'NIS', key: 'nis' },
             { header: 'Nama Siswa', key: 'nama' },
             { header: 'Kelas', key: 'kelas' },
@@ -244,7 +249,7 @@ export function LaporanSaldoMengendapPage() {
             {
               header: 'Limit Harian',
               key: 'limitHarian',
-              formatter: (v: unknown) => formatRupiah(Number(v)),
+              formatter: (v: unknown) => (Number(v) > 0 ? formatRupiah(Number(v)) : '-'),
             },
             {
               header: 'Belanja Hari Ini',
@@ -258,6 +263,17 @@ export function LaporanSaldoMengendapPage() {
             },
           ],
           data: siswaList,
+          summaryRow: {
+            no: '',
+            nis: '',
+            nama: '',
+            kelas: '',
+            parentName: '',
+            saldo: formatRupiah(totalSaldo),
+            limitHarian: '',
+            belanjaHariIni: formatRupiah(totalBelanjaHariIni),
+            isBlocked: '',
+          },
         })
       }
 

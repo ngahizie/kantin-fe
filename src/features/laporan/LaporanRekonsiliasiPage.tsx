@@ -198,6 +198,7 @@ export function LaporanRekonsiliasiPage() {
           'Penjualan Bersih': formatRupiah(data.penjualanBersih),
         },
         columns: [
+          { header: 'No', width: 6 },
           { header: 'Pos Akuntansi / Ledger', key: 'pos', width: 35 },
           { header: 'Kategori', key: 'kategori', width: 14 },
           { header: 'Arah Mutasi', key: 'arah', width: 14 },
@@ -210,6 +211,14 @@ export function LaporanRekonsiliasiPage() {
           { header: 'Keterangan Akuntansi', key: 'keterangan', width: 45 },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          pos: '',
+          kategori: '',
+          arah: '',
+          nominal: '',
+          keterangan: '',
+        },
       })
 
       toast.success('Ekspor Excel Berhasil', {
@@ -272,6 +281,7 @@ export function LaporanRekonsiliasiPage() {
           'Penjualan Bersih': formatRupiah(data.penjualanBersih),
         },
         columns: [
+          { header: 'No' },
           { header: 'Pos Akuntansi / Ledger', key: 'pos' },
           { header: 'Kategori', key: 'kategori' },
           { header: 'Arah', key: 'arah' },
@@ -279,6 +289,14 @@ export function LaporanRekonsiliasiPage() {
           { header: 'Keterangan Akuntansi', key: 'keterangan' },
         ],
         data: exportRows,
+        summaryRow: {
+          no: '',
+          pos: '',
+          kategori: '',
+          arah: '',
+          nominal: '',
+          keterangan: '',
+        },
       })
 
       toast.success('Ekspor PDF Berhasil', {
