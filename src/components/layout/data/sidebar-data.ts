@@ -75,7 +75,7 @@ export const sidebarData: SidebarData = {
               roles: ['pengelola'],
             },
             {
-              title: 'Kartu Stok Mutasi',
+              title: 'Mutasi Stok',
               url: '/stok/kartu',
               roles: ['pengelola', 'bendahara'],
             },

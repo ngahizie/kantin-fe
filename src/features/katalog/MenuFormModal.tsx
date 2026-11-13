@@ -638,7 +638,7 @@ export function MenuFormModal({
                 </div>
 
                 <p className='text-xs text-muted-foreground leading-relaxed'>
-                  Pilih aksi penyesuaian jika ingin menambah barang masuk, audit stok fisik (opname), atau mencatat barang rusak. Setiap mutasi wajib mengisi alasan dan akan tercatat permanen di Kartu Stok Mutasi.
+                  Pilih aksi penyesuaian jika ingin menambah barang masuk, audit stok fisik (opname), atau mencatat barang rusak. Setiap mutasi wajib mengisi alasan dan akan tercatat permanen di halaman Mutasi Stok.
                 </p>
 
                 {/* Tombol Pilihan Aksi Mutasi */}

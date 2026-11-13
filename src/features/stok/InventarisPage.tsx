@@ -323,7 +323,7 @@ export function InventarisPage() {
             <Button size='sm' asChild className='gap-1.5 font-semibold'>
               <Link to='/stok/kartu'>
                 <History className='size-4' />
-                <span>Buka Kartu Stok</span>
+                <span>Buka Mutasi Stok</span>
               </Link>
             </Button>
           </div>
