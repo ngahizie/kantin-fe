@@ -8,7 +8,7 @@ import {
   Image as ImageIcon,
   Barcode,
   X,
-  Layers,
+  Boxes,
 } from 'lucide-react'
 import {
   Dialog,
@@ -618,10 +618,10 @@ export function MenuFormModal({
 
             {/* Kelola Penyesuaian Stok Terintegrasi (Khusus Edit Menu) */}
             {isEditing && selectedMenu && (
-              <div className='rounded-xl border border-border/80 bg-muted/20 p-4 space-y-3.5'>
+              <div className='rounded-xl border border-border bg-muted/20 p-3 space-y-3'>
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <Layers className='size-4 text-primary' />
+                    <Boxes className='size-4 text-primary' />
                     <span className='text-xs font-semibold uppercase tracking-wider text-foreground'>
                       Kelola Penyesuaian Stok
                     </span>
@@ -630,26 +630,22 @@ export function MenuFormModal({
                     <span className='text-xs text-muted-foreground'>Stok Saat Ini:</span>
                     <Badge
                       variant={currentStok <= (watchedStokMinimum ?? 5) ? 'destructive' : 'secondary'}
-                      className='tabular-nums font-semibold'
+                      className='tabular-nums font-semibold text-xs py-0.5'
                     >
                       {loadingStok ? 'Memuat...' : `${currentStok} unit`}
                     </Badge>
                   </div>
                 </div>
 
-                <p className='text-xs text-muted-foreground leading-relaxed'>
-                  Pilih aksi penyesuaian jika ingin menambah barang masuk, audit stok fisik (opname), atau mencatat barang rusak. Setiap mutasi wajib mengisi alasan dan akan tercatat permanen di halaman Mutasi Stok.
-                </p>
-
                 {/* Tombol Pilihan Aksi Mutasi */}
                 <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
                   <button
                     type='button'
                     onClick={() => setAksiStok('NONE')}
-                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                    className={`h-8 px-2 text-xs rounded-md border font-medium text-center transition-all flex items-center justify-center ${
                       aksiStok === 'NONE'
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                        : 'border-border bg-background hover:bg-muted/70 text-muted-foreground'
+                        ? 'border-primary bg-primary text-primary-foreground shadow-xs font-semibold'
+                        : 'border-border bg-background hover:bg-muted text-muted-foreground'
                     }`}
                   >
                     Tanpa Mutasi
@@ -657,35 +653,35 @@ export function MenuFormModal({
                   <button
                     type='button'
                     onClick={() => setAksiStok('MASUK')}
-                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                    className={`h-8 px-2 text-xs rounded-md border font-medium text-center transition-all flex items-center justify-center ${
                       aksiStok === 'MASUK'
-                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
-                        : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300'
+                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs font-semibold'
+                        : 'border-border bg-background hover:border-emerald-300 hover:bg-emerald-50/60 hover:text-emerald-700 text-muted-foreground dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300'
                     }`}
                   >
-                    + Barang Masuk
+                    Barang Masuk
                   </button>
                   <button
                     type='button'
                     onClick={() => setAksiStok('OPNAME')}
-                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                    className={`h-8 px-2 text-xs rounded-md border font-medium text-center transition-all flex items-center justify-center ${
                       aksiStok === 'OPNAME'
-                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                        : 'border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 text-blue-800 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-300'
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-xs font-semibold'
+                        : 'border-border bg-background hover:border-blue-300 hover:bg-blue-50/60 hover:text-blue-700 text-muted-foreground dark:hover:bg-blue-950/30 dark:hover:text-blue-300'
                     }`}
                   >
-                    = Stok Opname
+                    Stok Opname
                   </button>
                   <button
                     type='button'
                     onClick={() => setAksiStok('RUSAK')}
-                    className={`px-2.5 py-2 text-xs rounded-lg border font-medium text-center transition-all ${
+                    className={`h-8 px-2 text-xs rounded-md border font-medium text-center transition-all flex items-center justify-center ${
                       aksiStok === 'RUSAK'
-                        ? 'border-rose-600 bg-rose-600 text-white shadow-sm'
-                        : 'border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-300'
+                        ? 'border-rose-600 bg-rose-600 text-white shadow-xs font-semibold'
+                        : 'border-border bg-background hover:border-rose-300 hover:bg-rose-50/60 hover:text-rose-700 text-muted-foreground dark:hover:bg-rose-950/30 dark:hover:text-rose-300'
                     }`}
                   >
-                    - Barang Rusak
+                    Barang Rusak
                   </button>
                 </div>
 
