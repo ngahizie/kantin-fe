@@ -51,7 +51,7 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
     expect(ws?.getColumn(1).width).toBe(3.0)
 
     // Verifikasi Kop
-    expect(ws?.getCell('B1').value).toBe('LAPORAN PENJUALAN HARIAN KANTIN')
+    expect(ws?.getCell('B1').value).toBe('Laporan Penjualan Harian Kantin')
     expect(ws?.getCell('B1').font?.name).toBe('Calibri')
     expect(ws?.getCell('B1').font?.bold).toBe(true)
 
@@ -141,5 +141,106 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
     const ws = result.workbook.getWorksheet('Data Mentah')
     expect(ws).toBeDefined()
     expect(ws?.getCell('B6').value).toBe('Kode')
+  })
+
+  it('berhasil mengekspor Laporan Total Saldo Siswa dengan footer abu-abu dan kolom non-angka kosong', async () => {
+    const data = [
+      {
+        nis: '1001',
+        nama: 'Budi Santoso',
+        kelas: '7A',
+        parentName: 'Agus',
+        saldo: 50000,
+        limitHarian: 20000,
+        belanjaHariIni: 15000,
+        isBlocked: false,
+      },
+      {
+        nis: '1002',
+        nama: 'Siti Aminah',
+        kelas: '7B',
+        parentName: 'Dewi',
+        saldo: 75000,
+        limitHarian: 30000,
+        belanjaHariIni: 25000,
+        isBlocked: false,
+      },
+    ]
+
+    const result = await exportTableToExcel({
+      filename: 'Laporan_Total_Saldo_Siswa_Test',
+      sheetName: 'Saldo Siswa',
+      title: 'Laporan Total Saldo Siswa',
+      columns: [
+        { header: 'NIS', key: 'nis', width: 14 },
+        { header: 'Nama Siswa', key: 'nama', width: 25 },
+        { header: 'Kelas', key: 'kelas', width: 12 },
+        { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
+        { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
+        { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
+        { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
+        {
+          header: 'Status Kartu',
+          key: 'isBlocked',
+          formatter: (v) => (v ? 'DIBLOKIR' : 'AKTIF'),
+          width: 14,
+        },
+      ],
+      data,
+      summaryRowColor: 'gray',
+      summaryRow: {
+        nis: '',
+        nama: '',
+        kelas: '',
+        parentName: '',
+        saldo: 125000,
+        limitHarian: 50000,
+        belanjaHariIni: 40000,
+        isBlocked: '',
+      },
+    })
+
+    const ws = result.workbook.getWorksheet('Saldo Siswa')
+    expect(ws).toBeDefined()
+
+    // Verifikasi Judul
+    expect(ws?.getCell('B1').value).toBe('Laporan Total Saldo Siswa')
+
+    // Verifikasi Header (Kolom E = Nama Orang Tua)
+    expect(ws?.getCell('B6').value).toBe('NIS')
+    expect(ws?.getCell('C6').value).toBe('Nama Siswa')
+    expect(ws?.getCell('D6').value).toBe('Kelas')
+    expect(ws?.getCell('E6').value).toBe('Nama Orang Tua')
+    expect(ws?.getCell('F6').value).toBe('Saldo Berjalan (Rp)')
+    expect(ws?.getCell('G6').value).toBe('Limit Harian (Rp)')
+    expect(ws?.getCell('H6').value).toBe('Belanja Hari Ini (Rp)')
+    expect(ws?.getCell('I6').value).toBe('Status Kartu')
+
+    // Verifikasi Baris Data (Row 7 & 8)
+    expect(ws?.getCell('E7').value).toBe('Agus')
+    expect(ws?.getCell('F7').value).toBe(50000)
+
+    // Verifikasi Footer Summary Row (Row 9)
+    // Non-angka kosong:
+    expect(ws?.getCell('B9').value).toBe('')
+    expect(ws?.getCell('C9').value).toBe('')
+    expect(ws?.getCell('D9').value).toBe('')
+    expect(ws?.getCell('E9').value).toBe('')
+    expect(ws?.getCell('I9').value).toBe('')
+
+    // Angka memiliki total:
+    expect(ws?.getCell('F9').value).toBe(125000)
+    expect(ws?.getCell('G9').value).toBe(50000)
+    expect(ws?.getCell('H9').value).toBe(40000)
+
+    // Background abu-abu FFD9D9D9
+    expect(ws?.getCell('F9').fill).toMatchObject({
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD9D9D9' },
+    })
+    // Font hitam bold
+    expect(ws?.getCell('F9').font?.color?.argb).toBe('FF000000')
+    expect(ws?.getCell('F9').font?.bold).toBe(true)
   })
 })

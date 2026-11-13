@@ -133,9 +133,13 @@ export function LaporanSaldoMengendapPage() {
 
       // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
       if (canAccessSiswa) {
+        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalLimitHarian = siswaList.reduce((acc, s) => acc + (Number(s.limitHarian) || 0), 0)
+        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+
         sheets.push({
           sheetName: 'Saldo Siswa',
-          title: 'LAPORAN TOTAL SALDO SISWA (DANA TITIPAN ORTU)',
+          title: 'Laporan Total Saldo Siswa',
           metadata: {
             'Tanggal Cetak': new Date().toLocaleString('id-ID'),
             'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
@@ -145,6 +149,7 @@ export function LaporanSaldoMengendapPage() {
             { header: 'NIS', key: 'nis', width: 14 },
             { header: 'Nama Siswa', key: 'nama', width: 25 },
             { header: 'Kelas', key: 'kelas', width: 12 },
+            { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
             { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
             { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
             { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
@@ -154,10 +159,19 @@ export function LaporanSaldoMengendapPage() {
               formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
               width: 14,
             },
-            { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
-            { header: 'Kontak Orang Tua', key: 'parentPhone', width: 18 },
           ],
           data: siswaList,
+          summaryRowColor: 'gray',
+          summaryRow: {
+            nis: '',
+            nama: '',
+            kelas: '',
+            parentName: '',
+            saldo: totalSaldo,
+            limitHarian: totalLimitHarian,
+            belanjaHariIni: totalBelanjaHariIni,
+            isBlocked: '',
+          },
         })
       }
 
@@ -212,11 +226,12 @@ export function LaporanSaldoMengendapPage() {
       // Section: Saldo Siswa
       if (canAccessSiswa) {
         sections.push({
-          sectionTitle: 'Rincian Total Saldo Siswa (Dana Titipan Murid)',
+          sectionTitle: 'Laporan Total Saldo Siswa',
           columns: [
             { header: 'NIS', key: 'nis' },
             { header: 'Nama Siswa', key: 'nama' },
             { header: 'Kelas', key: 'kelas' },
+            { header: 'Nama Orang Tua', key: 'parentName' },
             {
               header: 'Saldo Berjalan',
               key: 'saldo',
@@ -237,7 +252,6 @@ export function LaporanSaldoMengendapPage() {
               key: 'isBlocked',
               formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
             },
-            { header: 'Orang Tua', key: 'parentName' },
           ],
           data: siswaList,
         })

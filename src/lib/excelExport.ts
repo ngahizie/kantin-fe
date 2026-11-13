@@ -36,6 +36,8 @@ export interface ExportTableOptions<T = any> {
   columns: ExcelColumn<T>[]
   data: T[]
   summaryRow?: Record<string, string | number | null | undefined>
+  summaryRowColor?: 'navy' | 'gray' | string
+  autoSummaryRow?: boolean
   footnote?: string
 }
 
@@ -48,6 +50,8 @@ export interface SheetConfig<T = any> {
   columns: ExcelColumn<T>[]
   data: T[]
   summaryRow?: Record<string, string | number | null | undefined>
+  summaryRowColor?: 'navy' | 'gray' | string
+  autoSummaryRow?: boolean
   footnote?: string
 }
 
@@ -144,6 +148,8 @@ function getSchoolProfile(): { name: string; address: string } {
 const COLOR_NAVY = 'FF123463'
 const COLOR_ZEBRA = 'FFF0F4FB'
 const COLOR_TOTAL = 'FF22559B'
+const COLOR_GRAY_SUMMARY = 'FFD9D9D9'
+const COLOR_GRAY_SUMMARY_BORDER = 'FFA6A6A6'
 const COLOR_GRAY_TEXT = 'FF646464'
 const COLOR_BORDER = 'FFE0E0E0'
 const COLOR_HEADER_BORDER = 'FFD3D3D3'
@@ -161,11 +167,13 @@ function populateWorksheet<T>(
     columns: ExcelColumn<T>[]
     data: T[]
     summaryRow?: Record<string, string | number | null | undefined>
+    summaryRowColor?: 'navy' | 'gray' | string
+    autoSummaryRow?: boolean
     footnote?: string
   }
 ) {
   const schoolProfile = getSchoolProfile()
-  const title = (config.title || 'LAPORAN KANTIN CASHLESS').toUpperCase()
+  const title = config.title || 'LAPORAN KANTIN CASHLESS'
   const schoolName = (config.schoolName || schoolProfile.name).toUpperCase()
   const schoolAddress = config.schoolAddress || schoolProfile.address
 
@@ -334,40 +342,88 @@ function populateWorksheet<T>(
     currentRowNum++
   })
 
-  // Baris Total / Summary jika ada
-  if (config.summaryRow) {
+  // Baris Total / Summary jika ada atau autoSummaryRow diaktifkan
+  let summaryData = config.summaryRow
+  if (!summaryData && config.autoSummaryRow) {
+    summaryData = {}
+    config.columns.forEach((col) => {
+      if (!col.key) return
+      let isNumeric = false
+      let sum = 0
+      let hasValues = false
+
+      for (const item of config.data) {
+        const raw = (item as Record<string, unknown>)[col.key as string]
+        if (typeof raw === 'number' && !isNaN(raw)) {
+          isNumeric = true
+          hasValues = true
+          sum += raw
+        } else if (raw !== undefined && raw !== null && raw !== '') {
+          isNumeric = false
+          break
+        }
+      }
+
+      if (isNumeric && hasValues) {
+        summaryData![col.key as string] = sum
+      } else {
+        summaryData![col.key as string] = ''
+      }
+    })
+  }
+
+  if (summaryData) {
     const summaryRowNum = currentRowNum
     const row = ws.getRow(summaryRowNum)
     row.height = 20
+
+    const isGray =
+      config.summaryRowColor === 'gray' ||
+      config.summaryRowColor === 'abu-abu' ||
+      (typeof config.summaryRowColor === 'string' &&
+        config.summaryRowColor.toLowerCase().includes('gray'))
+
+    const fillColor = isGray
+      ? COLOR_GRAY_SUMMARY
+      : config.summaryRowColor && config.summaryRowColor !== 'navy'
+        ? (config.summaryRowColor.startsWith('FF')
+            ? config.summaryRowColor
+            : `FF${config.summaryRowColor.replace('#', '')}`)
+        : COLOR_TOTAL
+
+    const fontColor = isGray ? 'FF000000' : 'FFFFFFFF'
+    const borderColor = isGray ? COLOR_GRAY_SUMMARY_BORDER : COLOR_HEADER_BORDER
 
     config.columns.forEach((col, colIdx) => {
       const colNumber = startCol + colIdx
       const cell = ws.getCell(summaryRowNum, colNumber)
 
       let val: unknown = ''
-      if (col.key && config.summaryRow?.[col.key as string] !== undefined) {
-        val = config.summaryRow[col.key as string]
-      } else if (colIdx === 0) {
+      if (col.key && summaryData?.[col.key as string] !== undefined) {
+        val = summaryData[col.key as string]
+      } else if (!config.autoSummaryRow && colIdx === 0 && !isGray) {
         val = 'Total'
       }
 
-      cell.value = val as any
-      cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } }
+      cell.value = (val !== null && val !== undefined && val !== '') ? (val as any) : ''
+      cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: fontColor } }
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: COLOR_TOTAL },
+        fgColor: { argb: fillColor },
       }
 
       const align = resolveColumnAlignment(col)
       cell.alignment = {
-        horizontal: colIdx === 0 ? 'center' : align,
+        horizontal: typeof val === 'number' ? 'right' : (colIdx === 0 && val === 'Total') ? 'center' : align,
         vertical: 'middle',
       }
 
       cell.border = {
-        top: { style: 'thin', color: { argb: COLOR_HEADER_BORDER } },
-        bottom: { style: 'double', color: { argb: COLOR_HEADER_BORDER } },
+        top: { style: 'thin', color: { argb: borderColor } },
+        bottom: { style: 'double', color: { argb: borderColor } },
+        left: { style: 'thin', color: { argb: borderColor } },
+        right: { style: 'thin', color: { argb: borderColor } },
       }
     })
     currentRowNum++
@@ -473,6 +529,8 @@ export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): Exp
     columns: options.columns,
     data: options.data,
     summaryRow: options.summaryRow,
+    summaryRowColor: options.summaryRowColor,
+    autoSummaryRow: options.autoSummaryRow,
     footnote: options.footnote,
   })
 
@@ -508,6 +566,8 @@ export function exportMultiSheetExcel(options: MultiSheetExportOptions): ExportE
       columns: sheet.columns,
       data: sheet.data,
       summaryRow: sheet.summaryRow,
+      summaryRowColor: sheet.summaryRowColor,
+      autoSummaryRow: sheet.autoSummaryRow,
       footnote: sheet.footnote,
     })
   }
