@@ -14,6 +14,7 @@ import {
   matchesMenuSearchQuery,
   mergeKategoriMenuCounts,
   shouldPauseMenuAutoRefresh,
+  sortCategoriesNewestFirst,
   sortMenusNewestFirst,
 } from './menu-utils'
 
@@ -81,6 +82,30 @@ describe('Katalog Kategori Zod Validation Schema', () => {
     if (parsedReaktif.success) {
       expect(parsedReaktif.data.aktif).toBe(true)
     }
+  })
+
+  it('berhasil memvalidasi data kategori tanpa mengisi urutan', () => {
+    const dataTanpaUrutan = {
+      nama: 'Kategori Baru',
+    }
+    const parsed = kategoriFormSchema.safeParse(dataTanpaUrutan)
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.nama).toBe('Kategori Baru')
+      expect(parsed.data.urutan).toBeUndefined()
+    }
+  })
+
+  it('mengurutkan kategori dengan kategori terbaru (ID terbesar) di posisi paling atas', () => {
+    const daftarKategori: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1 },
+      { id: 2, nama: 'Minuman', urutan: 2 },
+      { id: 5, nama: 'Kategori Baru', urutan: 0 },
+      { id: 3, nama: 'Camilan', urutan: 3 },
+    ]
+    const sorted = sortCategoriesNewestFirst(daftarKategori)
+    expect(sorted.map((k) => k.id)).toEqual([5, 3, 2, 1])
+    expect(sorted[0].nama).toBe('Kategori Baru')
   })
 })
 

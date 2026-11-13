@@ -135,31 +135,6 @@ export function KategoriFormModal({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='urutan'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className='text-xs font-semibold'>Urutan Tampil</FormLabel>
-                  <FormControl>
-                    <Input
-                      type='number'
-                      min={0}
-                      placeholder='0'
-                      value={field.value}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                      disabled={isSubmitting}
-                      className='tabular-nums'
-                    />
-                  </FormControl>
-                  <FormDescription className='text-xs'>
-                    Angka lebih kecil akan tampil lebih awal pada tab kategori kasir.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <DialogFooter className='pt-2 sm:justify-end gap-2'>
               <Button
                 type='button'

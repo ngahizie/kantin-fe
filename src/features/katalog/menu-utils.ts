@@ -16,6 +16,18 @@ export function sortMenusNewestFirst(menus: MenuItem[]): MenuItem[] {
   })
 }
 
+/**
+ * Mengurutkan daftar kategori dengan item terbaru (ID terbesar) berada di paling atas,
+ * lalu diurutkan alfabetis jika ID sama.
+ */
+export function sortCategoriesNewestFirst(categories: KategoriItem[]): KategoriItem[] {
+  return [...categories].sort((a, b) => {
+    const idDiff = Number(b.id ?? 0) - Number(a.id ?? 0)
+    if (idDiff !== 0) return idDiff
+    return (a.nama ?? '').localeCompare(b.nama ?? '')
+  })
+}
+
 export function shouldPauseMenuAutoRefresh(params: {
   autoRefreshEnabled?: boolean
   isModalOpen: boolean

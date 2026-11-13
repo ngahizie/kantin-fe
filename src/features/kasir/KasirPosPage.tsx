@@ -39,7 +39,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
-import { matchesMenuSearchQuery } from '@/features/katalog/menu-utils'
+import { matchesMenuSearchQuery, sortCategoriesNewestFirst } from '@/features/katalog/menu-utils'
 import type { MenuItem, KategoriItem } from '@/features/katalog/types'
 import {
   kasirApi,
@@ -197,7 +197,7 @@ export const KasirPosPage: React.FC = () => {
         fetchTitikKasir(true),
       ])
       setMenus(menuData)
-      setKategoris(kategoriData)
+      setKategoris(sortCategoriesNewestFirst(kategoriData))
     } catch {
       toast.error('Gagal memuat katalog menu atau pengaturan POS')
     } finally {
@@ -217,7 +217,7 @@ export const KasirPosPage: React.FC = () => {
         ])
         if (isMounted) {
           setMenus(menuData)
-          setKategoris(kategoriData)
+          setKategoris(sortCategoriesNewestFirst(kategoriData))
           setLoading(false)
         }
         await loadSesiData()
