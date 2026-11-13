@@ -65,6 +65,15 @@ const SATUAN_OPTIONS: { value: SatuanType; label: string }[] = [
   { value: 'BOTOL', label: 'Botol / Gelas Kemasan' },
 ]
 
+function generateReferensiId(prefix: string, label?: string): string {
+  const ts = Date.now()
+  if (label) {
+    const clean = label.trim().replace(/[^a-zA-Z0-9]/g, '-').slice(0, 25)
+    return `${prefix}-${ts}-${clean}`.slice(0, 60)
+  }
+  return `${prefix}-${ts}`.slice(0, 60)
+}
+
 export function MenuFormModal({
   open,
   onOpenChange,
@@ -104,6 +113,7 @@ export function MenuFormModal({
 
   const { isSubmitting } = form.formState
   const watchedFotoUrl = useWatch({ control: form.control, name: 'fotoUrl' })
+  const watchedStokMinimum = useWatch({ control: form.control, name: 'stokMinimum' })
   const previewUrl = watchedFotoUrl || ''
 
   // State untuk mutasi stok fisik terintegrasi
@@ -118,39 +128,27 @@ export function MenuFormModal({
   const [qtyRusak, setQtyRusak] = useState<number | ''>('')
   const [alasanRusak, setAlasanRusak] = useState('')
 
-  // Sinkronisasi data awal saat modal dibuka
+  // Reset state mutasi saat menu atau status buka modal berubah
+  const [prevMenuId, setPrevMenuId] = useState<number | null | undefined>(undefined)
+  const currentMenuId = open ? (selectedMenu?.id ?? 0) : null
+  if (currentMenuId !== prevMenuId) {
+    setPrevMenuId(currentMenuId)
+    setAksiStok('NONE')
+    setQtyMasuk('')
+    setHargaBeliMasuk('')
+    setAlasanMasuk('')
+    setAlasanOpname('')
+    setQtyRusak('')
+    setAlasanRusak('')
+    const initialStok = Number(selectedMenu?.stokBerjalan) || 0
+    setCurrentStok(initialStok)
+    setQtyOpnameFisik(initialStok)
+  }
+
+  // Sinkronisasi data form saat modal dibuka
   useEffect(() => {
     if (open) {
-      // Reset input mutasi stok
-      setAksiStok('NONE')
-      setQtyMasuk('')
-      setHargaBeliMasuk('')
-      setAlasanMasuk('')
-      setAlasanOpname('')
-      setQtyRusak('')
-      setAlasanRusak('')
-
       if (selectedMenu) {
-        const initialStok = Number(selectedMenu.stokBerjalan) || 0
-        setCurrentStok(initialStok)
-        setQtyOpnameFisik(initialStok)
-
-        // Muat data stok terkini dari backend
-        setLoadingStok(true)
-        stokApi
-          .getStokMenu(selectedMenu.id)
-          .then((res) => {
-            if (res) {
-              const liveStok = Number(res.stok) || 0
-              setCurrentStok(liveStok)
-              setQtyOpnameFisik(liveStok)
-            }
-          })
-          .catch(() => {
-            // Abaikan error jaringan, gunakan fallback selectedMenu.stokBerjalan
-          })
-          .finally(() => setLoadingStok(false))
-
         form.reset({
           nama: selectedMenu.nama,
           kodeBarcode: selectedMenu.kodeBarcode || '',
@@ -161,9 +159,30 @@ export function MenuFormModal({
           fotoUrl: selectedMenu.fotoUrl || '',
           aktif: selectedMenu.aktif !== false,
         })
+
+        let active = true
+        void (async () => {
+          try {
+            setLoadingStok(true)
+            const res = await stokApi.getStokMenu(selectedMenu.id)
+            if (active && res) {
+              const liveStok = Number(res.stok) || 0
+              setCurrentStok(liveStok)
+              setQtyOpnameFisik(liveStok)
+            }
+          } catch {
+            // Abaikan error jaringan, gunakan fallback selectedMenu.stokBerjalan
+          } finally {
+            if (active) {
+              setLoadingStok(false)
+            }
+          }
+        })()
+
+        return () => {
+          active = false
+        }
       } else {
-        setCurrentStok(0)
-        setQtyOpnameFisik('')
         form.reset({
           nama: '',
           kodeBarcode: '',
@@ -269,9 +288,7 @@ export function MenuFormModal({
 
         // Jalankan mutasi stok jika ada aksi penyesuaian yang dipilih
         if (aksiStok === 'MASUK') {
-          const timestamp = Date.now()
-          const cleanRef = alasanMasuk.trim().replace(/[^a-zA-Z0-9]/g, '-').slice(0, 25)
-          const referensiId = `BM-${timestamp}-${cleanRef}`.slice(0, 60)
+          const referensiId = generateReferensiId('BM', alasanMasuk)
           await stokApi.catatBarangMasuk({
             menuId: selectedMenu.id,
             qty: Number(qtyMasuk),
@@ -280,7 +297,7 @@ export function MenuFormModal({
           })
           toast.success(`Menu "${payload.nama}" diperbarui & stok bertambah +${qtyMasuk}`)
         } else if (aksiStok === 'OPNAME') {
-          const referensiId = `OPN-${Date.now()}`.slice(0, 60)
+          const referensiId = generateReferensiId('OPN')
           await stokApi.sesuaikanOpname({
             menuId: selectedMenu.id,
             qtyFisik: Number(qtyOpnameFisik),
@@ -289,7 +306,7 @@ export function MenuFormModal({
           })
           toast.success(`Menu "${payload.nama}" diperbarui & stok disesuaikan ke ${qtyOpnameFisik}`)
         } else if (aksiStok === 'RUSAK') {
-          const referensiId = `RSK-${Date.now()}`.slice(0, 60)
+          const referensiId = generateReferensiId('RSK')
           await stokApi.catatBarangRusak({
             menuId: selectedMenu.id,
             qtyRusak: Number(qtyRusak),
@@ -612,7 +629,7 @@ export function MenuFormModal({
                   <div className='flex items-center gap-1.5'>
                     <span className='text-xs text-muted-foreground'>Stok Saat Ini:</span>
                     <Badge
-                      variant={currentStok <= (form.watch('stokMinimum') ?? 5) ? 'destructive' : 'secondary'}
+                      variant={currentStok <= (watchedStokMinimum ?? 5) ? 'destructive' : 'secondary'}
                       className='tabular-nums font-semibold'
                     >
                       {loadingStok ? 'Memuat...' : `${currentStok} unit`}

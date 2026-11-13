@@ -728,8 +728,8 @@ export function KartuStokPage() {
                 : 'text-rose-700 hover:text-rose-800 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40'
             }`}
           >
-            <Link to='/stok/masuk'>
-              Restock Menu Ini
+            <Link to='/menu'>
+              Restock di Katalog Menu
             </Link>
           </Button>
         </div>

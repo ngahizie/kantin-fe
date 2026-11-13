@@ -629,7 +629,7 @@ export function InventarisPage() {
                                 className='h-7 text-xs px-2 gap-1 text-primary hover:text-primary'
                                 asChild
                               >
-                                <Link to='/stok/masuk'>
+                                <Link to='/menu'>
                                   <PackagePlus className='h-3.5 w-3.5' />
                                   <span>Restock</span>
                                 </Link>

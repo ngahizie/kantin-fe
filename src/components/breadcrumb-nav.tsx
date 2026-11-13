@@ -43,7 +43,6 @@ const VALID_NAV_PATHS = new Set([
   '/kasir',
   '/menu',
   '/kategori',
-  '/stok/masuk',
   '/stok/opname',
   '/stok/kartu',
   '/stok/inventaris',
