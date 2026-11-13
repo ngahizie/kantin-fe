@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore } from '@/stores/useCartStore'
+import { useAuthStore } from '@/stores/auth-store'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { formatRupiah } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/validation-error'
@@ -112,8 +113,9 @@ export const KasirPosPage: React.FC = () => {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const { items, addItem, getItemQty, totalItems, totalHarga, clearCart } =
+  const { items, addItem, getItemQty, totalItems, totalHarga, clearCart, setCartOwner } =
     useCartStore()
+  const { auth } = useAuthStore()
   const { playSuccess, playError } = useBeepAudio()
 
   // Muat data sesi kasir harian & transaksi sesi
@@ -145,6 +147,12 @@ export const KasirPosPage: React.FC = () => {
       setSessionClosedOverride(currentSesi?.status === 'DITUTUP')
 
       if (currentSesi?.id) {
+        // Validasi dan set pemilik keranjang kasir (issue #143)
+        setCartOwner({
+          kasirId: auth.user?.userId,
+          sesiKasirId: currentSesi.id,
+          titikKasirId: activeTitikKasirId ?? undefined,
+        })
         const [rekap, trxList] = await Promise.all([
           kasirApi.getRekapSesi(currentSesi.id),
           kasirApi.getRiwayatTransaksiSesi(currentSesi.id),
@@ -157,10 +165,12 @@ export const KasirPosPage: React.FC = () => {
     } finally {
       setIsHistoryLoading(false)
     }
-  }, [activeTitikKasirId])
+  }, [activeTitikKasirId, auth.user, setCartOwner])
 
   const handleSessionClosed = useCallback(
     (closedSesi?: SesiKasirData) => {
+      // Kosongkan keranjang saat sesi kasir ditutup
+      clearCart()
       setSessionClosedOverride(true)
       if (closedSesi) {
         setSesi((prev) => ({
@@ -173,7 +183,7 @@ export const KasirPosPage: React.FC = () => {
       }
       void loadSesiData()
     },
-    [loadSesiData]
+    [clearCart, loadSesiData]
   )
 
   // Muat data katalog menu & kategori serta pengaturan operasional

@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
+import { useCartStore } from '@/stores/useCartStore'
 import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
@@ -22,6 +23,8 @@ export function SignOutDialog({
   const { auth } = useAuthStore()
 
   const handleSignOut = () => {
+    // Kosongkan keranjang belanja agar tidak terbawa ke akun kasir lain (issue #143)
+    useCartStore.getState().clearCart()
     auth.reset()
     // Arahkan langsung ke halaman sign-in tanpa menyimpan redirect path
     // untuk mencegah error 403 saat staf lain login dengan role berbeda
