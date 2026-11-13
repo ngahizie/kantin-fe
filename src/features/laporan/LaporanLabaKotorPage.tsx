@@ -14,6 +14,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -217,7 +218,7 @@ export function LaporanLabaKotorPage() {
           total: ringkasan.penjualanBersih ?? 0,
           modal: summaryTotalModal,
           laba: summaryLaba,
-          marginPersen: '',
+          marginPersen: `${summaryMargin}%`,
         },
       })
 
@@ -308,7 +309,7 @@ export function LaporanLabaKotorPage() {
           total: formatRupiah(ringkasan.penjualanBersih ?? 0),
           modal: formatRupiah(summaryTotalModal),
           laba: formatRupiah(summaryLaba),
-          marginPersen: '',
+          marginPersen: `${summaryMargin}%`,
         },
       })
 
@@ -561,6 +562,32 @@ export function LaporanLabaKotorPage() {
                       })
                     )}
                   </TableBody>
+                  {filteredItems.length > 0 && (
+                    <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                          Total / Rata-rata:
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                          {formatNumber(filteredItems.reduce((acc, item) => acc + (item.qty || 0), 0))}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                        <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                          {formatRupiah(ringkasan?.penjualanBersih ?? 0)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                          {formatRupiah(summaryTotalModal)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
+                          {formatRupiah(summaryLaba)}
+                        </TableCell>
+                        <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
+                          {summaryMargin}%
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  )}
                 </Table>
               </CardContent>
             </Card>

@@ -101,7 +101,7 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
 
     const screen = await render(<LaporanLabaKotorPage />)
 
-    await expect.element(screen.getByText('51.72%')).toBeInTheDocument()
+    await expect.element(screen.getByText('51.72%').first()).toBeInTheDocument()
     await expect.element(screen.getByText(/70\.000/).first()).toBeInTheDocument()
     await expect.element(screen.getByText(/75\.000/).first()).toBeInTheDocument()
     await expect
