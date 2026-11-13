@@ -195,6 +195,14 @@ export function KartuStokTimeline({
                       >
                         {meta.label}
                       </Badge>
+                      {item.menuNama && (
+                        <>
+                          <span className='text-muted-foreground/40 text-xs'>•</span>
+                          <span className='text-xs font-semibold text-foreground'>
+                            {item.menuNama}
+                          </span>
+                        </>
+                      )}
                       <span className='text-muted-foreground/40 text-xs'>•</span>
                       <span className='font-mono text-xs font-medium text-muted-foreground'>
                         #{item.referensiId}
