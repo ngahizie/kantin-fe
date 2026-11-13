@@ -369,7 +369,7 @@ export function LaporanRiwayatSiswaPage() {
       exportTableToPdf({
         filename: `Rekening_Koran_${profil.nis}_${profil.nama.replace(/\s+/g, '_')}`,
         title: `REKENING KORAN & HISTORI TRANSAKSI - ${profil.nama.toUpperCase()}`,
-        subtitle: `Laporan Transaksi & Mutasi Saldo Kartu Digital SKOOLIA`,
+        subtitle: `Laporan Transaksi & Mutasi Saldo Kartu Digital`,
         metadata: {
           'NIS': profil.nis,
           'Kelas': profil.kelas,

@@ -188,7 +188,7 @@ export function LaporanRekonsiliasiPage() {
       exportTableToExcel({
         filename: `Laporan_Rekonsiliasi_Harian_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Rekonsiliasi Harian',
-        title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO KANTIN SKOOLIA',
+        title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Periode Rekonsiliasi': dateFilterLabel,
@@ -271,7 +271,7 @@ export function LaporanRekonsiliasiPage() {
       exportTableToPdf({
         filename: `Laporan_Rekonsiliasi_Harian_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
-        subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+        subtitle: 'Sistem Kasir & Pembukuan',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Periode Rekonsiliasi': dateFilterLabel,

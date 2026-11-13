@@ -17,7 +17,7 @@
 import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
 import { useAuthStore } from '@/stores/auth-store'
-import { SCHOOL_LOGO_BASE64 } from '@/assets/schoolLogoBase64'
+import { SCHOOL_LOGO_BASE64, getSchoolLogoBase64 } from '@/assets/schoolLogoBase64'
 
 export interface ExcelColumn<T = any> {
   header: string
@@ -33,6 +33,7 @@ export interface ExportTableOptions<T = any> {
   title?: string
   schoolName?: string
   schoolAddress?: string
+  schoolLogoBase64?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: ExcelColumn<T>[]
   data: T[]
@@ -47,6 +48,7 @@ export interface SheetConfig<T = any> {
   title?: string
   schoolName?: string
   schoolAddress?: string
+  schoolLogoBase64?: string
   metadata?: Record<string, string | number | undefined | null>
   columns: ExcelColumn<T>[]
   data: T[]
@@ -58,6 +60,9 @@ export interface SheetConfig<T = any> {
 
 export interface MultiSheetExportOptions {
   filename: string
+  schoolName?: string
+  schoolAddress?: string
+  schoolLogoBase64?: string
   sheets: SheetConfig<any>[]
 }
 
@@ -207,16 +212,22 @@ export function shouldColumnBeSummed(key: string, header: string): boolean {
 /**
  * Mengambil informasi sekolah aktif dari auth store dengan fallback yang aman
  */
-function getSchoolProfile(): { name: string; address: string } {
+function getSchoolProfile(): { name: string; address: string; logoBase64: string } {
   try {
     const user = useAuthStore.getState().auth.user
+    const sekolahId = user?.sekolahId
     const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
-    const address = 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
-    return { name, address }
+    const address =
+      sekolahId === 10 || /10/.test(name)
+        ? 'Jl. Diponegoro No. 10, Lingkungan Pendidikan SKOOLIA'
+        : 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
+    const logoBase64 = getSchoolLogoBase64(sekolahId, name)
+    return { name, address, logoBase64 }
   } catch {
     return {
       name: 'SMP NEGERI 1 SKOOLIA',
       address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
+      logoBase64: SCHOOL_LOGO_BASE64,
     }
   }
 }
@@ -228,6 +239,24 @@ const COLOR_GRAY_TEXT = 'FF646464'
 const COLOR_BORDER = 'FFE0E0E0'
 const COLOR_HEADER_BORDER = 'FFD3D3D3'
 
+function cleanBase64ForExcel(raw: string): string {
+  const commaIdx = raw.indexOf(',')
+  return commaIdx >= 0 ? raw.substring(commaIdx + 1).trim() : raw.trim()
+}
+
+/**
+ * Menghapus embel-embel "Kantin Skoolia" dari judul, subjudul, atau catatan
+ */
+export function stripKantinSkoolia(text?: string | null): string {
+  if (!text) return ''
+  return text
+    .replace(/\s*[-–—:]?\s*kantin\s+skoolia\b/gi, '')
+    .replace(/\bkantin\s+skoolia\s*[-–—:]?\s*/gi, '')
+    .replace(/^[-–—:\s]+|[-–—:\s]+$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 /**
  * Membangun worksheet pada workbook ExcelJS sesuai format template docs/Ekspor excel.xlsx
  */
@@ -237,6 +266,7 @@ function populateWorksheet<T>(
     title?: string
     schoolName?: string
     schoolAddress?: string
+    schoolLogoBase64?: string
     metadata?: Record<string, string | number | undefined | null>
     columns: ExcelColumn<T>[]
     data: T[]
@@ -247,9 +277,12 @@ function populateWorksheet<T>(
   }
 ) {
   const schoolProfile = getSchoolProfile()
-  const title = config.title || 'LAPORAN KANTIN CASHLESS'
+  const rawTitle = config.title || 'LAPORAN KANTIN'
+  const title = stripKantinSkoolia(rawTitle) || 'LAPORAN KANTIN'
   const schoolName = (config.schoolName || schoolProfile.name).toUpperCase()
-  const schoolAddress = config.schoolAddress || schoolProfile.address
+  const schoolAddress = stripKantinSkoolia(config.schoolAddress || schoolProfile.address)
+  const activeLogoBase64 =
+    config.schoolLogoBase64 || schoolProfile.logoBase64 || SCHOOL_LOGO_BASE64
 
   const numCols = config.columns.length
   // Tabel dimulai dari kolom B (indeks kolom 2), kolom A (indeks 1) adalah padding
@@ -290,10 +323,11 @@ function populateWorksheet<T>(
     ws.getColumn(colNumber).width = calculatedWidth
   })
 
-  // Tambahkan Logo Sekolah Resmi dari template docs/Ekspor excel.xlsx
+  // Tambahkan Logo Sekolah Resmi dari profil sekolah aktif
   try {
+    const cleanLogo = cleanBase64ForExcel(activeLogoBase64)
     const logoId = ws.workbook.addImage({
-      base64: SCHOOL_LOGO_BASE64,
+      base64: cleanLogo,
       extension: 'png',
     })
 
@@ -549,7 +583,7 @@ function populateWorksheet<T>(
     const footnoteRowNum = currentRowNum + 1
     ws.mergeCells(footnoteRowNum, startCol, footnoteRowNum, endCol)
     const cell = ws.getCell(footnoteRowNum, startCol)
-    cell.value = config.footnote
+    cell.value = stripKantinSkoolia(config.footnote)
     cell.font = { name: 'Calibri', size: 8, bold: true, italic: true, color: { argb: COLOR_GRAY_TEXT } }
     cell.alignment = { horizontal: 'left', vertical: 'middle' }
     ws.getRow(footnoteRowNum).height = 16
@@ -628,8 +662,8 @@ async function triggerDownload(workbook: ExcelJS.Workbook, fullFilename: string)
  */
 export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): ExportExcelResult {
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'SKOOLIA Kantin'
-  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.creator = 'Sistem Kasir Sekolah'
+  wb.lastModifiedBy = 'Sistem Kasir Sekolah'
   wb.created = new Date()
   wb.modified = new Date()
 
@@ -640,6 +674,7 @@ export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): Exp
     title: options.title,
     schoolName: options.schoolName,
     schoolAddress: options.schoolAddress,
+    schoolLogoBase64: options.schoolLogoBase64,
     metadata: options.metadata,
     columns: options.columns,
     data: options.data,
@@ -665,8 +700,8 @@ export function exportTableToExcel<T = any>(options: ExportTableOptions<T>): Exp
  */
 export function exportMultiSheetExcel(options: MultiSheetExportOptions): ExportExcelResult {
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'SKOOLIA Kantin'
-  wb.lastModifiedBy = 'SKOOLIA Kantin'
+  wb.creator = 'Sistem Kasir Sekolah'
+  wb.lastModifiedBy = 'Sistem Kasir Sekolah'
   wb.created = new Date()
   wb.modified = new Date()
 
@@ -675,8 +710,9 @@ export function exportMultiSheetExcel(options: MultiSheetExportOptions): ExportE
     const ws = wb.addWorksheet(sheetName)
     populateWorksheet(ws, {
       title: sheet.title,
-      schoolName: sheet.schoolName,
-      schoolAddress: sheet.schoolAddress,
+      schoolName: sheet.schoolName || options.schoolName,
+      schoolAddress: sheet.schoolAddress || options.schoolAddress,
+      schoolLogoBase64: sheet.schoolLogoBase64 || options.schoolLogoBase64,
       metadata: sheet.metadata,
       columns: sheet.columns,
       data: sheet.data,

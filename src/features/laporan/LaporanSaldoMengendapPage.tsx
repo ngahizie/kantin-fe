@@ -26,6 +26,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -154,7 +155,7 @@ export function LaporanSaldoMengendapPage() {
             {
               header: 'Limit Harian (Rp)',
               key: 'limitHarian',
-              formatter: (v: unknown) => (Number(v) > 0 ? Number(v) : ''),
+              formatter: (v: unknown) => (Number(v) > 0 ? Number(v) : '-'),
               width: 16,
             },
             { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
@@ -299,7 +300,7 @@ export function LaporanSaldoMengendapPage() {
       exportMultiSectionPdf({
         filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN TOTAL SALDO SISWA & KEWAJIBAN DANA TITIPAN',
-        subtitle: 'Audit Akuntabilitas Dana Titipan Siswa Kantin SKOOLIA',
+        subtitle: 'Audit Akuntabilitas Dana Titipan Siswa',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
@@ -488,7 +489,7 @@ export function LaporanSaldoMengendapPage() {
                               {formatRupiah(siswa.saldo)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
-                              {siswa.limitHarian > 0 ? formatRupiah(siswa.limitHarian) : 'Tanpa Limit'}
+                              {siswa.limitHarian > 0 ? formatRupiah(siswa.limitHarian) : '-'}
                             </TableCell>
                             <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
                               {formatRupiah(siswa.belanjaHariIni)}
@@ -537,6 +538,25 @@ export function LaporanSaldoMengendapPage() {
                         ))
                       )}
                     </TableBody>
+                    {siswaList.length > 0 && (
+                      <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                            Total Saldo Terdaftar:
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
+                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.saldo || 0), 0))}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                            -
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.belanjaHariIni || 0), 0))}
+                          </TableCell>
+                          <TableCell colSpan={3} />
+                        </TableRow>
+                      </TableFooter>
+                    )}
                   </Table>
                 </CardContent>
               </Card>

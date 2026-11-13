@@ -373,7 +373,7 @@ export function SetoranKasPage() {
 
       exportTableToPdf({
         filename: `Rekap_Setoran_Kas_TU_${fileSlug}`,
-        title: 'REKAPITULASI & SETORAN KAS TU KANTIN SKOOLIA',
+        title: 'REKAPITULASI & SETORAN KAS TU',
         subtitle: `Periode: ${dateFilterLabel}`,
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),

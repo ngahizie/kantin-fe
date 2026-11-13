@@ -3,6 +3,7 @@ import {
   exportTableToPdf,
   exportMultiSectionPdf,
   sanitizePdfFilename,
+  stripKantinSkoolia,
 } from './pdfExport'
 
 describe('pdfExport utility', () => {
@@ -112,5 +113,28 @@ describe('pdfExport utility', () => {
     expect(result.filename).toBe('laporan-kosong.pdf')
     expect(result.doc.getNumberOfPages()).toBe(1)
     expect(result.buffer?.byteLength).toBeGreaterThan(0)
+  })
+
+  it('menghapus embel-embel Kantin Skoolia secara otomatis pada judul PDF', () => {
+    expect(stripKantinSkoolia('LAPORAN ANALISIS LABA KOTOR KANTIN SKOOLIA')).toBe(
+      'LAPORAN ANALISIS LABA KOTOR'
+    )
+    expect(stripKantinSkoolia('REKAPITULASI & SETORAN KAS TU KANTIN SKOOLIA')).toBe(
+      'REKAPITULASI & SETORAN KAS TU'
+    )
+    expect(stripKantinSkoolia('Audit Akuntabilitas Dana Titipan Siswa Kantin SKOOLIA')).toBe(
+      'Audit Akuntabilitas Dana Titipan Siswa'
+    )
+
+    const result = exportTableToPdf({
+      filename: 'test-strip-pdf',
+      title: 'LAPORAN REKONSILIASI KANTIN SKOOLIA',
+      subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+      columns: [{ header: 'No', key: 'id' }],
+      data: [{ id: 1 }],
+    })
+
+    expect(result).toBeDefined()
+    expect(result.doc).toBeDefined()
   })
 })

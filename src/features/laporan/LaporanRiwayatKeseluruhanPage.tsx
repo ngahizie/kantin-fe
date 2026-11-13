@@ -32,6 +32,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -147,6 +148,7 @@ export function LaporanRiwayatKeseluruhanPage() {
 
     try {
       const totalNominal = filteredTransaksi.reduce((acc, t) => acc + (Number(t.nominal) || 0), 0)
+      const totalSisaSaldo = filteredTransaksi.reduce((acc, t) => acc + (Number(t.saldoSetelah) || 0), 0)
 
       exportTableToExcel({
         filename: `Riwayat_Transaksi_Keseluruhan_${new Date().toISOString().split('T')[0]}`,
@@ -205,7 +207,7 @@ export function LaporanRiwayatKeseluruhanPage() {
           siswaKelas: '',
           jenis: '',
           nominal: totalNominal,
-          saldoSetelah: '',
+          saldoSetelah: totalSisaSaldo,
           titikKasir: '',
           petugas: '',
           items: '',
@@ -228,11 +230,12 @@ export function LaporanRiwayatKeseluruhanPage() {
 
     try {
       const totalNominal = filteredTransaksi.reduce((acc, t) => acc + (Number(t.nominal) || 0), 0)
+      const totalSisaSaldo = filteredTransaksi.reduce((acc, t) => acc + (Number(t.saldoSetelah) || 0), 0)
 
       exportTableToPdf({
         filename: `Riwayat_Transaksi_Keseluruhan_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN',
-        subtitle: 'Sistem Kasir & Pembukuan Kantin SKOOLIA',
+        subtitle: 'Sistem Kasir & Pembukuan',
         orientation: 'landscape',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
@@ -266,6 +269,7 @@ export function LaporanRiwayatKeseluruhanPage() {
             align: 'right',
           },
           { header: 'Titik Kasir', key: 'titikKasir', align: 'left' },
+          { header: 'Petugas', key: 'petugas', align: 'left' },
           {
             header: 'Rincian Belanja',
             key: 'items',
@@ -286,8 +290,9 @@ export function LaporanRiwayatKeseluruhanPage() {
           siswaKelas: '',
           jenis: '',
           nominal: formatRupiah(totalNominal),
-          saldoSetelah: '',
+          saldoSetelah: formatRupiah(totalSisaSaldo),
           titikKasir: '',
+          petugas: '',
           items: '',
         },
       })
@@ -769,6 +774,22 @@ export function LaporanRiwayatKeseluruhanPage() {
                       ))
                     )}
                   </TableBody>
+                  {filteredTransaksi.length > 0 && (
+                    <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                          Total Riwayat Terfilter:
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                          {formatRupiah(filteredTransaksi.reduce((acc, t) => acc + (Number(t.nominal) || 0), 0))}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                          {formatRupiah(filteredTransaksi.reduce((acc, t) => acc + (Number(t.saldoSetelah) || 0), 0))}
+                        </TableCell>
+                        <TableCell colSpan={3} />
+                      </TableRow>
+                    </TableFooter>
+                  )}
                 </Table>
               </CardContent>
             </Card>

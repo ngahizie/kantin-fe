@@ -24,6 +24,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -226,7 +227,7 @@ export function LaporanPenjualanPage() {
         sheets: [
           {
             sheetName: 'Penjualan per Item',
-            title: 'LAPORAN PENJUALAN PER ITEM MENU KANTIN SKOOLIA',
+            title: 'LAPORAN PENJUALAN PER ITEM MENU',
             metadata: {
               'Tanggal Cetak': new Date().toLocaleString('id-ID'),
               'Periode Laporan': dateFilterLabel,
@@ -263,7 +264,7 @@ export function LaporanPenjualanPage() {
               total: summaryPenjualanBersih,
               modal: summaryTotalModal,
               laba: summaryLaba,
-              marginPersen: '',
+              marginPersen: `${summaryMargin}%`,
             },
           },
           {
@@ -293,7 +294,7 @@ export function LaporanPenjualanPage() {
               total: summaryPenjualanBersih,
               modal: summaryTotalModal,
               laba: summaryLaba,
-              marginPersen: '',
+              marginPersen: `${summaryMargin}%`,
             },
           },
           {
@@ -364,7 +365,7 @@ export function LaporanPenjualanPage() {
 
       exportMultiSectionPdf({
         filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN PENJUALAN & LABA KOTOR KANTIN SKOOLIA',
+        title: 'LAPORAN PENJUALAN & LABA KOTOR',
         subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
@@ -424,7 +425,7 @@ export function LaporanPenjualanPage() {
               total: formatRupiah(summaryPenjualanBersih),
               modal: formatRupiah(summaryTotalModal),
               laba: formatRupiah(summaryLaba),
-              marginPersen: '',
+              marginPersen: `${summaryMargin}%`,
             },
           },
           {
@@ -464,7 +465,7 @@ export function LaporanPenjualanPage() {
               total: formatRupiah(summaryPenjualanBersih),
               modal: formatRupiah(summaryTotalModal),
               laba: formatRupiah(summaryLaba),
-              marginPersen: '',
+              marginPersen: `${summaryMargin}%`,
             },
           },
           {
@@ -780,6 +781,32 @@ export function LaporanPenjualanPage() {
                         })
                       )}
                     </TableBody>
+                    {filteredItems.length > 0 && (
+                      <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                            Total / Rata-rata:
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatNumber(filteredItems.reduce((acc, i) => acc + (i.qty || 0), 0))}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                          <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(summaryPenjualanBersih)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(summaryTotalModal)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
+                            {formatRupiah(summaryLaba)}
+                          </TableCell>
+                          <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
+                            {summaryMargin}%
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    )}
                   </Table>
                 </CardContent>
               </Card>
@@ -861,6 +888,30 @@ export function LaporanPenjualanPage() {
                         ))
                       )}
                     </TableBody>
+                    {kategoris.length > 0 && (
+                      <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                            Total / Rata-rata:
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatNumber(kategoris.reduce((acc, k) => acc + (k.qty || 0), 0))}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(summaryPenjualanBersih)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(summaryTotalModal)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
+                            {formatRupiah(summaryLaba)}
+                          </TableCell>
+                          <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
+                            {summaryMargin}%
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    )}
                   </Table>
                 </CardContent>
               </Card>
@@ -934,6 +985,27 @@ export function LaporanPenjualanPage() {
                         ))
                       )}
                     </TableBody>
+                    {filteredKasirs.length > 0 && (
+                      <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                            Total Penjualan Kasir:
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatNumber(filteredKasirs.reduce((acc, k) => acc + (k.jumlahTransaksi || 0), 0))} trx
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                            {formatRupiah(filteredKasirs.reduce((acc, k) => acc + (k.penjualanBruto || 0), 0))}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs text-amber-600 dark:text-amber-400 tabular-nums">
+                            {formatRupiah(filteredKasirs.reduce((acc, k) => acc + (k.nilaiVoid || 0), 0))}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
+                            {formatRupiah(filteredKasirs.reduce((acc, k) => acc + (k.penjualanBersih || 0), 0))}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    )}
                   </Table>
                 </CardContent>
               </Card>
