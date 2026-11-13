@@ -176,7 +176,7 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
         { header: 'Nama Siswa', key: 'nama', width: 25 },
         { header: 'Kelas', key: 'kelas', width: 12 },
         { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
-        { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
+        { header: 'Saldo Terkini (Rp)', key: 'saldo', width: 18 },
         { header: 'Limit Harian (Rp)', key: 'limitHarian', width: 16 },
         { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
         {
@@ -194,7 +194,7 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
         kelas: '',
         parentName: '',
         saldo: 125000,
-        limitHarian: 50000,
+        limitHarian: '',
         belanjaHariIni: 40000,
         isBlocked: '',
       },
@@ -211,7 +211,7 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
     expect(ws?.getCell('C6').value).toBe('Nama Siswa')
     expect(ws?.getCell('D6').value).toBe('Kelas')
     expect(ws?.getCell('E6').value).toBe('Nama Orang Tua')
-    expect(ws?.getCell('F6').value).toBe('Saldo Berjalan (Rp)')
+    expect(ws?.getCell('F6').value).toBe('Saldo Terkini (Rp)')
     expect(ws?.getCell('G6').value).toBe('Limit Harian (Rp)')
     expect(ws?.getCell('H6').value).toBe('Belanja Hari Ini (Rp)')
     expect(ws?.getCell('I6').value).toBe('Status Kartu')
@@ -222,15 +222,16 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
 
     // Verifikasi Footer Summary Row (Row 9)
     // Non-angka kosong:
+    // Non-angka dan limit harian dikosongkan:
     expect(ws?.getCell('B9').value).toBe('')
     expect(ws?.getCell('C9').value).toBe('')
     expect(ws?.getCell('D9').value).toBe('')
     expect(ws?.getCell('E9').value).toBe('')
+    expect(ws?.getCell('G9').value).toBe('')
     expect(ws?.getCell('I9').value).toBe('')
 
-    // Angka memiliki total:
+    // Angka saldo & belanja memiliki total:
     expect(ws?.getCell('F9').value).toBe(125000)
-    expect(ws?.getCell('G9').value).toBe(50000)
     expect(ws?.getCell('H9').value).toBe(40000)
 
     // Background abu-abu FFD9D9D9

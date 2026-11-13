@@ -149,7 +149,7 @@ export function LaporanSaldoMengendapPage() {
             { header: 'Nama Siswa', key: 'nama', width: 25 },
             { header: 'Kelas', key: 'kelas', width: 12 },
             { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
-            { header: 'Saldo Berjalan (Rp)', key: 'saldo', width: 18 },
+            { header: 'Saldo Terkini (Rp)', key: 'saldo', width: 18 },
             {
               header: 'Limit Harian (Rp)',
               key: 'limitHarian',
@@ -237,7 +237,7 @@ export function LaporanSaldoMengendapPage() {
             { header: 'Kelas', key: 'kelas' },
             { header: 'Nama Orang Tua', key: 'parentName' },
             {
-              header: 'Saldo Berjalan',
+              header: 'Saldo Terkini',
               key: 'saldo',
               formatter: (v: unknown) => formatRupiah(Number(v)),
             },
@@ -361,7 +361,7 @@ export function LaporanSaldoMengendapPage() {
                   {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Total siswa yang memiliki saldo berjalan
+                  Total siswa yang memiliki saldo terkini
                 </p>
               </CardContent>
             </Card>
@@ -415,7 +415,7 @@ export function LaporanSaldoMengendapPage() {
                     Rincian Dana Titipan per Siswa
                   </CardTitle>
                   <CardDescription>
-                    Saldo berjalan setiap siswa yang dititipkan oleh orang tua murid dan dapat dicairkan saat lulus/keluar.
+                    Saldo terkini setiap siswa yang dititipkan oleh orang tua murid dan dapat dicairkan saat lulus/keluar.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -425,7 +425,7 @@ export function LaporanSaldoMengendapPage() {
                         <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siswa</TableHead>
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kelas</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Berjalan</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Terkini</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Limit Harian</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Belanja Hari Ini</TableHead>
                         <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Kartu</TableHead>
