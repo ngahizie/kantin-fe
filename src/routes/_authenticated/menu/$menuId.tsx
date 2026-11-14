@@ -13,3 +13,4 @@ export const Route = createFileRoute('/_authenticated/menu/$menuId')({
   },
   component: MenuDetailPage,
 })
+

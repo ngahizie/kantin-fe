@@ -551,3 +551,4 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
     </>
   )
 }
+
