@@ -5,6 +5,8 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { Link, useSearch } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -35,6 +37,15 @@ export function KartuStokPage() {
 
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const PAGE_SIZE = 10
+  const totalPages = Math.max(1, Math.ceil(riwayat.length / PAGE_SIZE))
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+  const paginatedRiwayat = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE
+    return riwayat.slice(start, start + PAGE_SIZE)
+  }, [riwayat, safeCurrentPage])
 
   // Muat data mutasi stok seluruh menu
   useEffect(() => {
@@ -383,7 +394,8 @@ export function KartuStokPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      riwayat.map((item, idx) => {
+                      paginatedRiwayat.map((item, idx) => {
+                        const itemIndex = (safeCurrentPage - 1) * PAGE_SIZE + idx + 1
                         const isMasuk = item.arah === 'MASUK'
                         const aktorDisplay =
                           item.aktorNama ||
@@ -392,7 +404,7 @@ export function KartuStokPage() {
                         return (
                           <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
                             <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
-                              {idx + 1}
+                              {itemIndex}
                             </TableCell>
                             <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
                               {formatDateTime(item.waktu)}
@@ -439,6 +451,50 @@ export function KartuStokPage() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Pagination Footer */}
+              {!isLoadingRiwayat && riwayat.length > 0 && (
+                <div className='p-3.5 border-t border-border flex flex-wrap items-center justify-between gap-2 bg-muted/20'>
+                  <div className='text-xs font-medium text-muted-foreground tabular-nums'>
+                    Menampilkan{' '}
+                    <span className='font-semibold text-foreground'>
+                      {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
+                      {Math.min(safeCurrentPage * PAGE_SIZE, riwayat.length)}
+                    </span>{' '}
+                    dari{' '}
+                    <span className='font-semibold text-foreground'>{riwayat.length}</span>{' '}
+                    transaksi mutasi
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-xs font-medium text-muted-foreground tabular-nums'>
+                      Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
+                      <span className='font-semibold text-foreground'>{totalPages}</span>
+                    </span>
+                    <div className='flex items-center gap-1.5'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage === 1}
+                        className='gap-1 h-8 text-xs'
+                      >
+                        <ChevronLeft className='size-3.5' />
+                        Sebelumnya
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage === totalPages}
+                        className='gap-1 h-8 text-xs'
+                      >
+                        Selanjutnya
+                        <ChevronRight className='size-3.5' />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
