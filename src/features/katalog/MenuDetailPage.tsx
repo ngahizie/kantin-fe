@@ -82,7 +82,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
   const [loadingRiwayat, setLoadingRiwayat] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
-  const PAGE_SIZE = 5
+  const PAGE_SIZE = 10
   const totalPages = Math.max(1, Math.ceil(riwayatStok.length / PAGE_SIZE))
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
   const paginatedRiwayat = useMemo(() => {
