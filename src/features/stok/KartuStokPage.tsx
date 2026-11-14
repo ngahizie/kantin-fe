@@ -100,7 +100,7 @@ export function KartuStokPage() {
       'Arah',
       'Qty',
       'Saldo Akhir',
-      'HPP Snapshot (Rp)',
+      'HPP Satuan (Rp)',
       'Harga Beli Satuan (Rp)',
       'Total Nilai (Rp)',
       'Aktor',
@@ -180,7 +180,7 @@ export function KartuStokPage() {
           { header: 'Arah', key: 'arah' },
           { header: 'Qty', key: 'qty' },
           { header: 'Saldo Akhir', key: 'stokSetelah' },
-          { header: 'HPP Unit', key: 'hpp' },
+          { header: 'HPP Satuan', key: 'hpp' },
           { header: 'Aktor', key: 'aktor' },
           { header: 'Alasan / Keterangan', key: 'alasan' },
         ],
@@ -354,7 +354,7 @@ export function KartuStokPage() {
                         Saldo Akhir
                       </TableHead>
                       <TableHead className='text-right w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                        HPP Snapshot
+                        HPP Satuan
                       </TableHead>
                       <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aktor</TableHead>
                       <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Alasan / Keterangan</TableHead>
