@@ -80,6 +80,7 @@ export interface BarangMasukSingleRequest {
   qty: number
   hargaBeliPerUnit: number
   referensiId: string
+  alasan?: string
 }
 
 export interface BarangMasukPembalikRequest {

@@ -70,11 +70,6 @@ export const sidebarData: SidebarData = {
           roles: ['pengelola', 'bendahara'],
           items: [
             {
-              title: 'Stok Opname & Rusak',
-              url: '/stok/opname',
-              roles: ['pengelola'],
-            },
-            {
               title: 'Mutasi Stok',
               url: '/stok/kartu',
               roles: ['pengelola', 'bendahara'],
