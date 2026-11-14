@@ -94,6 +94,7 @@ export function KartuStokPage() {
     const headers = [
       'No.',
       'Waktu',
+      'Nomor Referensi',
       'Menu',
       'Jenis Mutasi',
       'Arah',
@@ -109,6 +110,7 @@ export function KartuStokPage() {
     const rows = riwayat.map((r, idx) => [
       idx + 1,
       `"${r.waktu}"`,
+      `"${r.referensiId}"`,
       `"${r.menuNama || 'Menu #' + r.menuId}"`,
       r.jenis,
       r.arah,
@@ -172,6 +174,7 @@ export function KartuStokPage() {
         },
         columns: [
           { header: 'Waktu Mutasi', key: 'waktu' },
+          { header: 'No. Referensi', key: 'referensiId' },
           { header: 'Menu / Produk', key: 'menu' },
           { header: 'Jenis Mutasi', key: 'jenis' },
           { header: 'Arah', key: 'arah' },
@@ -338,6 +341,7 @@ export function KartuStokPage() {
                     <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
                       <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
                       <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
+                      <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
                       <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu / Produk</TableHead>
                       <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
                       <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>
@@ -360,7 +364,7 @@ export function KartuStokPage() {
                     {isLoadingRiwayat ? (
                       <TableRow className='hover:bg-transparent border-b-0'>
                         <TableCell
-                          colSpan={10}
+                          colSpan={11}
                           className='h-32 text-center text-muted-foreground'
                         >
                           <div className='flex flex-col items-center justify-center gap-2'>
@@ -372,7 +376,7 @@ export function KartuStokPage() {
                     ) : riwayat.length === 0 ? (
                       <TableRow className='hover:bg-transparent border-b-0'>
                         <TableCell
-                          colSpan={10}
+                          colSpan={11}
                           className='h-32 text-center text-xs text-muted-foreground'
                         >
                           Tidak ada pergerakan stok tercatat.
@@ -392,6 +396,9 @@ export function KartuStokPage() {
                             </TableCell>
                             <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
                               {formatDateTime(item.waktu)}
+                            </TableCell>
+                            <TableCell className='font-mono text-xs font-medium'>
+                              {item.referensiId}
                             </TableCell>
                             <TableCell className='text-xs font-semibold text-foreground'>
                               {item.menuNama || `Menu #${item.menuId}`}
