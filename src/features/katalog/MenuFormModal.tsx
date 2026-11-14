@@ -65,12 +65,8 @@ const SATUAN_OPTIONS: { value: SatuanType; label: string }[] = [
   { value: 'BOTOL', label: 'Botol / Gelas Kemasan' },
 ]
 
-function generateReferensiId(prefix: string, label?: string): string {
+function generateReferensiId(prefix: string): string {
   const ts = Date.now()
-  if (label) {
-    const clean = label.trim().replace(/[^a-zA-Z0-9]/g, '-').slice(0, 25)
-    return `${prefix}-${ts}-${clean}`.slice(0, 60)
-  }
   return `${prefix}-${ts}`.slice(0, 60)
 }
 
@@ -288,12 +284,13 @@ export function MenuFormModal({
 
         // Jalankan mutasi stok jika ada aksi penyesuaian yang dipilih
         if (aksiStok === 'MASUK') {
-          const referensiId = generateReferensiId('BM', alasanMasuk)
+          const referensiId = generateReferensiId('BM')
           await stokApi.catatBarangMasuk({
             menuId: selectedMenu.id,
             qty: Number(qtyMasuk),
             hargaBeliPerUnit: Number(hargaBeliMasuk) || 0,
             referensiId,
+            alasan: alasanMasuk.trim() || undefined,
           })
           toast.success(`Menu "${payload.nama}" diperbarui & stok bertambah +${qtyMasuk}`)
         } else if (aksiStok === 'OPNAME') {
