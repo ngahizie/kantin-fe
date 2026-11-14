@@ -305,8 +305,8 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
             {/* Info Menu Grid */}
             <div className='grid gap-6 md:grid-cols-[260px_1fr]'>
               {/* Foto Produk */}
-              <Card className='mx-auto w-full max-w-[260px] md:mx-0 md:max-w-none h-fit'>
-                <CardContent className='p-5'>
+              <Card className='mx-auto w-full max-w-[260px] md:mx-0 md:max-w-none h-full flex flex-col justify-center'>
+                <CardContent className='p-5 flex items-center justify-center'>
                   <div className='relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-muted/40'>
                     {fotoSrc ? (
                       <img
@@ -325,9 +325,8 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
               </Card>
 
               {/* Rincian Produk */}
-              <div className='space-y-6'>
-                <Card>
-                  <CardHeader className='pb-2'>
+              <Card className='h-full'>
+                <CardHeader className='pb-2'>
                     <div className='flex flex-wrap items-center gap-2.5'>
                       <CardTitle className='text-xl font-bold tracking-tight'>
                         {menu.nama}
@@ -433,7 +432,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                   </CardContent>
                 </Card>
               </div>
-            </div>
 
             {/* Card Riwayat Mutasi Stok Menu Ini */}
             <Card className='overflow-hidden'>
