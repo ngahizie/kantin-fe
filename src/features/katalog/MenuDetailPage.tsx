@@ -453,7 +453,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                       <TableRow className='bg-muted/50 hover:bg-muted/50 border-b border-border'>
                         <TableHead className='w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
                         <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
-                        <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
                         <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
                         <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>Masuk</TableHead>
                         <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400'>Keluar</TableHead>
@@ -465,7 +464,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                     <TableBody>
                       {loadingRiwayat ? (
                         <TableRow className='hover:bg-transparent'>
-                          <TableCell colSpan={9} className='h-24 text-center'>
+                          <TableCell colSpan={8} className='h-24 text-center'>
                             <div className='flex items-center justify-center gap-2 text-xs text-muted-foreground'>
                               <Loader2 className='size-4 animate-spin' />
                               <span>Memuat riwayat mutasi stok...</span>
@@ -474,7 +473,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                         </TableRow>
                       ) : riwayatStok.length === 0 ? (
                         <TableRow className='hover:bg-transparent'>
-                          <TableCell colSpan={9} className='h-24 text-center text-xs text-muted-foreground'>
+                          <TableCell colSpan={8} className='h-24 text-center text-xs text-muted-foreground'>
                             Belum ada riwayat pergerakan stok untuk menu ini.
                           </TableCell>
                         </TableRow>
@@ -492,9 +491,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                               </TableCell>
                               <TableCell className='text-xs whitespace-nowrap text-muted-foreground tabular-nums'>
                                 {formatDateTime(item.waktu)}
-                              </TableCell>
-                              <TableCell className='font-mono text-xs font-medium'>
-                                {item.referensiId}
                               </TableCell>
                               <TableCell>
                                 <Badge
