@@ -430,11 +430,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                         </div>
                       </div>
                     </div>
-
-                    <p className='rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground'>
-                      Data diambil langsung dari server saat halaman dibuka. Stok
-                      berubah mengikuti transaksi kasir dan barang masuk.
-                    </p>
                   </CardContent>
                 </Card>
               </div>
