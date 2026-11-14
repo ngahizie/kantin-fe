@@ -304,9 +304,9 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
           <div className='space-y-6'>
             {/* Info Menu Grid */}
             <div className='grid gap-6 md:grid-cols-[260px_1fr]'>
-              {/* Foto & status */}
-              <Card className='mx-auto w-full max-w-[260px] md:mx-0 md:max-w-none'>
-                <CardContent className='space-y-4 p-5'>
+              {/* Foto Produk */}
+              <Card className='mx-auto w-full max-w-[260px] md:mx-0 md:max-w-none h-fit'>
+                <CardContent className='p-5'>
                   <div className='relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-muted/40'>
                     {fotoSrc ? (
                       <img
@@ -321,39 +321,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                       </div>
                     )}
                   </div>
-                  <div className='flex flex-wrap items-center gap-2'>
-                    {menu.aktif ? (
-                      <Badge
-                        variant='outline'
-                        className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                      >
-                        Aktif
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant='outline'
-                        className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'
-                      >
-                        Nonaktif
-                      </Badge>
-                    )}
-                    {habis && (
-                      <Badge
-                        variant='outline'
-                        className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
-                      >
-                        Habis
-                      </Badge>
-                    )}
-                    {menipis && (
-                      <Badge
-                        variant='outline'
-                        className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
-                      >
-                        Stok menipis
-                      </Badge>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
 
@@ -361,9 +328,42 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
               <div className='space-y-6'>
                 <Card>
                   <CardHeader className='pb-2'>
-                    <CardTitle className='text-xl font-bold tracking-tight'>
-                      {menu.nama}
-                    </CardTitle>
+                    <div className='flex flex-wrap items-center gap-2.5'>
+                      <CardTitle className='text-xl font-bold tracking-tight'>
+                        {menu.nama}
+                      </CardTitle>
+                      {menu.aktif ? (
+                        <Badge
+                          variant='outline'
+                          className='rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        >
+                          Aktif
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant='outline'
+                          className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground'
+                        >
+                          Nonaktif
+                        </Badge>
+                      )}
+                      {habis && (
+                        <Badge
+                          variant='outline'
+                          className='rounded-full border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
+                        >
+                          Habis
+                        </Badge>
+                      )}
+                      {menipis && (
+                        <Badge
+                          variant='outline'
+                          className='rounded-full border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                        >
+                          Stok menipis
+                        </Badge>
+                      )}
+                    </div>
                     {menu.kodeBarcode && (
                       <div className='mt-1 flex items-center gap-1.5 text-xs text-muted-foreground font-mono tabular-nums'>
                         <Barcode className='size-3.5 shrink-0 opacity-70' />
