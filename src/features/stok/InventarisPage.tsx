@@ -11,6 +11,8 @@ import {
   XCircle,
   Loader2,
   Barcode,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -191,6 +193,17 @@ export function InventarisPage() {
 
     return { totalNilai, totalUnit }
   }, [filteredAndSortedList])
+
+  // Pagination (10 item per halaman)
+  const PAGE_SIZE = 10
+  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / PAGE_SIZE))
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+
+  const paginatedList = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE
+    return filteredAndSortedList.slice(start, start + PAGE_SIZE)
+  }, [filteredAndSortedList, safeCurrentPage])
 
   // Export to CSV
   const handleExportCsv = () => {
@@ -470,7 +483,10 @@ export function InventarisPage() {
         <TableToolbar
           searchPlaceholder='Cari nama menu / kode barcode...'
           searchValue={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={(val) => {
+            setSearchQuery(val)
+            setCurrentPage(1)
+          }}
           filters={[
             {
               title: 'Kategori',
@@ -479,7 +495,10 @@ export function InventarisPage() {
                 value: String(k.id),
               })),
               selectedValues: selectedKategoriId !== 'ALL' ? [selectedKategoriId] : [],
-              onSelect: (vals) => setSelectedKategoriId(vals[0] || 'ALL'),
+              onSelect: (vals) => {
+                setSelectedKategoriId(vals[0] || 'ALL')
+                setCurrentPage(1)
+              },
               isSingleSelect: true,
             },
             {
@@ -490,7 +509,10 @@ export function InventarisPage() {
                 { label: 'Stok Habis (0)', value: 'HABIS' },
               ],
               selectedValues: selectedStatus !== 'ALL' ? [selectedStatus] : [],
-              onSelect: (vals) => setSelectedStatus((vals[0] as 'ALL' | 'AMAN' | 'MENIPIS' | 'HABIS') || 'ALL'),
+              onSelect: (vals) => {
+                setSelectedStatus((vals[0] as 'ALL' | 'AMAN' | 'MENIPIS' | 'HABIS') || 'ALL')
+                setCurrentPage(1)
+              },
               isSingleSelect: true,
             },
             {
@@ -503,7 +525,10 @@ export function InventarisPage() {
                 { label: 'Nama Menu (A-Z)', value: 'NAMA_ASC' },
               ],
               selectedValues: sortBy !== 'NILAI_DESC' ? [sortBy] : [],
-              onSelect: (vals) => setSortBy((vals[0] as typeof sortBy) || 'NILAI_DESC'),
+              onSelect: (vals) => {
+                setSortBy((vals[0] as typeof sortBy) || 'NILAI_DESC')
+                setCurrentPage(1)
+              },
               isSingleSelect: true,
             },
           ]}
@@ -563,7 +588,8 @@ export function InventarisPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredAndSortedList.map((item, idx) => {
+                    paginatedList.map((item, idx) => {
+                      const itemIndex = (safeCurrentPage - 1) * PAGE_SIZE + idx + 1
                       const stok = item.stokBerjalan ?? item.stok ?? 0
                       const min = item.stokMinimum ?? 0
                       const hpp = item.hpp ?? 0
@@ -580,7 +606,7 @@ export function InventarisPage() {
                       return (
                         <TableRow key={item.menuId} className='border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors'>
                           <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
-                            {idx + 1}
+                            {itemIndex}
                           </TableCell>
                           <TableCell>
                             <div className='flex flex-col'>
@@ -669,14 +695,60 @@ export function InventarisPage() {
               </Table>
             </div>
 
+            {/* Pagination Controls (Per 10 menu) */}
+            {!isLoading && filteredAndSortedList.length > 0 && (
+              <div className='p-3.5 border-t border-border flex flex-wrap items-center justify-between gap-2 bg-muted/20'>
+                <div className='text-xs font-medium text-muted-foreground tabular-nums'>
+                  Menampilkan{' '}
+                  <span className='font-semibold text-foreground'>
+                    {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
+                    {Math.min(safeCurrentPage * PAGE_SIZE, filteredAndSortedList.length)}
+                  </span>{' '}
+                  dari{' '}
+                  <span className='font-semibold text-foreground'>
+                    {filteredAndSortedList.length}
+                  </span>{' '}
+                  menu terfilter
+                </div>
+                <div className='flex items-center gap-3'>
+                  <span className='text-xs font-medium text-muted-foreground tabular-nums'>
+                    Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
+                    <span className='font-semibold text-foreground'>{totalPages}</span>
+                  </span>
+                  <div className='flex items-center gap-1.5'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={safeCurrentPage === 1}
+                      className='gap-1 h-8 text-xs'
+                    >
+                      <ChevronLeft className='size-3.5' />
+                      Sebelumnya
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={safeCurrentPage === totalPages}
+                      className='gap-1 h-8 text-xs'
+                    >
+                      Selanjutnya
+                      <ChevronRight className='size-3.5' />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Bottom Accumulation Footer */}
             <div className='flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/30 border-t border-border text-xs text-muted-foreground gap-2'>
               <div className='tabular-nums'>
-                Menampilkan{' '}
+                Total Keseluruhan:{' '}
                 <strong className='text-foreground'>
                   {filteredAndSortedList.length}
                 </strong>{' '}
-                dari {inventarisList.length} item menu
+                menu (dari {inventarisList.length} menu katalog)
               </div>
               <div className='flex items-center gap-6'>
                 <span>
