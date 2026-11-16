@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { formatRupiah } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/validation-error'
+import { subscribeKatalogChanges } from '@/lib/katalog-sync'
 import { useBeepAudio } from '@/hooks/useBeepAudio'
 import { useRfidScanner } from '@/hooks/useRfidScanner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -235,7 +236,7 @@ export const KasirPosPage: React.FC = () => {
     }
   }, [fetchPengaturan, fetchTitikKasir, loadSesiData])
 
-  // Auto-refresh katalog menu setiap 10 detik secara otomatis di latar belakang
+  // Auto-refresh katalog menu & pengaturan operasional setiap 10 detik di latar belakang
   useEffect(() => {
     const timer = setInterval(async () => {
       if (
@@ -251,7 +252,10 @@ export const KasirPosPage: React.FC = () => {
       }
 
       try {
-        const latestMenus = await katalogApi.getMenuList(undefined, true)
+        const [latestMenus] = await Promise.all([
+          katalogApi.getMenuList(undefined, true),
+          fetchPengaturan(),
+        ])
         setMenus(latestMenus)
       } catch {
         // Abaikan kegagalan background polling agar tidak mengganggu antarmuka kasir
@@ -267,7 +271,18 @@ export const KasirPosPage: React.FC = () => {
     closeSessionModalOpen,
     historyModalOpen,
     cekSaldoOpen,
+    fetchPengaturan,
   ])
+
+  // Sinkronisasi otomatis saat ada pembaruan pengaturan kantin dari tab lain
+  useEffect(() => {
+    const unsubscribe = subscribeKatalogChanges((evt) => {
+      if (evt.reason === 'kasir') {
+        void fetchPengaturan()
+      }
+    })
+    return () => unsubscribe()
+  }, [fetchPengaturan])
 
   // Cek apakah waktu saat ini telah melewati batas jam tutup kasir otomatis
   const isPastClosingTime = useMemo(() => {
@@ -813,11 +828,7 @@ export const KasirPosPage: React.FC = () => {
         onOpenChange={handleStudentModalOpenChange}
         data={successData}
         onComplete={handleTransactionComplete}
-        durasiDetik={
-          pengaturan.durasiFotoDetik && pengaturan.durasiFotoDetik !== 3
-            ? pengaturan.durasiFotoDetik
-            : 15
-        }
+        durasiDetik={pengaturan.durasiFotoDetik ?? 3}
       />
 
       {/* Dialog Cetak Struk (muncul otomatis setelah dialog transaksi berhasil selesai) */}

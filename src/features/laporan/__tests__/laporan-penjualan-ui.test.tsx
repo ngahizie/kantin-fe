@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
+import { useRoleStore } from '@/stores/useRoleStore'
 import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
 import { LaporanPenjualanPage } from '../LaporanPenjualanPage'
 
@@ -83,6 +84,7 @@ const BE_KASIRS = [
 describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    useRoleStore.getState().setRole('pengelola')
   })
 
   it('merender LaporanLabaKotorPage secara akurat dari field BE #291 meski /katalog 403 dan mendukung filter pencarian', async () => {
@@ -258,5 +260,38 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
     const bodyText = screen.container.textContent || ''
     expect(bodyText).not.toMatch(/undefined%/i)
     expect(bodyText).not.toMatch(/NaN%/i)
+  })
+
+  it('menyembunyikan metrik Modal (HPP) & Laba Kotor saat diakses oleh peran admin (PRD §9.5)', async () => {
+    useRoleStore.getState().setRole('admin')
+
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/laporan/penjualan') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_SUMMARY } }
+      }
+      if (url === '/api/laporan/penjualan/item') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_ITEMS } }
+      }
+      if (url === '/api/laporan/penjualan/kategori') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_CATEGORIES } }
+      }
+      if (url === '/api/laporan/penjualan/kasir') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_KASIRS } }
+      }
+      if (url === '/api/katalog/kategori' || url === '/api/katalog/menu') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanPenjualanPage />)
+
+    await expect.element(screen.getByText('Laporan Penjualan Kantin')).toBeInTheDocument()
+    await expect.element(screen.getByText('Nasi Goreng Spesial')).toBeInTheDocument()
+    await expect.element(screen.getByText('Total Modal (HPP)')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Laba Kotor')).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Modal Unit' })).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Laba' })).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Margin' })).not.toBeInTheDocument()
   })
 })

@@ -52,8 +52,8 @@ export interface RingkasanRekonsiliasi {
 export interface ArusPosRekonsiliasiItem {
   id: string
   pos: string
-  kategori: 'MASUK' | 'KELUAR' | 'SALDO' | 'EVALUASI'
-  arah: 'KREDIT' | 'DEBIT' | 'NETTO' | 'STATUS'
+  arah: 'MASUK' | 'KELUAR' | 'TETAP' | 'EVALUASI'
+  kategori?: 'MASUK' | 'KELUAR' | 'TETAP' | 'EVALUASI'
   nominal: number
   keterangan: string
 }
@@ -284,4 +284,28 @@ export interface RingkasanKerugianStok {
   qtyOpname: number
   kerugianBarangRusak: number
   qtyBarangRusak: number
+}
+
+// ─────────────────────────────────────────────────────────────
+// PEMBATALAN KASIR (VOID / REFUND KASIR - PRD §9.5)
+// ─────────────────────────────────────────────────────────────
+
+export interface BarisPembatalanKasir {
+  transaksiId: number
+  subjekTipe?: string
+  siswaId: number
+  siswaNama?: string
+  siswaNis?: string
+  siswaKelas?: string
+  kartuUid?: string | null
+  total: number
+  alasanVoid: string
+  voidAt: string
+  voidOleh?: number
+  voidOlehNama?: string
+  petugasId?: number
+  petugasNama?: string
+  titikKasirId?: number
+  titikKasirNama?: string
+  waktu: string
 }

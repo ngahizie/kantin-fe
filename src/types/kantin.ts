@@ -32,6 +32,7 @@ export interface KartuSiswaMock {
   limit_harian_enabled?: boolean
   belanja_hari_ini: number
   is_blocked: boolean
+  alasan_blokir?: string | null
   blocked_items?: number[]
   blocked_categories?: number[]
   parent_name?: string

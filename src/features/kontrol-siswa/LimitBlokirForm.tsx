@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Smartphone,
   PhoneOff,
+  ShieldBan,
 } from 'lucide-react'
 import {
   Dialog,
@@ -22,7 +23,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
@@ -75,7 +75,14 @@ function LimitBlokirFormContent({
   const [initialBlockedItemIds, setInitialBlockedItemIds] = useState<number[]>(
     Array.isArray(student.blocked_items) ? student.blocked_items : []
   )
-  const [catatan, setCatatan] = useState(student.catatan_kontrol || '')
+  const [cardBlocked, setCardBlocked] = useState<boolean>(Boolean(student.is_blocked))
+  const [initialCardBlocked, setInitialCardBlocked] = useState<boolean>(
+    Boolean(student.is_blocked)
+  )
+  const [alasanBlokir, setAlasanBlokir] = useState<string>(student.alasan_blokir || '')
+  const [initialAlasanBlokir, setInitialAlasanBlokir] = useState<string>(
+    student.alasan_blokir || ''
+  )
   const [menuSearch, setMenuSearch] = useState('')
   const [menuCatFilter, setMenuCatFilter] = useState<number | 'ALL'>('ALL')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -106,11 +113,17 @@ function LimitBlokirFormContent({
           const liveCats: number[] = Array.isArray(kontrol.kategoriDiblokir)
             ? kontrol.kategoriDiblokir
             : []
+          const liveBlocked = Boolean(kontrol.diblokir)
+          const liveAlasan = String(kontrol.alasanBlokir || '')
 
           setBlockedItemIds(liveItems)
           setInitialBlockedItemIds(liveItems)
           setBlockedCategoryIds(liveCats)
           setInitialBlockedCategoryIds(liveCats)
+          setCardBlocked(liveBlocked)
+          setInitialCardBlocked(liveBlocked)
+          setAlasanBlokir(liveAlasan)
+          setInitialAlasanBlokir(liveAlasan)
         }
       } catch {
         // Fallback memakai data student bawaan bila query kontrol gagal
@@ -140,12 +153,13 @@ function LimitBlokirFormContent({
   }
 
   const handleResetToDefault = () => {
+    setCardBlocked(false)
+    setAlasanBlokir('')
     setLimitEnabled(false)
     setLimitNominal('0')
     setBlockedCategoryIds([])
     setBlockedItemIds([])
-    setCatatan('')
-    toast.info('Form dikembalikan ke kondisi tanpa batas')
+    toast.info('Form dikembalikan ke kondisi aktif tanpa batas')
   }
 
   const filteredMenuItems = menuList.filter((item) => {
@@ -184,7 +198,25 @@ function LimitBlokirFormContent({
         (id) => !blockedCategoryIds.includes(id)
       )
 
+      const blockChanged =
+        cardBlocked !== initialCardBlocked ||
+        (cardBlocked && alasanBlokir.trim() !== initialAlasanBlokir.trim())
+
+      const resolvedAlasan = cardBlocked
+        ? alasanBlokir.trim() || 'Diblokir oleh Admin Sekolah'
+        : 'Blokir dibuka oleh Admin Sekolah'
+
       const requests: Promise<unknown>[] = [
+        ...(blockChanged
+          ? [
+              apiClient.post('/api/kontrol-kartu/blokir', {
+                subjekTipe: 'SISWA',
+                siswaId: student.siswa_id,
+                diblokir: cardBlocked,
+                alasan: resolvedAlasan,
+              }),
+            ]
+          : []),
         apiClient.put('/api/kontrol-kartu/limit-harian', {
           subjekTipe: 'SISWA',
           siswaId: student.siswa_id,
@@ -228,16 +260,17 @@ function LimitBlokirFormContent({
 
       const updatedStudent: KartuSiswaMock = {
         ...student,
+        is_blocked: cardBlocked,
+        alasan_blokir: cardBlocked ? resolvedAlasan : null,
         limit_harian: nominalLimitNum,
         limit_harian_enabled: limitEnabled,
         blocked_items: blockedItemIds,
         blocked_categories: blockedCategoryIds,
-        catatan_kontrol: catatan.trim(),
         updated_at: new Date().toISOString(),
       }
 
       toast.success(`Pengaturan kontrol untuk ${student.nama} berhasil disimpan!`, {
-        description: 'Batasan limit belanja dan larangan menu langsung aktif pada validasi kasir POS.',
+        description: 'Status kartu, limit belanja, dan larangan menu langsung aktif di kasir.',
       })
 
       onClose()
@@ -333,6 +366,44 @@ function LimitBlokirFormContent({
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-5 pt-1'>
+          {/* BAGIAN 0: BLOKIR KARTU RFID SISWA (INSTAN) */}
+          <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
+            <div className='flex items-center justify-between gap-3'>
+              <div className='space-y-0.5'>
+                <Label htmlFor='blokir-kartu-switch' className='text-sm font-bold flex items-center gap-2'>
+                  <ShieldBan className='h-4 w-4 text-destructive' />
+                  Blokir Kartu RFID Siswa
+                </Label>
+                <p className='text-xs text-muted-foreground'>
+                  Blokir seketika jika kartu siswa hilang, rusak, atau diminta oleh orang tua
+                </p>
+              </div>
+              <Switch
+                id='blokir-kartu-switch'
+                checked={cardBlocked}
+                onCheckedChange={setCardBlocked}
+              />
+            </div>
+
+            {cardBlocked && (
+              <div className='pt-3 space-y-2 border-t border-border'>
+                <Label htmlFor='alasanBlokirKartu' className='text-xs font-medium'>
+                  Alasan Pemblokiran Kartu
+                </Label>
+                <Input
+                  id='alasanBlokirKartu'
+                  value={alasanBlokir}
+                  onChange={(e) => setAlasanBlokir(e.target.value)}
+                  placeholder='Contoh: Kartu hilang / Permintaan orang tua siswa'
+                  className='text-xs'
+                />
+                <p className='text-[11px] text-rose-600 dark:text-rose-400'>
+                  Kartu yang diblokir akan langsung ditolak saat di-tap di seluruh perangkat kasir.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* BAGIAN 1: PENGATURAN LIMIT BELANJA HARIAN */}
           <div className='rounded-xl border border-border bg-muted/30 p-4 space-y-3'>
             <div className='flex items-center justify-between gap-3'>
@@ -603,20 +674,6 @@ function LimitBlokirFormContent({
                 })
               )}
             </div>
-          </div>
-
-          {/* BAGIAN 4: CATATAN INSTRUKSI ORANG TUA */}
-          <div className='space-y-1.5'>
-            <Label htmlFor='catatanKontrol' className='text-xs font-semibold'>
-              Catatan / Dasar Permintaan Orang Tua
-            </Label>
-            <Textarea
-              id='catatanKontrol'
-              value={catatan}
-              onChange={(e) => setCatatan(e.target.value)}
-              placeholder='Contoh: Permintaan tertulis via formulir TU / WhatsApp: Siswa alergi kafein & dibatasi jajan maksimal Rp 25.000/hari.'
-              className='text-xs min-h-[60px]'
-            />
           </div>
 
           <DialogFooter className='gap-2 pt-2 flex-col sm:flex-row justify-between'>

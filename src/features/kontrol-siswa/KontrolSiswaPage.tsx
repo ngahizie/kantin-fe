@@ -161,6 +161,7 @@ export function KontrolSiswaPage() {
                   ? kontrol.kategoriDiblokir
                   : [],
                 is_blocked: Boolean(kontrol.diblokir),
+                alasan_blokir: kontrol.alasanBlokir || null,
               }
             })
           } catch {
@@ -229,6 +230,9 @@ export function KontrolSiswaPage() {
           (s.blocked_items && s.blocked_items.length > 0) ||
           (s.blocked_categories && s.blocked_categories.length > 0)
         if (!hasBlock) return false
+      }
+      if (limitFilter === 'WITH_CARD_BLOCK') {
+        if (!s.is_blocked) return false
       }
 
       // Search
@@ -375,6 +379,7 @@ export function KontrolSiswaPage() {
                 { label: 'Dibatasi Nominal Harian', value: 'WITH_LIMIT' },
                 { label: 'Tanpa Batasan Nominal', value: 'NO_LIMIT' },
                 { label: 'Ada Pantangan Makanan', value: 'WITH_BLOCK' },
+                { label: 'Kartu Diblokir', value: 'WITH_CARD_BLOCK' },
               ],
               selectedValues: limitFilter !== 'ALL' ? [limitFilter] : [],
               onSelect: (vals) => setLimitFilter(vals[0] || 'ALL'),
@@ -464,9 +469,14 @@ export function KontrolSiswaPage() {
                                 <p className='text-muted-foreground font-mono text-[11px] tabular-nums'>
                                   NIS: {siswa.nis || '-'} • {siswa.kelas}
                                 </p>
-                                <p className='text-[10px] text-muted-foreground'>
+                                  <p className='text-[10px] text-muted-foreground'>
                                   Ortu: {siswa.parent_name || '-'}
                                 </p>
+                                {siswa.is_blocked && siswa.alasan_blokir && (
+                                  <p className='text-[10px] text-rose-600 dark:text-rose-400 font-medium truncate max-w-[200px]'>
+                                    Alasan blokir: {siswa.alasan_blokir}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </TableCell>

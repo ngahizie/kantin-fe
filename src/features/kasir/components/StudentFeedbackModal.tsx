@@ -27,7 +27,7 @@ export interface StudentFeedbackModalProps {
   durasiDetik?: number
 }
 
-const DEFAULT_COUNTDOWN_SECONDS = 15
+const DEFAULT_COUNTDOWN_SECONDS = 3
 
 export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
   open,

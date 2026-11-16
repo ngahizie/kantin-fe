@@ -139,7 +139,7 @@ export const PengaturanKantinPage: React.FC = () => {
       const errorObj = err as { response?: { data?: { message?: string } } }
       const msg =
         errorObj.response?.data?.message ||
-        'Gagal menyimpan konfigurasi ke backend kantin-be'
+        'Gagal menyimpan konfigurasi operasional ke server'
       toast.error(msg)
     } finally {
       setIsSubmitting(false)
@@ -199,7 +199,7 @@ export const PengaturanKantinPage: React.FC = () => {
             </AlertTitle>
             <AlertDescription className='text-xs text-muted-foreground'>
               Semua perubahan jam tutup otomatis, durasi tampil foto, dan langkah
-              konfirmasi akan langsung berlaku pada sesi klien kasir dan tervalidasi di database backend kantin-be.
+              konfirmasi akan langsung berlaku pada sesi klien kasir dan tersinkronisasi ke server.
             </AlertDescription>
           </Alert>
 
@@ -370,7 +370,7 @@ export const PengaturanKantinPage: React.FC = () => {
                         id='durasiFotoDetik'
                         type='number'
                         min={1}
-                        max={30}
+                        max={10}
                         className='h-9 font-mono text-sm w-24 tabular-nums'
                         disabled={isSubmitting || loadingPengaturan}
                         {...register('durasiFotoDetik', {
@@ -379,7 +379,7 @@ export const PengaturanKantinPage: React.FC = () => {
                       />
                       <div className='flex-1 text-[11px] text-muted-foreground'>
                         Lama foto siswa tampil di layar kasir untuk verifikasi
-                        visual wajah (default 3 detik, min. 1 s/d 30 detik).
+                        visual wajah (default 3 detik, min. 1 s/d 10 detik).
                       </div>
                     </div>
 

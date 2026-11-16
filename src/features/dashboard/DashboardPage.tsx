@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   ShoppingCart,
   AlertTriangle,
   Scale,
   CheckCircle2,
   Banknote,
+  Store,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -35,10 +37,12 @@ import { BackofficeHeader } from '@/components/layout/backoffice-header'
 import { Main } from '@/components/layout/main'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { formatTimeWithZone } from '@/lib/formatters'
 import type { RingkasanPenjualan, RingkasanRekonsiliasi, BarisPenjualanKategori } from '@/features/laporan/types'
 import type { MenuItem } from '@/features/katalog/types'
+import type { TitikKasir } from '@/features/pengaturan/types'
 
 export interface DynamicCategory {
   id: number
@@ -206,10 +210,12 @@ export const getStatusBadgeClass = (status: string) => {
 
 export function DashboardPage() {
   const { currentRole } = useRoleStore()
+  const isAdmin = currentRole === 'admin'
   const [penjualan, setPenjualan] = useState<RingkasanPenjualan | null>(null)
   const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
   const [rekonsiliasiStatus, setRekonsiliasiStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [titikKasirList, setTitikKasirList] = useState<TitikKasir[]>([])
   const [kategoriMap, setKategoriMap] = useState<Record<number, string>>({})
   const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
   const [chartCategories, setChartCategories] = useState<DynamicCategory[]>([])
@@ -231,7 +237,7 @@ export function DashboardPage() {
 
     const fetchInitialData = async () => {
       try {
-        const canViewKatalog = currentRole !== 'kepsek'
+        const canViewKatalog = !['kepsek', 'admin'].includes(currentRole)
         const canViewTransaksi = ['admin', 'tu', 'bendahara', 'pengelola'].includes(currentRole)
 
         const [
@@ -240,6 +246,7 @@ export function DashboardPage() {
           menuRes,
           kategoriRes,
           trxRes,
+          titikKasirRes,
         ] = await Promise.allSettled([
           laporanApi.getPenjualan(),
           canViewRekonsiliasi
@@ -249,6 +256,9 @@ export function DashboardPage() {
           canViewKatalog ? katalogApi.getKategoriList() : Promise.resolve([]),
           canViewTransaksi
             ? laporanApi.getRiwayatTransaksiKeseluruhan({ batas: 25 })
+            : Promise.resolve([]),
+          currentRole === 'admin'
+            ? pengaturanApi.getTitikKasirList()
             : Promise.resolve([]),
         ])
 
@@ -283,6 +293,13 @@ export function DashboardPage() {
         // 4. Data Menu & Stok
         if (menuRes.status === 'fulfilled' && Array.isArray(menuRes.value)) {
           setMenuItems(menuRes.value)
+        }
+
+        // 4b. Data Titik Kasir (khusus Admin)
+        if (titikKasirRes.status === 'fulfilled' && Array.isArray(titikKasirRes.value)) {
+          setTitikKasirList(titikKasirRes.value)
+        } else {
+          setTitikKasirList([])
         }
 
         // 5. Transaksi Kasir Terakhir (dari /api/laporan/transaksi-keseluruhan dengan rincian item & nama siswa)
@@ -466,6 +483,12 @@ export function DashboardPage() {
   const selisihKas = rekonsiliasi?.selisih ?? 0
   const isKasSeimbang = Boolean(rekonsiliasi?.seimbang)
 
+  const activeTitikCount = useMemo(
+    () => titikKasirList.filter((t) => t.aktif).length,
+    [titikKasirList]
+  )
+  const totalTitikCount = titikKasirList.length
+
   // Gunakan data penjualan per kategori per hari langsung dari BE tanpa memodifikasi kategori pertama
   const chartData = rawWeeklyData
 
@@ -481,7 +504,9 @@ export function DashboardPage() {
             Dashboard Ringkasan
           </h1>
           <p className='text-sm text-muted-foreground'>
-            Pantau penjualan harian, rekonsiliasi kas, stok menipis, dan aktivitas kasir secara real-time.
+            {isAdmin
+              ? 'Pantau penjualan harian, rekonsiliasi kas, status titik kasir, dan aktivitas transaksi secara real-time.'
+              : 'Pantau penjualan harian, rekonsiliasi kas, stok menipis, dan aktivitas kasir secara real-time.'}
           </p>
         </div>
 
@@ -627,46 +652,81 @@ export function DashboardPage() {
             )
           )}
 
-          {/* Card 4: Alert Status Stok Menipis */}
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Peringatan Stok Barang
-              </CardTitle>
-              <div
-                className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
-                  lowStockItems.length === 0
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                    : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
-                }`}
-              >
-                {lowStockItems.length === 0 ? (
-                  <CheckCircle2 className='size-4' />
-                ) : (
-                  <AlertTriangle className='size-4' />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-                {lowStockItems.length} <span className='text-base font-normal text-muted-foreground'>Item</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
-                <span
-                  className={`inline-flex items-center font-semibold shrink-0 ${
+          {/* Card 4: Titik Kasir Aktif (untuk Admin) / Alert Status Stok Menipis (untuk peran lain) */}
+          {isAdmin ? (
+            <Card>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+                <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                  Titik Kasir Aktif
+                </CardTitle>
+                <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'>
+                  <Store className='size-4' />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                  {activeTitikCount}{' '}
+                  <span className='text-base font-normal text-muted-foreground'>
+                    / {totalTitikCount} Perangkat
+                  </span>
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
+                  <span
+                    className={`inline-flex items-center font-semibold shrink-0 ${
+                      activeTitikCount > 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {activeTitikCount > 0 ? 'Operasional' : 'Belum Aktif'}
+                  </span>
+                  <span className='min-w-0 truncate tabular-nums'>
+                    • {totalTitikCount - activeTitikCount} Nonaktif
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
+                <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+                  Peringatan Stok Barang
+                </CardTitle>
+                <div
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
                     lowStockItems.length === 0
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-amber-600 dark:text-amber-400'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                   }`}
                 >
-                  {lowStockItems.length === 0 ? 'Stok Aman' : 'Perlu Restock'}
-                </span>
-                <span className='min-w-0 truncate tabular-nums'>
-                  • {effectiveMenuItems.filter(i => i.stok === 0).length} Habis, {effectiveMenuItems.filter(i => i.stok > 0 && i.stok <= i.stok_minimum).length} Menipis
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+                  {lowStockItems.length === 0 ? (
+                    <CheckCircle2 className='size-4' />
+                  ) : (
+                    <AlertTriangle className='size-4' />
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
+                  {lowStockItems.length} <span className='text-base font-normal text-muted-foreground'>Item</span>
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
+                  <span
+                    className={`inline-flex items-center font-semibold shrink-0 ${
+                      lowStockItems.length === 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {lowStockItems.length === 0 ? 'Stok Aman' : 'Perlu Restock'}
+                  </span>
+                  <span className='min-w-0 truncate tabular-nums'>
+                    • {effectiveMenuItems.filter(i => i.stok === 0).length} Habis, {effectiveMenuItems.filter(i => i.stok > 0 && i.stok <= i.stok_minimum).length} Menipis
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* ===== Grid Konten Tengah: Grafik Penjualan 7 Hari & Alert Stok Menipis ===== */}
@@ -819,70 +879,140 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Kolom Kanan: Stok Menipis */}
-          <Card className='col-span-1 lg:col-span-3 flex flex-col overflow-hidden'>
-            <CardHeader className='pb-3'>
-              <CardTitle className='text-base font-semibold flex items-center gap-2'>
-                <AlertTriangle className='size-4 text-amber-600 dark:text-amber-400' />
-                <span>Stok Menipis</span>
-              </CardTitle>
-              <CardDescription className='text-xs mt-0.5'>
-                Item dengan stok kurang dari atau sama dengan batas minimum sekolah
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='flex-1 p-0 border-t border-border'>
-              <div className='overflow-x-auto'>
-                <Table>
-                  <TableHeader>
-                    <TableRow className='bg-muted/40 hover:bg-muted/40 border-b border-border'>
-                      <TableHead className='w-12 text-center ps-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
-                      <TableHead className='ps-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu</TableHead>
-                      <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Sisa / Min</TableHead>
-                      <TableHead className='text-center pe-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lowStockItems.length === 0 ? (
-                      <TableRow className='hover:bg-transparent border-b-0'>
-                        <TableCell colSpan={4} className='h-28 text-center text-xs text-muted-foreground px-6'>
-                          <CheckCircle2 className='size-6 text-emerald-600 dark:text-emerald-400 mx-auto mb-1 opacity-80' />
-                          Semua stok menu dalam kondisi aman di atas batas minimum.
-                        </TableCell>
+          {/* Kolom Kanan: Status Titik Kasir (Admin) / Stok Menipis (peran lain) */}
+          {isAdmin ? (
+            <Card className='col-span-1 lg:col-span-3 flex flex-col overflow-hidden'>
+              <CardHeader className='pb-3 flex flex-row items-start justify-between gap-2'>
+                <div>
+                  <CardTitle className='text-base font-semibold flex items-center gap-2'>
+                    <Store className='size-4 text-primary' />
+                    <span>Status Titik Kasir</span>
+                  </CardTitle>
+                  <CardDescription className='text-xs mt-0.5'>
+                    Perangkat kasir terdaftar dan status operasionalnya saat ini
+                  </CardDescription>
+                </div>
+                <Link
+                  to='/pengaturan/titik-kasir'
+                  className='text-xs font-semibold text-primary hover:underline shrink-0 pt-0.5'
+                >
+                  Kelola
+                </Link>
+              </CardHeader>
+              <CardContent className='flex-1 p-0 border-t border-border'>
+                <div className='overflow-x-auto'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className='bg-muted/40 hover:bg-muted/40 border-b border-border'>
+                        <TableHead className='w-12 text-center ps-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                        <TableHead className='ps-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Titik Kasir</TableHead>
+                        <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Kode</TableHead>
+                        <TableHead className='text-center pe-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Status</TableHead>
                       </TableRow>
-                    ) : (
-                      lowStockItems.map((item, idx) => {
-                        const isOut = item.stok === 0
-                        return (
-                          <TableRow key={item.id} className='text-xs hover:bg-transparent border-b border-border last:border-b-0'>
+                    </TableHeader>
+                    <TableBody>
+                      {titikKasirList.length === 0 ? (
+                        <TableRow className='hover:bg-transparent border-b-0'>
+                          <TableCell colSpan={4} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                            <Store className='size-6 text-muted-foreground/50 mx-auto mb-1 opacity-70' />
+                            Belum ada titik kasir terdaftar.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        titikKasirList.map((tk, idx) => (
+                          <TableRow key={tk.id} className='text-xs hover:bg-transparent border-b border-border last:border-b-0'>
                             <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums ps-4 py-3'>
                               {idx + 1}
                             </TableCell>
-                            <TableCell className='ps-2 py-3 font-medium'>
-                              <div className='flex flex-col'>
-                                <span className='text-foreground font-semibold'>{item.nama}</span>
-                                <span className='text-[10px] text-muted-foreground'>{item.kategori_nama}</span>
-                              </div>
+                            <TableCell className='ps-2 py-3 font-semibold text-foreground'>
+                              {tk.nama}
                             </TableCell>
-                            <TableCell className='text-center py-3 text-xs tabular-nums'>
-                              <span className={isOut ? 'text-destructive font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}>
-                                {item.stok}
-                              </span>
-                              <span className='text-muted-foreground'> / {item.stok_minimum} {item.satuan}</span>
+                            <TableCell className='text-center py-3 font-mono text-xs text-muted-foreground tabular-nums'>
+                              {tk.kode}
                             </TableCell>
                             <TableCell className='text-center pe-6 py-3'>
-                              <Badge variant='outline' className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide ${getStatusBadgeClass(isOut ? 'HABIS' : 'MENIPIS')}`}>
-                                {isOut ? 'HABIS' : 'MENIPIS'}
+                              <Badge
+                                variant='outline'
+                                className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide ${getStatusBadgeClass(
+                                  tk.aktif ? 'AKTIF' : 'NONAKTIF'
+                                )}`}
+                              >
+                                {tk.aktif ? 'AKTIF' : 'NONAKTIF'}
                               </Badge>
                             </TableCell>
                           </TableRow>
-                        )
-                      })
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className='col-span-1 lg:col-span-3 flex flex-col overflow-hidden'>
+              <CardHeader className='pb-3'>
+                <CardTitle className='text-base font-semibold flex items-center gap-2'>
+                  <AlertTriangle className='size-4 text-amber-600 dark:text-amber-400' />
+                  <span>Stok Menipis</span>
+                </CardTitle>
+                <CardDescription className='text-xs mt-0.5'>
+                  Item dengan stok kurang dari atau sama dengan batas minimum sekolah
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex-1 p-0 border-t border-border'>
+                <div className='overflow-x-auto'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className='bg-muted/40 hover:bg-muted/40 border-b border-border'>
+                        <TableHead className='w-12 text-center ps-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No.</TableHead>
+                        <TableHead className='ps-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu</TableHead>
+                        <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Sisa / Min</TableHead>
+                        <TableHead className='text-center pe-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {lowStockItems.length === 0 ? (
+                        <TableRow className='hover:bg-transparent border-b-0'>
+                          <TableCell colSpan={4} className='h-28 text-center text-xs text-muted-foreground px-6'>
+                            <CheckCircle2 className='size-6 text-emerald-600 dark:text-emerald-400 mx-auto mb-1 opacity-80' />
+                            Semua stok menu dalam kondisi aman di atas batas minimum.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        lowStockItems.map((item, idx) => {
+                          const isOut = item.stok === 0
+                          return (
+                            <TableRow key={item.id} className='text-xs hover:bg-transparent border-b border-border last:border-b-0'>
+                              <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums ps-4 py-3'>
+                                {idx + 1}
+                              </TableCell>
+                              <TableCell className='ps-2 py-3 font-medium'>
+                                <div className='flex flex-col'>
+                                  <span className='text-foreground font-semibold'>{item.nama}</span>
+                                  <span className='text-[10px] text-muted-foreground'>{item.kategori_nama}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className='text-center py-3 text-xs tabular-nums'>
+                                <span className={isOut ? 'text-destructive font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}>
+                                  {item.stok}
+                                </span>
+                                <span className='text-muted-foreground'> / {item.stok_minimum} {item.satuan}</span>
+                              </TableCell>
+                              <TableCell className='text-center pe-6 py-3'>
+                                <Badge variant='outline' className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide ${getStatusBadgeClass(isOut ? 'HABIS' : 'MENIPIS')}`}>
+                                  {isOut ? 'HABIS' : 'MENIPIS'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Transaksi Kasir Terkini */}

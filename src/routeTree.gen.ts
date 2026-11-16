@@ -19,7 +19,6 @@ import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedPengaturanIndexRouteImport } from './routes/_authenticated/pengaturan/index'
 import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authenticated/menu/index'
 import { Route as AuthenticatedKontrolSiswaIndexRouteImport } from './routes/_authenticated/kontrol-siswa/index'
@@ -37,6 +36,7 @@ import { Route as AuthenticatedLaporanRiwayatSiswaIndexRouteImport } from './rou
 import { Route as AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport } from './routes/_authenticated/laporan/riwayat-keseluruhan/index'
 import { Route as AuthenticatedLaporanRekonsiliasiIndexRouteImport } from './routes/_authenticated/laporan/rekonsiliasi/index'
 import { Route as AuthenticatedLaporanPenjualanIndexRouteImport } from './routes/_authenticated/laporan/penjualan/index'
+import { Route as AuthenticatedLaporanPembatalanIndexRouteImport } from './routes/_authenticated/laporan/pembatalan/index'
 import { Route as AuthenticatedLaporanLabaKotorIndexRouteImport } from './routes/_authenticated/laporan/laba-kotor/index'
 import { Route as AuthenticatedLaporanKerugianStokIndexRouteImport } from './routes/_authenticated/laporan/kerugian-stok/index'
 
@@ -88,11 +88,6 @@ const authSignInRoute = authSignInRouteImport.update({
   id: '/(auth)/sign-in',
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPengaturanIndexRoute =
   AuthenticatedPengaturanIndexRouteImport.update({
@@ -194,6 +189,12 @@ const AuthenticatedLaporanPenjualanIndexRoute =
     path: '/laporan/penjualan/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLaporanPembatalanIndexRoute =
+  AuthenticatedLaporanPembatalanIndexRouteImport.update({
+    id: '/laporan/pembatalan/',
+    path: '/laporan/pembatalan/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLaporanLabaKotorIndexRoute =
   AuthenticatedLaporanLabaKotorIndexRouteImport.update({
     id: '/laporan/laba-kotor/',
@@ -222,9 +223,9 @@ export interface FileRoutesByFullPath {
   '/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu/': typeof AuthenticatedMenuIndexRoute
   '/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
-  '/users/': typeof AuthenticatedUsersIndexRoute
   '/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/laporan/pembatalan/': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
@@ -252,9 +253,9 @@ export interface FileRoutesByTo {
   '/kontrol-siswa': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/pengaturan': typeof AuthenticatedPengaturanIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
   '/laporan/kerugian-stok': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/laporan/laba-kotor': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/laporan/pembatalan': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/laporan/penjualan': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/laporan/rekonsiliasi': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/laporan/riwayat-keseluruhan': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
@@ -285,9 +286,9 @@ export interface FileRoutesById {
   '/_authenticated/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
-  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/_authenticated/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/_authenticated/laporan/pembatalan/': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/_authenticated/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
   '/_authenticated/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/_authenticated/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
@@ -318,9 +319,9 @@ export interface FileRouteTypes {
     | '/kontrol-siswa/'
     | '/menu/'
     | '/pengaturan/'
-    | '/users/'
     | '/laporan/kerugian-stok/'
     | '/laporan/laba-kotor/'
+    | '/laporan/pembatalan/'
     | '/laporan/penjualan/'
     | '/laporan/rekonsiliasi/'
     | '/laporan/riwayat-keseluruhan/'
@@ -348,9 +349,9 @@ export interface FileRouteTypes {
     | '/kontrol-siswa'
     | '/menu'
     | '/pengaturan'
-    | '/users'
     | '/laporan/kerugian-stok'
     | '/laporan/laba-kotor'
+    | '/laporan/pembatalan'
     | '/laporan/penjualan'
     | '/laporan/rekonsiliasi'
     | '/laporan/riwayat-keseluruhan'
@@ -380,9 +381,9 @@ export interface FileRouteTypes {
     | '/_authenticated/kontrol-siswa/'
     | '/_authenticated/menu/'
     | '/_authenticated/pengaturan/'
-    | '/_authenticated/users/'
     | '/_authenticated/laporan/kerugian-stok/'
     | '/_authenticated/laporan/laba-kotor/'
+    | '/_authenticated/laporan/pembatalan/'
     | '/_authenticated/laporan/penjualan/'
     | '/_authenticated/laporan/rekonsiliasi/'
     | '/_authenticated/laporan/riwayat-keseluruhan/'
@@ -479,13 +480,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-in'
       preLoaderRoute: typeof authSignInRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/users/': {
-      id: '/_authenticated/users/'
-      path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pengaturan/': {
       id: '/_authenticated/pengaturan/'
@@ -606,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanPenjualanIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/laporan/pembatalan/': {
+      id: '/_authenticated/laporan/pembatalan/'
+      path: '/laporan/pembatalan'
+      fullPath: '/laporan/pembatalan/'
+      preLoaderRoute: typeof AuthenticatedLaporanPembatalanIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/laporan/laba-kotor/': {
       id: '/_authenticated/laporan/laba-kotor/'
       path: '/laporan/laba-kotor'
@@ -630,9 +631,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKontrolSiswaIndexRoute: typeof AuthenticatedKontrolSiswaIndexRoute
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedPengaturanIndexRoute: typeof AuthenticatedPengaturanIndexRoute
-  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedLaporanKerugianStokIndexRoute: typeof AuthenticatedLaporanKerugianStokIndexRoute
   AuthenticatedLaporanLabaKotorIndexRoute: typeof AuthenticatedLaporanLabaKotorIndexRoute
+  AuthenticatedLaporanPembatalanIndexRoute: typeof AuthenticatedLaporanPembatalanIndexRoute
   AuthenticatedLaporanPenjualanIndexRoute: typeof AuthenticatedLaporanPenjualanIndexRoute
   AuthenticatedLaporanRekonsiliasiIndexRoute: typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   AuthenticatedLaporanRiwayatKeseluruhanIndexRoute: typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
@@ -654,11 +655,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKontrolSiswaIndexRoute: AuthenticatedKontrolSiswaIndexRoute,
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedPengaturanIndexRoute: AuthenticatedPengaturanIndexRoute,
-  AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedLaporanKerugianStokIndexRoute:
     AuthenticatedLaporanKerugianStokIndexRoute,
   AuthenticatedLaporanLabaKotorIndexRoute:
     AuthenticatedLaporanLabaKotorIndexRoute,
+  AuthenticatedLaporanPembatalanIndexRoute:
+    AuthenticatedLaporanPembatalanIndexRoute,
   AuthenticatedLaporanPenjualanIndexRoute:
     AuthenticatedLaporanPenjualanIndexRoute,
   AuthenticatedLaporanRekonsiliasiIndexRoute:
