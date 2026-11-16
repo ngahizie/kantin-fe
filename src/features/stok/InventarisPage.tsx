@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   XCircle,
   Loader2,
+  Barcode,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -30,13 +31,14 @@ import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
-import type { KategoriItem } from '@/features/katalog/types'
+import type { KategoriItem, MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
 import type { InventarisItem } from './types'
 
 export function InventarisPage() {
   const [inventarisList, setInventarisList] = useState<InventarisItem[]>([])
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([])
+  const [menuList, setMenuList] = useState<MenuItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Filters
@@ -50,13 +52,15 @@ export function InventarisPage() {
     let isMounted = true
     const init = async () => {
       try {
-        const [invData, kategoris] = await Promise.all([
+        const [invData, kategoris, menus] = await Promise.all([
           stokApi.getInventaris(false),
           katalogApi.getKategoriList().catch(() => []),
+          katalogApi.getMenuList(undefined, false).catch(() => []),
         ])
         if (!isMounted) return
         setInventarisList(invData)
         setKategoriList(kategoris)
+        setMenuList(menus)
       } catch (err: unknown) {
         if (!isMounted) return
         const msg =
@@ -79,15 +83,27 @@ export function InventarisPage() {
     return map
   }, [kategoriList])
 
+  // Create Menu Lookup Map (for fallback kodeBarcode)
+  const menuMap = useMemo(() => {
+    const map = new Map<number, MenuItem>()
+    menuList.forEach((m) => map.set(m.id, m))
+    return map
+  }, [menuList])
+
   // Filter & Sort Logic
   const filteredAndSortedList = useMemo(() => {
     return inventarisList
       .filter((item) => {
-        // Search Filter
+        // Search Filter (by name or barcode)
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase()
           const name = (item.namaMenu || item.nama || '').toLowerCase()
-          if (!name.includes(q)) return false
+          const barcode = (
+            item.kodeBarcode ||
+            menuMap.get(item.menuId)?.kodeBarcode ||
+            ''
+          ).toLowerCase()
+          if (!name.includes(q) && !barcode.includes(q)) return false
         }
 
         // Kategori Filter
@@ -123,7 +139,7 @@ export function InventarisPage() {
         if (sortBy === 'NAMA_ASC') return nameA.localeCompare(nameB)
         return 0
       })
-  }, [inventarisList, searchQuery, selectedKategoriId, selectedStatus, sortBy])
+  }, [inventarisList, searchQuery, selectedKategoriId, selectedStatus, sortBy, menuMap])
 
   // Top KPI Metrics (Calculated accurately across all items)
   const kpiData = useMemo(() => {
@@ -185,6 +201,7 @@ export function InventarisPage() {
 
     const headers = [
       'Menu ID',
+      'Kode Barcode',
       'Nama Menu',
       'Kategori',
       'Stok Saat Ini',
@@ -203,9 +220,11 @@ export function InventarisPage() {
 
       const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
       const nilai = item.nilaiPersediaan ?? (stok * item.hpp)
+      const barcode = item.kodeBarcode || menuMap.get(item.menuId)?.kodeBarcode || '-'
 
       return [
         item.menuId,
+        `"${barcode.replace(/"/g, '""')}"`,
         `"${(item.namaMenu || item.nama).replace(/"/g, '""')}"`,
         `"${kategoriNama}"`,
         stok,
@@ -249,9 +268,11 @@ export function InventarisPage() {
 
         const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
         const nilai = item.nilaiPersediaan ?? (stok * item.hpp)
+        const barcode = item.kodeBarcode || menuMap.get(item.menuId)?.kodeBarcode || '-'
 
         return {
           menuId: item.menuId,
+          kodeBarcode: barcode,
           nama: item.namaMenu || item.nama,
           kategori: kategoriNama,
           stok,
@@ -274,6 +295,7 @@ export function InventarisPage() {
         },
         columns: [
           { header: 'ID', key: 'menuId' },
+          { header: 'Kode Barcode', key: 'kodeBarcode' },
           { header: 'Nama Menu / Barang', key: 'nama' },
           { header: 'Kategori', key: 'kategori' },
           { header: 'Stok', key: 'stok' },
@@ -446,7 +468,7 @@ export function InventarisPage() {
 
         {/* Filters & Search Toolbar */}
         <TableToolbar
-          searchPlaceholder='Cari nama menu / SKU...'
+          searchPlaceholder='Cari nama menu / kode barcode...'
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
           filters={[
@@ -565,9 +587,26 @@ export function InventarisPage() {
                               <span className='font-semibold text-foreground text-sm'>
                                 {item.namaMenu || item.nama}
                               </span>
-                              <span className='text-[11px] text-muted-foreground tabular-nums'>
-                                SKU #{item.menuId}
-                              </span>
+                              {(() => {
+                                const barcode =
+                                  item.kodeBarcode ||
+                                  menuMap.get(item.menuId)?.kodeBarcode
+                                if (barcode) {
+                                  return (
+                                    <div className='mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground font-mono tabular-nums'>
+                                      <Barcode className='size-3 shrink-0 opacity-70' />
+                                      <span className='truncate' title={barcode}>
+                                        {barcode}
+                                      </span>
+                                    </div>
+                                  )
+                                }
+                                return (
+                                  <span className='text-[11px] text-muted-foreground font-mono'>
+                                    -
+                                  </span>
+                                )
+                              })()}
                             </div>
                           </TableCell>
                           <TableCell className='text-xs text-muted-foreground'>
