@@ -35,6 +35,7 @@ import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
+import { useRoleStore } from '@/stores/useRoleStore'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import { formatMargin } from './laporan-utils'
@@ -64,6 +65,8 @@ const getCategoryBadgeClass = (kategori: string) => {
 }
 
 export function LaporanPenjualanPage() {
+  const { currentRole } = useRoleStore()
+  const isAdmin = currentRole === 'admin'
   const [ringkasan, setRingkasan] = useState<RingkasanPenjualan | null>(null)
   const [items, setItems] = useState<BarisPenjualanItem[]>([])
   const [kategoris, setKategoris] = useState<BarisPenjualanKategori[]>([])
@@ -228,30 +231,41 @@ export function LaporanPenjualanPage() {
           {
             sheetName: 'Penjualan per Item',
             title: 'LAPORAN PENJUALAN PER ITEM MENU',
-            metadata: {
-              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-              'Periode Laporan': dateFilterLabel,
-              'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
-              'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-              'Laba Total': formatRupiah(summaryLaba),
-              'Rata-rata Margin': `${summaryMargin}%`,
-            },
+            metadata: isAdmin
+              ? {
+                  'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+                  'Periode Laporan': dateFilterLabel,
+                  'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+                  'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
+                }
+              : {
+                  'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+                  'Periode Laporan': dateFilterLabel,
+                  'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+                  'Total Modal (HPP)': formatRupiah(summaryTotalModal),
+                  'Laba Total': formatRupiah(summaryLaba),
+                  'Rata-rata Margin': `${summaryMargin}%`,
+                },
             columns: [
               { header: 'No', width: 6 },
               { header: 'Nama Menu', key: 'nama', width: 28 },
               { header: 'Kategori', key: 'kategoriNama', width: 16 },
               { header: 'Qty Terjual', key: 'qty', width: 12 },
               { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
-              { header: 'Modal Unit (Rp)', key: 'hpp', width: 14 },
+              ...(!isAdmin ? [{ header: 'Modal Unit (Rp)', key: 'hpp', width: 14 }] : []),
               { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
-              { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-              { header: 'Laba (Rp)', key: 'laba', width: 18 },
-              {
-                header: 'Margin (%)',
-                key: 'marginPersen',
-                formatter: (v) => `${Number(v ?? 0)}%`,
-                width: 12,
-              },
+              ...(!isAdmin
+                ? [
+                    { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
+                    { header: 'Laba (Rp)', key: 'laba', width: 18 },
+                    {
+                      header: 'Margin (%)',
+                      key: 'marginPersen',
+                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
+                      width: 12,
+                    },
+                  ]
+                : []),
             ],
             data: exportItems,
             summaryRow: {
@@ -260,11 +274,15 @@ export function LaporanPenjualanPage() {
               kategoriNama: '',
               qty: items.reduce((acc, i) => acc + (i.qty || 0), 0),
               hargaSatuan: '',
-              hpp: '',
+              ...(!isAdmin ? { hpp: '' } : {}),
               total: summaryPenjualanBersih,
-              modal: summaryTotalModal,
-              laba: summaryLaba,
-              marginPersen: `${summaryMargin}%`,
+              ...(!isAdmin
+                ? {
+                    modal: summaryTotalModal,
+                    laba: summaryLaba,
+                    marginPersen: `${summaryMargin}%`,
+                  }
+                : {}),
             },
           },
           {
@@ -276,14 +294,18 @@ export function LaporanPenjualanPage() {
               { header: 'Jumlah Variasi Menu', key: 'jumlahItem', width: 18 },
               { header: 'Total Qty Terjual', key: 'qty', width: 16 },
               { header: 'Total Penjualan (Rp)', key: 'total', width: 20 },
-              { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-              { header: 'Laba (Rp)', key: 'laba', width: 18 },
-              {
-                header: 'Margin (%)',
-                key: 'marginPersen',
-                formatter: (v) => `${Number(v ?? 0)}%`,
-                width: 12,
-              },
+              ...(!isAdmin
+                ? [
+                    { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
+                    { header: 'Laba (Rp)', key: 'laba', width: 18 },
+                    {
+                      header: 'Margin (%)',
+                      key: 'marginPersen',
+                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
+                      width: 12,
+                    },
+                  ]
+                : []),
             ],
             data: exportKategoris,
             summaryRow: {
@@ -292,9 +314,13 @@ export function LaporanPenjualanPage() {
               jumlahItem: '',
               qty: kategoris.reduce((acc, k) => acc + (k.qty || 0), 0),
               total: summaryPenjualanBersih,
-              modal: summaryTotalModal,
-              laba: summaryLaba,
-              marginPersen: `${summaryMargin}%`,
+              ...(!isAdmin
+                ? {
+                    modal: summaryTotalModal,
+                    laba: summaryLaba,
+                    marginPersen: `${summaryMargin}%`,
+                  }
+                : {}),
             },
           },
           {
@@ -365,16 +391,25 @@ export function LaporanPenjualanPage() {
 
       exportMultiSectionPdf({
         filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN PENJUALAN & LABA KOTOR',
-        subtitle: 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
-        metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
-          'Periode Laporan': dateFilterLabel,
-          'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
-          'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-          'Laba Total': formatRupiah(summaryLaba),
-          'Rata-rata Margin Kotor': `${summaryMargin}%`,
-        },
+        title: isAdmin ? 'LAPORAN PENJUALAN' : 'LAPORAN PENJUALAN & LABA KOTOR',
+        subtitle: isAdmin
+          ? 'Analisis Penjualan Menu, Kategori, dan Titik Kasir'
+          : 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
+        metadata: isAdmin
+          ? {
+              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+              'Periode Laporan': dateFilterLabel,
+              'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+              'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
+            }
+          : {
+              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+              'Periode Laporan': dateFilterLabel,
+              'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+              'Total Modal (HPP)': formatRupiah(summaryTotalModal),
+              'Laba Total': formatRupiah(summaryLaba),
+              'Rata-rata Margin Kotor': `${summaryMargin}%`,
+            },
         sections: [
           {
             sectionTitle: '1. Rincian Penjualan per Item Menu',
@@ -388,31 +423,39 @@ export function LaporanPenjualanPage() {
                 key: 'hargaSatuan',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
-              {
-                header: 'Modal Unit',
-                key: 'hpp',
-                formatter: (v) => formatRupiah(Number(v ?? 0)),
-              },
+              ...(!isAdmin
+                ? [
+                    {
+                      header: 'Modal Unit',
+                      key: 'hpp',
+                      formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
+                    },
+                  ]
+                : []),
               {
                 header: 'Total Penjualan',
                 key: 'total',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
-              {
-                header: 'Total Modal',
-                key: 'modal',
-                formatter: (v) => formatRupiah(Number(v ?? 0)),
-              },
-              {
-                header: 'Laba',
-                key: 'laba',
-                formatter: (v) => formatRupiah(Number(v ?? 0)),
-              },
-              {
-                header: 'Margin',
-                key: 'marginPersen',
-                formatter: (v) => `${Number(v ?? 0)}%`,
-              },
+              ...(!isAdmin
+                ? [
+                    {
+                      header: 'Total Modal',
+                      key: 'modal',
+                      formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
+                    },
+                    {
+                      header: 'Laba',
+                      key: 'laba',
+                      formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
+                    },
+                    {
+                      header: 'Margin',
+                      key: 'marginPersen',
+                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
+                    },
+                  ]
+                : []),
             ],
             data: exportItems,
             summaryRow: {
@@ -421,11 +464,15 @@ export function LaporanPenjualanPage() {
               kategoriNama: '',
               qty: `${items.reduce((acc, i) => acc + (i.qty || 0), 0)}`,
               hargaSatuan: '',
-              hpp: '',
+              ...(!isAdmin ? { hpp: '' } : {}),
               total: formatRupiah(summaryPenjualanBersih),
-              modal: formatRupiah(summaryTotalModal),
-              laba: formatRupiah(summaryLaba),
-              marginPersen: `${summaryMargin}%`,
+              ...(!isAdmin
+                ? {
+                    modal: formatRupiah(summaryTotalModal),
+                    laba: formatRupiah(summaryLaba),
+                    marginPersen: `${summaryMargin}%`,
+                  }
+                : {}),
             },
           },
           {
@@ -440,21 +487,25 @@ export function LaporanPenjualanPage() {
                 key: 'total',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
-              {
-                header: 'Total Modal',
-                key: 'modal',
-                formatter: (v) => formatRupiah(Number(v ?? 0)),
-              },
-              {
-                header: 'Laba',
-                key: 'laba',
-                formatter: (v) => formatRupiah(Number(v ?? 0)),
-              },
-              {
-                header: 'Margin',
-                key: 'marginPersen',
-                formatter: (v) => `${Number(v ?? 0)}%`,
-              },
+              ...(!isAdmin
+                ? [
+                    {
+                      header: 'Total Modal',
+                      key: 'modal',
+                      formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
+                    },
+                    {
+                      header: 'Laba',
+                      key: 'laba',
+                      formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
+                    },
+                    {
+                      header: 'Margin',
+                      key: 'marginPersen',
+                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
+                    },
+                  ]
+                : []),
             ],
             data: exportKategoris,
             summaryRow: {
@@ -463,9 +514,13 @@ export function LaporanPenjualanPage() {
               jumlahItem: '',
               qty: `${kategoris.reduce((acc, k) => acc + (k.qty || 0), 0)}`,
               total: formatRupiah(summaryPenjualanBersih),
-              modal: formatRupiah(summaryTotalModal),
-              laba: formatRupiah(summaryLaba),
-              marginPersen: `${summaryMargin}%`,
+              ...(!isAdmin
+                ? {
+                    modal: formatRupiah(summaryTotalModal),
+                    laba: formatRupiah(summaryLaba),
+                    marginPersen: `${summaryMargin}%`,
+                  }
+                : {}),
             },
           },
           {
@@ -517,7 +572,10 @@ export function LaporanPenjualanPage() {
   return (
     <>
       <Header fixed>
-        <HeaderBreadcrumb section='Laporan Keuangan' title='Penjualan & Laba Kotor' />
+        <HeaderBreadcrumb
+          section='Laporan Keuangan'
+          title={isAdmin ? 'Laporan Penjualan' : 'Penjualan & Laba Kotor'}
+        />
         <HeaderActions />
       </Header>
 
@@ -526,7 +584,7 @@ export function LaporanPenjualanPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Laporan Penjualan & Laba Kotor
+                {isAdmin ? 'Laporan Penjualan Kantin' : 'Laporan Penjualan & Laba Kotor'}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
@@ -550,7 +608,11 @@ export function LaporanPenjualanPage() {
           </div>
 
           {/* SUMMARY CARDS GRID */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+              isAdmin ? 'lg:grid-cols-2' : 'lg:grid-cols-4'
+            }`}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -571,46 +633,50 @@ export function LaporanPenjualanPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Modal (HPP)
-                </CardTitle>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Wallet className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
-                  {ringkasan ? formatRupiah(summaryTotalModal) : '...'}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Biaya modal menu terjual
-                </p>
-              </CardContent>
-            </Card>
+            {!isAdmin && (
+              <>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Modal (HPP)
+                    </CardTitle>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Wallet className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
+                      {ringkasan ? formatRupiah(summaryTotalModal) : '...'}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Biaya modal menu terjual
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Laba Kotor
-                </CardTitle>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold tracking-tight tabular-nums text-blue-600 dark:text-blue-400">
-                  {ringkasan ? formatRupiah(summaryLaba) : '...'}
-                </div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <Badge variant="outline" className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-mono text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-                    Margin: {formatMargin(summaryMargin)}
-                  </Badge>
-                  <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
-                </div>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Laba Kotor
+                    </CardTitle>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight tabular-nums text-blue-600 dark:text-blue-400">
+                      {ringkasan ? formatRupiah(summaryLaba) : '...'}
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <Badge variant="outline" className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-mono text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+                        Margin: {formatMargin(summaryMargin)}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
@@ -659,7 +725,7 @@ export function LaporanPenjualanPage() {
               searchValue={searchQuery}
               onSearchChange={setSearchQuery}
               filters={
-                activeTab === 'item'
+                activeTab === 'item' && !isAdmin
                   ? [
                       {
                         title: 'Urutkan',
@@ -675,7 +741,7 @@ export function LaporanPenjualanPage() {
                     ]
                   : []
               }
-              isFiltered={Boolean(searchQuery || (activeTab === 'item' && sortBy !== 'terlaris'))}
+              isFiltered={Boolean(searchQuery || (activeTab === 'item' && !isAdmin && sortBy !== 'terlaris'))}
               onReset={() => {
                 setSearchQuery('')
                 setSortBy('terlaris')
@@ -687,10 +753,12 @@ export function LaporanPenjualanPage() {
               <Card className="p-0 gap-0 overflow-hidden">
                 <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
-                    Penjualan & Laba Kotor per Item Menu
+                    {isAdmin ? 'Penjualan per Item Menu' : 'Penjualan & Laba Kotor per Item Menu'}
                   </CardTitle>
                   <CardDescription>
-                    Peringkat menu berdasarkan volume terjual, modal (HPP), dan kontribusi laba.
+                    {isAdmin
+                      ? 'Peringkat menu berdasarkan volume terjual dan total penjualan.'
+                      : 'Peringkat menu berdasarkan volume terjual, modal (HPP), dan kontribusi laba.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -702,17 +770,23 @@ export function LaporanPenjualanPage() {
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Satuan</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Unit</TableHead>
+                        {!isAdmin && (
+                          <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Unit</TableHead>
+                        )}
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
-                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin</TableHead>
+                        {!isAdmin && (
+                          <>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
+                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin</TableHead>
+                          </>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                          <TableCell colSpan={isAdmin ? 6 : 10} className="h-32 text-center text-muted-foreground">
                             <div className="flex items-center justify-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>Memuat rincian penjualan per menu...</span>
@@ -721,7 +795,7 @@ export function LaporanPenjualanPage() {
                         </TableRow>
                       ) : filteredItems.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                          <TableCell colSpan={isAdmin ? 6 : 10} className="h-24 text-center text-muted-foreground">
                             Tidak ada data item yang cocok.
                           </TableCell>
                         </TableRow>
@@ -750,32 +824,38 @@ export function LaporanPenjualanPage() {
                               <TableCell className="text-right font-mono text-xs tabular-nums">
                                 {formatRupiah(getItemHarga(item))}
                               </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                {formatRupiah(getItemUnitModal(item))}
-                              </TableCell>
+                              {!isAdmin && (
+                                <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                  {formatRupiah(getItemUnitModal(item))}
+                                </TableCell>
+                              )}
                               <TableCell className="text-right font-mono font-bold text-sm tabular-nums">
                                 {formatRupiah(getItemOmset(item))}
                               </TableCell>
-                              <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                {formatRupiah(getItemModal(item))}
-                              </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
-                                {formatRupiah(getItemLaba(item))}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Badge
-                                  variant="outline"
-                                  className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-medium tabular-nums ${
-                                    (itemMargin || 0) >= 35
-                                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                      : (itemMargin || 0) >= 20
-                                      ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
-                                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
-                                  }`}
-                                >
-                                  {formatMargin(itemMargin)}
-                                </Badge>
-                              </TableCell>
+                              {!isAdmin && (
+                                <>
+                                  <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                    {formatRupiah(getItemModal(item))}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
+                                    {formatRupiah(getItemLaba(item))}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge
+                                      variant="outline"
+                                      className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-medium tabular-nums ${
+                                        (itemMargin || 0) >= 35
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                          : (itemMargin || 0) >= 20
+                                          ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
+                                          : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                                      }`}
+                                    >
+                                      {formatMargin(itemMargin)}
+                                    </Badge>
+                                  </TableCell>
+                                </>
+                              )}
                             </TableRow>
                           )
                         })
@@ -785,25 +865,31 @@ export function LaporanPenjualanPage() {
                       <TableFooter className="bg-muted/50 font-bold border-t border-border">
                         <TableRow>
                           <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
-                            Total / Rata-rata:
+                            {isAdmin ? 'Total:' : 'Total / Rata-rata:'}
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
                             {formatNumber(filteredItems.reduce((acc, i) => acc + (i.qty || 0), 0))}
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
-                          <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                          {!isAdmin && (
+                            <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                          )}
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
                             {formatRupiah(summaryPenjualanBersih)}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
-                            {formatRupiah(summaryTotalModal)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
-                            {formatRupiah(summaryLaba)}
-                          </TableCell>
-                          <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
-                            {summaryMargin}%
-                          </TableCell>
+                          {!isAdmin && (
+                            <>
+                              <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                                {formatRupiah(summaryTotalModal)}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
+                                {formatRupiah(summaryLaba)}
+                              </TableCell>
+                              <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
+                                {summaryMargin}%
+                              </TableCell>
+                            </>
+                          )}
                         </TableRow>
                       </TableFooter>
                     )}
@@ -817,10 +903,12 @@ export function LaporanPenjualanPage() {
               <Card className="p-0 gap-0 overflow-hidden">
                 <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
-                    Penjualan & Laba Kotor per Kategori
+                    {isAdmin ? 'Penjualan per Kategori' : 'Penjualan & Laba Kotor per Kategori'}
                   </CardTitle>
                   <CardDescription>
-                    Perbandingan performa omset dan margin laba antar kelompok kategori makanan/minuman.
+                    {isAdmin
+                      ? 'Perbandingan performa omset penjualan antar kelompok kategori makanan/minuman.'
+                      : 'Perbandingan performa omset dan margin laba antar kelompok kategori makanan/minuman.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -832,15 +920,19 @@ export function LaporanPenjualanPage() {
                         <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Variasi Menu</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Terjual (Qty)</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
-                        <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin Rata-rata</TableHead>
+                        {!isAdmin && (
+                          <>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
+                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin Rata-rata</TableHead>
+                          </>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                          <TableCell colSpan={isAdmin ? 5 : 8} className="h-32 text-center text-muted-foreground">
                             <div className="flex items-center justify-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>Memuat data penjualan per kategori...</span>
@@ -849,7 +941,7 @@ export function LaporanPenjualanPage() {
                         </TableRow>
                       ) : filteredKategoris.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                          <TableCell colSpan={isAdmin ? 5 : 8} className="h-24 text-center text-muted-foreground">
                             Tidak ada kategori yang cocok.
                           </TableCell>
                         </TableRow>
@@ -873,17 +965,21 @@ export function LaporanPenjualanPage() {
                             <TableCell className="text-right font-mono font-bold text-sm tabular-nums">
                               {formatRupiah(getKatOmset(kat))}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
-                              {formatRupiah(getKatModal(kat))}
-                            </TableCell>
-                            <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
-                              {formatRupiah(getKatLaba(kat))}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant="outline" className="rounded-full border border-border bg-muted px-2.5 py-0.5 font-mono text-xs font-medium text-foreground tabular-nums">
-                                {formatMargin(getKatMargin(kat))}
-                              </Badge>
-                            </TableCell>
+                            {!isAdmin && (
+                              <>
+                                <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                  {formatRupiah(getKatModal(kat))}
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-bold text-sm text-blue-600 dark:text-blue-400 tabular-nums">
+                                  {formatRupiah(getKatLaba(kat))}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant="outline" className="rounded-full border border-border bg-muted px-2.5 py-0.5 font-mono text-xs font-medium text-foreground tabular-nums">
+                                    {formatMargin(getKatMargin(kat))}
+                                  </Badge>
+                                </TableCell>
+                              </>
+                            )}
                           </TableRow>
                         ))
                       )}
@@ -892,7 +988,7 @@ export function LaporanPenjualanPage() {
                       <TableFooter className="bg-muted/50 font-bold border-t border-border">
                         <TableRow>
                           <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
-                            Total / Rata-rata:
+                            {isAdmin ? 'Total:' : 'Total / Rata-rata:'}
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
                             {formatNumber(kategoris.reduce((acc, k) => acc + (k.qty || 0), 0))}
@@ -900,15 +996,19 @@ export function LaporanPenjualanPage() {
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
                             {formatRupiah(summaryPenjualanBersih)}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
-                            {formatRupiah(summaryTotalModal)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
-                            {formatRupiah(summaryLaba)}
-                          </TableCell>
-                          <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
-                            {summaryMargin}%
-                          </TableCell>
+                          {!isAdmin && (
+                            <>
+                              <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
+                                {formatRupiah(summaryTotalModal)}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs tabular-nums text-blue-600 dark:text-blue-400">
+                                {formatRupiah(summaryLaba)}
+                              </TableCell>
+                              <TableCell className="text-center font-mono text-xs font-semibold tabular-nums text-primary">
+                                {summaryMargin}%
+                              </TableCell>
+                            </>
+                          )}
                         </TableRow>
                       </TableFooter>
                     )}

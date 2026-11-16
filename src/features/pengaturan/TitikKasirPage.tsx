@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import {
   Store,
   Plus,
   Loader2,
   Edit2,
   Trash2,
-  MonitorCheck,
   AlertTriangle,
   PowerOff,
   CheckCircle2,
@@ -49,12 +47,7 @@ import { TitikKasirFormModal } from './TitikKasirFormModal'
 import type { TitikKasir, TitikKasirFormValues } from './types'
 
 export const TitikKasirPage: React.FC = () => {
-  const navigate = useNavigate()
-  const {
-    activeTitikKasirId,
-    setActiveTitikKasirId,
-    fetchTitikKasir,
-  } = usePengaturanStore()
+  const { fetchTitikKasir } = usePengaturanStore()
 
   const [titikList, setTitikList] = useState<TitikKasir[]>([])
   const [loading, setLoading] = useState(true)
@@ -127,7 +120,6 @@ export const TitikKasirPage: React.FC = () => {
   const totalCount = titikList.length
   const activeCount = titikList.filter((t) => t.aktif).length
   const inactiveCount = totalCount - activeCount
-  const currentPos = titikList.find((t) => t.id === activeTitikKasirId)
 
   // Handlers CRUD
   const handleOpenCreate = () => {
@@ -190,13 +182,6 @@ export const TitikKasirPage: React.FC = () => {
     }
   }
 
-  const handleSelectForPos = (item: TitikKasir) => {
-    setActiveTitikKasirId(item.id)
-    toast.success(
-      `Titik kasir aktif POS diubah menjadi "${item.nama}" (${item.kode})`
-    )
-  }
-
   return (
     <>
       <Header fixed>
@@ -229,7 +214,7 @@ export const TitikKasirPage: React.FC = () => {
         </div>
 
         {/* Metric KPI Cards */}
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='grid gap-4 sm:grid-cols-3'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
@@ -263,7 +248,7 @@ export const TitikKasirPage: React.FC = () => {
                 {activeCount}
               </div>
               <p className='text-xs text-muted-foreground mt-1'>
-                Dapat dipilih di POS
+                Dapat digunakan oleh kasir POS
               </p>
             </CardContent>
           </Card>
@@ -284,35 +269,6 @@ export const TitikKasirPage: React.FC = () => {
               <p className='text-xs text-muted-foreground mt-1'>
                 Sementara dimatikan
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Kasir POS Aktif
-              </CardTitle>
-              <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'>
-                <MonitorCheck className='size-4' />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className='text-lg font-bold tracking-tight text-foreground truncate'>
-                {currentPos ? currentPos.nama : 'Belum dipilih'}
-              </div>
-              <div className='flex items-center justify-between gap-2 mt-1'>
-                <span className='font-mono text-xs text-muted-foreground tabular-nums'>
-                  {currentPos ? currentPos.kode : '-'}
-                </span>
-                <Button
-                  variant='link'
-                  size='sm'
-                  onClick={() => navigate({ to: '/kasir' })}
-                  className='h-auto p-0 text-xs text-primary'
-                >
-                  Buka POS
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -349,8 +305,8 @@ export const TitikKasirPage: React.FC = () => {
               <Table>
                 <TableHeader className='bg-muted/50'>
                   <TableRow className='border-b border-border hover:bg-transparent'>
-                    <TableHead className='w-16 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                      ID
+                    <TableHead className='w-14 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      No.
                     </TableHead>
                     <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                       Nama Titik Kasir
@@ -361,9 +317,6 @@ export const TitikKasirPage: React.FC = () => {
                     <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center'>
                       Status Operasional
                     </TableHead>
-                    <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                      Status di POS Klien
-                    </TableHead>
                     <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right'>
                       Aksi
                     </TableHead>
@@ -373,7 +326,7 @@ export const TitikKasirPage: React.FC = () => {
                   {loading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={6}
+                        colSpan={5}
                         className='h-32 text-center text-xs text-muted-foreground'
                       >
                         <div className='flex items-center justify-center gap-2'>
@@ -385,7 +338,7 @@ export const TitikKasirPage: React.FC = () => {
                   ) : filteredList.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={6}
+                        colSpan={5}
                         className='h-32 text-center text-xs text-muted-foreground'
                       >
                         <div className='flex flex-col items-center justify-center gap-1.5'>
@@ -408,112 +361,78 @@ export const TitikKasirPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredList.map((item) => {
-                      const isCurrentActivePos = item.id === activeTitikKasirId
+                    filteredList.map((item, idx) => (
+                      <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/40'>
+                        <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
+                          {idx + 1}
+                        </TableCell>
 
-                      return (
-                        <TableRow key={item.id} className='border-b border-border last:border-b-0 hover:bg-muted/40'>
-                          <TableCell className='text-center font-mono text-xs text-muted-foreground tabular-nums'>
-                            #{item.id}
-                          </TableCell>
-
-                          <TableCell>
-                            <div className='flex items-center gap-2.5'>
-                              <div className='flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-foreground'>
-                                <Store className='h-4 w-4' />
-                              </div>
-                              <div>
-                                <p className='text-sm font-semibold text-foreground'>
-                                  {item.nama}
-                                </p>
-                                <p className='text-[11px] text-muted-foreground tabular-nums'>
-                                  ID Tenant: {item.sekolahId}
-                                </p>
-                              </div>
+                        <TableCell>
+                          <div className='flex items-center gap-2.5'>
+                            <div className='flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-foreground'>
+                              <Store className='h-4 w-4' />
                             </div>
-                          </TableCell>
+                            <p className='text-sm font-semibold text-foreground'>
+                              {item.nama}
+                            </p>
+                          </div>
+                        </TableCell>
 
-                          <TableCell>
+                        <TableCell>
+                          <Badge
+                            variant='outline'
+                            className='rounded-full border px-2.5 py-0.5 font-mono text-xs font-medium text-foreground bg-muted/50 border-border tabular-nums'
+                          >
+                            {item.kode}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className='text-center'>
+                          <div className='flex items-center justify-center gap-2'>
+                            <Switch
+                              checked={item.aktif}
+                              onCheckedChange={() => handleToggleAktif(item)}
+                              title={`Klik untuk ${item.aktif ? 'menonaktifkan' : 'mengaktifkan'}`}
+                            />
                             <Badge
                               variant='outline'
-                              className='rounded-full border px-2.5 py-0.5 font-mono text-xs font-medium text-foreground bg-muted/50 border-border tabular-nums'
+                              className={
+                                item.aktif
+                                  ? 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
+                                  : 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground bg-muted/50 border-border'
+                              }
                             >
-                              {item.kode}
+                              {item.aktif ? 'Aktif' : 'Nonaktif'}
                             </Badge>
-                          </TableCell>
+                          </div>
+                        </TableCell>
 
-                          <TableCell className='text-center'>
-                            <div className='flex items-center justify-center gap-2'>
-                              <Switch
-                                checked={item.aktif}
-                                onCheckedChange={() => handleToggleAktif(item)}
-                                title={`Klik untuk ${item.aktif ? 'menonaktifkan' : 'mengaktifkan'}`}
-                              />
-                              <Badge
-                                variant='outline'
-                                className={
-                                  item.aktif
-                                    ? 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
-                                    : 'rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground bg-muted/50 border-border'
-                                }
-                              >
-                                {item.aktif ? 'Aktif' : 'Nonaktif'}
-                              </Badge>
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            {isCurrentActivePos ? (
-                              <Badge
-                                variant='outline'
-                                className='gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/40 dark:border-blue-900/60'
-                              >
-                                <MonitorCheck className='h-3 w-3' />
-                                <span>Sedang Dipakai</span>
-                              </Badge>
-                            ) : item.aktif ? (
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                onClick={() => handleSelectForPos(item)}
-                                className='h-7 text-xs'
-                              >
-                                Pilih untuk POS
-                              </Button>
-                            ) : (
-                              <span className='text-xs text-muted-foreground'>
-                                -
-                              </span>
-                            )}
-                          </TableCell>
-
-                          <TableCell className='text-right'>
-                            <div className='flex items-center justify-end gap-1'>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => handleOpenEdit(item)}
-                                className='h-8 w-8'
-                                title='Ubah titik kasir'
-                              >
-                                <Edit2 className='h-3.5 w-3.5' />
-                              </Button>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => setDeletingItem(item)}
-                                className='h-8 w-8 text-destructive hover:bg-destructive/10'
-                                title='Hapus titik kasir'
-                              >
-                                <Trash2 className='h-3.5 w-3.5' />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })
+                        <TableCell className='text-right'>
+                          <div className='flex items-center justify-end gap-1'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => handleOpenEdit(item)}
+                              className='h-8 w-8'
+                              title='Ubah titik kasir'
+                            >
+                              <Edit2 className='h-3.5 w-3.5' />
+                            </Button>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => setDeletingItem(item)}
+                              className='h-8 w-8 text-destructive hover:bg-destructive/10'
+                              title='Hapus titik kasir'
+                            >
+                              <Trash2 className='h-3.5 w-3.5' />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>

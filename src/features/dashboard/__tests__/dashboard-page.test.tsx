@@ -3,8 +3,15 @@ import { render } from 'vitest-browser-react'
 import { DashboardPage, getStatusBadgeClass } from '../DashboardPage'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 
 let mockRole = 'pengelola'
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, to, ...props }: { children?: React.ReactNode; to?: string }) => (
+    <a href={to} {...props}>{children}</a>
+  ),
+}))
 
 vi.mock('@/stores/useRoleStore', () => ({
   useRoleStore: () => ({
@@ -54,6 +61,14 @@ vi.mock('@/features/katalog/api/katalog-api', () => ({
   katalogApi: {
     getMenuList: vi.fn().mockResolvedValue([]),
     getKategoriList: vi.fn().mockResolvedValue([]),
+  },
+}))
+
+vi.mock('@/features/pengaturan/api/pengaturan-api', () => ({
+  pengaturanApi: {
+    getTitikKasirList: vi.fn().mockResolvedValue([
+      { id: 1, sekolahId: 1, nama: 'Kasir Kantin Utama', kode: 'POS-01', aktif: true, createdAt: '', updatedAt: '' },
+    ]),
   },
 }))
 
@@ -244,6 +259,20 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     await expect.element(refundBadge).toBeInTheDocument()
     await expect.element(refundBadge).toHaveClass('text-rose-700')
     await expect.element(screen.getByText('VOID', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('menyembunyikan metrik Stok Menipis dan menampilkan Status Titik Kasir untuk peran admin (PRD §9.5)', async () => {
+    mockRole = 'admin'
+    const screen = await render(<DashboardPage />)
+
+    expect(katalogApi.getMenuList).not.toHaveBeenCalled()
+    expect(pengaturanApi.getTitikKasirList).toHaveBeenCalled()
+
+    await expect.element(screen.getByText('Titik Kasir Aktif')).toBeInTheDocument()
+    await expect.element(screen.getByText('Status Titik Kasir', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Kasir Kantin Utama')).toBeInTheDocument()
+    await expect.element(screen.getByText('Peringatan Stok Barang')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Stok Menipis')).not.toBeInTheDocument()
   })
 })
 

@@ -152,7 +152,7 @@ export const sidebarData: SidebarData = {
             {
               title: 'Analisis Laba Kotor',
               url: '/laporan/laba-kotor',
-              roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
+              roles: ['pengelola', 'bendahara', 'kepsek'],
             },
             {
               title: 'Total Saldo Siswa',
@@ -163,6 +163,16 @@ export const sidebarData: SidebarData = {
               title: 'Riwayat Transaksi',
               url: '/laporan/riwayat-keseluruhan',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
+            },
+            {
+              title: 'Riwayat Per Siswa',
+              url: '/laporan/riwayat-siswa',
+              roles: ['admin', 'bendahara', 'tu'],
+            },
+            {
+              title: 'Pembatalan Kasir',
+              url: '/laporan/pembatalan',
+              roles: ['admin', 'bendahara', 'tu'],
             },
             {
               title: 'Laporan Kerugian Stok',

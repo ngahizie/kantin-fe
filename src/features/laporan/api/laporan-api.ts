@@ -13,6 +13,7 @@ import {
   type RiwayatTransaksiKeseluruhanItem,
   type BarisKerugianStok,
   type RingkasanKerugianStok,
+  type BarisPembatalanKasir,
   resolveTitikDanPetugas,
 } from '../types'
 
@@ -630,6 +631,71 @@ export const laporanApi = {
       kerugianBarangRusak: 0,
       qtyBarangRusak: 0,
     }
+  },
+
+  /**
+   * Mengambil Daftar Pembatalan Transaksi Kasir (Void / Kartu Dipakai Bukan Pemiliknya)
+   * Diperkaya dengan identitas siswa & nama titik kasir bila tersedia.
+   */
+  async getPembatalan(
+    params?: LaporanFilterParams
+  ): Promise<BarisPembatalanKasir[]> {
+    const res = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
+      '/api/laporan/pembatalan',
+      { params }
+    )
+    const rawList = Array.isArray(res.data?.data) ? res.data.data : []
+    if (rawList.length === 0) return []
+
+    const [siswaRes, titikRes] = await Promise.all([
+      apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/siswa', { params: { batas: 50 } }).catch(() => null),
+      apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/pengaturan-kantin/titik-kasir').catch(() => null),
+    ])
+
+    const siswaMap = new Map<number, { nama: string; nis: string; kelas: string }>()
+    const rawSiswa = Array.isArray(siswaRes?.data?.data) ? siswaRes.data.data : []
+    for (const s of rawSiswa) {
+      const id = Number(s.siswaId ?? s.id ?? 0)
+      if (id > 0) {
+        siswaMap.set(id, {
+          nama: String(s.nama || `Siswa #${id}`),
+          nis: String(s.nis || '-'),
+          kelas: String(s.kelas || '-'),
+        })
+      }
+    }
+
+    const titikMap = new Map<number, string>()
+    const rawTitik = Array.isArray(titikRes?.data?.data) ? titikRes.data.data : []
+    for (const t of rawTitik) {
+      const id = Number(t.id ?? 0)
+      if (id > 0) {
+        titikMap.set(id, String(t.nama || `Titik Kasir #${id}`))
+      }
+    }
+
+    return rawList.map((row) => {
+      const siswaId = Number(row.siswaId ?? row.siswa_id ?? 0)
+      const titikKasirId = Number(row.titikKasirId ?? row.titik_kasir_id ?? 0)
+      const siswaInfo = siswaMap.get(siswaId)
+      return {
+        transaksiId: Number(row.transaksiId ?? row.id ?? 0),
+        subjekTipe: String(row.subjekTipe || 'SISWA'),
+        siswaId,
+        siswaNama: String(row.siswaNama || siswaInfo?.nama || `Siswa #${siswaId}`),
+        siswaNis: String(row.siswaNis || siswaInfo?.nis || '-'),
+        siswaKelas: String(row.siswaKelas || siswaInfo?.kelas || '-'),
+        kartuUid: row.kartuUid ? String(row.kartuUid) : null,
+        total: toFiniteNumber(row.total, 0),
+        alasanVoid: String(row.alasanVoid || row.alasan_void || '-'),
+        voidAt: String(row.voidAt || row.void_at || ''),
+        voidOleh: row.voidOleh != null ? Number(row.voidOleh) : undefined,
+        petugasId: row.petugasId != null ? Number(row.petugasId) : undefined,
+        titikKasirId: titikKasirId > 0 ? titikKasirId : undefined,
+        titikKasirNama: String(row.titikKasirNama || (titikKasirId > 0 ? titikMap.get(titikKasirId) : '') || 'Kasir Kantin'),
+        waktu: String(row.waktu || ''),
+      }
+    })
   },
 
   /**
