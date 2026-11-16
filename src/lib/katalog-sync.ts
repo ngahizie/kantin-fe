@@ -145,6 +145,8 @@ export function notifyKatalogChanged(
   return event
 }
 
+export const emitSyncSignal = notifyKatalogChanged
+
 /**
  * Berlangganan notifikasi perubahan katalog di tab saat ini maupun lintas tab.
  * Menggabungkan BroadcastChannel (utama) dan storage event (cadangan) dengan

@@ -78,56 +78,49 @@ export function LaporanRekonsiliasiPage() {
       {
         id: '1',
         pos: 'Top-up Online Siswa',
-        kategori: 'MASUK',
-        arah: 'KREDIT',
+        arah: 'MASUK',
         nominal: data.topupOnline,
         keterangan: 'Pemasukan saldo via payment gateway / transfer virtual account',
       },
       {
         id: '2',
         pos: 'Top-up Tunai di TU',
-        kategori: 'MASUK',
-        arah: 'KREDIT',
+        arah: 'MASUK',
         nominal: data.topupTunai,
         keterangan: 'Penerimaan fisik uang tunai di loket Tata Usaha',
       },
       {
         id: '3',
         pos: 'Pengembalian Saldo Siswa (Refund)',
-        kategori: 'KELUAR',
-        arah: 'DEBIT',
+        arah: 'KELUAR',
         nominal: data.refund,
         keterangan: 'Pengembalian sisa saldo bagi siswa yang lulus atau pindah sekolah',
       },
       {
         id: '4',
         pos: 'Penjualan Bersih Kantin',
-        kategori: 'SALDO',
-        arah: 'DEBIT',
+        arah: 'TETAP',
         nominal: data.penjualanBersih,
         keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi pembatalan ${formatRupiah(data.voidPenjualan)}`,
       },
       {
         id: '5',
         pos: 'Saldo Mengendap Siswa',
-        kategori: 'SALDO',
-        arah: 'STATUS',
+        arah: 'TETAP',
         nominal: data.saldoSiswa,
         keterangan: 'Total dana titipan tersimpan di kartu seluruh siswa (kewajiban sekolah)',
       },
       {
         id: '7',
         pos: 'Koreksi Saldo Masuk',
-        kategori: 'MASUK',
-        arah: 'KREDIT',
+        arah: 'MASUK',
         nominal: data.koreksiMasuk,
         keterangan: 'Penyesuaian saldo tambah oleh bendahara dengan berita acara',
       },
       {
         id: '8',
         pos: 'Pembatalan Transaksi Kasir',
-        kategori: 'MASUK',
-        arah: 'KREDIT',
+        arah: 'MASUK',
         nominal: data.voidPenjualan,
         keterangan: 'Pembatalan transaksi salah tap yang mengembalikan saldo',
       },
@@ -142,7 +135,7 @@ export function LaporanRekonsiliasiPage() {
       (p) =>
         p.pos.toLowerCase().includes(q) ||
         p.keterangan.toLowerCase().includes(q) ||
-        p.kategori.toLowerCase().includes(q)
+        p.arah.toLowerCase().includes(q)
     )
   }, [rincianPos, searchQuery])
 
@@ -157,29 +150,25 @@ export function LaporanRekonsiliasiPage() {
       const exportRows = [
         ...rincianPos.map((item) => ({
           pos: item.pos,
-          kategori: item.kategori,
           arah: item.arah,
           nominal: item.nominal,
           keterangan: item.keterangan,
         })),
         {
           pos: 'TOTAL TOP-UP BERSIH (Topup - Refund)',
-          kategori: 'EVALUASI',
-          arah: 'NETTO',
+          arah: 'EVALUASI',
           nominal: data.topupBersih,
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
           pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
-          kategori: 'EVALUASI',
-          arah: 'NETTO',
+          arah: 'EVALUASI',
           nominal: data.totalPenggunaan,
           keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
-          kategori: 'EVALUASI',
-          arah: 'STATUS',
+          arah: 'EVALUASI',
           nominal: data.selisih,
           keterangan: data.seimbang ? 'SEIMBANG (Rp 0)' : 'SELISIH - PERIKSA KAS!',
         },
@@ -200,8 +189,7 @@ export function LaporanRekonsiliasiPage() {
         columns: [
           { header: 'No', width: 6 },
           { header: 'Pos Akuntansi / Ledger', key: 'pos', width: 35 },
-          { header: 'Kategori', key: 'kategori', width: 14 },
-          { header: 'Arah Mutasi', key: 'arah', width: 14 },
+          { header: 'Arah', key: 'arah', width: 14 },
           {
             header: 'Nominal (Rp)',
             key: 'nominal',
@@ -214,7 +202,6 @@ export function LaporanRekonsiliasiPage() {
         summaryRow: {
           no: '',
           pos: '',
-          kategori: '',
           arah: '',
           nominal: '',
           keterangan: '',
@@ -240,29 +227,25 @@ export function LaporanRekonsiliasiPage() {
       const exportRows = [
         ...rincianPos.map((item) => ({
           pos: item.pos,
-          kategori: item.kategori,
           arah: item.arah,
           nominal: formatRupiah(item.nominal),
           keterangan: item.keterangan,
         })),
         {
           pos: 'TOTAL TOP-UP BERSIH (Topup - Refund)',
-          kategori: 'EVALUASI',
-          arah: 'NETTO',
+          arah: 'EVALUASI',
           nominal: formatRupiah(data.topupBersih),
           keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
         },
         {
           pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
-          kategori: 'EVALUASI',
-          arah: 'NETTO',
+          arah: 'EVALUASI',
           nominal: formatRupiah(data.totalPenggunaan),
           keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
         },
         {
           pos: 'SELISIH INVARIANT AKUNTANSI',
-          kategori: 'EVALUASI',
-          arah: 'STATUS',
+          arah: 'EVALUASI',
           nominal: formatRupiah(data.selisih),
           keterangan: data.seimbang ? 'SEIMBANG (Rp 0)' : 'SELISIH - PERIKSA KAS!',
         },
@@ -283,7 +266,6 @@ export function LaporanRekonsiliasiPage() {
         columns: [
           { header: 'No' },
           { header: 'Pos Akuntansi / Ledger', key: 'pos' },
-          { header: 'Kategori', key: 'kategori' },
           { header: 'Arah', key: 'arah' },
           { header: 'Nominal', key: 'nominal' },
           { header: 'Keterangan Akuntansi', key: 'keterangan' },
@@ -292,7 +274,6 @@ export function LaporanRekonsiliasiPage() {
         summaryRow: {
           no: '',
           pos: '',
-          kategori: '',
           arah: '',
           nominal: '',
           keterangan: '',
@@ -577,7 +558,6 @@ export function LaporanRekonsiliasiPage() {
                     <TableRow className="border-b border-border hover:bg-transparent">
                       <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pos Akuntansi / Ledger</TableHead>
-                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</TableHead>
                       <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Arah</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal (Rp)</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Keterangan & Rujukan</TableHead>
@@ -586,7 +566,7 @@ export function LaporanRekonsiliasiPage() {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             <span>Memuat data rekonsiliasi harian...</span>
@@ -595,7 +575,7 @@ export function LaporanRekonsiliasiPage() {
                       </TableRow>
                     ) : filteredPos.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                           Tidak ditemukan pos yang sesuai dengan pencarian.
                         </TableCell>
                       </TableRow>
@@ -612,24 +592,15 @@ export function LaporanRekonsiliasiPage() {
                             <Badge
                               variant="outline"
                               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                posItem.kategori === 'MASUK'
+                                posItem.arah === 'MASUK'
                                   ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                  : posItem.kategori === 'KELUAR'
+                                  : posItem.arah === 'KELUAR'
                                   ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                                   : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
                               }`}
                             >
-                              {posItem.kategori}
+                              {posItem.arah}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-center font-mono text-xs">
-                            {posItem.arah === 'KREDIT' ? (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">KREDIT</span>
-                            ) : posItem.arah === 'DEBIT' ? (
-                              <span className="text-blue-600 dark:text-blue-400 font-bold">DEBIT</span>
-                            ) : (
-                              <span className="text-muted-foreground">STATUS</span>
-                            )}
                           </TableCell>
                           <TableCell className="text-right font-mono font-bold text-sm tabular-nums">
                             {formatRupiah(posItem.nominal)}
