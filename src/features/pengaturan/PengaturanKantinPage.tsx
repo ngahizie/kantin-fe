@@ -204,7 +204,7 @@ export const PengaturanKantinPage: React.FC = () => {
           </Alert>
 
           {/* Form Pengaturan */}
-          <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className='space-y-6'>
             <div className='grid gap-6 md:grid-cols-2'>
               {/* Card 1: Identitas & Jam Tutup Otomatis */}
               <Card>
@@ -454,7 +454,7 @@ export const PengaturanKantinPage: React.FC = () => {
                     <Input
                       id='maksTopup'
                       type='number'
-                      step={10000}
+                      step={1000}
                       min={1000}
                       placeholder='500000'
                       className='font-mono text-sm tabular-nums'
@@ -508,7 +508,7 @@ export const PengaturanKantinPage: React.FC = () => {
                     <Input
                       id='batasSaldoSiswa'
                       type='number'
-                      step={50000}
+                      step={10000}
                       min={10000}
                       placeholder='1000000'
                       className='font-mono text-sm tabular-nums'
