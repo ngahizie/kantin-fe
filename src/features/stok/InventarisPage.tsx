@@ -290,7 +290,7 @@ export function InventarisPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Nilai Persediaan': formatRupiah(kpiData.totalNilai),
-          'Total SKU Terdaftar': `${kpiData.totalSku} SKU`,
+          'Total Menu Terdaftar': `${kpiData.totalSku} Menu`,
           'Item Stok Menipis/Habis': `${kpiData.countMenipis + kpiData.countHabis} Item`,
         },
         columns: [
@@ -373,11 +373,11 @@ export function InventarisPage() {
             </CardContent>
           </Card>
 
-          {/* 2. Total SKU & Unit */}
+          {/* 2. Total Menu & Unit */}
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Total SKU Terdaftar
+                Total Menu Terdaftar
               </CardTitle>
               <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'>
                 <Package className='size-4' />
@@ -387,7 +387,7 @@ export function InventarisPage() {
               <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
                 {formatNumber(kpiData.totalSku)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
-                  item
+                  Menu
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground tabular-nums'>
@@ -410,7 +410,7 @@ export function InventarisPage() {
               <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
                 {formatNumber(kpiData.countAman)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
-                  SKU
+                  Menu
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
@@ -433,7 +433,7 @@ export function InventarisPage() {
               <div className='text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums'>
                 {formatNumber(kpiData.countMenipis)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
-                  SKU
+                  Menu
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
@@ -456,7 +456,7 @@ export function InventarisPage() {
               <div className='text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums'>
                 {formatNumber(kpiData.countHabis)}{' '}
                 <span className='text-xs font-normal text-muted-foreground'>
-                  SKU
+                  Menu
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
