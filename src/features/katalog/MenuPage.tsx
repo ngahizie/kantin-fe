@@ -42,12 +42,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { Link } from '@tanstack/react-router'
 import {
   getLatestKatalogChangeId,
   subscribeKatalogChanges,
 } from '@/lib/katalog-sync'
 import { katalogApi } from './api/katalog-api'
-import { MenuDetailModal } from './MenuDetailModal'
 import { MenuFormModal } from './MenuFormModal'
 import {
   matchesMenuSearchQuery,
@@ -107,10 +107,6 @@ export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null)
 
-  // Modal detail popup state
-  const [detailMenuId, setDetailMenuId] = useState<number | null>(null)
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
-
   // Delete & status toggle states
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -122,7 +118,7 @@ export function MenuPage() {
   )
 
   const isAutoRefreshPaused = shouldPauseMenuAutoRefresh({
-    isModalOpen: isModalOpen || isDetailOpen,
+    isModalOpen,
     hasDeleteTarget: Boolean(deleteTarget),
     isDeleting,
     togglingId,
@@ -379,11 +375,6 @@ export function MenuPage() {
   const handleEdit = (menu: MenuItem) => {
     setSelectedMenu(menu)
     setIsModalOpen(true)
-  }
-
-  const handleViewDetail = (item: MenuItem) => {
-    setDetailMenuId(item.id)
-    setIsDetailOpen(true)
   }
 
   const handleFormSuccess = () => {
@@ -705,9 +696,14 @@ export function MenuPage() {
 
                         {/* Nama Menu */}
                         <TableCell className='py-3.5 ps-2 overflow-hidden'>
-                          <div className='font-semibold text-foreground text-sm truncate' title={item.nama}>
+                          <Link
+                            to='/menu/$menuId'
+                            params={{ menuId: String(item.id) }}
+                            className='font-semibold text-foreground text-sm truncate hover:underline block'
+                            title={item.nama}
+                          >
                             {item.nama}
-                          </div>
+                          </Link>
                           {item.kodeBarcode && (
                             <div className='mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground font-mono tabular-nums'>
                               <Barcode className='size-3 shrink-0 opacity-70' />
@@ -810,10 +806,15 @@ export function MenuPage() {
                               variant='ghost'
                               size='icon'
                               className='size-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted'
-                              onClick={() => handleViewDetail(item)}
+                              asChild
                               title='Lihat Detail'
                             >
-                              <Eye className='size-4' />
+                              <Link
+                                to='/menu/$menuId'
+                                params={{ menuId: String(item.id) }}
+                              >
+                                <Eye className='size-4' />
+                              </Link>
                             </Button>
                             <Button
                               variant='ghost'
@@ -902,15 +903,6 @@ export function MenuPage() {
         selectedMenu={selectedMenu}
         kategoriList={kategoriList}
         onSuccess={handleFormSuccess}
-      />
-
-      {/* Modal Detail Popup */}
-      <MenuDetailModal
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        menuId={detailMenuId}
-        kategoriList={kategoriList}
-        onEdit={(item) => handleEdit(item)}
       />
 
       {/* Alert Dialog Konfirmasi Hapus Menu */}

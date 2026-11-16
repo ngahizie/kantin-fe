@@ -118,10 +118,10 @@ describe('SearchProvider and CommandMenu', () => {
     await openCommandPalette(screen)
 
     await userEvent.click(
-      getByRole('option', { name: 'Manajemen Stok Stok Opname & Rusak' })
+      getByRole('option', { name: 'Manajemen Stok Mutasi Stok' })
     )
 
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/stok/opname' })
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: '/stok/kartu' })
     await expect
       .element(getByPlaceholder(COMMAND_MENU_PLACEHOLDER))
       .not.toBeInTheDocument()

@@ -11,7 +11,7 @@ import { katalogApi } from '../api/katalog-api'
 import type { KategoriItem, MenuItem } from '../types'
 
 vi.mock('@tanstack/react-router', () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => vi.fn(), Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
 }))
 
 vi.mock('@/components/layout/header', () => ({
@@ -437,3 +437,4 @@ describe('MenuPage — Stabilitas Tata Letak Saat Berganti Filter', () => {
     })
   })
 })
+
