@@ -38,9 +38,10 @@ export const kasirApi = {
    * Eksekusi transaksi tap kartu RFID di kasir (PRD §6.2)
    */
   async prosesTap(data: TapTransaksiRequest): Promise<TapTransaksiData> {
+    const cleanUid = data.rfidUid.trim().toUpperCase()
     const payload = {
-      kartu_uid: data.rfidUid,
-      rfidUid: data.rfidUid,
+      kartu_uid: cleanUid,
+      rfidUid: cleanUid,
       items: data.items.map((it) => ({
         menu_id: it.menuId,
         menuId: it.menuId,
@@ -201,7 +202,7 @@ export const kasirApi = {
    * Cek saldo dan status kartu siswa berdasarkan UID kartu RFID
    */
   async cekSaldo(rfidUid: string): Promise<InfoSaldoData> {
-    const uid = rfidUid.trim()
+    const uid = rfidUid.trim().toUpperCase()
     if (!uid) {
       throw new Error('Nomor UID kartu RFID wajib diisi.')
     }

@@ -33,7 +33,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   const isSearchingRef = useRef<boolean>(false)
 
   const executeSearch = useCallback(async (queryToSearch: string) => {
-    const query = queryToSearch.trim()
+    const query = queryToSearch.trim().toUpperCase()
     if (!query) return
     if (isSearchingRef.current) return
 
@@ -65,8 +65,9 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   // Untuk pengetikan manual di input, pemeriksaan hanya dipicu saat tombol Periksa diklik.
   useRfidScanner({
     onScan: (scannedUid) => {
-      setSearchInput(scannedUid)
-      executeSearch(scannedUid)
+      const clean = scannedUid.trim().toUpperCase()
+      setSearchInput(clean)
+      executeSearch(clean)
     },
     enabled: open,
   })

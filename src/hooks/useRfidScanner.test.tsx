@@ -153,4 +153,18 @@ describe('useRfidScanner', () => {
     expect(onScan).toHaveBeenCalledTimes(1)
     expect(onScan).toHaveBeenCalledWith('04A1B2C3')
   })
+
+  it('mengonversi UID hasil scan huruf kecil menjadi uppercase secara otomatis', async () => {
+    const onScan = vi.fn()
+    await render(<ScannerHarness onScan={onScan} />)
+
+    dispatchKeySequence(
+      document.body,
+      ['0', '4', 'a', '1', 'b', '2', 'c', '3', 'd', '4', 'Enter'],
+      15
+    )
+
+    expect(onScan).toHaveBeenCalledTimes(1)
+    expect(onScan).toHaveBeenCalledWith('04A1B2C3D4')
+  })
 })

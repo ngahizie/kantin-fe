@@ -62,6 +62,7 @@ export interface InventarisItem {
   menipis: boolean
   namaMenu?: string
   stokBerjalan?: number
+  kodeBarcode?: string | null
 }
 
 export interface HasilMutasiStok {

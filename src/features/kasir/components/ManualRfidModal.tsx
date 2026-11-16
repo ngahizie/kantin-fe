@@ -30,7 +30,7 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
 
   const handleExecute = useCallback(
     (uidToProcess: string) => {
-      const trimmed = uidToProcess.trim()
+      const trimmed = uidToProcess.trim().toUpperCase()
       if (!trimmed || isProcessing || hasSubmittedRef.current) return
 
       hasSubmittedRef.current = true

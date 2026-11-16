@@ -2662,6 +2662,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           hpp,
           nilaiPersediaan: stok * hpp,
           menipis,
+          kodeBarcode: m.kode_barcode ?? null,
         }
       })
 
