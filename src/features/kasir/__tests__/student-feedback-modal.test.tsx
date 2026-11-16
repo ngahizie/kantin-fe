@@ -69,7 +69,7 @@ describe('StudentFeedbackModal', () => {
     await expect.element(screen.getByText('NIS: 12345')).toBeInTheDocument()
   })
 
-  it('menggunakan default hitung mundur 15 detik untuk menutup otomatis', async () => {
+  it('menggunakan default hitung mundur 3 detik untuk menutup otomatis sesuai PRD', async () => {
     const mockData = {
       transaksi_id: 3344,
       total: 10000,
@@ -92,7 +92,7 @@ describe('StudentFeedbackModal', () => {
       />
     )
 
-    await expect.element(screen.getByText('15', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('3', { exact: true })).toBeInTheDocument()
     await expect.element(screen.getByText(/Menutup otomatis dalam/i)).toBeInTheDocument()
   })
 
