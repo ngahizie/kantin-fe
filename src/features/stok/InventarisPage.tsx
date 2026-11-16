@@ -381,7 +381,7 @@ export function InventarisPage() {
                 {formatRupiah(kpiData.totalNilai)}
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Valuasi stok berjalan × HPP
+                Total modal stok barang saat ini
               </p>
             </CardContent>
           </Card>
