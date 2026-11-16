@@ -35,7 +35,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   const executeSearch = useCallback(async (queryToSearch: string) => {
     const query = queryToSearch.trim().toUpperCase()
     if (!query) return
-    if (isSearchingRef.current && lastSearchedRef.current === query) return
+    if (isSearchingRef.current) return
 
     lastSearchedRef.current = query
     isSearchingRef.current = true
@@ -60,7 +60,9 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     }
   }, [])
 
-  // Integrasi listener RFID scanner global saat modal sedang terbuka
+  // Integrasi listener RFID scanner global saat modal terbuka:
+  // Tap kartu fisik RFID langsung otomatis memeriksa saldo (hardware scanner burst).
+  // Untuk pengetikan manual di input, pemeriksaan hanya dipicu saat tombol Periksa diklik.
   useRfidScanner({
     onScan: (scannedUid) => {
       const clean = scannedUid.trim().toUpperCase()
@@ -69,34 +71,6 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
     },
     enabled: open,
   })
-
-  // Deteksi otomatis saat kartu di-scan (UID 8-16 digit desimal/hex)
-  useEffect(() => {
-    const trimmed = searchInput.trim().toUpperCase()
-    if (!trimmed) return
-
-    // Jika data hasil saat ini sudah sesuai dengan UID ini, jangan cek ulang
-    if (result && result.uid?.toUpperCase() === trimmed) {
-      return
-    }
-
-    if (lastSearchedRef.current.toUpperCase() === trimmed && (result || errorMessage)) {
-      return
-    }
-
-    // Pola kartu RFID: 8-16 digit desimal (Mifare desimal) atau 8-16 hex chars
-    const isCompletedUid =
-      /^\d{8,16}$/.test(trimmed) || /^[0-9a-fA-F]{8,16}$/.test(trimmed)
-
-    // Hanya auto-eksekusi saat pola UID lengkap terbaca dari scanner/input
-    if (!isCompletedUid) return
-
-    const timer = setTimeout(() => {
-      executeSearch(trimmed)
-    }, 60)
-
-    return () => clearTimeout(timer)
-  }, [searchInput, result, errorMessage, executeSearch])
 
   // Auto focus & select input saat modal terbuka
   useEffect(() => {
@@ -113,6 +87,14 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     executeSearch(searchInput)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
+    if (result || errorMessage) {
+      setResult(null)
+      setErrorMessage(null)
+    }
   }
 
   const handleReset = () => {
@@ -143,7 +125,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
             </DialogTitle>
           </div>
           <DialogDescription className='text-xs text-muted-foreground'>
-            Tap kartu RFID atau masukkan nomor UID kartu untuk memeriksa saldo dan status kartu terkini.
+            Tap kartu RFID untuk periksa langsung, atau ketik nomor UID kartu lalu klik tombol Periksa.
           </DialogDescription>
         </DialogHeader>
 
@@ -156,7 +138,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
                 <Input
                   ref={inputRef}
                   value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
+                  onChange={handleInputChange}
                   onFocus={(e) => e.target.select()}
                   placeholder='Tap kartu atau ketik UID kartu RFID...'
                   disabled={loading}
