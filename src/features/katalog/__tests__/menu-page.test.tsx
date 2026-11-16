@@ -11,7 +11,21 @@ import { katalogApi } from '../api/katalog-api'
 import type { KategoriItem, MenuItem } from '../types'
 
 vi.mock('@tanstack/react-router', () => ({
-  useNavigate: () => vi.fn(), Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
+  useNavigate: () => vi.fn(),
+  useSearch: () => ({}),
+  Link: ({
+    children,
+    to,
+    ...props
+  }: {
+    children?: React.ReactNode
+    to?: string
+    [key: string]: unknown
+  }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 vi.mock('@/components/layout/header', () => ({

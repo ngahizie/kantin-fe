@@ -515,7 +515,7 @@ export function InventarisPage() {
                     <TableHead className='text-right w-44 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                       Nilai Persediaan
                     </TableHead>
-                    <TableHead className='text-center w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aksi</TableHead>
+                    <TableHead className='text-center w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -607,34 +607,20 @@ export function InventarisPage() {
                             {formatRupiah(totalNilai)}
                           </TableCell>
                           <TableCell className='text-center'>
-                            <div className='flex items-center justify-center gap-1.5'>
-                              <Button
-                                size='sm'
-                                variant='outline'
-                                className='h-7 text-xs px-2 gap-1'
-                                asChild
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='h-7 text-xs px-2.5 gap-1.5 text-primary hover:text-primary font-medium'
+                              asChild
+                            >
+                              <Link
+                                to='/menu'
+                                search={{ editMenuId: item.menuId, aksi: 'MASUK' }}
                               >
-                                <Link
-                                  to='/stok/kartu'
-                                  search={{ menuId: item.menuId }}
-                                >
-                                  <History className='h-3.5 w-3.5' />
-                                  <span>Kartu</span>
-                                </Link>
-                              </Button>
-
-                              <Button
-                                size='sm'
-                                variant='ghost'
-                                className='h-7 text-xs px-2 gap-1 text-primary hover:text-primary'
-                                asChild
-                              >
-                                <Link to='/menu'>
-                                  <PackagePlus className='h-3.5 w-3.5' />
-                                  <span>Restock</span>
-                                </Link>
-                              </Button>
-                            </div>
+                                <PackagePlus className='size-3.5' />
+                                <span>Restock</span>
+                              </Link>
+                            </Button>
                           </TableCell>
                         </TableRow>
                       )
