@@ -695,22 +695,47 @@ export function InventarisPage() {
               </Table>
             </div>
 
-            {/* Pagination Controls (Per 10 menu) */}
+            {/* Unified Footer: Informasi Data & Pagination dalam 1 Baris Rapi */}
             {!isLoading && filteredAndSortedList.length > 0 && (
-              <div className='p-3.5 border-t border-border flex flex-wrap items-center justify-between gap-2 bg-muted/20'>
-                <div className='text-xs font-medium text-muted-foreground tabular-nums'>
-                  Menampilkan{' '}
-                  <span className='font-semibold text-foreground'>
-                    {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
-                    {Math.min(safeCurrentPage * PAGE_SIZE, filteredAndSortedList.length)}
-                  </span>{' '}
-                  dari{' '}
-                  <span className='font-semibold text-foreground'>
-                    {filteredAndSortedList.length}
-                  </span>{' '}
-                  menu terfilter
+              <div className='p-3.5 border-t border-border flex flex-col md:flex-row md:items-center justify-between gap-3 bg-muted/20 text-xs text-muted-foreground'>
+                {/* Sisi Kiri: Informasi Baris & Total Akumulasi */}
+                <div className='flex flex-wrap items-center gap-x-3.5 gap-y-1 tabular-nums'>
+                  <div>
+                    Menampilkan{' '}
+                    <span className='font-semibold text-foreground'>
+                      {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
+                      {Math.min(safeCurrentPage * PAGE_SIZE, filteredAndSortedList.length)}
+                    </span>{' '}
+                    dari{' '}
+                    <span className='font-semibold text-foreground'>
+                      {filteredAndSortedList.length}
+                    </span>{' '}
+                    menu
+                    {filteredAndSortedList.length !== inventarisList.length && (
+                      <span className='text-muted-foreground'>
+                        {' '}(total {inventarisList.length})
+                      </span>
+                    )}
+                  </div>
+                  <span className='hidden sm:inline text-border'>|</span>
+                  <div className='flex items-center gap-3'>
+                    <span>
+                      Total Fisik:{' '}
+                      <strong className='text-foreground font-mono tabular-nums'>
+                        {formatNumber(filteredSummary.totalUnit)} unit
+                      </strong>
+                    </span>
+                    <span>
+                      Total Nilai:{' '}
+                      <strong className='text-primary font-mono font-semibold tabular-nums'>
+                        {formatRupiah(filteredSummary.totalNilai)}
+                      </strong>
+                    </span>
+                  </div>
                 </div>
-                <div className='flex items-center gap-3'>
+
+                {/* Sisi Kanan: Kontrol Navigasi Halaman */}
+                <div className='flex items-center justify-between sm:justify-end gap-3 shrink-0'>
                   <span className='text-xs font-medium text-muted-foreground tabular-nums'>
                     Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
                     <span className='font-semibold text-foreground'>{totalPages}</span>
@@ -740,31 +765,6 @@ export function InventarisPage() {
                 </div>
               </div>
             )}
-
-            {/* Bottom Accumulation Footer */}
-            <div className='flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/30 border-t border-border text-xs text-muted-foreground gap-2'>
-              <div className='tabular-nums'>
-                Total Keseluruhan:{' '}
-                <strong className='text-foreground'>
-                  {filteredAndSortedList.length}
-                </strong>{' '}
-                menu (dari {inventarisList.length} menu katalog)
-              </div>
-              <div className='flex items-center gap-6'>
-                <span>
-                  Total Fisik Terfilter:{' '}
-                  <strong className='text-foreground font-mono text-sm tabular-nums'>
-                    {formatNumber(filteredSummary.totalUnit)} unit
-                  </strong>
-                </span>
-                <span>
-                  Total Nilai Terfilter:{' '}
-                  <strong className='text-primary font-mono text-sm font-bold tabular-nums'>
-                    {formatRupiah(filteredSummary.totalNilai)}
-                  </strong>
-                </span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </Main>
