@@ -207,7 +207,7 @@ describe('Fitur Cek Saldo Siswa', () => {
 
     const res = await kasirApi.cekSaldo('04a1b2c3d4')
     expect(getSpy).toHaveBeenCalledWith(
-      '/api/kasir/kartu/04a1b2c3d4',
+      '/api/kasir/kartu/04A1B2C3D4',
       expect.objectContaining({ silent: true, skipToast: true })
     )
     expect(res.id).toBe(1)
@@ -254,6 +254,32 @@ describe('Fitur Cek Saldo Siswa', () => {
 
     await expect(kasirApi.cekSaldo('INVALID_UID_99999')).rejects.toThrow(
       'Kartu tidak dikenali'
+    )
+  })
+
+  it('menormalisasi rfidUid huruf kecil menjadi uppercase saat memanggil prosesTap', async () => {
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        data: {
+          id: 12345,
+          total: 10000,
+          pembeli: { nama: 'Raka Aditya', kelas: '7A', nis: '1001' },
+        },
+      },
+    })
+
+    await kasirApi.prosesTap({
+      rfidUid: '04a1b2c3d4',
+      items: [{ menuId: 1, qty: 1 }],
+      idempotencyKey: 'idemp-123',
+    })
+
+    expect(postSpy).toHaveBeenCalledWith(
+      '/api/kasir/tap',
+      expect.objectContaining({
+        kartu_uid: '04A1B2C3D4',
+        rfidUid: '04A1B2C3D4',
+      })
     )
   })
 })

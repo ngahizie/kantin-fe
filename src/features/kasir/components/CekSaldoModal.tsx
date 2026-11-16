@@ -33,7 +33,7 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   const isSearchingRef = useRef<boolean>(false)
 
   const executeSearch = useCallback(async (queryToSearch: string) => {
-    const query = queryToSearch.trim()
+    const query = queryToSearch.trim().toUpperCase()
     if (!query) return
     if (isSearchingRef.current && lastSearchedRef.current === query) return
 
@@ -63,23 +63,24 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   // Integrasi listener RFID scanner global saat modal sedang terbuka
   useRfidScanner({
     onScan: (scannedUid) => {
-      setSearchInput(scannedUid)
-      executeSearch(scannedUid)
+      const clean = scannedUid.trim().toUpperCase()
+      setSearchInput(clean)
+      executeSearch(clean)
     },
     enabled: open,
   })
 
   // Deteksi otomatis saat kartu di-scan (UID 8-16 digit desimal/hex)
   useEffect(() => {
-    const trimmed = searchInput.trim()
+    const trimmed = searchInput.trim().toUpperCase()
     if (!trimmed) return
 
     // Jika data hasil saat ini sudah sesuai dengan UID ini, jangan cek ulang
-    if (result && result.uid?.toLowerCase() === trimmed.toLowerCase()) {
+    if (result && result.uid?.toUpperCase() === trimmed) {
       return
     }
 
-    if (lastSearchedRef.current.toLowerCase() === trimmed.toLowerCase() && (result || errorMessage)) {
+    if (lastSearchedRef.current.toUpperCase() === trimmed && (result || errorMessage)) {
       return
     }
 

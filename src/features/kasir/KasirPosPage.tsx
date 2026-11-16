@@ -370,14 +370,15 @@ export const KasirPosPage: React.FC = () => {
   // Eksekusi transaksi tap RFID ke backend
   const executeTapTransaction = useCallback(
     async (scannedUid: string) => {
-      if (!scannedUid || isProcessing) return
+      const cleanUid = scannedUid.trim().toUpperCase()
+      if (!cleanUid || isProcessing) return
 
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
 
       try {
         const result = await kasirApi.prosesTap({
-          rfidUid: scannedUid,
+          rfidUid: cleanUid,
           items: items.map((it) => ({
             menuId: it.menu.id,
             qty: it.qty,
@@ -453,7 +454,7 @@ export const KasirPosPage: React.FC = () => {
         setErrorInfo({
           message,
           kekurangan,
-          uid: scannedUid,
+          uid: cleanUid,
         })
         setErrorModalOpen(true)
       } finally {
@@ -475,6 +476,7 @@ export const KasirPosPage: React.FC = () => {
   // Handler proses tap RFID: konfirmasi manual (jika aktif) atau eksekusi langsung
   const handleProcessTap = useCallback(
     async (scannedUid: string) => {
+      const cleanUid = scannedUid.trim().toUpperCase()
       if (!isOnline) {
         playError()
         toast.error('Offline - transaksi tidak tersedia saat koneksi terputus')
@@ -487,7 +489,7 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      if (!scannedUid || isProcessing) return
+      if (!cleanUid || isProcessing) return
 
       if (items.length === 0) {
         playError()
@@ -499,12 +501,12 @@ export const KasirPosPage: React.FC = () => {
 
       // Langkah konfirmasi manual sesuai pengaturan operasional kantin
       if (pengaturan.konfirmasiManual) {
-        setPendingScannedUid(scannedUid)
+        setPendingScannedUid(cleanUid)
         setConfirmManualOpen(true)
         return
       }
 
-      await executeTapTransaction(scannedUid)
+      await executeTapTransaction(cleanUid)
     },
     [
       isOnline,
@@ -520,17 +522,18 @@ export const KasirPosPage: React.FC = () => {
   // Bersihkan UID yang ikut tertulis bila scan terjadi saat kursor berada di input cari menu
   const handleHardwareRfidScan = useCallback(
     (scannedUid: string) => {
+      const cleanUid = scannedUid.trim().toUpperCase()
       if (document.activeElement === searchInputRef.current) {
         setSearchQuery((prev) => {
           if (!prev) return prev
-          const lowerUid = scannedUid.toLowerCase()
+          const lowerUid = cleanUid.toLowerCase()
           return prev.toLowerCase().endsWith(lowerUid)
-            ? prev.slice(0, prev.length - scannedUid.length)
+            ? prev.slice(0, prev.length - cleanUid.length)
             : prev
         })
         searchInputRef.current?.blur()
       }
-      void handleProcessTap(scannedUid)
+      void handleProcessTap(cleanUid)
     },
     [handleProcessTap]
   )

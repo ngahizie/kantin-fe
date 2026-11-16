@@ -118,7 +118,7 @@ export function useRfidScanner({
         if (isValidScanBurst(buffer, timestamps, inEditable)) {
           e.preventDefault()
           e.stopPropagation()
-          const scannedUid = buffer
+          const scannedUid = buffer.toUpperCase()
           clearBuffer()
           onScanRef.current(scannedUid)
           return
@@ -172,7 +172,7 @@ export function useRfidScanner({
           const timestamps = burstTimestampsRef.current
 
           if (isValidScanBurst(buffer, timestamps, targetIsEditable)) {
-            const scannedUid = buffer
+            const scannedUid = buffer.toUpperCase()
             clearBuffer()
             onScanRef.current(scannedUid)
           } else {
