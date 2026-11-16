@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { formatRupiah, formatNumber } from '@/lib/formatters'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   getLatestKatalogChangeId,
   subscribeKatalogChanges,
@@ -106,6 +106,14 @@ export function MenuPage() {
   // Modal form state
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null)
+  const [initialAksiStok, setInitialAksiStok] = useState<'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'>('NONE')
+
+  const searchParams = useSearch({ strict: false }) as {
+    editMenuId?: string | number
+    aksi?: 'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'
+  }
+  const navigate = useNavigate()
+  const autoEditHandledRef = useRef<string | number | null>(null)
 
   // Delete & status toggle states
   const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null)
@@ -367,13 +375,50 @@ export function MenuPage() {
     return filteredMenu.slice(start, start + PAGE_SIZE)
   }, [filteredMenu, safeCurrentPage])
 
+  // Auto-buka modal edit jika diarahkan dengan search param editMenuId (misal dari restock inventaris)
+  useEffect(() => {
+    if (!searchParams.editMenuId) {
+      autoEditHandledRef.current = null
+      return
+    }
+
+    if (menuList.length === 0) return
+
+    const targetId = Number(searchParams.editMenuId)
+    if (autoEditHandledRef.current === targetId) return
+
+    const targetMenu = menuList.find((m) => m.id === targetId)
+    if (targetMenu) {
+      autoEditHandledRef.current = targetId
+      const timer = setTimeout(() => {
+        setSelectedMenu(targetMenu)
+        setInitialAksiStok(searchParams.aksi || 'MASUK')
+        setIsModalOpen(true)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams.editMenuId, searchParams.aksi, menuList])
+
+  const handleModalOpenChange = (open: boolean) => {
+    setIsModalOpen(open)
+    if (!open) {
+      setInitialAksiStok('NONE')
+      autoEditHandledRef.current = null
+      if (searchParams.editMenuId) {
+        void navigate({ to: '/menu', search: {}, replace: true })
+      }
+    }
+  }
+
   const handleAdd = () => {
     setSelectedMenu(null)
+    setInitialAksiStok('NONE')
     setIsModalOpen(true)
   }
 
   const handleEdit = (menu: MenuItem) => {
     setSelectedMenu(menu)
+    setInitialAksiStok('NONE')
     setIsModalOpen(true)
   }
 
@@ -381,6 +426,9 @@ export function MenuPage() {
     mutationEpochRef.current += 1
     if (!selectedMenu) {
       setCurrentPage(1)
+    }
+    if (searchParams.editMenuId) {
+      void navigate({ to: '/menu', search: {}, replace: true })
     }
     void syncKatalog(true)
   }
@@ -899,10 +947,11 @@ export function MenuPage() {
       {/* Modal Form Tambah / Edit */}
       <MenuFormModal
         open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={handleModalOpenChange}
         selectedMenu={selectedMenu}
         kategoriList={kategoriList}
         onSuccess={handleFormSuccess}
+        initialAksiStok={initialAksiStok}
       />
 
       {/* Alert Dialog Konfirmasi Hapus Menu */}

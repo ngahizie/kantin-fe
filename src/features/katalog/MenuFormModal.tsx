@@ -57,6 +57,7 @@ interface MenuFormModalProps {
   selectedMenu?: MenuItem | null
   kategoriList: KategoriItem[]
   onSuccess: () => void
+  initialAksiStok?: 'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'
 }
 
 const SATUAN_OPTIONS: { value: SatuanType; label: string }[] = [
@@ -76,6 +77,7 @@ export function MenuFormModal({
   selectedMenu,
   kategoriList,
   onSuccess,
+  initialAksiStok = 'NONE',
 }: MenuFormModalProps) {
   const isEditing = Boolean(selectedMenu)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -115,7 +117,7 @@ export function MenuFormModal({
   // State untuk mutasi stok fisik terintegrasi
   const [currentStok, setCurrentStok] = useState<number>(0)
   const [loadingStok, setLoadingStok] = useState(false)
-  const [aksiStok, setAksiStok] = useState<'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'>('NONE')
+  const [aksiStok, setAksiStok] = useState<'NONE' | 'MASUK' | 'OPNAME' | 'RUSAK'>(initialAksiStok)
   const [qtyMasuk, setQtyMasuk] = useState<number | ''>('')
   const [hargaBeliMasuk, setHargaBeliMasuk] = useState<number | ''>('')
   const [alasanMasuk, setAlasanMasuk] = useState('')
@@ -129,7 +131,7 @@ export function MenuFormModal({
   const currentMenuId = open ? (selectedMenu?.id ?? 0) : null
   if (currentMenuId !== prevMenuId) {
     setPrevMenuId(currentMenuId)
-    setAksiStok('NONE')
+    setAksiStok(initialAksiStok)
     setQtyMasuk('')
     setHargaBeliMasuk('')
     setAlasanMasuk('')
