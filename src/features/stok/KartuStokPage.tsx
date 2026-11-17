@@ -123,7 +123,7 @@ export function KartuStokPage() {
       `"${r.waktu}"`,
       `"${r.referensiId}"`,
       `"${r.menuNama || 'Menu #' + r.menuId}"`,
-      r.jenis,
+      r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
       r.arah,
       r.qty,
       r.stokSetelah,
@@ -162,7 +162,7 @@ export function KartuStokPage() {
         waktu: formatDateTime(r.waktu),
         referensiId: r.referensiId,
         menu: r.menuNama || `Menu #${r.menuId}`,
-        jenis: r.jenis,
+        jenis: r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis.replace(/_/g, ' '),
         arah: r.arah,
         qty: `${r.arah === 'MASUK' ? '+' : '-'}${r.qty}`,
         stokSetelah: r.stokSetelah,
@@ -417,7 +417,9 @@ export function KartuStokPage() {
                                   item.arah
                                 )}`}
                               >
-                                {item.jenis.replace(/_/g, ' ')}
+                                {item.jenis === 'PENJUALAN_VOID'
+                                  ? 'REFUND PENJUALAN'
+                                  : item.jenis.replace(/_/g, ' ')}
                               </Badge>
                             </TableCell>
                             <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>

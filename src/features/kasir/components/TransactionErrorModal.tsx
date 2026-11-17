@@ -85,7 +85,7 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
                   : errorInfo.message}
               </p>
               <p className='pt-1 text-xs text-muted-foreground'>
-                Siswa perlu melakukan top up tunai di loket TU sebelum
+                Siswa perlu melakukan top up tunai di Layanan TU sebelum
                 menyelesaikan transaksi.
               </p>
             </div>

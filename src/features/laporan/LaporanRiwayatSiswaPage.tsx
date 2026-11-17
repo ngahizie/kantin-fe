@@ -266,7 +266,7 @@ export function LaporanRiwayatSiswaPage() {
         return {
           waktu: formatDateTime(trx.waktu),
           referensiId: trx.referensiId,
-          jenis: trx.jenis,
+          jenis: trx.jenis === 'VOID' ? 'REFUND' : trx.jenis,
           titikKasir: trx.titikKasir,
           petugas: trx.petugas,
           daftarItem: itemStr,
@@ -299,7 +299,7 @@ export function LaporanRiwayatSiswaPage() {
           { header: 'Waktu Transaksi', key: 'waktu', width: 20 },
           { header: 'No. Transaksi', key: 'referensiId', width: 22 },
           { header: 'Jenis Mutasi', key: 'jenis', width: 14 },
-          { header: 'Titik Kasir / Loket', key: 'titikKasir', width: 20 },
+          { header: 'Titik Kasir', key: 'titikKasir', width: 20 },
           { header: 'Petugas', key: 'petugas', width: 18 },
           { header: 'Rincian Menu / Info', key: 'daftarItem', width: 32 },
           { header: 'Keterangan', key: 'keterangan', width: 26 },
@@ -351,7 +351,7 @@ export function LaporanRiwayatSiswaPage() {
         return {
           waktu: formatDateTime(trx.waktu),
           referensiId: trx.referensiId,
-          jenis: trx.jenis,
+          jenis: trx.jenis === 'VOID' ? 'REFUND' : trx.jenis,
           titikKasir: trx.titikKasir,
           petugas: trx.petugas,
           daftarItem: itemStr,
@@ -913,7 +913,7 @@ export function LaporanRiwayatSiswaPage() {
                     { label: 'Belanja Kasir', value: 'BELANJA' },
                     { label: 'Top-up Tunai TU', value: 'TOPUP_TUNAI' },
                     { label: 'Koreksi Bendahara', value: 'KOREKSI' },
-                    { label: 'Void Pembatalan', value: 'VOID' },
+                    { label: 'Refund Transaksi', value: 'VOID' },
                   ],
                   selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
                   onSelect: (vals) => setJenisFilter(vals[0] || 'ALL'),
@@ -933,7 +933,7 @@ export function LaporanRiwayatSiswaPage() {
                   Histori Transaksi Lengkap Siswa
                 </CardTitle>
                 <CardDescription>
-                  Daftar transaksi kasir, top-up, pembatalan void, dan mutasi saldo untuk menjawab pertanyaan orang tua.
+                  Daftar transaksi kasir, top-up, refund transaksi, dan mutasi saldo untuk menjawab pertanyaan orang tua.
                 </CardDescription>
               </CardHeader>
 
@@ -995,7 +995,7 @@ export function LaporanRiwayatSiswaPage() {
                                   : 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
                               }`}
                             >
-                              {trx.jenis}
+                              {trx.jenis === 'VOID' ? 'REFUND' : trx.jenis}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs">

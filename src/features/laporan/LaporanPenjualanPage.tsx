@@ -332,7 +332,7 @@ export function LaporanPenjualanPage() {
               { header: 'Petugas Jaga', key: 'petugas', width: 20 },
               { header: 'Jumlah Transaksi', key: 'jumlahTransaksi', width: 16 },
               { header: 'Penjualan Bruto (Rp)', key: 'penjualanBruto', width: 20 },
-              { header: 'Nilai Void (Rp)', key: 'nilaiVoid', width: 16 },
+              { header: 'Nilai Refund (Rp)', key: 'nilaiVoid', width: 16 },
               { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
             ],
             data: kasirs,
@@ -536,7 +536,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
               {
-                header: 'Nilai Void',
+                header: 'Nilai Refund',
                 key: 'nilaiVoid',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
@@ -1025,7 +1025,7 @@ export function LaporanPenjualanPage() {
                     Penjualan per Titik Kasir & Petugas
                   </CardTitle>
                   <CardDescription>
-                    Rekap penerimaan transaksi, pembatalan void, dan omset bersih per loket POS.
+                    Rekap penerimaan transaksi, refund transaksi, dan omset bersih per titik kasir.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -1037,7 +1037,7 @@ export function LaporanPenjualanPage() {
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Petugas Jaga</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jumlah Transaksi</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penjualan Bruto</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Nilai Void</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Nilai Refund</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Penjualan Bersih</TableHead>
                       </TableRow>
                     </TableHeader>

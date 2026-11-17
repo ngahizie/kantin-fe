@@ -206,7 +206,7 @@ export function resolveTitikDanPetugas(trx: {
   const jenis = trx.jenis || ''
   if (jenis === 'TOPUP_TUNAI') {
     return {
-      titik: hasTitik ? trx.titikKasir! : 'Loket TU',
+      titik: hasTitik ? trx.titikKasir! : 'Layanan TU',
       petugas: hasPetugas ? trx.petugas! : 'Sri Wahyuni',
     }
   }
@@ -222,10 +222,10 @@ export function resolveTitikDanPetugas(trx: {
       petugas: hasPetugas ? trx.petugas! : 'Siti Rahma',
     }
   }
-  if (jenis === 'REFUND') {
+  if (jenis === 'REFUND' || jenis === 'VOID') {
     return {
-      titik: hasTitik ? trx.titikKasir! : 'Loket TU',
-      petugas: hasPetugas ? trx.petugas! : 'Sri Wahyuni',
+      titik: hasTitik ? trx.titikKasir! : 'Titik Kasir',
+      petugas: hasPetugas ? trx.petugas! : 'Petugas Kasir',
     }
   }
 
