@@ -311,7 +311,7 @@ export function TopupTunaiPage() {
                 {students.length} Siswa
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Data akun kartu jajan siswa aktif
+                Jumlah seluruh siswa terdaftar
               </p>
             </CardContent>
           </Card>
@@ -327,10 +327,10 @@ export function TopupTunaiPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
-                {students.filter((s) => !s.is_blocked).length} Aktif Normal
+                {students.filter((s) => !s.is_blocked).length} Kartu Aktif
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Siap melakukan transaksi di kantin
+                Kartu aktif dan bisa digunakan transaksi
               </p>
             </CardContent>
           </Card>
@@ -349,7 +349,7 @@ export function TopupTunaiPage() {
                 {formatRupiah(batasSaldoSekolah)}
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Plafon saldo maksimal per kartu siswa
+                Batas maksimal saldo yang bisa disimpan
               </p>
             </CardContent>
           </Card>
