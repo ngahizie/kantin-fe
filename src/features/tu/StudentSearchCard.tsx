@@ -173,10 +173,11 @@ export function StudentSearchCard({
                         className='flex cursor-pointer items-center justify-between py-2.5'
                       >
                         <div className='flex items-center gap-3'>
-                          <Avatar className='h-8 w-8'>
+                          <Avatar className='size-8 shrink-0 rounded-full border border-border'>
                             <AvatarImage
                               src={student.foto_url}
                               alt={student.nama || 'Siswa'}
+                              className='aspect-square size-full object-cover object-center'
                             />
                             <AvatarFallback>
                               {student.nama?.charAt(0) || '?'}
@@ -256,10 +257,11 @@ export function StudentSearchCard({
         {selectedStudent ? (
           <div className='space-y-4 rounded-xl border border-border bg-muted/30 p-4'>
             <div className='flex items-start gap-4'>
-              <Avatar className='h-14 w-14 border border-border'>
+              <Avatar className='size-14 shrink-0 rounded-full border border-border'>
                 <AvatarImage
                   src={selectedStudent.foto_url}
                   alt={selectedStudent.nama || 'Siswa'}
+                  className='aspect-square size-full object-cover object-center'
                 />
                 <AvatarFallback className='bg-primary/10 text-lg font-bold text-primary'>
                   {selectedStudent.nama?.charAt(0) || '?'}
