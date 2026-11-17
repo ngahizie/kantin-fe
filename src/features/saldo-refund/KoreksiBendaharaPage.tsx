@@ -546,15 +546,15 @@ export function KoreksiBendaharaPage() {
           onValueChange={setActiveTab}
           className='space-y-4'
         >
-          <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-md grid-cols-2'}`}>
+          <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-xl grid-cols-2'}`}>
             <TabsTrigger value='riwayat' className='gap-2 text-xs'>
               <History className='h-3.5 w-3.5' />
-              Riwayat Penyesuaian Saldo ({filteredKoreksi.length})
+              Riwayat Penyesuaian ({filteredKoreksi.length})
             </TabsTrigger>
             {!isKepsek && (
               <TabsTrigger value='transaksi-lampau' className='gap-2 text-xs'>
                 <ReceiptText className='h-3.5 w-3.5' />
-                Cari Transaksi Kasir Terdahulu ({filteredTransaksi.length})
+                Transaksi Kasir Terdahulu ({filteredTransaksi.length})
               </TabsTrigger>
             )}
           </TabsList>
@@ -581,9 +581,10 @@ export function KoreksiBendaharaPage() {
 
             {/* Filter Toolbar */}
             <TableToolbar
-              searchPlaceholder='Cari No. Berita Acara, nama siswa, alasan...'
+              searchPlaceholder='Cari berita acara, nama siswa, alasan...'
               searchValue={searchQuery}
               onSearchChange={setSearchQuery}
+              searchClassName='w-[200px] sm:w-[260px] lg:w-[320px]'
               filters={[
                 {
                   title: 'Arah Mutasi',
@@ -858,9 +859,10 @@ export function KoreksiBendaharaPage() {
 
             {/* Toolbar Filter Tab 2 */}
             <TableToolbar
-              searchPlaceholder='Cari ID Transaksi, Sesi, nama siswa, kartu UID...'
+              searchPlaceholder='Cari no. transaksi, nama siswa, kasir...'
               searchValue={txSearchQuery}
               onSearchChange={setTxSearchQuery}
+              searchClassName='w-[200px] sm:w-[260px] lg:w-[320px]'
               filters={[
                 {
                   title: 'Status Koreksi',
