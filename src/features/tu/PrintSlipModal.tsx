@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatRupiah } from '@/lib/formatters'
+import { useAuthStore } from '@/stores/auth-store'
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,15 @@ export function PrintSlipModal({
   onOpenChange,
   slipData,
 }: PrintSlipModalProps) {
+  const user = useAuthStore((s) => s.auth.user)
+  const sekolahNama = user?.sekolahNama || 'KANTIN SKOOLIA'
+  const logoSrc =
+    user?.sekolahId === 10
+      ? '/logo-sekolah-10.png'
+      : user?.sekolahId === 1
+        ? '/logo-sekolah-1.png'
+        : '/logo.png'
+
   if (!slipData) return null
 
   const formattedDate = new Date(slipData.waktu).toLocaleString('id-ID', {
@@ -52,6 +62,7 @@ export function PrintSlipModal({
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: 'Asia/Jakarta',
   })
 
   const handlePrint = () => {
@@ -170,11 +181,11 @@ export function PrintSlipModal({
             <div className='print-border-dashed space-y-1.5 border-b border-dashed border-slate-300 pb-3 text-center'>
               <div className='flex items-center justify-center gap-2 text-sm font-bold tracking-tight text-slate-900 uppercase'>
                 <img
-                  src='/logo.png'
-                  alt='Logo Skoolia'
+                  src={logoSrc}
+                  alt={sekolahNama}
                   className='h-5 w-5 object-contain'
                 />
-                <span>KANTIN SKOOLIA</span>
+                <span>{sekolahNama}</span>
               </div>
               <p className='text-[10px] font-semibold tracking-wider text-slate-600 uppercase'>
                 BUKTI PENERIMAAN SALDO SISWA

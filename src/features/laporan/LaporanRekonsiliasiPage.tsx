@@ -87,7 +87,7 @@ export function LaporanRekonsiliasiPage() {
         pos: 'Top-up Tunai di TU',
         arah: 'MASUK',
         nominal: data.topupTunai,
-        keterangan: 'Penerimaan fisik uang tunai di loket Tata Usaha',
+        keterangan: 'Penerimaan fisik uang tunai di Layanan TU',
       },
       {
         id: '3',
@@ -101,7 +101,7 @@ export function LaporanRekonsiliasiPage() {
         pos: 'Penjualan Bersih Kantin',
         arah: 'TETAP',
         nominal: data.penjualanBersih,
-        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi pembatalan ${formatRupiah(data.voidPenjualan)}`,
+        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi refund ${formatRupiah(data.voidPenjualan)}`,
       },
       {
         id: '5',
@@ -119,10 +119,10 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '8',
-        pos: 'Pembatalan Transaksi Kasir',
+        pos: 'Refund Transaksi Kasir',
         arah: 'MASUK',
         nominal: data.voidPenjualan,
-        keterangan: 'Pembatalan transaksi salah tap yang mengembalikan saldo',
+        keterangan: 'Refund transaksi salah tap yang mengembalikan saldo',
       },
     ]
   }, [data])
@@ -476,7 +476,7 @@ export function LaporanRekonsiliasiPage() {
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex justify-between gap-2 tabular-nums">
                   <span>Kotor: {data ? formatRupiah(data.penjualan) : '-'}</span>
-                  <span className="text-amber-600 dark:text-amber-400 font-medium">Batal: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-medium">Refund: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
                 </div>
               </CardContent>
             </Card>

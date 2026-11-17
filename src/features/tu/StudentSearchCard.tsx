@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   Search,
-  Radio,
   Check,
   ChevronsUpDown,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
+import apiClient from '@/lib/api-client'
+import { useRfidScanner } from '@/hooks/useRfidScanner'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,44 +51,74 @@ export function StudentSearchCard({
   const [openCombobox, setOpenCombobox] = useState(false)
   const [rfidInput, setRfidInput] = useState('')
   const [rfidFeedback, setRfidFeedback] = useState<string | null>(null)
+  const [isSearchingRfid, setIsSearchingRfid] = useState(false)
 
-  const handleFindRfid = (uidToFind?: string) => {
-    const targetUid = (uidToFind || rfidInput).trim()
-    if (!targetUid) return
+  const handleFindRfid = async (uidToFind?: string) => {
+    const rawUid = (uidToFind || rfidInput).trim()
+    if (!rawUid) return
+    const targetUid = rawUid.toUpperCase()
 
-    const found = students.find(
-      (s) => (s.uid || '').toLowerCase() === targetUid.toLowerCase()
-    )
-    if (found) {
-      onSelectStudent(found)
-      setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
-      setRfidInput(found.uid)
-      return
+    setIsSearchingRfid(true)
+    try {
+      // 1. Cek langsung di memory lokal siswa (UID fisik, NIS, atau nomor kartu)
+      let found = students.find(
+        (s) =>
+          (s.uid || '').toUpperCase() === targetUid ||
+          (s.nis || '').toUpperCase() === targetUid
+      )
+
+      // 2. Jika belum ditemukan di memory lokal (misal proses sinkronisasi awal belum selesai),
+      // cek RFID per siswa secara on-the-fly dari backend
+      if (!found) {
+        for (const s of students) {
+          if (!s.uid || s.uid.startsWith('UID-')) {
+            try {
+              const rfidRes = await apiClient.get(`/api/siswa/${s.siswa_id}/rfid`)
+              const liveUid = rfidRes.data?.data?.rfidUid
+              if (liveUid) {
+                s.uid = liveUid
+                if (liveUid.toUpperCase() === targetUid) {
+                  found = s
+                  break
+                }
+              }
+            } catch {
+              // Abaikan kegagalan per siswa
+            }
+          }
+        }
+      }
+
+      if (found) {
+        onSelectStudent(found)
+        setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
+        setRfidInput(found.uid || rawUid)
+        return
+      }
+
+      setRfidFeedback(`RFID UID "${rawUid}" tidak terdaftar di data siswa.`)
+    } finally {
+      setIsSearchingRfid(false)
     }
-
-    setRfidFeedback(`RFID UID "${targetUid}" tidak terdaftar di data siswa.`)
   }
+
+  // Deteksi otomatis saat kartu ditempelkan ke USB RFID reader hardware
+  useRfidScanner({
+    onScan: (scannedUid) => {
+      void handleFindRfid(scannedUid)
+    },
+    enabled: !isLoading,
+  })
 
   return (
     <Card>
       <CardHeader className='pb-4'>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
-          <div>
-            <CardTitle className='text-lg font-semibold'>
-              Pencarian Data Siswa
-            </CardTitle>
-            <CardDescription className='text-xs'>
-              Cari berdasarkan NIS, Nama Siswa, atau tempelkan kartu RFID
-            </CardDescription>
-          </div>
-          <Badge
-            variant='outline'
-            className='flex items-center gap-1.5 rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
-          >
-            <Radio className='h-3 w-3 animate-pulse text-blue-600 dark:text-blue-400' />
-            Alat Pemindai Siap
-          </Badge>
-        </div>
+        <CardTitle className='text-lg font-semibold'>
+          Pencarian Data Siswa
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Cari berdasarkan NIS, Nama Siswa, atau tempelkan kartu RFID
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
         {/* Autocomplete Input Search */}
@@ -141,10 +173,11 @@ export function StudentSearchCard({
                         className='flex cursor-pointer items-center justify-between py-2.5'
                       >
                         <div className='flex items-center gap-3'>
-                          <Avatar className='h-8 w-8'>
+                          <Avatar className='size-8 shrink-0 rounded-full border border-border'>
                             <AvatarImage
                               src={student.foto_url}
                               alt={student.nama || 'Siswa'}
+                              className='aspect-square size-full object-cover object-center'
                             />
                             <AvatarFallback>
                               {student.nama?.charAt(0) || '?'}
@@ -190,7 +223,7 @@ export function StudentSearchCard({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
-                  handleFindRfid()
+                  void handleFindRfid()
                 }
               }}
             />
@@ -199,9 +232,17 @@ export function StudentSearchCard({
               size='sm'
               variant='outline'
               className='h-9 shrink-0 px-3 text-xs'
-              onClick={() => handleFindRfid()}
+              disabled={isSearchingRfid}
+              onClick={() => void handleFindRfid()}
             >
-              Cari Kartu
+              {isSearchingRfid ? (
+                <>
+                  <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                  Mencari...
+                </>
+              ) : (
+                'Cari Kartu'
+              )}
             </Button>
           </div>
 
@@ -216,10 +257,11 @@ export function StudentSearchCard({
         {selectedStudent ? (
           <div className='space-y-4 rounded-xl border border-border bg-muted/30 p-4'>
             <div className='flex items-start gap-4'>
-              <Avatar className='h-14 w-14 border border-border'>
+              <Avatar className='size-14 shrink-0 rounded-full border border-border'>
                 <AvatarImage
                   src={selectedStudent.foto_url}
                   alt={selectedStudent.nama || 'Siswa'}
+                  className='aspect-square size-full object-cover object-center'
                 />
                 <AvatarFallback className='bg-primary/10 text-lg font-bold text-primary'>
                   {selectedStudent.nama?.charAt(0) || '?'}

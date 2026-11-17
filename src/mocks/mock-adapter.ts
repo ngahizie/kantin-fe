@@ -1409,6 +1409,26 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
+    // --- 5z. TU / Siswa: Lookup RFID UID Siswa (GET /api/siswa/{siswaId}/rfid) ---
+    if (url.match(/\/api\/siswa\/\d+\/rfid/) && method === 'get') {
+      const match = url.match(/\/api\/siswa\/(\d+)\/rfid/)
+      const sId = match ? Number(match[1]) : 0
+      const student = siswaList.find((s) => s.siswa_id === sId)
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: student ? 'UID kartu siswa' : 'UID kartu siswa tidak tersedia',
+          data: {
+            siswaId: sId,
+            rfidUid: student?.uid || null,
+            ditemukan: Boolean(student?.uid),
+          },
+        },
+      }
+    }
+
     // --- 6. TU: Pencarian Siswa & Kartu Tamu / Kandidat Saldo ---
     if (
       (url.includes('/api/siswa') ||

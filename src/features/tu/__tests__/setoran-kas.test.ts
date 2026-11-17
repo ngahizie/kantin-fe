@@ -104,6 +104,6 @@ describe('mapRekapSetoranTuItem', () => {
     expect(mappedEmpty.total_sistem).toBe(0)
 
     const mappedOther = mapRekapSetoranTuItem({ petugasId: 99 })
-    expect(mappedOther.petugas_nama).toBe('Petugas Loket TU #99')
+    expect(mappedOther.petugas_nama).toBe('Petugas TU #99')
   })
 })

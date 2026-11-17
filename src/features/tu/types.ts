@@ -175,7 +175,7 @@ export function mapRekapSetoranTuItem(
     raw.petugas_nama ||
       raw.petugasNama ||
       knownPetugas?.nama ||
-      `Petugas Loket TU #${petugasId}`
+      `Petugas TU #${petugasId}`
   )
 
   const petugasNip =

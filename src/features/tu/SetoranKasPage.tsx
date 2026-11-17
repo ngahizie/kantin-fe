@@ -199,7 +199,7 @@ export function SetoranKasPage() {
                 currentUser?.userId && Number(currentUser.userId) === pId
               const petugasNama = isCurrentPetugas
                 ? currentUser?.nama || 'Petugas TU'
-                : KNOWN_PETUGAS_MAP[pId]?.nama || `Petugas Loket TU #${pId}`
+                : KNOWN_PETUGAS_MAP[pId]?.nama || `Petugas TU #${pId}`
               const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
 
               items.push({
@@ -574,7 +574,7 @@ export function SetoranKasPage() {
                   Daftar Rekapitulasi Kas TU Per Petugas ({dateFilterLabel})
                 </CardTitle>
                 <CardDescription className='mt-0.5 text-xs'>
-                  Rincian setoran uang tunai dari seluruh titik loket TU
+                  Rincian setoran uang tunai dari seluruh petugas TU
                   kepada Bendahara Sekolah
                 </CardDescription>
               </div>

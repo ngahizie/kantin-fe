@@ -26,6 +26,8 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah } from '@/lib/formatters'
+import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
+import type { PengaturanKantin } from '@/features/pengaturan/types'
 import { PrintSlipModal, type TopupSlipData } from './PrintSlipModal'
 import { StudentSearchCard } from './StudentSearchCard'
 import { mapInfoSiswaToKartuSiswa } from './types'
@@ -37,9 +39,12 @@ import {
 } from './saldo-storage'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
-const MAX_SALDO_SEKOLAH = 500000
+const DEFAULT_MAX_SALDO = 1000000
+const DEFAULT_MIN_TOPUP = 5000
+const DEFAULT_MAX_TOPUP = 500000
 
 export function TopupTunaiPage() {
+  const [pengaturan, setPengaturan] = useState<PengaturanKantin | null>(null)
   const [students, setStudents] = useState<KartuSiswaMock[]>([])
   const [isLoadingStudents, setIsLoadingStudents] = useState(true)
   const [selectedStudent, setSelectedStudent] = useState<KartuSiswaMock | null>(
@@ -54,6 +59,17 @@ export function TopupTunaiPage() {
 
   useEffect(() => {
     let isMounted = true
+
+    // Muat konfigurasi pengaturan kantin sekolah (plafon saldo, min/max topup)
+    void pengaturanApi
+      .getPengaturan()
+      .then((cfg) => {
+        if (isMounted && cfg) {
+          setPengaturan(cfg)
+        }
+      })
+      .catch(() => {})
+
     const loadStudents = async () => {
       setIsLoadingStudents(true)
       let currentList: KartuSiswaMock[] = []
@@ -80,28 +96,42 @@ export function TopupTunaiPage() {
 
       if (currentList.length === 0) return
 
-      // Sinkronisasi saldo riil dari backend (/api/saldo) bila terhubung ke live BE
+      // Sinkronisasi saldo riil & UID RFID dari backend (/api/saldo & /api/siswa/{id}/rfid) bila terhubung ke live BE
       try {
         const syncedStudents = await Promise.all(
           currentList.map(async (student) => {
+            const updated = { ...student }
             try {
-              const saldoRes = await apiClient.get('/api/saldo', {
-                params: {
-                  siswaId: student.siswa_id,
-                },
-              })
-              const liveSaldo = saldoRes.data?.data?.saldo
+              const [saldoRes, rfidRes] = await Promise.all([
+                apiClient
+                  .get('/api/saldo', {
+                    params: {
+                      siswaId: student.siswa_id,
+                    },
+                  })
+                  .catch(() => null),
+                apiClient
+                  .get(`/api/siswa/${student.siswa_id}/rfid`)
+                  .catch(() => null),
+              ])
+
+              const liveSaldo = saldoRes?.data?.data?.saldo
               // Hanya perbarui saldo jika liveSaldo dari backend bernilai > 0.
               // Jika liveSaldo === 0 namun siswa memiliki saldo tersimpan (> 0),
               // pertahankan saldo lokal (agar tidak ter-reset ke 0 pada akun TU sekolah 2 / multi-tenant).
               if (typeof liveSaldo === 'number' && liveSaldo > 0) {
                 saveStoredSaldo(student.siswa_id, liveSaldo)
-                return { ...student, saldo: liveSaldo }
+                updated.saldo = liveSaldo
+              }
+
+              const liveRfid = rfidRes?.data?.data?.rfidUid
+              if (liveRfid) {
+                updated.uid = liveRfid
               }
             } catch {
-              // Jika query saldo belum ada di database, pertahankan saldo lokal
+              // Jika query saldo/rfid belum ada di database, pertahankan data lokal
             }
-            return student
+            return updated
           })
         )
 
@@ -109,7 +139,7 @@ export function TopupTunaiPage() {
           setStudents(syncedStudents)
         }
       } catch {
-        // Abaikan jika live query saldo gagal
+        // Abaikan jika live query saldo/rfid gagal
       }
     }
     void loadStudents()
@@ -124,16 +154,24 @@ export function TopupTunaiPage() {
       selectedStudent
     : null
 
+  const minTopup = pengaturan?.minTopup ?? DEFAULT_MIN_TOPUP
+  const maksTopup = pengaturan?.maksTopup ?? DEFAULT_MAX_TOPUP
+  const batasSaldoSekolah =
+    pengaturan?.batasSaldoSiswa ?? DEFAULT_MAX_SALDO
+
   const nominalNum = Number(nominal) || 0
   const saldoSaatIni = currentStudent?.saldo || 0
   const saldoBaru = saldoSaatIni + nominalNum
-  const isExceedingLimit = saldoBaru > MAX_SALDO_SEKOLAH
+  const isUnderMinTopup = nominalNum > 0 && nominalNum < minTopup
+  const isOverMaksTopup = nominalNum > maksTopup
+  const isExceedingLimit = saldoBaru > batasSaldoSekolah
   const isStudentBlocked = currentStudent?.is_blocked ?? false
 
   const isValidSubmit =
     currentStudent !== null &&
     !isStudentBlocked &&
-    nominalNum > 0 &&
+    nominalNum >= minTopup &&
+    !isOverMaksTopup &&
     !isExceedingLimit &&
     namaPenyetor.trim().length > 0
 
@@ -273,7 +311,7 @@ export function TopupTunaiPage() {
                 {students.length} Siswa
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Data akun kartu jajan siswa aktif
+                Jumlah seluruh siswa terdaftar
               </p>
             </CardContent>
           </Card>
@@ -289,10 +327,10 @@ export function TopupTunaiPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums'>
-                {students.filter((s) => !s.is_blocked).length} Aktif Normal
+                {students.filter((s) => !s.is_blocked).length} Kartu Aktif
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Siap melakukan transaksi di kantin
+                Kartu aktif dan bisa digunakan transaksi
               </p>
             </CardContent>
           </Card>
@@ -308,10 +346,10 @@ export function TopupTunaiPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-                {formatRupiah(MAX_SALDO_SEKOLAH)}
+                {formatRupiah(batasSaldoSekolah)}
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Plafon saldo maksimal per kartu siswa
+                Batas maksimal saldo yang bisa disimpan
               </p>
             </CardContent>
           </Card>
@@ -441,12 +479,46 @@ export function TopupTunaiPage() {
                         </div>
                       </div>
 
+                      {/* Warning: Below Min Topup */}
+                      {isUnderMinTopup && (
+                        <Alert variant='destructive'>
+                          <AlertCircle className='h-4 w-4' />
+                          <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
+                            Nominal Kurang dari Batas Minimal!
+                          </AlertTitle>
+                          <AlertDescription className='mt-1 text-xs leading-relaxed'>
+                            Nominal pengisian minimal yang diizinkan adalah{' '}
+                            <strong className='tabular-nums'>
+                              {formatRupiah(minTopup)}
+                            </strong>
+                            .
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Warning: Over Max Topup */}
+                      {isOverMaksTopup && (
+                        <Alert variant='destructive'>
+                          <AlertCircle className='h-4 w-4' />
+                          <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
+                            Nominal Melebihi Batas Maksimal Top-up!
+                          </AlertTitle>
+                          <AlertDescription className='mt-1 text-xs leading-relaxed'>
+                            Nominal pengisian per transaksi tidak boleh melampaui{' '}
+                            <strong className='tabular-nums'>
+                              {formatRupiah(maksTopup)}
+                            </strong>
+                            .
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                       {/* Warning: Exceeding Max Balance */}
                       {isExceedingLimit && (
                         <Alert variant='destructive'>
                           <AlertCircle className='h-4 w-4' />
                           <AlertTitle className='text-xs font-bold tracking-wide uppercase'>
-                            Melebihi Batas Saldo Maksimal Sekolah!
+                            Melebihi Batas Saldo Maksimal Siswa!
                           </AlertTitle>
                           <AlertDescription className='mt-1 text-xs leading-relaxed'>
                             Saldo baru (
@@ -456,7 +528,7 @@ export function TopupTunaiPage() {
                             ) melampaui batas maksimum yang diizinkan sekolah
                             sebesar{' '}
                             <strong className='tabular-nums'>
-                              {formatRupiah(MAX_SALDO_SEKOLAH)}
+                              {formatRupiah(batasSaldoSekolah)}
                             </strong>
                             . Kurangi jumlah pengisian saldo.
                           </AlertDescription>
