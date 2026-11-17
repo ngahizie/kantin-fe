@@ -53,4 +53,20 @@ describe('LaporanDateFilter', () => {
       tanggal: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     })
   })
+
+  it('menyembunyikan blok Pilihan Cepat ketika hidePresets bernilai true', async () => {
+    const onChange = vi.fn()
+
+    const screen = await render(
+      <LaporanDateFilter initialPreset='TODAY' hidePresets onChange={onChange} />
+    )
+
+    const triggerBtn = screen.getByRole('button', { name: /Hari Ini/i })
+    await userEvent.click(triggerBtn)
+
+    await expect.element(screen.getByText('Pilihan Cepat')).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: 'Hari Ini', exact: true })).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: 'Kemarin', exact: true })).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Pilih Satu Hari Tertentu')).toBeInTheDocument()
+  })
 })

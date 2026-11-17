@@ -922,7 +922,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
 
       if (payload instanceof FormData) {
         const file = payload.get('file')
-        if (file instanceof File || file instanceof Blob) {
+        if (file instanceof Blob) {
           if ('name' in file) {
             fileName = file.name
           }

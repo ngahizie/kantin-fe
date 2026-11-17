@@ -24,6 +24,8 @@ export interface LaporanDateFilterProps {
   align?: 'start' | 'end' | 'center'
   /** Sembunyikan pilihan rentang multi-hari (khusus endpoint harian satu tanggal) */
   singleDayOnly?: boolean
+  /** Sembunyikan blok pilihan cepat (mis. Hari Ini, Kemarin, dsb.) */
+  hidePresets?: boolean
 }
 
 export function LaporanDateFilter({
@@ -32,6 +34,7 @@ export function LaporanDateFilter({
   className,
   align = 'start',
   singleDayOnly = false,
+  hidePresets = false,
 }: LaporanDateFilterProps) {
   const [open, setOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<DateFilterPreset>(initialPreset)
@@ -189,39 +192,41 @@ export function LaporanDateFilter({
           </div>
 
           {/* Preset Cepat */}
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-semibold text-muted-foreground uppercase">
-              Pilihan Cepat
+          {!hidePresets && (
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase">
+                Pilihan Cepat
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { preset: 'TODAY' as const, label: 'Hari Ini' },
+                  { preset: 'YESTERDAY' as const, label: 'Kemarin' },
+                  ...(!singleDayOnly
+                    ? [
+                        { preset: 'LAST_7_DAYS' as const, label: '7 Hari Terakhir' },
+                        { preset: 'LAST_30_DAYS' as const, label: '30 Hari Terakhir' },
+                        { preset: 'THIS_MONTH' as const, label: 'Bulan Ini' },
+                      ]
+                    : []),
+                ].map((item) => (
+                  <Button
+                    key={item.preset}
+                    variant={selectedPreset === item.preset ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleSelectPreset(item.preset)}
+                    className={`h-8 justify-between text-xs font-normal ${
+                      selectedPreset === item.preset ? 'font-semibold' : ''
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {selectedPreset === item.preset && <Check className="h-3.5 w-3.5 shrink-0" />}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { preset: 'TODAY' as const, label: 'Hari Ini' },
-                { preset: 'YESTERDAY' as const, label: 'Kemarin' },
-                ...(!singleDayOnly
-                  ? [
-                      { preset: 'LAST_7_DAYS' as const, label: '7 Hari Terakhir' },
-                      { preset: 'LAST_30_DAYS' as const, label: '30 Hari Terakhir' },
-                      { preset: 'THIS_MONTH' as const, label: 'Bulan Ini' },
-                    ]
-                  : []),
-              ].map((item) => (
-                <Button
-                  key={item.preset}
-                  variant={selectedPreset === item.preset ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleSelectPreset(item.preset)}
-                  className={`h-8 justify-between text-xs font-normal ${
-                    selectedPreset === item.preset ? 'font-semibold' : ''
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {selectedPreset === item.preset && <Check className="h-3.5 w-3.5 shrink-0" />}
-                </Button>
-              ))}
-            </div>
-          </div>
+          )}
 
-          <div className="border-t border-border pt-3 space-y-3">
+          <div className={`space-y-3 ${hidePresets ? '' : 'border-t border-border pt-3'}`}>
             {/* Pilih Hari Spesifik */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase">
