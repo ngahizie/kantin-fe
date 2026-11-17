@@ -916,6 +916,25 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
 
     // --- Storage Upload File ---
     if (url.includes('/api/storage/upload') && method === 'post') {
+      let previewUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'
+      let fileName = 'foto-produk.jpg'
+      let fileSize = 154200
+
+      if (payload instanceof FormData) {
+        const file = payload.get('file')
+        if (file instanceof File || file instanceof Blob) {
+          if ('name' in file) {
+            fileName = file.name
+          }
+          fileSize = file.size
+          try {
+            previewUrl = URL.createObjectURL(file)
+          } catch {
+            // Abaikan jika tidak di environment browser DOM
+          }
+        }
+      }
+
       return {
         status: 200,
         data: {
@@ -923,10 +942,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           status: 'SUCCESS',
           message: 'Berkas berhasil diunggah',
           data: {
-            path: 'sekolah-10/menu/upload-preview.jpg',
-            url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-            namaAsli: 'foto-produk.jpg',
-            ukuran: 154200,
+            path: `sekolah-10/menu/${fileName}`,
+            url: previewUrl,
+            namaAsli: fileName,
+            ukuran: fileSize,
           },
         },
       }

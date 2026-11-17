@@ -4,6 +4,7 @@ import { formatRupiah } from '@/lib/formatters'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import type { MenuItem } from '@/features/katalog/types'
+import { katalogApi } from '@/features/katalog/api/katalog-api'
 
 export interface MenuItemCardProps {
   menu: MenuItem
@@ -52,7 +53,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       <div className='relative aspect-4/3 w-full shrink-0 overflow-hidden bg-muted/50'>
         {menu.fotoUrl && !imageError ? (
           <img
-            src={menu.fotoUrl}
+            src={katalogApi.getImageUrl(menu.fotoUrl)}
             alt={menu.nama}
             onError={() => setImageError(true)}
             className={`block aspect-4/3 h-full w-full object-cover ${

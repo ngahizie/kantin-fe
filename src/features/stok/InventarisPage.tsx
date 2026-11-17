@@ -2,7 +2,6 @@ import { TableToolbar } from '@/components/data-table'
 import { ExportButton } from '@/components/export-button'
 import { useState, useEffect, useMemo } from 'react'
 import {
-  History,
   PackagePlus,
   Wallet,
   Package,
@@ -354,13 +353,6 @@ export function InventarisPage() {
               disabled={filteredAndSortedList.length === 0}
               data-testid='btn-inventaris-export'
             />
-
-            <Button size='sm' asChild className='gap-1.5 font-semibold'>
-              <Link to='/stok/kartu'>
-                <History className='size-4' />
-                <span>Buka Mutasi Stok</span>
-              </Link>
-            </Button>
           </div>
         </div>
 

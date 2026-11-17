@@ -81,6 +81,22 @@ const SUMMARY_ICON_CLASSES = {
     'border border-border bg-muted/50 text-muted-foreground',
 } as const
 
+function MenuThumbnail({ fotoUrl, nama }: { fotoUrl?: string | null; nama: string }) {
+  const [failed, setFailed] = useState(false)
+  if (!fotoUrl || failed) {
+    return <ImageIcon className='size-5 text-muted-foreground/30' />
+  }
+  return (
+    <img
+      src={katalogApi.getImageUrl(fotoUrl)}
+      alt={nama}
+      className='size-full object-cover'
+      onError={() => setFailed(true)}
+      loading='lazy'
+    />
+  )
+}
+
 async function fetchKatalogData() {
   const [menus, categories] = await Promise.all([
     katalogApi.getMenuList(undefined, false),
@@ -726,19 +742,7 @@ export function MenuPage() {
                         {/* Foto Thumbnail */}
                         <TableCell className='text-center py-3.5'>
                           <div className='size-11 rounded-xl border border-border bg-muted/40 overflow-hidden flex items-center justify-center mx-auto shrink-0'>
-                            {item.fotoUrl ? (
-                              <img
-                                src={katalogApi.getImageUrl(item.fotoUrl)}
-                                alt={item.nama}
-                                className='size-full object-cover'
-                                onError={(e) => {
-                                  ;(e.target as HTMLImageElement).src =
-                                    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'
-                                }}
-                              />
-                            ) : (
-                              <ImageIcon className='size-5 text-muted-foreground/30' />
-                            )}
+                            <MenuThumbnail fotoUrl={item.fotoUrl} nama={item.nama} />
                           </div>
                         </TableCell>
 
