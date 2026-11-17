@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   Search,
-  Radio,
   Check,
   ChevronsUpDown,
   AlertTriangle,
@@ -114,23 +113,12 @@ export function StudentSearchCard({
   return (
     <Card>
       <CardHeader className='pb-4'>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
-          <div>
-            <CardTitle className='text-lg font-semibold'>
-              Pencarian Data Siswa
-            </CardTitle>
-            <CardDescription className='text-xs'>
-              Cari berdasarkan NIS, Nama Siswa, atau tempelkan kartu RFID
-            </CardDescription>
-          </div>
-          <Badge
-            variant='outline'
-            className='flex items-center gap-1.5 rounded-full border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
-          >
-            <Radio className='h-3 w-3 animate-pulse text-blue-600 dark:text-blue-400' />
-            Alat Pemindai Siap
-          </Badge>
-        </div>
+        <CardTitle className='text-lg font-semibold'>
+          Pencarian Data Siswa
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Cari berdasarkan NIS, Nama Siswa, atau tempelkan kartu RFID
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
         {/* Autocomplete Input Search */}
