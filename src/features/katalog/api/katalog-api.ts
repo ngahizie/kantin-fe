@@ -121,10 +121,16 @@ export const katalogApi = {
   /** Helper untuk resolusi URL gambar (jika path relatif, arahkan ke file storage endpoint) */
   getImageUrl(pathOrUrl?: string | null): string {
     if (!pathOrUrl) return ''
-    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('data:')) {
+    if (
+      pathOrUrl.startsWith('http://') ||
+      pathOrUrl.startsWith('https://') ||
+      pathOrUrl.startsWith('data:') ||
+      pathOrUrl.startsWith('blob:')
+    ) {
       return pathOrUrl
     }
-    const baseURL = apiClient.defaults.baseURL || ''
-    return `${baseURL}/api/storage/file?path=${encodeURIComponent(pathOrUrl)}`
+    // Jika path relatif (mis. "sekolah-1/menu/..."), gunakan relative path /api/storage/file
+    // agar melewati proxy Vite (dev) / Nginx (prod) sehingga cookie sesi otomatis terkirim
+    return `/api/storage/file?path=${encodeURIComponent(pathOrUrl)}`
   },
 }

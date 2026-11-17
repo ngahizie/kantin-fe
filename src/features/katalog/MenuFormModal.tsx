@@ -114,6 +114,25 @@ export function MenuFormModal({
   const watchedStokMinimum = useWatch({ control: form.control, name: 'stokMinimum' })
   const previewUrl = watchedFotoUrl || ''
 
+  // State untuk preview gambar lokal & status error render
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null)
+  const [fotoGagal, setFotoGagal] = useState(false)
+
+  const effectivePreviewSrc = useMemo(() => {
+    if (localPreviewUrl) return localPreviewUrl
+    if (previewUrl) return katalogApi.getImageUrl(previewUrl)
+    return ''
+  }, [localPreviewUrl, previewUrl])
+
+  // Bersihkan object URL lokal jika modal ditutup atau komponen unmount
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl)
+      }
+    }
+  }, [localPreviewUrl])
+
   // State untuk mutasi stok fisik terintegrasi
   const [currentStok, setCurrentStok] = useState<number>(0)
   const [loadingStok, setLoadingStok] = useState(false)
@@ -146,6 +165,12 @@ export function MenuFormModal({
   // Sinkronisasi data form saat modal dibuka
   useEffect(() => {
     if (open) {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl)
+        setLocalPreviewUrl(null)
+      }
+      setFotoGagal(false)
+
       if (selectedMenu) {
         form.reset({
           nama: selectedMenu.nama,
@@ -212,6 +237,14 @@ export function MenuFormModal({
       return
     }
 
+    // Buat object URL langsung untuk preview instan tanpa menunggu selesai upload
+    const objectUrl = URL.createObjectURL(file)
+    if (localPreviewUrl) {
+      URL.revokeObjectURL(localPreviewUrl)
+    }
+    setLocalPreviewUrl(objectUrl)
+    setFotoGagal(false)
+
     try {
       setIsUploading(true)
       const res = await katalogApi.uploadFoto(file, 'menu')
@@ -231,7 +264,15 @@ export function MenuFormModal({
   }
 
   const handleRemovePhoto = () => {
+    if (localPreviewUrl) {
+      URL.revokeObjectURL(localPreviewUrl)
+      setLocalPreviewUrl(null)
+    }
+    setFotoGagal(false)
     form.setValue('fotoUrl', '', { shouldValidate: true })
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   async function onSubmit(values: MenuFormValues) {
@@ -358,17 +399,13 @@ export function MenuFormModal({
 
               <div className='flex items-center gap-4'>
                 <div className='relative size-20 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 group'>
-                  {previewUrl ? (
+                  {effectivePreviewSrc && !fotoGagal ? (
                     <>
                       <img
-                        src={katalogApi.getImageUrl(previewUrl)}
+                        src={effectivePreviewSrc}
                         alt='Preview Produk'
                         className='size-full object-cover'
-                        onError={(e) => {
-                          // Fallback jika error render URL
-                          ;(e.target as HTMLImageElement).src =
-                            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'
-                        }}
+                        onError={() => setFotoGagal(true)}
                       />
                       <button
                         type='button'
@@ -414,7 +451,7 @@ export function MenuFormModal({
                         </>
                       )}
                     </Button>
-                    {previewUrl && (
+                    {(effectivePreviewSrc || previewUrl) && (
                       <Button
                         type='button'
                         variant='ghost'

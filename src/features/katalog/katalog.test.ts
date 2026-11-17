@@ -576,3 +576,38 @@ describe('Validasi Hapus Kategori & API Hapus Kategori', () => {
     expect(remaining.some((k) => k.id === createdKat.id)).toBe(false)
   })
 })
+
+describe('Resolusi URL Foto Produk & Upload Foto', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('katalogApi.getImageUrl mengembalikan URL apa adanya untuk protokol http, https, data, dan blob', () => {
+    expect(katalogApi.getImageUrl('')).toBe('')
+    expect(katalogApi.getImageUrl(null)).toBe('')
+    expect(katalogApi.getImageUrl(undefined)).toBe('')
+
+    expect(katalogApi.getImageUrl('https://example.com/foto.jpg')).toBe('https://example.com/foto.jpg')
+    expect(katalogApi.getImageUrl('http://localhost:9000/kantin/foto.png')).toBe('http://localhost:9000/kantin/foto.png')
+    expect(katalogApi.getImageUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
+    expect(katalogApi.getImageUrl('blob:http://localhost:5173/uuid-test')).toBe('blob:http://localhost:5173/uuid-test')
+  })
+
+  it('katalogApi.getImageUrl menghasilkan relative path /api/storage/file untuk path relatif storage', () => {
+    const path = 'sekolah-1/menu/foto-katsu.jpg'
+    const expected = `/api/storage/file?path=${encodeURIComponent(path)}`
+    expect(katalogApi.getImageUrl(path)).toBe(expected)
+  })
+
+  it('katalogApi.uploadFoto mengunggah berkas dan menghasilkan data path/url yang sesuai', async () => {
+    const file = new File(['fake content'], 'nasi-goreng-spesial.jpg', { type: 'image/jpeg' })
+    const res = await katalogApi.uploadFoto(file, 'menu')
+
+    expect(res).toBeDefined()
+    expect(res.namaAsli).toBe('nasi-goreng-spesial.jpg')
+    expect(res.path).toContain('nasi-goreng-spesial.jpg')
+    expect(res.url).toBeTruthy()
+    // Pastikan bukan lagi hardcoded foto mangkuk salad bila file dikirim
+    expect(res.url).not.toBe('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400')
+  })
+})

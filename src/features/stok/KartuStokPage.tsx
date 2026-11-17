@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  FileSpreadsheet,
   Boxes,
   ArrowDownLeft,
   ArrowUpRight,
@@ -8,7 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { Link, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -254,13 +253,6 @@ export function KartuStokPage() {
               disabled={riwayat.length === 0}
               data-testid='btn-kartu-stok-export'
             />
-
-            <Button size='sm' asChild className='gap-1.5 font-semibold'>
-              <Link to='/stok/inventaris'>
-                <FileSpreadsheet className='h-4 w-4' />
-                <span>Tabel Ringkasan Inventaris</span>
-              </Link>
-            </Button>
           </div>
         </div>
 
