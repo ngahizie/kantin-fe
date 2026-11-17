@@ -291,6 +291,12 @@ export function mapTransaksiKasirItemToSesiTutup(
   const alasanVoidVal = r.alasanVoid ?? r.alasan_void
   const voidAtVal = r.voidAt ?? r.void_at
 
+  const rawAlasanVoid =
+    alasanVoidVal !== undefined && alasanVoidVal !== null
+      ? String(alasanVoidVal).replace(/\s*\(demo void\)/gi, '').trim()
+      : null
+  const cleanAlasanVoid = rawAlasanVoid || null
+
   return {
     id,
     waktu: r.waktu ? String(r.waktu) : new Date().toISOString(),
@@ -310,14 +316,8 @@ export function mapTransaksiKasirItemToSesiTutup(
         : undefined,
     dapat_dikoreksi: dapatDikoreksi,
     dapatDikoreksi,
-    alasan_void:
-      alasanVoidVal !== undefined && alasanVoidVal !== null
-        ? String(alasanVoidVal)
-        : null,
-    alasanVoid:
-      alasanVoidVal !== undefined && alasanVoidVal !== null
-        ? String(alasanVoidVal)
-        : null,
+    alasan_void: cleanAlasanVoid,
+    alasanVoid: cleanAlasanVoid,
     void_at:
       voidAtVal !== undefined && voidAtVal !== null ? String(voidAtVal) : null,
     voidAt:

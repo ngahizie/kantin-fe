@@ -1040,7 +1040,10 @@ export function KoreksiBendaharaPage() {
                                   variant='outline'
                                   className='rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
-                                  REFUND {tx.alasanVoid ? `(${tx.alasanVoid})` : ''}
+                                  REFUND{' '}
+                                  {tx.alasanVoid
+                                    ? `(${tx.alasanVoid.replace(/\s*\(demo void\)/gi, '').trim()})`
+                                    : ''}
                                 </Badge>
                               ) : (
                                 <Badge
