@@ -80,28 +80,42 @@ export function TopupTunaiPage() {
 
       if (currentList.length === 0) return
 
-      // Sinkronisasi saldo riil dari backend (/api/saldo) bila terhubung ke live BE
+      // Sinkronisasi saldo riil & UID RFID dari backend (/api/saldo & /api/siswa/{id}/rfid) bila terhubung ke live BE
       try {
         const syncedStudents = await Promise.all(
           currentList.map(async (student) => {
+            const updated = { ...student }
             try {
-              const saldoRes = await apiClient.get('/api/saldo', {
-                params: {
-                  siswaId: student.siswa_id,
-                },
-              })
-              const liveSaldo = saldoRes.data?.data?.saldo
+              const [saldoRes, rfidRes] = await Promise.all([
+                apiClient
+                  .get('/api/saldo', {
+                    params: {
+                      siswaId: student.siswa_id,
+                    },
+                  })
+                  .catch(() => null),
+                apiClient
+                  .get(`/api/siswa/${student.siswa_id}/rfid`)
+                  .catch(() => null),
+              ])
+
+              const liveSaldo = saldoRes?.data?.data?.saldo
               // Hanya perbarui saldo jika liveSaldo dari backend bernilai > 0.
               // Jika liveSaldo === 0 namun siswa memiliki saldo tersimpan (> 0),
               // pertahankan saldo lokal (agar tidak ter-reset ke 0 pada akun TU sekolah 2 / multi-tenant).
               if (typeof liveSaldo === 'number' && liveSaldo > 0) {
                 saveStoredSaldo(student.siswa_id, liveSaldo)
-                return { ...student, saldo: liveSaldo }
+                updated.saldo = liveSaldo
+              }
+
+              const liveRfid = rfidRes?.data?.data?.rfidUid
+              if (liveRfid) {
+                updated.uid = liveRfid
               }
             } catch {
-              // Jika query saldo belum ada di database, pertahankan saldo lokal
+              // Jika query saldo/rfid belum ada di database, pertahankan data lokal
             }
-            return student
+            return updated
           })
         )
 
@@ -109,7 +123,7 @@ export function TopupTunaiPage() {
           setStudents(syncedStudents)
         }
       } catch {
-        // Abaikan jika live query saldo gagal
+        // Abaikan jika live query saldo/rfid gagal
       }
     }
     void loadStudents()

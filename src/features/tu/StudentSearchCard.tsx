@@ -6,7 +6,10 @@ import {
   Check,
   ChevronsUpDown,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
+import apiClient from '@/lib/api-client'
+import { useRfidScanner } from '@/hooks/useRfidScanner'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,23 +52,64 @@ export function StudentSearchCard({
   const [openCombobox, setOpenCombobox] = useState(false)
   const [rfidInput, setRfidInput] = useState('')
   const [rfidFeedback, setRfidFeedback] = useState<string | null>(null)
+  const [isSearchingRfid, setIsSearchingRfid] = useState(false)
 
-  const handleFindRfid = (uidToFind?: string) => {
-    const targetUid = (uidToFind || rfidInput).trim()
-    if (!targetUid) return
+  const handleFindRfid = async (uidToFind?: string) => {
+    const rawUid = (uidToFind || rfidInput).trim()
+    if (!rawUid) return
+    const targetUid = rawUid.toUpperCase()
 
-    const found = students.find(
-      (s) => (s.uid || '').toLowerCase() === targetUid.toLowerCase()
-    )
-    if (found) {
-      onSelectStudent(found)
-      setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
-      setRfidInput(found.uid)
-      return
+    setIsSearchingRfid(true)
+    try {
+      // 1. Cek langsung di memory lokal siswa (UID fisik, NIS, atau nomor kartu)
+      let found = students.find(
+        (s) =>
+          (s.uid || '').toUpperCase() === targetUid ||
+          (s.nis || '').toUpperCase() === targetUid
+      )
+
+      // 2. Jika belum ditemukan di memory lokal (misal proses sinkronisasi awal belum selesai),
+      // cek RFID per siswa secara on-the-fly dari backend
+      if (!found) {
+        for (const s of students) {
+          if (!s.uid || s.uid.startsWith('UID-')) {
+            try {
+              const rfidRes = await apiClient.get(`/api/siswa/${s.siswa_id}/rfid`)
+              const liveUid = rfidRes.data?.data?.rfidUid
+              if (liveUid) {
+                s.uid = liveUid
+                if (liveUid.toUpperCase() === targetUid) {
+                  found = s
+                  break
+                }
+              }
+            } catch {
+              // Abaikan kegagalan per siswa
+            }
+          }
+        }
+      }
+
+      if (found) {
+        onSelectStudent(found)
+        setRfidFeedback(`Kartu RFID terdeteksi: ${found.nama} (${found.nis})`)
+        setRfidInput(found.uid || rawUid)
+        return
+      }
+
+      setRfidFeedback(`RFID UID "${rawUid}" tidak terdaftar di data siswa.`)
+    } finally {
+      setIsSearchingRfid(false)
     }
-
-    setRfidFeedback(`RFID UID "${targetUid}" tidak terdaftar di data siswa.`)
   }
+
+  // Deteksi otomatis saat kartu ditempelkan ke USB RFID reader hardware
+  useRfidScanner({
+    onScan: (scannedUid) => {
+      void handleFindRfid(scannedUid)
+    },
+    enabled: !isLoading,
+  })
 
   return (
     <Card>
@@ -190,7 +234,7 @@ export function StudentSearchCard({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
-                  handleFindRfid()
+                  void handleFindRfid()
                 }
               }}
             />
@@ -199,9 +243,17 @@ export function StudentSearchCard({
               size='sm'
               variant='outline'
               className='h-9 shrink-0 px-3 text-xs'
-              onClick={() => handleFindRfid()}
+              disabled={isSearchingRfid}
+              onClick={() => void handleFindRfid()}
             >
-              Cari Kartu
+              {isSearchingRfid ? (
+                <>
+                  <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                  Mencari...
+                </>
+              ) : (
+                'Cari Kartu'
+              )}
             </Button>
           </div>
 
