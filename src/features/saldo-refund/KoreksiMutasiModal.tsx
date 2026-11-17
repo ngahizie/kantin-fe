@@ -379,7 +379,7 @@ function KoreksiMutasiFormContent({
               id={nominalInputId}
               type='number'
               min='1'
-              step='500'
+              step='any'
               value={nominalStr}
               onChange={(e) => setNominalStr(e.target.value)}
               placeholder='0'
