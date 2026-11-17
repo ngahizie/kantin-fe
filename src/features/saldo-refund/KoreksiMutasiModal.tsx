@@ -192,7 +192,7 @@ function KoreksiMutasiFormContent({
       }
 
       toast.success(
-        `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (-${formatRupiah(nominalNum)})` : `KREDIT (+${formatRupiah(nominalNum)})`} berhasil dicatat!`
+        `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
       )
 
       onSuccess?.(newKoreksi)
@@ -321,7 +321,7 @@ function KoreksiMutasiFormContent({
               <ArrowDownRight className='mt-0.5 h-4 w-4 text-destructive' />
               <div>
                 <span className='block text-xs font-bold'>
-                  Kurangi Saldo Siswa (-)
+                  Kurangi Saldo Siswa
                 </span>
                 <span className='mt-0.5 block text-[11px] leading-tight text-muted-foreground'>
                   Untuk koreksi kelebihan isi saldo atau transaksi salah.
@@ -340,7 +340,7 @@ function KoreksiMutasiFormContent({
               <ArrowUpRight className='mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
               <div>
                 <span className='block text-xs font-bold'>
-                  Tambah Saldo Siswa (+)
+                  Tambah Saldo Siswa
                 </span>
                 <span className='mt-0.5 block text-[11px] leading-tight text-muted-foreground'>
                   Untuk pengembalian saldo siswa karena kasir salah potong.
