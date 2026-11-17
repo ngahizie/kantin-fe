@@ -36,7 +36,8 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Penjualan & Laba Kotor')
     expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Riwayat Transaksi')
-    expect(subReportTitles).toContain('Riwayat Per Siswa')
+    expect(subReportTitles).not.toContain('Riwayat Per Siswa')
+    expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).toContain('Pembatalan Kasir')
     expect(subReportTitles).not.toContain('Analisis Laba Kotor')
     expect(subReportTitles).not.toContain('Laporan Kerugian Stok')
@@ -75,6 +76,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).not.toContain('Cek Selisih Uang')
     expect(subReportTitles).not.toContain('Total Saldo Siswa')
     expect(subReportTitles).not.toContain('Riwayat Transaksi')
+    expect(subReportTitles).not.toContain('Riwayat Per Siswa')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
 
     // Pengaturan kantin harus disembunyikan dari pengelola
@@ -111,6 +113,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Cek Selisih Uang')
     expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Riwayat Transaksi')
+    expect(subReportTitles).not.toContain('Riwayat Per Siswa')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
   })
@@ -172,6 +175,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).toContain('Riwayat Transaksi')
+    expect(subReportTitles).not.toContain('Riwayat Per Siswa')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
   })
 })
