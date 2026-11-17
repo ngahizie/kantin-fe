@@ -44,8 +44,13 @@
     padding-right: 0 !important;
   }
 
+  /* Mencegah react-remove-scroll memecah position: sticky pada header saat dropdown select/popover dibuka di halaman */
+  html:not(:has([data-slot='dialog-overlay'], [data-slot='alert-dialog-overlay'], [data-slot='sheet-overlay'])) body[data-scroll-locked],
+  html body[data-scroll-locked]:not(:has([data-slot='dialog-overlay'], [data-slot='alert-dialog-overlay'], [data-slot='sheet-overlay'])) {
+    overflow: visible !important;
+  }
+
   /* Saat modal/dialog/sheet terbuka, selaraskan warna latar root agar menggelap sempurna */
-  html:has(body[data-scroll-locked]),
   html:has([data-slot='dialog-overlay']),
   html:has([data-slot='alert-dialog-overlay']),
   html:has([data-slot='sheet-overlay']) {

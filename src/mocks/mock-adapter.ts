@@ -3709,10 +3709,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           return { status: 404, data: { message: 'Titik kasir tidak ditemukan' } }
         }
 
-        const target = titikKasirList[idx]
-        target.is_active = false
-        target.aktif = false
-        target.updated_at = new Date().toISOString()
+        const [removed] = titikKasirList.splice(idx, 1)
 
         return {
           status: 200,
@@ -3720,14 +3717,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             code: 200,
             responseCode: 200,
             status: 'SUCCESS',
-            message: `Titik kasir "${target.nama}" dinonaktifkan`,
+            message: `Titik kasir "${removed.nama}" berhasil dihapus`,
             data: {
-              id: target.id,
-              nama: target.nama,
-              kode: target.kode,
+              id: removed.id,
+              nama: removed.nama,
+              kode: removed.kode,
               aktif: false,
-              createdAt: target.created_at,
-              updatedAt: target.updated_at,
+              createdAt: removed.created_at,
+              updatedAt: new Date().toISOString(),
             },
           },
         }
