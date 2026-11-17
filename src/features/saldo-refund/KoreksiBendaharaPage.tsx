@@ -225,15 +225,16 @@ export function KoreksiBendaharaPage() {
   }, [executeFetch])
 
   const handleCreateSuccess = (newKoreksi: MutasiKoreksiItem) => {
-    setKoreksiList((prev) => [newKoreksi, ...prev])
-    if (newKoreksi.transaksi_terkait_id) {
+    const safeKoreksi = mapMutasiKoreksiItem(newKoreksi, students)
+    setKoreksiList((prev) => [safeKoreksi, ...prev])
+    if (safeKoreksi.transaksi_terkait_id) {
       setTransaksiList((prev) =>
         prev.map((t) =>
-          String(t.id) === String(newKoreksi.transaksi_terkait_id)
+          String(t.id) === String(safeKoreksi.transaksi_terkait_id)
             ? {
                 ...t,
                 status: 'DIKOREKSI',
-                koreksi_referensi_id: newKoreksi.referensi_id,
+                koreksi_referensi_id: safeKoreksi.referensi_id,
                 dapatDikoreksi: false,
                 dapat_dikoreksi: false,
               }
@@ -241,18 +242,26 @@ export function KoreksiBendaharaPage() {
         )
       )
     }
+    void executeFetch()
   }
 
   // Filtered koreksi list
   const filteredKoreksi = useMemo(() => {
     return koreksiList.filter((k) => {
-      const q = searchQuery.toLowerCase()
+      const q = (searchQuery || '').toLowerCase().trim()
+      const refId = String(k.referensi_id || k.referensiId || '').toLowerCase()
+      const nama = String(k.siswa_nama || k.siswaNama || '').toLowerCase()
+      const info = String(k.siswa_info || k.siswaInfo || '').toLowerCase()
+      const alasan = String(k.alasan || k.keterangan || '').toLowerCase()
+      const bendahara = String(k.bendahara_nama || k.bendaharaNama || '').toLowerCase()
+
       const matchSearch =
-        k.referensi_id.toLowerCase().includes(q) ||
-        k.siswa_nama.toLowerCase().includes(q) ||
-        k.siswa_info.toLowerCase().includes(q) ||
-        k.alasan.toLowerCase().includes(q) ||
-        k.bendahara_nama.toLowerCase().includes(q)
+        !q ||
+        refId.includes(q) ||
+        nama.includes(q) ||
+        info.includes(q) ||
+        alasan.includes(q) ||
+        bendahara.includes(q)
 
       let matchArah = true
       if (arahFilter !== 'ALL') {
@@ -266,15 +275,24 @@ export function KoreksiBendaharaPage() {
   // Filtered transaksi sesi tutup list
   const filteredTransaksi = useMemo(() => {
     return transaksiList.filter((tx) => {
-      const q = txSearchQuery.toLowerCase()
+      const q = (txSearchQuery || '').toLowerCase().trim()
+      const id = String(tx.id || '').toLowerCase()
+      const sesi = String(tx.sesi_kasir_id || '').toLowerCase()
+      const nama = String(tx.siswa_nama || '').toLowerCase()
+      const info = String(tx.siswa_info || '').toLowerCase()
+      const titik = String(tx.titik_kasir || '').toLowerCase()
+      const uid = String(tx.kartu_uid || '').toLowerCase()
+      const petugas = String(tx.petugas_kasir || '').toLowerCase()
+
       const matchSearch =
-        String(tx.id).toLowerCase().includes(q) ||
-        String(tx.sesi_kasir_id).toLowerCase().includes(q) ||
-        tx.siswa_nama.toLowerCase().includes(q) ||
-        tx.siswa_info.toLowerCase().includes(q) ||
-        tx.titik_kasir.toLowerCase().includes(q) ||
-        (tx.kartu_uid && tx.kartu_uid.toLowerCase().includes(q)) ||
-        (tx.petugas_kasir && tx.petugas_kasir.toLowerCase().includes(q))
+        !q ||
+        id.includes(q) ||
+        sesi.includes(q) ||
+        nama.includes(q) ||
+        info.includes(q) ||
+        titik.includes(q) ||
+        uid.includes(q) ||
+        petugas.includes(q)
 
       let matchStatus = true
       if (txStatusFilter !== 'ALL') {

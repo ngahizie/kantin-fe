@@ -128,20 +128,32 @@ export type ArahMutasi = 'DEBIT' | 'KREDIT'
 export interface MutasiKoreksiItem {
   id: string | number
   referensi_id: string
+  referensiId?: string
   waktu: string
   siswa_id: number
+  siswaId?: number
   siswa_nama: string
+  siswaNama?: string
   siswa_info: string
+  siswaInfo?: string
   jenis_koreksi: JenisKoreksi
+  jenisKoreksi?: JenisKoreksi
   arah: ArahMutasi
   nominal: number
   saldo_sebelum: number
+  saldoSebelum?: number
   saldo_setelah: number
+  saldoSetelah?: number
   alasan: string
+  keterangan?: string
   bendahara_id: number
+  bendaharaId?: number
   bendahara_nama: string
+  bendaharaNama?: string
   transaksi_terkait_id?: string | number
+  transaksiTerkaitId?: string | number
   sesi_kasir_id?: number
+  sesiKasirId?: number
 }
 
 export interface KoreksiSaldoPayload {
@@ -368,9 +380,10 @@ export function mapMutasiKoreksiItem(
   const bendaharaId = Number(r.aktorId ?? r.bendahara_id ?? 0)
   const bendaharaNama = String(
     r.bendahara_nama ??
+      r.bendaharaNama ??
       (bendaharaId ? `Bendahara #${bendaharaId}` : 'Bendahara')
   )
-  const rawTxId = r.transaksiId ?? r.transaksi_terkait_id
+  const rawTxId = r.transaksi_terkait_id ?? r.transaksiId ?? r.transaksiTerkaitId
   const transaksiId =
     rawTxId !== undefined && rawTxId !== null
       ? typeof rawTxId === 'number'
@@ -378,7 +391,7 @@ export function mapMutasiKoreksiItem(
         : String(rawTxId)
       : undefined
 
-  const rawSesiId = r.sesiKasirId ?? r.sesi_kasir_id
+  const rawSesiId = r.sesi_kasir_id ?? r.sesiKasirId
   const sesiKasirId =
     rawSesiId !== undefined && rawSesiId !== null ? Number(rawSesiId) : undefined
 
@@ -389,19 +402,31 @@ export function mapMutasiKoreksiItem(
   return {
     id,
     referensi_id: referensiId,
+    referensiId,
     waktu: r.waktu ? String(r.waktu) : new Date().toISOString(),
     siswa_id: siswaId,
+    siswaId,
     siswa_nama: siswaNama,
+    siswaNama,
     siswa_info: siswaInfo,
+    siswaInfo,
     jenis_koreksi: jenisKoreksi,
+    jenisKoreksi,
     arah,
     nominal,
     saldo_sebelum: saldoSebelum,
+    saldoSebelum,
     saldo_setelah: saldoSetelah,
+    saldoSetelah,
     alasan,
+    keterangan: alasan,
     bendahara_id: bendaharaId,
+    bendaharaId,
     bendahara_nama: bendaharaNama,
+    bendaharaNama,
     transaksi_terkait_id: transaksiId,
+    transaksiTerkaitId: transaksiId,
     sesi_kasir_id: sesiKasirId,
+    sesiKasirId,
   }
 }
