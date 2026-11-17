@@ -54,6 +54,11 @@ vi.mock('@/features/laporan/api/laporan-api', () => ({
     }),
     getPenjualanPerKategori: vi.fn().mockResolvedValue([]),
     getRiwayatTransaksiKeseluruhan: vi.fn().mockResolvedValue([]),
+    getSaldoMengendap: vi.fn().mockResolvedValue({
+      totalSaldo: 500000,
+      jumlahSiswa: 20,
+    }),
+    getPembatalan: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -113,10 +118,10 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     expect(laporanApi.getRekonsiliasi).toHaveBeenCalled()
 
     // Memverifikasi card rekonsiliasi menampilkan nominal saldo mengendap dan status seimbang dalam satu baris
-    await expect.element(screen.getByText(/Rp\s*500\.000/)).toBeInTheDocument()
-    const seimbangLabel = screen.getByText('Seimbang')
+    await expect.element(screen.getByText(/Rp\s*500\.000/).first()).toBeInTheDocument()
+    const seimbangLabel = screen.getByText('Seimbang', { exact: true })
     await expect.element(seimbangLabel).toBeInTheDocument()
-    await expect.element(screen.getByText(/• Selisih Rp\s*0/)).toBeInTheDocument()
+    await expect.element(screen.getByText(/• Selisih Rp\s*0/).first()).toBeInTheDocument()
 
     const statusRow = (await seimbangLabel.element()).parentElement
     expect(statusRow?.className).toContain('whitespace-nowrap')
