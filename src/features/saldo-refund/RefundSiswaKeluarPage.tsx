@@ -62,7 +62,7 @@ export function RefundSiswaKeluarPage() {
           apiClient.get('/api/saldo/refund/kandidat', {
             params: { hanyaTidakAktif: true },
           }),
-          apiClient.get('/api/siswa', { params: { batas: 50 } }),
+          apiClient.get('/api/siswa', { params: { batas: 50, hanyaTidakAktif: true } }),
         ])
         if (!isMounted) return
 
@@ -122,12 +122,17 @@ export function RefundSiswaKeluarPage() {
                 ),
                 is_card_blocked: true,
                 nama_ortu: String(
-                  item.nama_ortu ?? item.namaOrangTua ?? info?.namaOrangTua ?? '-'
+                  item.namaOrangTua ||
+                    item.nama_ortu ||
+                    item.namaOrtu ||
+                    info?.namaOrangTua ||
+                    '-'
                 ),
                 kontak_ortu: String(
-                  item.kontak_ortu ??
-                    item.teleponOrangTua ??
-                    info?.teleponOrangTua ??
+                  item.teleponOrangTua ||
+                    item.kontak_ortu ||
+                    item.kontakOrtu ||
+                    info?.teleponOrangTua ||
                     '-'
                 ),
                 is_refunded: saldoVal === 0,

@@ -401,8 +401,8 @@ export function KoreksiBendaharaPage() {
         metadata: {
           'Tanggal Cetak': new Date().toLocaleString('id-ID'),
           'Total Mutasi': `${filteredKoreksi.length} transaksi`,
-          'Total Koreksi Kredit (+)': formatRupiah(filteredKredit),
-          'Total Koreksi Debit (-)': formatRupiah(filteredDebit),
+          'Total Koreksi Kredit': formatRupiah(filteredKredit),
+          'Total Koreksi Debit': formatRupiah(filteredDebit),
         },
         columns: [
           { header: 'Ref ID', key: 'referensi_id' },
@@ -503,7 +503,7 @@ export function KoreksiBendaharaPage() {
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Penambahan Saldo (+)
+                Penambahan Saldo
               </CardTitle>
               <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'>
                 <ArrowUpRight className='size-4' />
@@ -522,7 +522,7 @@ export function KoreksiBendaharaPage() {
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Pengurangan Saldo (-)
+                Pengurangan Saldo
               </CardTitle>
               <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-400'>
                 <ArrowDownRight className='size-4' />
@@ -607,8 +607,8 @@ export function KoreksiBendaharaPage() {
                 {
                   title: 'Arah Mutasi',
                   options: [
-                    { label: 'Kurangi Saldo Siswa (-)', value: 'DEBIT' },
-                    { label: 'Tambah Saldo Siswa (+)', value: 'KREDIT' },
+                    { label: 'Kurangi Saldo Siswa', value: 'DEBIT' },
+                    { label: 'Tambah Saldo Siswa', value: 'KREDIT' },
                   ],
                   selectedValues: arahFilter !== 'ALL' ? [arahFilter] : [],
                   onSelect: (vals) => setArahFilter(vals[0] || 'ALL'),
@@ -774,7 +774,7 @@ export function KoreksiBendaharaPage() {
                                   className='gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
                                   <ArrowDownRight className='h-3 w-3' />
-                                  DEBIT (-Saldo)
+                                  DEBIT (Pengurangan)
                                 </Badge>
                               ) : (
                                 <Badge
@@ -782,7 +782,7 @@ export function KoreksiBendaharaPage() {
                                   className='gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 >
                                   <ArrowUpRight className='h-3 w-3' />
-                                  KREDIT (+Saldo)
+                                  KREDIT (Penambahan)
                                 </Badge>
                               )}
                             </TableCell>

@@ -43,14 +43,10 @@ interface RefundOrangTuaModalProps {
   onRefundSuccess: (siswaId: number, slipData: RefundSlipData) => void
 }
 
-const BANK_OPTIONS = [
-  { value: 'BCA', label: 'Bank BCA (Bank Central Asia)' },
+const POPULAR_BANKS = [
+  { value: 'BCA', label: 'Bank BCA' },
+  { value: 'BRI', label: 'Bank BRI' },
   { value: 'MANDIRI', label: 'Bank Mandiri' },
-  { value: 'BRI', label: 'Bank BRI (Bank Rakyat Indonesia)' },
-  { value: 'BNI', label: 'Bank BNI (Bank Negara Indonesia)' },
-  { value: 'BSI', label: 'Bank Syariah Indonesia (BSI)' },
-  { value: 'CIMB', label: 'CIMB Niaga' },
-  { value: 'PERMATA', label: 'Bank Permata' },
   { value: 'LAINNYA', label: 'Bank Lainnya' },
 ]
 
@@ -86,11 +82,37 @@ function RefundOrangTuaFormContent({
   const [metode, setMetode] = useState<'TUNAI' | 'TRANSFER_BANK'>(
     siswa.bank_ortu || siswa.no_rekening_ortu ? 'TRANSFER_BANK' : 'TUNAI'
   )
-  const [namaPenerima, setNamaPenerima] = useState(siswa.nama_ortu || '')
-  const [kontakPenerima, setKontakPenerima] = useState(siswa.kontak_ortu || '')
-  const [bank, setBank] = useState(siswa.bank_ortu || 'BCA')
+
+  // Data penerima & kontak otomatis dari database
+  const dbNamaOrtu = siswa.nama_ortu && siswa.nama_ortu !== '-' ? siswa.nama_ortu : ''
+  const dbKontakOrtu = siswa.kontak_ortu && siswa.kontak_ortu !== '-' ? siswa.kontak_ortu : ''
+  const [fallbackNamaPenerima, setFallbackNamaPenerima] = useState('')
+  const [fallbackKontakPenerima, setFallbackKontakPenerima] = useState('')
+
+  const namaPenerima = dbNamaOrtu || fallbackNamaPenerima
+  const kontakPenerima = dbKontakOrtu || fallbackKontakPenerima
+
+  // Bank: 3 bank populer (BCA, BRI, Mandiri) atau 'LAINNYA'
+  const initialIsPopular = Boolean(
+    siswa.bank_ortu && ['BCA', 'BRI', 'MANDIRI'].includes(siswa.bank_ortu.toUpperCase())
+  )
+  const [bank, setBank] = useState<string>(() => {
+    if (siswa.bank_ortu) {
+      return initialIsPopular ? siswa.bank_ortu.toUpperCase() : 'LAINNYA'
+    }
+    return 'BCA'
+  })
+  const [customBank, setCustomBank] = useState<string>(() => {
+    if (siswa.bank_ortu && !initialIsPopular) {
+      return siswa.bank_ortu
+    }
+    return ''
+  })
+
   const [noRekening, setNoRekening] = useState(siswa.no_rekening_ortu || '')
-  const [namaRekening, setNamaRekening] = useState(siswa.nama_ortu || '')
+  const [namaRekening, setNamaRekening] = useState(
+    dbNamaOrtu || (siswa.nama_ortu && siswa.nama_ortu !== '-' ? siswa.nama_ortu : '') || ''
+  )
   const [catatan, setCatatan] = useState(`Pengembalian sisa saldo kelulusan/nonaktif ${siswa.nama}`)
   const [buktiUrl, setBuktiUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -135,6 +157,17 @@ function RefundOrangTuaFormContent({
     }
   }
 
+  const finalBankName =
+    metode === 'TRANSFER_BANK'
+      ? bank === 'LAINNYA'
+        ? customBank.trim()
+        : (POPULAR_BANKS.find((b) => b.value === bank)?.label || bank)
+      : undefined
+
+  const isBankValid =
+    metode !== 'TRANSFER_BANK' ||
+    (bank !== 'LAINNYA' ? Boolean(bank) : customBank.trim().length >= 2)
+
   const isValidSubmit =
     siswa.saldo > 0 &&
     namaPenerima.trim().length >= 3 &&
@@ -142,7 +175,7 @@ function RefundOrangTuaFormContent({
     agreement &&
     (metode === 'TUNAI' ||
       (metode === 'TRANSFER_BANK' &&
-        bank.length > 0 &&
+        isBankValid &&
         noRekening.trim().length >= 5 &&
         namaRekening.trim().length >= 3))
 
@@ -186,7 +219,7 @@ function RefundOrangTuaFormContent({
         metode,
         nama_penerima: namaPenerima.trim(),
         kontak_penerima: kontakPenerima.trim(),
-        bank: metode === 'TRANSFER_BANK' ? bank : undefined,
+        bank: finalBankName,
         nomor_rekening:
           metode === 'TRANSFER_BANK' ? noRekening.trim() : undefined,
         nama_rekening:
@@ -196,7 +229,7 @@ function RefundOrangTuaFormContent({
       }
 
       toast.success(`Refund sisa saldo ${siswa.nama} berhasil diproses!`, {
-        description: `Saldo ${formatRupiah(siswa.saldo)} diserahkan ke ${namaPenerima.trim()}. Kartu RFID lama otomatis diblokir permanen.`,
+        description: `Saldo ${formatRupiah(siswa.saldo)} diserahkan ke ${namaPenerima.trim()}${finalBankName ? ` (${finalBankName})` : ''}. Kartu RFID lama otomatis diblokir permanen.`,
       })
 
       onOpenChange(false)
@@ -318,7 +351,7 @@ function RefundOrangTuaFormContent({
                       <SelectValue placeholder='Pilih bank' />
                     </SelectTrigger>
                     <SelectContent>
-                      {BANK_OPTIONS.map((b) => (
+                      {POPULAR_BANKS.map((b) => (
                         <SelectItem key={b.value} value={b.value} className='text-xs'>
                           {b.label}
                         </SelectItem>
@@ -341,6 +374,24 @@ function RefundOrangTuaFormContent({
                 </div>
               </div>
 
+              {/* Input Bank Sendiri jika memilih Bank Lainnya */}
+              {bank === 'LAINNYA' && (
+                <div className='space-y-1.5'>
+                  <Label htmlFor='customBank' className='text-xs font-semibold'>
+                    Nama Bank Tujuan Lainnya <span className='text-destructive'>*</span>
+                  </Label>
+                  <Input
+                    id='customBank'
+                    value={customBank}
+                    onChange={(e) => setCustomBank(e.target.value)}
+                    placeholder='Tulis nama bank sendiri (contoh: Bank BNI, Bank BSI, Bank Jatim)'
+                    className='text-xs'
+                    required
+                    autoFocus
+                  />
+                </div>
+              )}
+
               <div className='space-y-1.5'>
                 <Label htmlFor='namaRekening' className='text-xs'>
                   Nama Pemilik Rekening <span className='text-destructive'>*</span>
@@ -356,38 +407,88 @@ function RefundOrangTuaFormContent({
             </div>
           )}
 
-          {/* Info Penerima */}
+          {/* Info Penerima Otomatis dari Database */}
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div className='space-y-1.5'>
-              <Label htmlFor='namaPenerima' className='text-xs'>
-                Nama Orang Tua / Penerima <span className='text-destructive'>*</span>
-              </Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='namaPenerima' className='text-xs'>
+                  Nama Orang Tua / Penerima <span className='text-destructive'>*</span>
+                </Label>
+                {dbNamaOrtu && (
+                  <Badge
+                    variant='outline'
+                    className='rounded-full border-blue-200 bg-blue-50 px-2 py-0 text-[10px] font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
+                  >
+                    Dari Database
+                  </Badge>
+                )}
+              </div>
               <div className='relative'>
                 <User className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground' />
                 <Input
                   id='namaPenerima'
                   value={namaPenerima}
-                  onChange={(e) => setNamaPenerima(e.target.value)}
+                  onChange={(e) => setFallbackNamaPenerima(e.target.value)}
+                  readOnly={Boolean(dbNamaOrtu)}
+                  disabled={Boolean(dbNamaOrtu)}
                   placeholder='Nama lengkap orang tua'
-                  className='pl-8 text-xs'
+                  className={`pl-8 text-xs ${
+                    dbNamaOrtu
+                      ? 'bg-muted/60 text-foreground cursor-not-allowed select-none font-medium'
+                      : ''
+                  }`}
                 />
               </div>
+              {dbNamaOrtu ? (
+                <p className='text-[10px] text-muted-foreground'>
+                  Diambil otomatis dari data wali siswa di database.
+                </p>
+              ) : (
+                <p className='text-[10px] text-amber-600 dark:text-amber-400'>
+                  Data wali belum tersedia di database, silakan masukkan nama penerima.
+                </p>
+              )}
             </div>
 
             <div className='space-y-1.5'>
-              <Label htmlFor='kontakPenerima' className='text-xs'>
-                No. HP / WhatsApp Ortu <span className='text-destructive'>*</span>
-              </Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='kontakPenerima' className='text-xs'>
+                  No. HP / WhatsApp Ortu <span className='text-destructive'>*</span>
+                </Label>
+                {dbKontakOrtu && (
+                  <Badge
+                    variant='outline'
+                    className='rounded-full border-emerald-200 bg-emerald-50 px-2 py-0 text-[10px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  >
+                    WhatsApp Database
+                  </Badge>
+                )}
+              </div>
               <div className='relative'>
                 <Phone className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground' />
                 <Input
                   id='kontakPenerima'
                   value={kontakPenerima}
-                  onChange={(e) => setKontakPenerima(e.target.value)}
+                  onChange={(e) => setFallbackKontakPenerima(e.target.value)}
+                  readOnly={Boolean(dbKontakOrtu)}
+                  disabled={Boolean(dbKontakOrtu)}
                   placeholder='0812xxxxxxx'
-                  className='pl-8 text-xs font-mono tabular-nums'
+                  className={`pl-8 text-xs font-mono tabular-nums ${
+                    dbKontakOrtu
+                      ? 'bg-muted/60 text-foreground cursor-not-allowed select-none font-medium'
+                      : ''
+                  }`}
                 />
               </div>
+              {dbKontakOrtu ? (
+                <p className='text-[10px] text-muted-foreground'>
+                  Nomor WhatsApp resmi orang tua terdaftar di database.
+                </p>
+              ) : (
+                <p className='text-[10px] text-amber-600 dark:text-amber-400'>
+                  Nomor kontak belum terdaftar di database, silakan masukkan nomor HP/WA.
+                </p>
+              )}
             </div>
           </div>
 
