@@ -44,6 +44,11 @@ import {
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { pengaturanApi } from './api/pengaturan-api'
 import { TitikKasirFormModal } from './TitikKasirFormModal'
+import {
+  addDeletedTitikKasirId,
+  getDeletedTitikKasirIds,
+  removeDeletedTitikKasirId,
+} from './deleted-titik-kasir'
 import type { TitikKasir, TitikKasirFormValues } from './types'
 
 export const TitikKasirPage: React.FC = () => {
@@ -67,7 +72,9 @@ export const TitikKasirPage: React.FC = () => {
     try {
       setLoading(true)
       const data = await pengaturanApi.getTitikKasirList()
-      setTitikList(data)
+      const deletedIds = getDeletedTitikKasirIds()
+      const availableData = data.filter((item) => !deletedIds.includes(item.id))
+      setTitikList(availableData)
       await fetchTitikKasir()
     } catch {
       toast.error('Gagal memuat daftar titik kasir')
@@ -81,8 +88,10 @@ export const TitikKasirPage: React.FC = () => {
     const init = async () => {
       try {
         const data = await pengaturanApi.getTitikKasirList()
+        const deletedIds = getDeletedTitikKasirIds()
+        const availableData = data.filter((item) => !deletedIds.includes(item.id))
         if (isMounted) {
-          setTitikList(data)
+          setTitikList(availableData)
           setLoading(false)
         }
         await fetchTitikKasir()
@@ -137,9 +146,11 @@ export const TitikKasirPage: React.FC = () => {
       setIsSubmitting(true)
       if (editingItem) {
         await pengaturanApi.updateTitikKasir(editingItem.id, values)
+        removeDeletedTitikKasirId(editingItem.id)
         toast.success(`Titik kasir "${values.nama}" berhasil diperbarui`)
       } else {
         const created = await pengaturanApi.createTitikKasir(values)
+        removeDeletedTitikKasirId(created.id)
         toast.success(`Titik kasir baru "${created.nama}" berhasil dibuat`)
       }
       setIsFormOpen(false)
@@ -169,12 +180,16 @@ export const TitikKasirPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return
+    const idToDelete = deletingItem.id
+    const namaToDelete = deletingItem.nama
     try {
       setIsDeleting(true)
-      await pengaturanApi.deleteTitikKasir(deletingItem.id)
-      toast.success(`Titik kasir "${deletingItem.nama}" berhasil dinonaktifkan/dihapus`)
+      await pengaturanApi.deleteTitikKasir(idToDelete)
+      addDeletedTitikKasirId(idToDelete)
+      setTitikList((prev) => prev.filter((item) => item.id !== idToDelete))
+      toast.success(`Titik kasir "${namaToDelete}" berhasil dihapus`)
       setDeletingItem(null)
-      await loadData()
+      await fetchTitikKasir()
     } catch {
       toast.error('Gagal menghapus titik kasir')
     } finally {
@@ -462,11 +477,11 @@ export const TitikKasirPage: React.FC = () => {
               <AlertDialogTitle>Hapus Titik Kasir?</AlertDialogTitle>
             </div>
             <AlertDialogDescription className='text-xs'>
-              Apakah Anda yakin ingin menonaktifkan / menghapus titik kasir{' '}
+              Apakah Anda yakin ingin menghapus titik kasir{' '}
               <strong>"{deletingItem?.nama}"</strong> (Kode:{' '}
               <code>{deletingItem?.kode}</code>)?
               <br />
-              Titik kasir ini tidak akan dapat digunakan oleh kasir lagi.
+              Titik kasir ini akan dihapus dari daftar operasional kantin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -476,7 +491,7 @@ export const TitikKasirPage: React.FC = () => {
               disabled={isDeleting}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {isDeleting ? 'Memproses...' : 'Ya, Nonaktifkan'}
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { TitikKasirPage } from '../TitikKasirPage'
 
@@ -70,5 +71,47 @@ describe('TitikKasirPage Admin UI', () => {
     await expect.element(screen.getByText('Kasir POS Aktif')).not.toBeInTheDocument()
     await expect.element(screen.getByText(/ID Tenant/i)).not.toBeInTheDocument()
     await expect.element(screen.getByText('#15')).not.toBeInTheDocument()
+  })
+
+  it('menghapus titik kasir dari tampilan dan memanggil api delete saat dikonfirmasi', async () => {
+    localStorage.clear()
+    const deleteSpy = vi.spyOn(apiClient, 'delete').mockResolvedValue({
+      data: { code: 200, status: 'SUCCESS' },
+    } as any)
+
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/pengaturan-kantin/titik-kasir') {
+        return {
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            data: [
+              {
+                id: 15,
+                sekolahId: 1,
+                nama: 'Kasir Kantin Utama',
+                kode: 'KSR-01',
+                aktif: true,
+                createdAt: '2026-11-10T08:00:00Z',
+                updatedAt: '2026-11-10T08:00:00Z',
+              },
+            ],
+          },
+        }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<TitikKasirPage />)
+    await expect.element(screen.getByText('Kasir Kantin Utama')).toBeInTheDocument()
+
+    const deleteBtn = screen.getByTitle('Hapus titik kasir')
+    await userEvent.click(deleteBtn)
+
+    const confirmBtn = screen.getByRole('button', { name: 'Ya, Hapus' })
+    await userEvent.click(confirmBtn)
+
+    expect(deleteSpy).toHaveBeenCalledWith('/api/pengaturan-kantin/titik-kasir/15')
+    await expect.element(screen.getByText('Kasir Kantin Utama')).not.toBeInTheDocument()
   })
 })

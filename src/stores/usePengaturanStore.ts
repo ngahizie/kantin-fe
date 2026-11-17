@@ -5,6 +5,7 @@ import {
   type TitikKasir,
   type PengaturanKantinFormValues,
 } from '@/features/pengaturan/types'
+import { getDeletedTitikKasirIds } from '@/features/pengaturan/deleted-titik-kasir'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { emitSyncSignal } from '@/lib/katalog-sync'
 
@@ -84,16 +85,20 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
       try {
         set({ loadingTitikKasir: true })
         const data = await pengaturanApi.getTitikKasirList(hanyaAktif)
-        set({ titikKasirList: data })
+        const deletedIds = getDeletedTitikKasirIds()
+        const validData = data.filter((t) => !deletedIds.includes(t.id))
+        set({ titikKasirList: validData })
 
         const currentActiveId = get().activeTitikKasirId
-        const exists = data.some((t) => t.id === currentActiveId && t.aktif)
-        if (!exists && data.length > 0) {
-          const firstActive = data.find((t) => t.aktif) || data[0]
+        const exists = validData.some((t) => t.id === currentActiveId && t.aktif)
+        if (!exists && validData.length > 0) {
+          const firstActive = validData.find((t) => t.aktif) || validData[0]
           get().setActiveTitikKasirId(firstActive.id)
+        } else if (validData.length === 0) {
+          get().setActiveTitikKasirId(null)
         }
 
-        return data
+        return validData
       } catch {
         return get().titikKasirList
       } finally {

@@ -202,6 +202,7 @@ export function LaporanPembatalanPage() {
           </div>
           <div className='flex flex-wrap items-center gap-2'>
             <LaporanDateFilter
+              hidePresets
               initialPreset='TODAY'
               onChange={(params, label) => {
                 setDateFilterParams(params)
