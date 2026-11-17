@@ -225,15 +225,16 @@ export function KoreksiBendaharaPage() {
   }, [executeFetch])
 
   const handleCreateSuccess = (newKoreksi: MutasiKoreksiItem) => {
-    setKoreksiList((prev) => [newKoreksi, ...prev])
-    if (newKoreksi.transaksi_terkait_id) {
+    const safeKoreksi = mapMutasiKoreksiItem(newKoreksi, students)
+    setKoreksiList((prev) => [safeKoreksi, ...prev])
+    if (safeKoreksi.transaksi_terkait_id) {
       setTransaksiList((prev) =>
         prev.map((t) =>
-          String(t.id) === String(newKoreksi.transaksi_terkait_id)
+          String(t.id) === String(safeKoreksi.transaksi_terkait_id)
             ? {
                 ...t,
                 status: 'DIKOREKSI',
-                koreksi_referensi_id: newKoreksi.referensi_id,
+                koreksi_referensi_id: safeKoreksi.referensi_id,
                 dapatDikoreksi: false,
                 dapat_dikoreksi: false,
               }
@@ -241,18 +242,26 @@ export function KoreksiBendaharaPage() {
         )
       )
     }
+    void executeFetch()
   }
 
   // Filtered koreksi list
   const filteredKoreksi = useMemo(() => {
     return koreksiList.filter((k) => {
-      const q = searchQuery.toLowerCase()
+      const q = (searchQuery || '').toLowerCase().trim()
+      const refId = String(k.referensi_id || k.referensiId || '').toLowerCase()
+      const nama = String(k.siswa_nama || k.siswaNama || '').toLowerCase()
+      const info = String(k.siswa_info || k.siswaInfo || '').toLowerCase()
+      const alasan = String(k.alasan || k.keterangan || '').toLowerCase()
+      const bendahara = String(k.bendahara_nama || k.bendaharaNama || '').toLowerCase()
+
       const matchSearch =
-        k.referensi_id.toLowerCase().includes(q) ||
-        k.siswa_nama.toLowerCase().includes(q) ||
-        k.siswa_info.toLowerCase().includes(q) ||
-        k.alasan.toLowerCase().includes(q) ||
-        k.bendahara_nama.toLowerCase().includes(q)
+        !q ||
+        refId.includes(q) ||
+        nama.includes(q) ||
+        info.includes(q) ||
+        alasan.includes(q) ||
+        bendahara.includes(q)
 
       let matchArah = true
       if (arahFilter !== 'ALL') {
@@ -266,15 +275,24 @@ export function KoreksiBendaharaPage() {
   // Filtered transaksi sesi tutup list
   const filteredTransaksi = useMemo(() => {
     return transaksiList.filter((tx) => {
-      const q = txSearchQuery.toLowerCase()
+      const q = (txSearchQuery || '').toLowerCase().trim()
+      const id = String(tx.id || '').toLowerCase()
+      const sesi = String(tx.sesi_kasir_id || '').toLowerCase()
+      const nama = String(tx.siswa_nama || '').toLowerCase()
+      const info = String(tx.siswa_info || '').toLowerCase()
+      const titik = String(tx.titik_kasir || '').toLowerCase()
+      const uid = String(tx.kartu_uid || '').toLowerCase()
+      const petugas = String(tx.petugas_kasir || '').toLowerCase()
+
       const matchSearch =
-        String(tx.id).toLowerCase().includes(q) ||
-        String(tx.sesi_kasir_id).toLowerCase().includes(q) ||
-        tx.siswa_nama.toLowerCase().includes(q) ||
-        tx.siswa_info.toLowerCase().includes(q) ||
-        tx.titik_kasir.toLowerCase().includes(q) ||
-        (tx.kartu_uid && tx.kartu_uid.toLowerCase().includes(q)) ||
-        (tx.petugas_kasir && tx.petugas_kasir.toLowerCase().includes(q))
+        !q ||
+        id.includes(q) ||
+        sesi.includes(q) ||
+        nama.includes(q) ||
+        info.includes(q) ||
+        titik.includes(q) ||
+        uid.includes(q) ||
+        petugas.includes(q)
 
       let matchStatus = true
       if (txStatusFilter !== 'ALL') {
@@ -546,15 +564,15 @@ export function KoreksiBendaharaPage() {
           onValueChange={setActiveTab}
           className='space-y-4'
         >
-          <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-md grid-cols-2'}`}>
+          <TabsList className={`grid w-full ${isKepsek ? 'max-w-xs grid-cols-1' : 'max-w-xl grid-cols-2'}`}>
             <TabsTrigger value='riwayat' className='gap-2 text-xs'>
               <History className='h-3.5 w-3.5' />
-              Riwayat Penyesuaian Saldo ({filteredKoreksi.length})
+              Riwayat Penyesuaian ({filteredKoreksi.length})
             </TabsTrigger>
             {!isKepsek && (
               <TabsTrigger value='transaksi-lampau' className='gap-2 text-xs'>
                 <ReceiptText className='h-3.5 w-3.5' />
-                Cari Transaksi Kasir Terdahulu ({filteredTransaksi.length})
+                Transaksi Kasir Terdahulu ({filteredTransaksi.length})
               </TabsTrigger>
             )}
           </TabsList>
@@ -581,9 +599,10 @@ export function KoreksiBendaharaPage() {
 
             {/* Filter Toolbar */}
             <TableToolbar
-              searchPlaceholder='Cari No. Berita Acara, nama siswa, alasan...'
+              searchPlaceholder='Cari berita acara, nama siswa, alasan...'
               searchValue={searchQuery}
               onSearchChange={setSearchQuery}
+              searchClassName='w-[200px] sm:w-[260px] lg:w-[320px]'
               filters={[
                 {
                   title: 'Arah Mutasi',
@@ -858,9 +877,10 @@ export function KoreksiBendaharaPage() {
 
             {/* Toolbar Filter Tab 2 */}
             <TableToolbar
-              searchPlaceholder='Cari ID Transaksi, Sesi, nama siswa, kartu UID...'
+              searchPlaceholder='Cari no. transaksi, nama siswa, kasir...'
               searchValue={txSearchQuery}
               onSearchChange={setTxSearchQuery}
+              searchClassName='w-[200px] sm:w-[260px] lg:w-[320px]'
               filters={[
                 {
                   title: 'Status Koreksi',
@@ -1038,7 +1058,10 @@ export function KoreksiBendaharaPage() {
                                   variant='outline'
                                   className='rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
-                                  REFUND {tx.alasanVoid ? `(${tx.alasanVoid})` : ''}
+                                  REFUND{' '}
+                                  {tx.alasanVoid
+                                    ? `(${tx.alasanVoid.replace(/\s*\(demo void\)/gi, '').trim()})`
+                                    : ''}
                                 </Badge>
                               ) : (
                                 <Badge

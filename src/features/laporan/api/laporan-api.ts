@@ -687,7 +687,10 @@ export const laporanApi = {
         siswaKelas: String(row.siswaKelas || siswaInfo?.kelas || '-'),
         kartuUid: row.kartuUid ? String(row.kartuUid) : null,
         total: toFiniteNumber(row.total, 0),
-        alasanVoid: String(row.alasanVoid || row.alasan_void || '-'),
+        alasanVoid:
+          String(row.alasanVoid || row.alasan_void || '-')
+            .replace(/\s*\(demo void\)/gi, '')
+            .trim() || '-',
         voidAt: String(row.voidAt || row.void_at || ''),
         voidOleh: row.voidOleh != null ? Number(row.voidOleh) : undefined,
         petugasId: row.petugasId != null ? Number(row.petugasId) : undefined,

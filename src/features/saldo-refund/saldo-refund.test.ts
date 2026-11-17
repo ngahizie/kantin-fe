@@ -184,6 +184,22 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.siswa_nama).toBe('Siti Rahmawati')
   })
 
+  it('membersihkan sufiks (demo void) dari alasanVoid transaksi VOID', () => {
+    const rawBeItem = {
+      id: 910105,
+      waktu: '2026-10-20T10:20:00+07:00',
+      total: 18000,
+      status: 'VOID',
+      alasanVoid: 'Salah input menu (demo void)',
+      dapatDikoreksi: false,
+    }
+
+    const mapped = mapTransaksiKasirItemToSesiTutup(rawBeItem, dummySiswa)
+
+    expect(mapped.alasanVoid).toBe('Salah input menu')
+    expect(mapped.alasan_void).toBe('Salah input menu')
+  })
+
   it('berhasil memetakan MutasiKoreksiItem camelCase BE ke MutasiKoreksiItem FE', () => {
     const rawBeMutasi = {
       id: 12,

@@ -33,11 +33,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type {
-  JenisKoreksi,
-  ArahMutasi,
-  MutasiKoreksiItem,
-  TransaksiSesiTutupItem,
+import {
+  mapMutasiKoreksiItem,
+  type JenisKoreksi,
+  type ArahMutasi,
+  type MutasiKoreksiItem,
+  type TransaksiSesiTutupItem,
 } from './types'
 
 interface KoreksiMutasiModalProps {
@@ -171,25 +172,55 @@ function KoreksiMutasiFormContent({
       const res = await apiClient.post('/api/saldo/koreksi', payload)
 
       const fallbackId = `KOR-${referensiId.trim()}`
-      const newKoreksi: MutasiKoreksiItem = (res.data?.data
-        ?.mutasi as MutasiKoreksiItem) || {
+      const rawData =
+        res.data?.data?.mutasi ??
+        (res.data?.data && typeof res.data.data === 'object' && ('referensiId' in res.data.data || 'referensi_id' in res.data.data)
+          ? res.data.data
+          : null)
+
+      const fallbackItem: MutasiKoreksiItem = {
         id: fallbackId,
         referensi_id: referensiId.trim(),
+        referensiId: referensiId.trim(),
         waktu: new Date().toISOString(),
         siswa_id: Number(selectedSiswaId),
+        siswaId: Number(selectedSiswaId),
         siswa_nama: siswaNama,
+        siswaNama,
         siswa_info: siswaInfo,
+        siswaInfo,
         jenis_koreksi: jenisKoreksi,
+        jenisKoreksi,
         arah,
         nominal: nominalNum,
         saldo_sebelum: saldoSaatIni,
+        saldoSebelum: saldoSaatIni,
         saldo_setelah: saldoSetelah,
+        saldoSetelah,
         alasan: alasan.trim(),
+        keterangan: alasan.trim(),
         bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
+        bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
         bendahara_nama: bendaharaNama,
+        bendaharaNama,
         transaksi_terkait_id: initialTransaction?.id,
+        transaksiTerkaitId: initialTransaction?.id,
         sesi_kasir_id: initialTransaction?.sesi_kasir_id,
+        sesiKasirId: initialTransaction?.sesi_kasir_id,
       }
+
+      const newKoreksi: MutasiKoreksiItem = rawData
+        ? mapMutasiKoreksiItem(
+            {
+              ...fallbackItem,
+              ...(rawData as Record<string, unknown>),
+              siswaNama: (rawData as Record<string, unknown>).siswaNama ?? siswaNama,
+              siswaInfo: (rawData as Record<string, unknown>).siswaInfo ?? siswaInfo,
+              bendaharaNama: (rawData as Record<string, unknown>).bendaharaNama ?? bendaharaNama,
+            },
+            students
+          )
+        : fallbackItem
 
       toast.success(
         `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (-${formatRupiah(nominalNum)})` : `KREDIT (+${formatRupiah(nominalNum)})`} berhasil dicatat!`
@@ -379,7 +410,7 @@ function KoreksiMutasiFormContent({
               id={nominalInputId}
               type='number'
               min='1'
-              step='500'
+              step='any'
               value={nominalStr}
               onChange={(e) => setNominalStr(e.target.value)}
               placeholder='0'

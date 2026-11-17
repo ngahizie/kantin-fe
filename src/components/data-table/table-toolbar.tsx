@@ -29,6 +29,7 @@ export type TableToolbarProps = {
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void
+  searchClassName?: string
   filters?: TableToolbarFilter[]
   isFiltered?: boolean
   onReset?: () => void
@@ -41,6 +42,7 @@ export function TableToolbar({
   searchPlaceholder = 'Cari...',
   searchValue,
   onSearchChange,
+  searchClassName,
   filters = [],
   isFiltered,
   onReset,
@@ -63,7 +65,10 @@ export function TableToolbar({
               placeholder={searchPlaceholder}
               value={searchValue ?? ''}
               onChange={(e) => onSearchChange(e.target.value)}
-              className='h-8 w-[180px] sm:w-[220px] lg:w-[260px] pl-8.5 text-xs'
+              className={cn(
+                'h-8 w-[180px] sm:w-[220px] lg:w-[280px] pl-8.5 text-xs',
+                searchClassName
+              )}
             />
           </div>
         )}
