@@ -427,6 +427,7 @@ export function SetoranKasPage() {
           <div className='flex flex-wrap items-center gap-2.5'>
             <LaporanDateFilter
               initialPreset='TODAY'
+              hidePresets
               onChange={(params, label) => {
                 setDateFilterParams(params)
                 setDateFilterLabel(label)
