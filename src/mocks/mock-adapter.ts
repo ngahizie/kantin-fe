@@ -922,10 +922,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
 
       if (payload instanceof FormData) {
         const file = payload.get('file')
-        if (file instanceof Blob) {
-          if ('name' in file) {
-            fileName = file.name
-          }
+        if (file && typeof file !== 'string') {
+          fileName = file.name
           fileSize = file.size
           try {
             previewUrl = URL.createObjectURL(file)
