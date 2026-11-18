@@ -238,7 +238,7 @@ export const AdminDashboard: React.FC = () => {
         />
 
         <DashboardStatCard
-          title='Pembatalan Kasir (Void)'
+          title='Pembatalan Kasir (Refund)'
           value={todayPembatalan.length}
           unit='Trx'
           icon={RotateCcw}
@@ -264,7 +264,7 @@ export const AdminDashboard: React.FC = () => {
                 Tren Transaksi & Pembatalan 7 Hari
               </CardTitle>
               <CardDescription className='text-xs mt-0.5'>
-                Perbandingan frekuensi transaksi sukses dengan transaksi yang dibatalkan kasir (void)
+                Perbandingan frekuensi transaksi sukses dengan transaksi yang dibatalkan kasir (refund)
               </CardDescription>
             </div>
             <div className='flex items-center gap-4 text-xs pt-2 border-t border-border'>
@@ -274,7 +274,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className='flex items-center gap-1.5'>
                 <span className='size-2.5 rounded-full bg-rose-500 shrink-0' />
-                <span className='font-medium text-muted-foreground'>Pembatalan (Void)</span>
+                <span className='font-medium text-muted-foreground'>Pembatalan (Refund)</span>
               </div>
             </div>
           </CardHeader>
@@ -323,7 +323,7 @@ export const AdminDashboard: React.FC = () => {
                             <div className='flex items-center justify-between gap-6 py-0.5 text-muted-foreground'>
                               <span className='flex items-center gap-1.5'>
                                 <span className='size-2 rounded-full bg-rose-500' />
-                                Pembatalan (Void):
+                                Pembatalan (Refund):
                               </span>
                               <span className='font-semibold tabular-nums text-rose-600 dark:text-rose-400'>
                                 {row.batal} Trx
@@ -423,12 +423,12 @@ export const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* ===== Tabel Bawah: Aktivitas Pembatalan Kasir (Void) Terkini ===== */}
+      {/* ===== Tabel Bawah: Aktivitas Pembatalan Kasir (Refund) Terkini ===== */}
       <Card className='overflow-hidden'>
         <CardHeader className='pb-3 flex flex-row items-center justify-between gap-4'>
           <div>
             <CardTitle className='text-base font-semibold'>
-              Aktivitas Pembatalan Kasir (Void) Terkini
+              Aktivitas Pembatalan Kasir (Refund) Terkini
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
               Audit transaksi kasir yang dibatalkan beserta alasan dan waktu pembatalan

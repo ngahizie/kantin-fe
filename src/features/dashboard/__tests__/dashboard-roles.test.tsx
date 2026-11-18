@@ -131,7 +131,8 @@ describe('Role Dashboards Component Rendering', () => {
     const screen = await render(<AdminDashboard />)
     await expect.element(screen.getByText('Dashboard Admin Sekolah')).toBeInTheDocument()
     await expect.element(screen.getByText('Titik Kasir Aktif')).toBeInTheDocument()
-    await expect.element(screen.getByText('Aktivitas Pembatalan Kasir (Void) Terkini')).toBeInTheDocument()
+    await expect.element(screen.getByText('Aktivitas Pembatalan Kasir (Refund) Terkini')).toBeInTheDocument()
+    await expect.element(screen.getByText(/Void/i)).not.toBeInTheDocument()
   })
 
   it('renders KepsekDashboard correctly with executive financial breakdown & margin', async () => {
