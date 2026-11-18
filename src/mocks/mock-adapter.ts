@@ -222,6 +222,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       pembeliFotoUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
       kartuUid: 'CARD-SISWA-05',
+      metodeBayar: 'TUNAI',
+      uangDiterima: 20000,
+      kembalian: 5000,
       items: [
         {
           menuId: 1,
@@ -257,10 +260,21 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     let jumlahVoid = 0
     let totalBersih = 0
     let totalVoid = 0
+    let jumlahTunai = 0
+    let jumlahSaldo = 0
+    let totalTunai = 0
+    let totalSaldo = 0
     mockSesiTransactions.forEach((t) => {
       if (t.status === 'SUKSES') {
         jumlahSukses++
         totalBersih += t.total
+        if (t.metodeBayar === 'TUNAI') {
+          jumlahTunai++
+          totalTunai += t.total
+        } else {
+          jumlahSaldo++
+          totalSaldo += t.total
+        }
       } else if (t.status === 'VOID') {
         jumlahVoid++
         totalVoid += t.total
@@ -273,6 +287,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       totalBruto: totalBersih + totalVoid,
       totalVoid,
       totalBersih,
+      jumlahTunai,
+      jumlahSaldo,
+      totalTunai,
+      totalSaldo,
     }
   }
 
@@ -1385,8 +1403,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const liveRekap = getLiveRekap()
       currentSesiMock.status = 'DITUTUP'
       currentSesiMock.ditutupAt = new Date().toISOString()
-      const uangFisik = payload.uangFisik != null ? Number(payload.uangFisik) : liveRekap.totalBersih
-      const selisih = payload.selisih != null ? Number(payload.selisih) : uangFisik - liveRekap.totalBersih
+      const kasSeharusnya = liveRekap.totalTunai ?? liveRekap.totalBersih
+      const uangFisik = payload.uangFisik != null ? Number(payload.uangFisik) : kasSeharusnya
+      const selisih = payload.selisih != null ? Number(payload.selisih) : uangFisik - kasSeharusnya
       const catatan = payload.catatan ? String(payload.catatan) : null
 
       currentSesiMock.uangFisik = uangFisik

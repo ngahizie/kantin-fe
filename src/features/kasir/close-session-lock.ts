@@ -6,6 +6,7 @@ export const KANTIN_CLOSE_SESSION_LOCKS_KEY =
 export interface CloseSessionLockEntry {
   sesiId: number
   cashValue: number
+  kasSeharusnya?: number
   catatanSelisih?: string
   tanggal?: string
   titikKasirId?: number
@@ -99,7 +100,8 @@ export function getCloseSessionLock(
 export function saveCloseSessionLock(
   sesi: Pick<SesiKasirData, 'id' | 'tanggal' | 'titikKasirId'> | null | undefined,
   cashValue: number,
-  catatanSelisih?: string
+  catatanSelisih?: string,
+  kasSeharusnya?: number
 ): CloseSessionLockEntry | null {
   if (!sesi?.id) return null
   const normalizedCash = Math.max(0, Math.trunc(Number(cashValue) || 0))
@@ -112,6 +114,10 @@ export function saveCloseSessionLock(
   const nextEntry: CloseSessionLockEntry = {
     sesiId: sesi.id,
     cashValue: normalizedCash,
+    kasSeharusnya:
+      typeof kasSeharusnya === 'number' && Number.isFinite(kasSeharusnya)
+        ? kasSeharusnya
+        : undefined,
     catatanSelisih: catatanSelisih || undefined,
     tanggal: sesi.tanggal,
     titikKasirId: sesi.titikKasirId,

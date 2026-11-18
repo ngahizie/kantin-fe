@@ -123,7 +123,7 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     await expect.element(screen.getByText(/Transaksi Void/i)).not.toBeInTheDocument()
     await expect.element(screen.getByText('Penjualan Kotor')).toBeInTheDocument()
     await expect.element(screen.getByText(/Bruto/i)).not.toBeInTheDocument()
-    await expect.element(screen.getByText('Pendapatan Bersih:')).toBeInTheDocument()
+    await expect.element(screen.getByText('Kas tunai seharusnya:')).toBeInTheDocument()
     await expect.element(screen.getByText(/\(Net\)/i)).not.toBeInTheDocument()
     await expect
       .element(
@@ -133,7 +133,9 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
     await expect.element(screen.getByText(/- Void Rp/i)).not.toBeInTheDocument()
     await expect.element(screen.getByText('Terkunci')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Rp 100.000')).toBeInTheDocument()
-    await expect.element(screen.getByText('Rp 198.000')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Rp 198.000', { exact: true }))
+      .toBeInTheDocument()
 
     // Tidak boleh ada tombol kembali, tombol ubah, maupun banner peringatan konfirmasi
     await expect
@@ -551,6 +553,126 @@ describe('CloseSessionModal (Blind Count & Anti-Kecurangan Rekonsiliasi)', () =>
       .toBeDisabled()
     await expect
       .element(reloaded.getByText(/Sesi kasir hari ini telah ditutup/i))
+      .toBeInTheDocument()
+  })
+
+  it('menghitung selisih kas terhadap penjualan TUNAI pada sesi campuran (Issue #169 C.2d)', async () => {
+    const rekapCampuran: RekapSesiData = {
+      sesiKasirId: 41,
+      jumlahTransaksi: 2,
+      jumlahVoid: 0,
+      totalBruto: 24000,
+      totalVoid: 0,
+      totalBersih: 24000,
+      jumlahTunai: 1,
+      jumlahSaldo: 1,
+      totalTunai: 16000,
+      totalSaldo: 8000,
+    }
+
+    // 1. Kas fisik diinput Rp16.000 -> selisih Rp0 (Pas)
+    const screenPas = await render(
+      <CloseSessionModal
+        open={true}
+        onOpenChange={() => {}}
+        sesi={sampleSesi}
+        rekap={rekapCampuran}
+      />
+    )
+
+    const inputPas = screenPas.getByLabelText(/Total Uang Tunai di Laci Kasir/i)
+    await userEvent.fill(inputPas, '16000')
+    await userEvent.click(
+      screenPas.getByRole('button', { name: /Lanjut ke Rekapitulasi/i })
+    )
+
+    await expect
+      .element(screenPas.getByText('Kas tunai seharusnya:'))
+      .toBeInTheDocument()
+    await expect
+      .element(screenPas.getByText('Kas Seimbang (Rp 0)'))
+      .toBeInTheDocument()
+    await expect
+      .element(screenPas.getByText(/Tunai Rp\s*16\.000\s*·\s*1\s*transaksi/))
+      .toBeInTheDocument()
+    await expect
+      .element(screenPas.getByText(/Saldo Rp\s*8\.000\s*·\s*1\s*transaksi/))
+      .toBeInTheDocument()
+    await expect
+      .element(screenPas.getByText(/tidak menambah kas fisik/))
+      .toBeInTheDocument()
+
+    // Verifikasi lock tersimpan dengan kasSeharusnya = 16000
+    const lock = getCloseSessionLock(sampleSesi)
+    expect(lock?.cashValue).toBe(16000)
+    expect(lock?.kasSeharusnya).toBe(16000)
+
+    await screenPas.unmount()
+    clearCloseSessionLock(sampleSesi.id)
+
+    // 2. Kas fisik diinput Rp20.000 -> kelebihan Rp4.000
+    const screenLebih = await render(
+      <CloseSessionModal
+        open={true}
+        onOpenChange={() => {}}
+        sesi={sampleSesi}
+        rekap={rekapCampuran}
+      />
+    )
+
+    const inputLebih = screenLebih.getByLabelText(/Total Uang Tunai di Laci Kasir/i)
+    await userEvent.fill(inputLebih, '20000')
+    await userEvent.click(
+      screenLebih.getByRole('button', { name: /Lanjut ke Rekapitulasi/i })
+    )
+
+    await expect
+      .element(screenLebih.getByText(/Kelebihan Kas:\s*\+Rp\s*4\.000/))
+      .toBeInTheDocument()
+    await expect
+      .element(screenLebih.getByText('Lebih', { exact: true }))
+      .toBeInTheDocument()
+
+    await screenLebih.unmount()
+    clearCloseSessionLock(sampleSesi.id)
+
+    // 3. Sesi seluruhnya transaksi saldo (tunai Rp0, saldo Rp24.000) dan kas fisik Rp0 -> selisih Rp0
+    const rekapHanyaSaldo: RekapSesiData = {
+      sesiKasirId: 41,
+      jumlahTransaksi: 2,
+      jumlahVoid: 0,
+      totalBruto: 24000,
+      totalVoid: 0,
+      totalBersih: 24000,
+      jumlahTunai: 0,
+      jumlahSaldo: 2,
+      totalTunai: 0,
+      totalSaldo: 24000,
+    }
+
+    const screenSaldo = await render(
+      <CloseSessionModal
+        open={true}
+        onOpenChange={() => {}}
+        sesi={sampleSesi}
+        rekap={rekapHanyaSaldo}
+      />
+    )
+
+    const inputSaldo = screenSaldo.getByLabelText(/Total Uang Tunai di Laci Kasir/i)
+    await userEvent.fill(inputSaldo, '0')
+    await userEvent.click(
+      screenSaldo.getByRole('button', { name: /Lanjut ke Rekapitulasi/i })
+    )
+
+    await expect
+      .element(screenSaldo.getByText('Kas Seimbang (Rp 0)'))
+      .toBeInTheDocument()
+    await expect
+      .element(screenSaldo.getByText(/Tunai Rp\s*0\s*·\s*0\s*transaksi/))
+      .toBeInTheDocument()
+    await expect
+      .element(screenSaldo.getByText(/Saldo Rp\s*24\.000\s*·\s*2\s*transaksi/))
       .toBeInTheDocument()
   })
 })

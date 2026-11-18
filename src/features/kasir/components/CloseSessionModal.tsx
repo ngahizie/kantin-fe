@@ -132,9 +132,21 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
   const totalBruto = rekap?.totalBruto ?? sesi?.totalBruto ?? 0
   const totalVoid = rekap?.totalVoid ?? sesi?.totalVoid ?? 0
   const totalBersih = rekap?.totalBersih ?? sesi?.totalBersih ?? 0
+  const jumlahTunai = rekap?.jumlahTunai
+  const jumlahSaldo = rekap?.jumlahSaldo
+  const totalTunai = rekap?.totalTunai
+  const totalSaldo = rekap?.totalSaldo
 
-  // Selisih = Uang Fisik Diinput - Pendapatan Bersih Sistem
-  const selisih = cashValue - totalBersih
+  // Kas tunai seharusnya: prioritas totalTunai dari BE (C.2d), fallback ke totalBersih jika belum ada
+  const kasSeharusnya =
+    initialLock?.kasSeharusnya ??
+    rekap?.totalTunai ??
+    rekap?.totalBersih ??
+    sesi?.totalBersih ??
+    0
+
+  // Selisih = Uang Fisik Diinput - Kas Tunai Seharusnya
+  const selisih = cashValue - kasSeharusnya
   const isSelisihAda = selisih !== 0
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -170,7 +182,12 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
       )
       return
     }
-    const locked = saveCloseSessionLock(sesi, cashValue, catatanSelisih)
+    const locked = saveCloseSessionLock(
+      sesi,
+      cashValue,
+      catatanSelisih,
+      kasSeharusnya
+    )
     if (locked) {
       setCashInput(String(locked.cashValue))
     }
@@ -195,7 +212,9 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
 
     const existingLock = getCloseSessionLock(sesi)
     const authoritativeCash = existingLock ? existingLock.cashValue : cashValue
-    const authoritativeSelisih = authoritativeCash - totalBersih
+    const authoritativeKasSeharusnya =
+      existingLock?.kasSeharusnya ?? kasSeharusnya
+    const authoritativeSelisih = authoritativeCash - authoritativeKasSeharusnya
 
     if (authoritativeSelisih !== 0 && !catatanSelisih.trim()) {
       toast.error('Keterangan selisih wajib diisi sebelum menutup sesi')
@@ -477,18 +496,27 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </span>
               </div>
 
-              {/* Pendapatan Bersih Sistem */}
+              {/* Kas Tunai Seharusnya */}
               <div className='rounded-xl border border-primary/20 bg-primary/10 p-3'>
                 <div className='mb-1 flex items-center justify-between'>
                   <span className='text-[11px] font-semibold text-primary'>
-                    Pendapatan Bersih:
+                    Kas tunai seharusnya:
                   </span>
                 </div>
                 <span className='block text-lg font-bold tabular-nums text-primary'>
-                  {formatRupiah(totalBersih)}
+                  {formatRupiah(kasSeharusnya)}
                 </span>
+                <div className='mt-2 space-y-0.5 border-t border-primary/15 pt-1.5 text-[11px] text-muted-foreground'>
+                  <div className='tabular-nums'>
+                    Tunai {formatRupiah(totalTunai ?? kasSeharusnya)} · {formatNumber(jumlahTunai ?? (rekap?.totalTunai !== undefined ? 0 : jumlahTransaksi))} transaksi
+                  </div>
+                  <div className='tabular-nums'>
+                    Saldo {formatRupiah(totalSaldo ?? (rekap?.totalTunai !== undefined ? 0 : Math.max(0, totalBersih - (totalTunai ?? kasSeharusnya))))} · {formatNumber(jumlahSaldo ?? 0)} transaksi{' '}
+                    <span className='text-[10px] text-muted-foreground/80'>(tidak menambah kas fisik)</span>
+                  </div>
+                </div>
                 {totalVoid > 0 && (
-                  <span className='mt-0.5 block text-[10px] tabular-nums text-muted-foreground'>
+                  <span className='mt-1 block text-[10px] tabular-nums text-muted-foreground/75'>
                     (Kotor {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
                   </span>
                 )}
@@ -545,10 +573,10 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </div>
                 <p className='mt-0.5 text-[11px] opacity-90'>
                   {selisih === 0
-                    ? 'Uang fisik di laci kasir cocok 100% dengan pencatatan transaksi sistem.'
+                    ? 'Uang fisik di laci kasir cocok 100% dengan pencatatan kas tunai sistem.'
                     : selisih < 0
-                    ? 'Jumlah uang fisik lebih sedikit dibandingkan total penjualan sistem. Berikan keterangan alasan di bawah.'
-                    : 'Jumlah uang fisik lebih banyak dibandingkan total penjualan sistem. Berikan keterangan alasan di bawah.'}
+                    ? 'Jumlah uang fisik lebih sedikit dibandingkan kas tunai sistem yang seharusnya. Berikan keterangan alasan di bawah.'
+                    : 'Jumlah uang fisik lebih banyak dibandingkan kas tunai sistem yang seharusnya. Berikan keterangan alasan di bawah.'}
                 </p>
               </div>
             </div>
