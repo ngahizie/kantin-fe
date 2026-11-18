@@ -124,8 +124,8 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     await expect.element(screen.getByText(/• Selisih Rp\s*0/).first()).toBeInTheDocument()
 
     const statusRow = (await seimbangLabel.element()).parentElement
-    expect(statusRow?.className).toContain('whitespace-nowrap')
-    expect(statusRow?.className).not.toContain('flex-wrap')
+    expect(statusRow?.className).toContain('flex')
+    expect(statusRow?.className).toContain('flex-wrap')
   })
 
   it('tidak menampilkan Rp 0 atau Seimbang palsu saat getRekonsiliasi gagal dimuat', async () => {
