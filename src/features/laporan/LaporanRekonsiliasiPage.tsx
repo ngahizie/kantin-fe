@@ -28,7 +28,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
@@ -179,7 +179,7 @@ export function LaporanRekonsiliasiPage() {
         sheetName: 'Rekonsiliasi Harian',
         title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
@@ -256,7 +256,7 @@ export function LaporanRekonsiliasiPage() {
         title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
         subtitle: 'Sistem Kasir & Pembukuan',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode Rekonsiliasi': dateFilterLabel,
           'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),

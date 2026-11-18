@@ -155,7 +155,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         sheetName: 'Riwayat Transaksi',
         title: 'LAPORAN RIWAYAT TRANSAKSI BELANJA KESELURUHAN SISWA',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Data`,
@@ -238,7 +238,7 @@ export function LaporanRiwayatKeseluruhanPage() {
         subtitle: 'Sistem Kasir & Pembukuan',
         orientation: 'landscape',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode': dateFilterLabel,
           'Total Transaksi Belanja': formatRupiah(ringkasan.totalBelanja),
           'Jumlah Transaksi Terfilter': `${filteredTransaksi.length} Catatan`,

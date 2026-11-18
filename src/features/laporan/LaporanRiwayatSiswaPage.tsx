@@ -292,7 +292,7 @@ export function LaporanRiwayatSiswaPage() {
           'Kontak Wali': profil.parentPhone,
           'Saldo Terkini Saat Ini': formatRupiah(profil.saldo),
           'Limit Harian': formatRupiah(profil.limitHarian),
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
         },
         columns: [
           { header: 'No', width: 6 },
@@ -377,7 +377,7 @@ export function LaporanRiwayatSiswaPage() {
           'Kontak Wali': profil.parentPhone,
           'Saldo Terkini': formatRupiah(profil.saldo),
           'Limit Harian': formatRupiah(profil.limitHarian),
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
         },
         columns: [
           { header: 'No' },

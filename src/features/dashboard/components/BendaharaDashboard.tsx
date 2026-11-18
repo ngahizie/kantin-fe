@@ -35,7 +35,7 @@ import {
 import { DashboardStatCard } from './DashboardStatCard'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import apiClient from '@/lib/api-client'
-import { formatTimeWithZone } from '@/lib/formatters'
+import { formatTimeWithZone, formatNumber } from '@/lib/formatters'
 import {
   formatRupiah,
   getLast7Days,
@@ -298,9 +298,9 @@ export const BendaharaDashboard: React.FC = () => {
                     tickFormatter={(value) => {
                       if (value === 0) return 'Rp 0'
                       if (value >= 1_000_000) {
-                        return `Rp ${(value / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} jt`
+                        return `Rp ${formatNumber(value / 1_000_000, { maximumFractionDigits: 1 })} jt`
                       }
-                      return `Rp ${(value / 1_000).toLocaleString('id-ID')} rb`
+                      return `Rp ${formatNumber(value / 1_000)} rb`
                     }}
                   />
                   <RechartsTooltip

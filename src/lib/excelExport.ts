@@ -18,6 +18,7 @@ import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
 import { useAuthStore } from '@/stores/auth-store'
 import { SCHOOL_LOGO_BASE64, getSchoolLogoBase64 } from '@/assets/schoolLogoBase64'
+import { formatDateTime } from './formatters'
 
 export interface ExcelColumn<T = any> {
   header: string
@@ -384,7 +385,7 @@ function populateWorksheet<T>(
         const printDate =
           config.metadata['Tanggal Cetak'] ||
           config.metadata['Dicetak'] ||
-          new Date().toLocaleString('id-ID')
+          formatDateTime(new Date())
         parts.push(`Dicetak: ${printDate}`)
 
         const periode = config.metadata['Periode'] || config.metadata['Tanggal']
@@ -407,7 +408,7 @@ function populateWorksheet<T>(
         }
         return parts.join('   |   ')
       })()
-    : `Dicetak: ${new Date().toLocaleString('id-ID')}`
+    : `Dicetak: ${formatDateTime(new Date())}`
 
   ws.mergeCells(5, startCol, 5, endCol)
   const cellB5 = ws.getCell(5, startCol)

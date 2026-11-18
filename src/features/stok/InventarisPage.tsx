@@ -29,7 +29,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { KategoriItem, MenuItem } from '@/features/katalog/types'
@@ -300,7 +300,7 @@ export function InventarisPage() {
         title: 'LAPORAN INVENTARIS & VALUASI PERSEDIAAN',
         subtitle: 'Kantin Cashless SKOOLIA - Posisi dan Nilai Aset Stok',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Total Nilai Persediaan': formatRupiah(kpiData.totalNilai),
           'Total Menu Terdaftar': `${kpiData.totalSku} Menu`,
           'Item Stok Menipis/Habis': `${kpiData.countMenipis + kpiData.countHabis} Item`,

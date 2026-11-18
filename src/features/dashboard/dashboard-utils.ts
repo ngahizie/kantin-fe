@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatWeekdayShort, formatMonthShort, formatDateIso } from '@/lib/formatters'
 
 export interface DynamicCategory {
   id: number
@@ -53,18 +54,15 @@ export const getLast7Days = () => {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
 
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const dateStr = `${y}-${m}-${day}`
+    const dateStr = formatDateIso(d)
 
     let label: string
     if (i === 0) {
       label = 'Hari Ini'
     } else {
-      const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' })
+      const dayName = formatWeekdayShort(d)
       const dayNum = String(d.getDate()).padStart(2, '0')
-      const monthName = d.toLocaleDateString('id-ID', { month: 'short' })
+      const monthName = formatMonthShort(d)
       label = `${dayName} (${dayNum} ${monthName})`
     }
 

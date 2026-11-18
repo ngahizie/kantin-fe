@@ -176,7 +176,7 @@ export function KartuStokPage() {
         title: 'LAPORAN HISTORI MUTASI STOK',
         subtitle: 'Seluruh Mutasi Produk & Menu Kantin',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Cakupan': 'Seluruh Menu Kantin',
           'Total Transaksi': `${riwayat.length} Transaksi`,
           'Total Masuk': `${kpiData.totalMasuk} Unit`,

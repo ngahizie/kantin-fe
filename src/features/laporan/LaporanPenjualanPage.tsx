@@ -32,7 +32,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
 import { useRoleStore } from '@/stores/useRoleStore'
@@ -233,13 +233,13 @@ export function LaporanPenjualanPage() {
             title: 'LAPORAN PENJUALAN PER ITEM MENU',
             metadata: isAdmin
               ? {
-                  'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+                  'Tanggal Cetak': formatDateTime(new Date()),
                   'Periode Laporan': dateFilterLabel,
                   'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
                   'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
                 }
               : {
-                  'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+                  'Tanggal Cetak': formatDateTime(new Date()),
                   'Periode Laporan': dateFilterLabel,
                   'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
                   'Total Modal (HPP)': formatRupiah(summaryTotalModal),
@@ -397,13 +397,13 @@ export function LaporanPenjualanPage() {
           : 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: isAdmin
           ? {
-              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+              'Tanggal Cetak': formatDateTime(new Date()),
               'Periode Laporan': dateFilterLabel,
               'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
               'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
             }
           : {
-              'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+              'Tanggal Cetak': formatDateTime(new Date()),
               'Periode Laporan': dateFilterLabel,
               'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
               'Total Modal (HPP)': formatRupiah(summaryTotalModal),

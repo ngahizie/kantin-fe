@@ -14,7 +14,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, formatDate } from '@/lib/formatters'
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
@@ -181,11 +181,7 @@ export const PengaturanKantinPage: React.FC = () => {
                 <span>
                   Pembaruan:{' '}
                   {pengaturan.updatedAt
-                    ? new Date(pengaturan.updatedAt).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })
+                    ? formatDate(pengaturan.updatedAt)
                     : 'Bawaan'}
                 </span>
               </Badge>

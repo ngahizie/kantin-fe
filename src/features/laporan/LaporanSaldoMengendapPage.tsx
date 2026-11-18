@@ -34,7 +34,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -141,7 +141,7 @@ export function LaporanSaldoMengendapPage() {
           sheetName: 'Saldo Siswa',
           title: 'Laporan Total Saldo Siswa',
           metadata: {
-            'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+            'Tanggal Cetak': formatDateTime(new Date()),
             'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
             'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
           },
@@ -187,7 +187,7 @@ export function LaporanSaldoMengendapPage() {
           sheetName: 'Ringkasan Eksekutif',
           title: 'LAPORAN RINGKASAN TOTAL SALDO SISWA (KEWAJIBAN SEKOLAH)',
           metadata: {
-            'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+            'Tanggal Cetak': formatDateTime(new Date()),
             'Total Dana Titipan': formatRupiah(ringkasan.saldoSiswa),
           },
           columns: [
@@ -302,7 +302,7 @@ export function LaporanSaldoMengendapPage() {
         title: 'LAPORAN TOTAL SALDO SISWA & KEWAJIBAN DANA TITIPAN',
         subtitle: 'Audit Akuntabilitas Dana Titipan Siswa',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
           'Jumlah Siswa': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
         },
