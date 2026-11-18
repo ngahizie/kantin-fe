@@ -89,21 +89,30 @@ export const kasirApi = {
     const resUangDiterima =
       rawUangDiterima !== undefined && rawUangDiterima !== null
         ? Number(rawUangDiterima)
-        : resMetodeBayar === 'TUNAI'
-          ? Number(data.uangDiterima ?? resTotal)
-          : null
+        : null
 
+    // Pakai nilai kembalian langsung dari respons BE (jangan hitung lokal, Issue #170 / C.2e)
     const rawKembalian = raw.kembalian
     const resKembalian =
       rawKembalian !== undefined && rawKembalian !== null
         ? Number(rawKembalian)
-        : resMetodeBayar === 'TUNAI' && resUangDiterima !== null
-          ? Math.max(0, resUangDiterima - resTotal)
-          : null
+        : null
+
+    const rawSaldoSisa =
+      raw.pembeli?.sisa_saldo ??
+      raw.pembeli?.saldoSisa ??
+      raw.saldoSisa ??
+      raw.sisa_saldo
+    const resSaldoSisa =
+      resMetodeBayar === 'TUNAI' ||
+      rawSaldoSisa === undefined ||
+      rawSaldoSisa === null
+        ? null
+        : Number(rawSaldoSisa)
 
     const defaultBuyerName =
       resMetodeBayar === 'TUNAI'
-        ? data.namaPembeli?.trim() || 'Tamu (Tunai)'
+        ? data.namaPembeli?.trim() || 'Tamu (tunai)'
         : 'Pembeli'
 
     const pembeli: TapBuyerInfo = {
@@ -122,26 +131,8 @@ export const kasirApi = {
         raw.fotoUrl ||
         raw.foto_url ||
         null,
-      sisa_saldo:
-        resMetodeBayar === 'TUNAI'
-          ? 0
-          : Number(
-              raw.pembeli?.sisa_saldo ??
-                raw.pembeli?.saldoSisa ??
-                raw.saldoSisa ??
-                raw.sisa_saldo ??
-                0
-            ),
-      saldoSisa:
-        resMetodeBayar === 'TUNAI'
-          ? 0
-          : Number(
-              raw.pembeli?.saldoSisa ??
-                raw.pembeli?.sisa_saldo ??
-                raw.saldoSisa ??
-                raw.sisa_saldo ??
-                0
-            ),
+      sisa_saldo: resSaldoSisa,
+      saldoSisa: resSaldoSisa,
     }
 
     // Identitas pembeli murni dari respons BE (issue #294).
@@ -242,14 +233,38 @@ export const kasirApi = {
   },
 
   /**
-   * Ambil daftar transaksi sesi kasir hari ini (Issue #5)
+   * Ambil daftar transaksi sesi kasir hari ini (Issue #5, C.2e)
    */
   async getRiwayatTransaksiSesi(sesiId?: number): Promise<TransaksiSesiItem[]> {
     const res = await apiClient.get<ApiResponse<TransaksiSesiItem[]>>(
       '/api/kasir/transaksi/sesi',
       { params: { sesiId } }
     )
-    return res.data?.data || []
+    const rows = res.data?.data || []
+    return rows.map((row) => {
+      const raw = row as TransaksiSesiItem & {
+        metode_bayar?: string
+        uang_diterima?: number | null
+      }
+      const metodeRaw = String(
+        raw.metodeBayar ?? raw.metode_bayar ?? 'SALDO'
+      ).toUpperCase()
+      const metodeBayar: MetodeBayarKasir =
+        metodeRaw === 'TUNAI' ? 'TUNAI' : 'SALDO'
+      const rawUang = raw.uangDiterima ?? raw.uang_diterima
+      const uangDiterima =
+        rawUang !== undefined && rawUang !== null ? Number(rawUang) : null
+      const kembalian =
+        raw.kembalian !== undefined && raw.kembalian !== null
+          ? Number(raw.kembalian)
+          : null
+      return {
+        ...row,
+        metodeBayar,
+        uangDiterima,
+        kembalian,
+      }
+    })
   },
 
   /**

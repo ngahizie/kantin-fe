@@ -54,9 +54,9 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
     kodeStruk || (receipt.transaksiId ? `TRX-${receipt.transaksiId}` : '-')
   const hasCopyableKode = kodeStrukDisplay !== '-'
   const isTunai = receipt.metodeBayar === 'TUNAI'
-  const uangDiterimaDisplay = receipt.uangDiterima ?? receipt.total
-  const kembalianDisplay =
-    receipt.kembalian ?? Math.max(0, uangDiterimaDisplay - receipt.total)
+  // Gunakan nilai dari BE apa adanya — jangan hitung ulang kembalian lokal (Issue #170 / C.2e)
+  const uangDiterimaFromBe = receipt.uangDiterima ?? null
+  const kembalianFromBe = receipt.kembalian ?? null
 
   useEffect(() => {
     return () => {
@@ -322,23 +322,30 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
               <div className='flex items-center justify-between gap-3'>
                 <span className='text-slate-600'>Uang Diterima</span>
                 <span className='font-semibold text-slate-900 tabular-nums'>
-                  {formatRupiah(uangDiterimaDisplay)}
+                  {uangDiterimaFromBe !== null
+                    ? formatRupiah(uangDiterimaFromBe)
+                    : '-'}
                 </span>
               </div>
               <div className='flex items-center justify-between gap-3'>
                 <span className='text-slate-600'>Kembalian</span>
                 <span className='font-bold text-emerald-700 tabular-nums'>
-                  {formatRupiah(kembalianDisplay)}
+                  {kembalianFromBe !== null
+                    ? formatRupiah(kembalianFromBe)
+                    : '-'}
                 </span>
               </div>
             </>
           ) : (
-            <div className='flex items-center justify-between gap-3'>
-              <span className='text-slate-600'>Sisa Saldo</span>
-              <span className='font-bold text-emerald-700 tabular-nums'>
-                {formatRupiah(receipt.saldoSisa)}
-              </span>
-            </div>
+            receipt.saldoSisa !== null &&
+            receipt.saldoSisa !== undefined && (
+              <div className='flex items-center justify-between gap-3'>
+                <span className='text-slate-600'>Sisa Saldo</span>
+                <span className='font-bold text-emerald-700 tabular-nums'>
+                  {formatRupiah(receipt.saldoSisa)}
+                </span>
+              </div>
+            )
           )}
         </div>
 

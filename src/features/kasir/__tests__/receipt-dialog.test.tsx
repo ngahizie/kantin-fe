@@ -491,4 +491,42 @@ describe('Alur berurutan Transaksi Berhasil -> Cetak Struk di KasirPosPage', () 
     await expect.element(screen.getByText(/^Rp\s*5\.000$/)).toBeInTheDocument()
     await expect.element(screen.getByText('Sisa Saldo')).not.toBeInTheDocument()
   })
+
+  it('memakai kembalian dari BE apa adanya pada ReceiptDialog tanpa hitung lokal dan menyembunyikan baris tunai untuk SALDO (Issue #170)', async () => {
+    const saldoReceipt: ReceiptData = {
+      transaksiId: 5102,
+      nomorStruk: 'TRX-20261118-5102',
+      waktu: '2026-11-18T10:20:00Z',
+      namaKantin: 'Kantin Sehat SKOOLIA',
+      titikKasir: 'Kasir 1',
+      pembeliNama: 'Raka Aditya',
+      pembeliKelas: '7A',
+      pembeliNis: '24250101',
+      pembeliFotoUrl: null,
+      metodeBayar: 'SALDO',
+      uangDiterima: null,
+      kembalian: null,
+      items: [
+        {
+          menuId: 1,
+          namaMenu: 'Nasi Uduk Komplit',
+          qty: 1,
+          hargaSatuan: 12000,
+          subtotal: 12000,
+        },
+      ],
+      total: 12000,
+      saldoSisa: 45000,
+    }
+
+    const screen = await render(
+      <ReceiptDialog open={true} onOpenChange={() => {}} receipt={saldoReceipt} />
+    )
+
+    await expect.element(screen.getByText('Kartu RFID', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Sisa Saldo')).toBeInTheDocument()
+    await expect.element(screen.getByText(/^Rp\s*45\.000$/)).toBeInTheDocument()
+    await expect.element(screen.getByText('Uang Diterima')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Kembalian')).not.toBeInTheDocument()
+  })
 })
