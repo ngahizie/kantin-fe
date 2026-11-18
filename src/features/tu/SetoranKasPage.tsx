@@ -42,7 +42,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, formatDateTime, formatTime, formatTimeWithZone } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import {
   LaporanDateFilter,
@@ -376,7 +376,7 @@ export function SetoranKasPage() {
         title: 'REKAPITULASI & SETORAN KAS TU',
         subtitle: `Periode: ${dateFilterLabel}`,
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Total Setoran Sistem': formatRupiah(totalPenerimaanSistem),
           'Total Uang Fisik Diterima': formatRupiah(totalUangFisikDisetor),
           'Total Selisih Kas': formatRupiah(totalSelisihFisik),
@@ -762,12 +762,7 @@ export function SetoranKasPage() {
                                 </div>
                                 <div className='text-[11px] text-muted-foreground tabular-nums'>
                                   {item.konfirmasi_pada
-                                    ? new Date(
-                                        item.konfirmasi_pada
-                                      ).toLocaleTimeString('id-ID', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                      }) + ' WIB'
+                                    ? formatTimeWithZone(item.konfirmasi_pada)
                                     : '-'}
                                 </div>
                                 {item.catatan && (
@@ -947,11 +942,7 @@ export function SetoranKasPage() {
                               </TableCell>
                               <TableCell className='text-xs tabular-nums'>
                                 <div className='font-mono font-medium'>
-                                  {new Date(tx.waktu).toLocaleTimeString('id-ID', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                  })}
+                                  {formatTime(tx.waktu)}
                                 </div>
                                 <div className='font-mono text-[11px] text-muted-foreground'>
                                   {tx.referensi_id}

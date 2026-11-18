@@ -6,7 +6,7 @@ import {
   CreditCard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   Dialog,
@@ -55,15 +55,7 @@ export function PrintSlipModal({
 
   if (!slipData) return null
 
-  const formattedDate = new Date(slipData.waktu).toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZone: 'Asia/Jakarta',
-  })
+  const formattedDate = formatDateTime(slipData.waktu)
 
   const handlePrint = () => {
     window.print()

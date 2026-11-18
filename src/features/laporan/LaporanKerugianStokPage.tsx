@@ -116,7 +116,7 @@ export function LaporanKerugianStokPage() {
         sheetName: 'Kerugian Stok',
         title: 'LAPORAN KERUGIAN STOK',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode': dateFilterLabel,
           'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
           'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,
@@ -179,7 +179,7 @@ export function LaporanKerugianStokPage() {
         title: 'LAPORAN KERUGIAN STOK',
         subtitle: 'Daftar Selisih Stok Opname dan Barang Rusak/Kadaluarsa',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Periode': dateFilterLabel,
           'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
           'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,

@@ -1,4 +1,5 @@
 import type { KartuSiswaMock } from '@/types/kantin'
+import { formatDateIso } from '@/lib/formatters'
 import {
   getStoredTopupTransactions,
   type StatusSetoranKas,
@@ -125,7 +126,7 @@ export function mapRekapSetoranTuItem(
   const tanggal = String(
     raw.tanggal ||
       fallbackDate ||
-      new Date().toLocaleDateString('en-CA')
+      formatDateIso(new Date())
   )
   const totalTopup = Number(
     raw.totalTopup ?? raw.total_sistem ?? raw.totalSistem ?? 0

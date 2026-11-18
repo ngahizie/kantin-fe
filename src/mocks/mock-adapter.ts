@@ -34,6 +34,7 @@ import {
   getStoredSaldoOverrides,
   saveStoredSaldo,
 } from '@/features/tu/saldo-storage'
+import { formatRupiah } from '@/lib/formatters'
 
 export interface MockResponseData {
   code?: number
@@ -1058,7 +1059,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           return {
             status: 400,
             data: {
-              message: `Melebihi limit harian (sisa Rp ${sisaLimit.toLocaleString('id-ID')})`,
+              message: `Melebihi limit harian (sisa ${formatRupiah(sisaLimit)})`,
             },
           }
         }
@@ -1071,7 +1072,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         return {
           status: 400,
           data: {
-            message: `Saldo kurang Rp ${kurang.toLocaleString('id-ID')}`,
+            message: `Saldo kurang ${formatRupiah(kurang)}`,
             kekurangan: kurang,
           },
         }
@@ -1657,7 +1658,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           catatan ||
           (selisih === 0
             ? 'Uang fisik pas sesuai total sistem'
-            : `Selisih kas ${selisih < 0 ? 'kurang' : 'lebih'} Rp ${Math.abs(selisih).toLocaleString('id-ID')}`),
+            : `Selisih kas ${selisih < 0 ? 'kurang' : 'lebih'} ${formatRupiah(Math.abs(selisih))}`),
         bendahara_id: 10,
         bendahara_nama: bendaharaNama,
         konfirmasi_pada: new Date().toISOString(),
@@ -1845,7 +1846,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             data: {
               code: 400,
               status: 'BAD_REQUEST',
-              message: `Koreksi DEBIT ditolak: Saldo siswa saat ini (Rp ${siswa.saldo.toLocaleString('id-ID')}) tidak mencukupi untuk dikurangi Rp ${nominal.toLocaleString('id-ID')} (saldo tidak boleh minus)`,
+              message: `Koreksi DEBIT ditolak: Saldo siswa saat ini (${formatRupiah(siswa.saldo)}) tidak mencukupi untuk dikurangi ${formatRupiah(nominal)} (saldo tidak boleh minus)`,
             },
           }
         }
@@ -2123,11 +2124,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         return {
           status: 400,
           data: {
-            message: `Top-up ditolak: Saldo baru (Rp ${(
-              siswa.saldo + nominal
-            ).toLocaleString(
-              'id-ID'
-            )}) melebihi batas saldo maksimal sekolah (Rp ${MAX_SALDO.toLocaleString('id-ID')})`,
+            message: `Top-up ditolak: Saldo baru (${formatRupiah(siswa.saldo + nominal)}) melebihi batas saldo maksimal sekolah (${formatRupiah(MAX_SALDO)})`,
           },
         }
       }

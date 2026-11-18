@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, formatDateTime } from '@/lib/formatters'
 import type { RefundSlipData } from './types'
 
 interface SlipRefundModalProps {
@@ -184,7 +184,7 @@ export function SlipRefundModal({
 
           {/* Footer Struk */}
           <div className='pt-2 border-t border-border text-center space-y-1 text-[10px] text-muted-foreground'>
-            <p className='tabular-nums'>Waktu Transaksi: {new Date(slipData.waktu).toLocaleString('id-ID')}</p>
+            <p className='tabular-nums'>Waktu Transaksi: {formatDateTime(slipData.waktu)}</p>
             <p>Petugas TU / Kasir: {slipData.petugas_nama}</p>
             <p className='italic font-medium text-foreground'>
               "Status saldo siswa asal telah menjadi Rp 0 dan kartu fisik telah diblokir permanen."

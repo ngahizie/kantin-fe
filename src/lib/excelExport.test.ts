@@ -5,6 +5,7 @@ import {
   exportRawDataToExcel,
   stripKantinSkoolia,
 } from './excelExport'
+import { formatRupiah } from './formatters'
 
 describe('excelExport utility (ExcelJS template resmi)', () => {
   it('berhasil memformat dan mengekspor single table ke workbook dengan kop dan gaya Navy #123463', async () => {
@@ -29,7 +30,7 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
         {
           header: 'Harga Satuan',
           key: 'harga',
-          formatter: (v) => `Rp ${Number(v).toLocaleString('id-ID')}`,
+          formatter: (v) => formatRupiah(Number(v)),
         },
         { header: 'Jumlah Terjual', key: 'qty' },
       ],

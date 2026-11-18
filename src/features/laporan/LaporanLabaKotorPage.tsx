@@ -22,7 +22,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -184,7 +184,7 @@ export function LaporanLabaKotorPage() {
         sheetName: 'Laba Kotor',
         title: 'LAPORAN ANALISIS LABA KOTOR',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
           'Total Laba': formatRupiah(summaryLaba),
@@ -256,7 +256,7 @@ export function LaporanLabaKotorPage() {
         title: 'LAPORAN ANALISIS LABA KOTOR',
         subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
           'Total Laba': formatRupiah(summaryLaba),

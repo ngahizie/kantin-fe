@@ -91,7 +91,7 @@ export function LaporanPembatalanPage() {
       sheetName: 'Pembatalan Kasir',
       title: 'LAPORAN PEMBATALAN TRANSAKSI KASIR',
       metadata: {
-        'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+        'Tanggal Cetak': formatDateTime(new Date()),
         Periode: dateFilterLabel,
         'Total Pembatalan': `${formatNumber(totalTransaksiBatal)} transaksi`,
         'Total Nominal Dikembalikan': formatRupiah(totalNominalBatal),
@@ -143,7 +143,7 @@ export function LaporanPembatalanPage() {
       filename: `Laporan_Pembatalan_Kasir_${new Date().toISOString().split('T')[0]}`,
       title: 'LAPORAN PEMBATALAN TRANSAKSI KASIR',
       metadata: {
-        'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+        'Tanggal Cetak': formatDateTime(new Date()),
         Periode: dateFilterLabel,
         'Total Pembatalan': `${formatNumber(totalTransaksiBatal)} transaksi`,
         'Total Nominal Dikembalikan': formatRupiah(totalNominalBatal),

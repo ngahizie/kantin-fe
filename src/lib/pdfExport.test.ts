@@ -5,6 +5,7 @@ import {
   sanitizePdfFilename,
   stripKantinSkoolia,
 } from './pdfExport'
+import { formatRupiah } from './formatters'
 
 describe('pdfExport utility', () => {
   it('berhasil membersihkan nama file dan memastikan ekstensi .pdf', () => {
@@ -34,13 +35,13 @@ describe('pdfExport utility', () => {
         {
           header: 'Harga Satuan',
           key: 'harga',
-          formatter: (v) => `Rp ${Number(v).toLocaleString('id-ID')}`,
+          formatter: (v) => formatRupiah(Number(v)),
         },
         { header: 'Qty Terjual', key: 'qty' },
         {
           header: 'Total Penjualan',
           key: 'total',
-          formatter: (v) => `Rp ${Number(v).toLocaleString('id-ID')}`,
+          formatter: (v) => formatRupiah(Number(v)),
         },
       ],
       data,

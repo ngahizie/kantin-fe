@@ -399,7 +399,7 @@ export function KoreksiBendaharaPage() {
         title: 'LOG AUDIT PENYESUAIAN SALDO BENDAHARA',
         subtitle: 'Rekapitulasi riwayat mutasi koreksi saldo kantin',
         metadata: {
-          'Tanggal Cetak': new Date().toLocaleString('id-ID'),
+          'Tanggal Cetak': formatDateTime(new Date()),
           'Total Mutasi': `${filteredKoreksi.length} transaksi`,
           'Total Koreksi Kredit': formatRupiah(filteredKredit),
           'Total Koreksi Debit': formatRupiah(filteredDebit),
@@ -722,13 +722,7 @@ export function KoreksiBendaharaPage() {
                                 {k.referensi_id}
                               </div>
                               <div className='text-[11px] text-muted-foreground'>
-                                {new Date(k.waktu).toLocaleString('id-ID', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {formatDateTime(k.waktu)}
                               </div>
                             </TableCell>
 
@@ -994,13 +988,7 @@ export function KoreksiBendaharaPage() {
                                 {tx.id}
                               </div>
                               <div className='text-[11px] text-muted-foreground'>
-                                {new Date(tx.waktu).toLocaleString('id-ID', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {formatDateTime(tx.waktu)}
                               </div>
                             </TableCell>
 
@@ -1156,9 +1144,7 @@ export function KoreksiBendaharaPage() {
                     Waktu Eksekusi Audit:
                   </span>
                   <span className='font-semibold'>
-                    {new Date(selectedKoreksiForPrint.waktu).toLocaleString(
-                      'id-ID'
-                    )}
+                    {formatDateTime(selectedKoreksiForPrint.waktu)}
                   </span>
                 </div>
                 <div className='flex justify-between'>
