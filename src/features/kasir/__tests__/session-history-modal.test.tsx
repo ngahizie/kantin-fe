@@ -267,4 +267,56 @@ describe('SessionHistoryModal', () => {
     )
     expect(onTransactionRefunded).toHaveBeenCalledTimes(1)
   })
+
+  it('dapat mencetak ulang struk transaksi TUNAI dari riwayat memakai angka BE tanpa Sisa Saldo (Issue #170)', async () => {
+    const cashTrx: TransaksiSesiItem = {
+      id: 205,
+      transaksiId: 205,
+      nomorReferensi: 'TRX-20261118-0205',
+      waktu: '2026-11-18T10:30:00Z',
+      pembeliNama: 'Tamu (tunai)',
+      pembeliKelas: null,
+      pembeliNis: null,
+      pembeliFotoUrl: null,
+      metodeBayar: 'TUNAI',
+      uangDiterima: 50000,
+      kembalian: 35000,
+      items: [
+        {
+          menuId: 2,
+          namaMenu: 'Nasi Goreng Ayam',
+          qty: 1,
+          hargaSatuan: 15000,
+          subtotal: 15000,
+        },
+      ],
+      total: 15000,
+      status: 'SUKSES',
+    }
+
+    const screen = await render(
+      <SessionHistoryModal
+        open={true}
+        onOpenChange={() => {}}
+        transactions={[cashTrx]}
+        namaKantin='Kantin Sehat SKOOLIA'
+        titikKasirNama='Kasir 1'
+      />
+    )
+
+    // Kartu riwayat menampilkan badge Tunai & nominal Uang Diterima/Kembalian, tanpa Sisa Saldo
+    await expect.element(screen.getByText('Tamu (tunai)')).toBeInTheDocument()
+    await expect.element(screen.getByText('Sisa Saldo')).not.toBeInTheDocument()
+
+    // Klik tombol Cetak Ulang -> membuka ReceiptDialog dengan angka identik dari TransaksiSesiItem
+    await userEvent.click(screen.getByRole('button', { name: /Cetak Ulang/i }))
+
+    await expect
+      .element(screen.getByRole('heading', { name: 'Cetak Struk' }))
+      .toBeInTheDocument()
+    await expect.element(screen.getByText('TRX-20261118-0205')).toBeInTheDocument()
+    await expect.element(screen.getByText(/^Rp\s*50\.000$/).first()).toBeInTheDocument()
+    await expect.element(screen.getByText(/^Rp\s*35\.000$/).first()).toBeInTheDocument()
+    await expect.element(screen.getByText('Sisa Saldo')).not.toBeInTheDocument()
+  })
 })

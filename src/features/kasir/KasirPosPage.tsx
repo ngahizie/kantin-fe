@@ -534,24 +534,13 @@ export const KasirPosPage: React.FC = () => {
       if (isProcessing) return
 
       const currentTotal = totalHarga()
-      const cashCheck = evaluateCashPayment(currentTotal, uangDiterima)
-      if (!cashCheck.isValid) {
-        playError()
-        setErrorInfo({
-          message: cashCheck.errorMessage || 'Uang tunai tidak mencukupi.',
-          kekurangan: cashCheck.kekurangan > 0 ? cashCheck.kekurangan : undefined,
-        })
-        setErrorModalOpen(true)
-        return
-      }
-
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
 
       try {
         const result = await kasirApi.prosesTap({
           metodeBayar: 'TUNAI',
-          uangDiterima: cashCheck.uangDiterima,
+          uangDiterima,
           items: items.map((it) => ({
             menuId: it.menu.id,
             qty: it.qty,
@@ -569,12 +558,11 @@ export const KasirPosPage: React.FC = () => {
         }))
         const activeTitik = getActiveTitikKasir()
         const finalTotal = Number(result.total ?? currentTotal)
-        const finalUangDiterima = Number(
-          result.uangDiterima ?? cashCheck.uangDiterima
-        )
-        const finalKembalian = Number(
-          result.kembalian ?? Math.max(0, finalUangDiterima - finalTotal)
-        )
+        // Gunakan uangDiterima & kembalian apa adanya dari respons BE (Issue #170 / C.2e)
+        const finalUangDiterima =
+          result.uangDiterima !== undefined ? result.uangDiterima : null
+        const finalKembalian =
+          result.kembalian !== undefined ? result.kembalian : null
 
         const nextReceipt: ReceiptData = {
           transaksiId: Number(result.transaksiId || result.transaksi_id || 0),
@@ -586,17 +574,17 @@ export const KasirPosPage: React.FC = () => {
             activeTitik?.nama ||
             sesi?.titikKasirNama ||
             null,
-          pembeliNama: result.pembeli?.nama || 'Tamu (Tunai)',
+          pembeliNama: result.pembeli?.nama || 'Tamu (tunai)',
           pembeliKelas: null,
           pembeliNis: null,
           pembeliFotoUrl: null,
-          metodeBayar: 'TUNAI',
+          metodeBayar: result.metodeBayar ?? 'TUNAI',
           uangDiterima: finalUangDiterima,
           kembalian: finalKembalian,
           items: snapshotItems,
           namaItemFallback: result.namaItem,
           total: finalTotal,
-          saldoSisa: 0,
+          saldoSisa: null,
         }
 
         // Transaksi Tunai Sukses: langsung bersihkan keranjang & buka struk (tanpa modal foto siswa)
@@ -605,8 +593,15 @@ export const KasirPosPage: React.FC = () => {
         setMobileCartOpen(false)
         setReceiptData(nextReceipt)
         setReceiptModalOpen(true)
+        const toastDescParts = [`Total ${formatRupiah(finalTotal)}`]
+        if (finalUangDiterima !== null) {
+          toastDescParts.push(`Diterima ${formatRupiah(finalUangDiterima)}`)
+        }
+        if (finalKembalian !== null) {
+          toastDescParts.push(`Kembalian ${formatRupiah(finalKembalian)}`)
+        }
         toast.success('Transaksi tunai berhasil!', {
-          description: `Total ${formatRupiah(finalTotal)} • Diterima ${formatRupiah(finalUangDiterima)} • Kembalian ${formatRupiah(finalKembalian)}`,
+          description: toastDescParts.join(' • '),
         })
         void loadKatalogData()
         void loadSesiData()
@@ -673,9 +668,9 @@ export const KasirPosPage: React.FC = () => {
       }
 
       const cashCheck = evaluateCashPayment(totalHarga(), uangDiterima)
+      // Bila uang kurang, langsung kirim ke BE agar mendapat respons 409 "Uang tunai kurang Rp ..." (tanpa kosongkan keranjang)
       if (!cashCheck.isValid) {
-        playError()
-        toast.error(cashCheck.errorMessage || 'Uang tunai kurang dari total belanja.')
+        await executeCashTransaction(uangDiterima)
         return
       }
 
@@ -1128,11 +1123,13 @@ export const KasirPosPage: React.FC = () => {
         errorInfo={errorInfo}
       />
 
-      {/* Modal Riwayat Transaksi Sesi Hari Ini (termasuk aksi Refund BE #292) */}
+      {/* Modal Riwayat Transaksi Sesi Hari Ini (termasuk aksi Cetak Ulang & Refund BE #292) */}
       <SessionHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         transactions={transactions}
+        namaKantin={pengaturan.namaKantin || 'Kantin Sehat SKOOLIA'}
+        titikKasirNama={getActiveTitikKasir()?.nama || sesi?.titikKasirNama || null}
         isLoading={isHistoryLoading}
         isSessionClosed={isSessionClosed}
         isOffline={!isOnline}

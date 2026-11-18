@@ -1,6 +1,7 @@
 import React, { useId, useMemo, useState } from 'react'
 import {
   History,
+  Printer,
   Receipt,
   RotateCcw,
   Search,
@@ -29,8 +30,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
+import ReceiptDialog from './ReceiptDialog'
 import RefundDialog from './RefundDialog'
-import type { TransaksiSesiItem } from '../api/kasir-api'
+import type { ReceiptData, TransaksiSesiItem } from '../api/kasir-api'
 
 const FILTER_STATUS_OPTIONS = [
   { value: 'ALL', label: 'Semua Status' },
@@ -45,6 +47,8 @@ export interface SessionHistoryModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   transactions: TransaksiSesiItem[]
+  namaKantin?: string
+  titikKasirNama?: string | null
   isLoading?: boolean
   isSessionClosed?: boolean
   isOffline?: boolean
@@ -55,6 +59,8 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
   open,
   onOpenChange,
   transactions,
+  namaKantin = 'Kantin Sehat SKOOLIA',
+  titikKasirNama = null,
   isLoading = false,
   isSessionClosed = false,
   isOffline = false,
@@ -72,6 +78,8 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
   const [selectedTrxForRefund, setSelectedTrxForRefund] =
     useState<TransaksiSesiItem | null>(null)
   const [refundDialogOpen, setRefundDialogOpen] = useState(false)
+  const [reprintReceipt, setReprintReceipt] = useState<ReceiptData | null>(null)
+  const [reprintDialogOpen, setReprintDialogOpen] = useState(false)
   const [prevOpen, setPrevOpen] = useState(open)
 
   if (open !== prevOpen) {
@@ -125,8 +133,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
   const handleSheetOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setRefundDialogOpen(false)
+      setReprintDialogOpen(false)
     } else {
       setSelectedTrxForRefund(null)
+      setReprintReceipt(null)
     }
     onOpenChange(nextOpen)
   }
@@ -134,6 +144,36 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
   const handleOpenRefundDialog = (trx: TransaksiSesiItem) => {
     setSelectedTrxForRefund(trx)
     setRefundDialogOpen(true)
+  }
+
+  // Bangun struk cetak ulang murni dari data BE TransaksiSesiItem tanpa hitung lokal (Issue #170 / C.2e)
+  const handleOpenReprintDialog = (trx: TransaksiSesiItem) => {
+    const metodeBayar = trx.metodeBayar === 'TUNAI' ? 'TUNAI' : 'SALDO'
+    const nextReceipt: ReceiptData = {
+      transaksiId: Number(trx.transaksiId || trx.id || 0),
+      nomorStruk: trx.nomorReferensi || null,
+      waktu: trx.waktu,
+      namaKantin,
+      titikKasir: titikKasirNama,
+      pembeliNama: trx.pembeliNama || (metodeBayar === 'TUNAI' ? 'Tamu (tunai)' : 'Pembeli'),
+      pembeliKelas: metodeBayar === 'TUNAI' ? null : (trx.pembeliKelas ?? null),
+      pembeliNis: metodeBayar === 'TUNAI' ? null : (trx.pembeliNis ?? null),
+      pembeliFotoUrl: metodeBayar === 'TUNAI' ? null : (trx.pembeliFotoUrl ?? null),
+      metodeBayar,
+      uangDiterima: metodeBayar === 'TUNAI' ? (trx.uangDiterima ?? null) : null,
+      kembalian: metodeBayar === 'TUNAI' ? (trx.kembalian ?? null) : null,
+      items: trx.items.map((it) => ({
+        menuId: it.menuId,
+        namaMenu: it.namaMenu,
+        qty: it.qty,
+        hargaSatuan: it.hargaSatuan,
+        subtotal: it.subtotal,
+      })),
+      total: Number(trx.total ?? 0),
+      saldoSisa: null,
+    }
+    setReprintReceipt(nextReceipt)
+    setReprintDialogOpen(true)
   }
 
   const canRefund = !isSessionClosed && !isOffline
@@ -379,6 +419,29 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                         </ul>
                       </div>
 
+                      {/* Ringkasan Pembayaran Tunai (dari data BE TransaksiSesiItem, tanpa Sisa Saldo) */}
+                      {trx.metodeBayar === 'TUNAI' &&
+                        (trx.uangDiterima != null || trx.kembalian != null) && (
+                          <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-[11px]'>
+                            <span className='text-muted-foreground'>
+                              Uang Diterima:{' '}
+                              <strong className='font-semibold tabular-nums text-foreground'>
+                                {trx.uangDiterima != null
+                                  ? formatRupiah(trx.uangDiterima)
+                                  : '-'}
+                              </strong>
+                            </span>
+                            <span className='text-muted-foreground'>
+                              Kembalian:{' '}
+                              <strong className='font-bold tabular-nums text-emerald-700 dark:text-emerald-400'>
+                                {trx.kembalian != null
+                                  ? formatRupiah(trx.kembalian)
+                                  : '-'}
+                              </strong>
+                            </span>
+                          </div>
+                        )}
+
                       {/* Catatan Alasan jika transaksi berstatus VOID */}
                       {!isSukses && trx.voidAlasan && (
                         <div className='rounded-xl border border-destructive/20 bg-destructive/10 p-2 text-[11px] text-destructive'>
@@ -391,9 +454,20 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                         </div>
                       )}
 
-                      {/* Tombol Aksi Refund untuk Transaksi SUKSES */}
+                      {/* Tombol Aksi Cetak Ulang & Refund untuk Transaksi SUKSES */}
                       {isSukses && (
-                        <div className='flex items-center justify-end pt-1'>
+                        <div className='flex flex-wrap items-center justify-end gap-2 pt-1'>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => handleOpenReprintDialog(trx)}
+                            className='h-8 gap-1.5 px-3 text-xs font-semibold'
+                            title='Cetak ulang struk transaksi ini'
+                          >
+                            <Printer className='h-3.5 w-3.5' />
+                            <span>Cetak Ulang</span>
+                          </Button>
                           <Button
                             type='button'
                             variant='outline'
@@ -422,6 +496,13 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Dialog Cetak Ulang Struk dari Riwayat Sesi (Issue #170 / C.2e) */}
+      <ReceiptDialog
+        open={reprintDialogOpen}
+        onOpenChange={setReprintDialogOpen}
+        receipt={reprintReceipt}
+      />
 
       {/* Dialog Refund Transaksi Terpilih (BE #292) */}
       <RefundDialog

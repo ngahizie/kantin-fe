@@ -112,12 +112,17 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
   const handleCashSubmit = () => {
     if (isCartEmpty || isProcessing || isOffline || isSessionClosed) return
-    if (!cashEval.isValid) {
+    if (!cashInputRaw.trim()) {
       setCashSubmittedError(true)
       cashInputRef.current?.focus()
       return
     }
-    setCashSubmittedError(false)
+    if (!cashEval.isValid) {
+      setCashSubmittedError(true)
+    } else {
+      setCashSubmittedError(false)
+    }
+    // Tetap teruskan ke handler checkout agar validasi server (HTTP 409) dapat ditampilkan konsisten
     onCashCheckout?.(cashEval.uangDiterima)
   }
 

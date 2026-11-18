@@ -101,8 +101,8 @@ export interface TapBuyerInfo {
   nis?: string | null
   foto_url?: string | null
   fotoUrl?: string | null
-  sisa_saldo: number
-  saldoSisa?: number
+  sisa_saldo: number | null
+  saldoSisa?: number | null
 }
 
 export interface TapTransaksiData {
@@ -143,7 +143,7 @@ export interface ReceiptData {
   items: ReceiptLineItem[]
   namaItemFallback?: string[]
   total: number
-  saldoSisa: number
+  saldoSisa: number | null
 }
 
 export interface RefundTransaksiPayload {

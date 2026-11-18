@@ -99,7 +99,75 @@ describe('Kasir Bayar Tunai Kartu Tamu / Tanpa Kartu (Issue #165)', () => {
       expect(result.metodeBayar).toBe('TUNAI')
       expect(result.uangDiterima).toBe(20000)
       expect(result.kembalian).toBe(5000)
-      expect(result.pembeli.sisa_saldo).toBe(0)
+      expect(result.pembeli.sisa_saldo).toBeNull()
+      expect(result.pembeli.saldoSisa).toBeNull()
+    })
+
+    it('memakai kembalian & uangDiterima apa adanya dari respons BE tanpa hitung lokal (Issue #170)', async () => {
+      vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: {
+            transaksiId: 902,
+            nomorStruk: 'TRX-20261118-902',
+            total: 15000,
+            saldoSisa: null,
+            metodeBayar: 'TUNAI',
+            uangDiterima: 20000,
+            kembalian: 4500, // Nilai berbeda sengaja untuk membuktikan FE memakai nilai BE apa adanya
+            waktu: '2026-11-18T10:05:00Z',
+          },
+        },
+      })
+
+      const result = await kasirApi.prosesTap({
+        metodeBayar: 'TUNAI',
+        uangDiterima: 20000,
+        items: [{ menuId: 2, qty: 1 }],
+        idempotencyKey: 'idemp-tunai-be-verbatim',
+        titikKasirId: 1,
+      })
+
+      expect(result.uangDiterima).toBe(20000)
+      expect(result.kembalian).toBe(4500)
+      expect(result.pembeli.saldoSisa).toBeNull()
+    })
+
+    it('getRiwayatTransaksiSesi meneruskan metodeBayar, uangDiterima, dan kembalian dari BE untuk cetak ulang (Issue #170)', async () => {
+      vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: [
+            {
+              id: 701,
+              transaksiId: 701,
+              nomorReferensi: 'TRX-20261118-701',
+              waktu: '2026-11-18T10:10:00Z',
+              pembeliNama: 'Tamu (tunai)',
+              items: [
+                {
+                  menuId: 2,
+                  namaMenu: 'Nasi Goreng Ayam',
+                  qty: 1,
+                  hargaSatuan: 15000,
+                  subtotal: 15000,
+                },
+              ],
+              total: 15000,
+              status: 'SUKSES',
+              metodeBayar: 'TUNAI',
+              uangDiterima: 50000,
+              kembalian: 35000,
+            },
+          ],
+        },
+      })
+
+      const list = await kasirApi.getRiwayatTransaksiSesi(1)
+      expect(list).toHaveLength(1)
+      expect(list[0].metodeBayar).toBe('TUNAI')
+      expect(list[0].uangDiterima).toBe(50000)
+      expect(list[0].kembalian).toBe(35000)
     })
   })
 
@@ -153,7 +221,7 @@ describe('Kasir Bayar Tunai Kartu Tamu / Tanpa Kartu (Issue #165)', () => {
       expect(res.data.data.total).toBe(12000)
       expect(res.data.data.uangDiterima).toBe(12000)
       expect(res.data.data.kembalian).toBe(0)
-      expect(res.data.data.pembeli.sisa_saldo).toBe(0)
+      expect(res.data.data.pembeli.sisa_saldo).toBeNull()
 
       expect(await getMenuStock(1)).toBe(stokSebelum - 1)
       expect(await getAllStudentBalances()).toEqual(saldoSebelum)
@@ -178,7 +246,7 @@ describe('Kasir Bayar Tunai Kartu Tamu / Tanpa Kartu (Issue #165)', () => {
       expect(await getAllStudentBalances()).toEqual(saldoSebelum)
     })
 
-    it('tunai kurang: ditolak HTTP 400 dengan pesan jelas dan stok tidak berkurang', async () => {
+    it('tunai kurang: ditolak HTTP 409 dengan pesan jelas dan stok tidak berkurang', async () => {
       const stokSebelum = await getMenuStock(2)
 
       await expect(
@@ -191,7 +259,7 @@ describe('Kasir Bayar Tunai Kartu Tamu / Tanpa Kartu (Issue #165)', () => {
         })
       ).rejects.toMatchObject({
         response: {
-          status: 400,
+          status: 409,
           data: {
             message: expect.stringMatching(/Uang tunai kurang/i),
             kekurangan: 5000,

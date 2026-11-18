@@ -1095,7 +1095,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         if (!Number.isFinite(cashVal) || cashVal < totalBelanja) {
           const kurang = Math.max(0, totalBelanja - (Number.isFinite(cashVal) ? cashVal : 0))
           return {
-            status: 400,
+            status: 409,
             data: {
               message: `Uang tunai kurang ${formatRupiah(kurang)}`,
               kekurangan: kurang,
@@ -1228,8 +1228,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               nis: metodeBayar === 'SALDO' ? siswa?.nis ?? null : null,
               foto_url: metodeBayar === 'SALDO' ? siswa?.foto_url ?? null : null,
               fotoUrl: metodeBayar === 'SALDO' ? siswa?.foto_url ?? null : null,
-              sisa_saldo: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : 0,
-              saldoSisa: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : 0,
+              sisa_saldo: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : null,
+              saldoSisa: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : null,
             },
           },
         },
