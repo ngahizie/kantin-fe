@@ -36,6 +36,7 @@ export interface RekapSesiData {
 }
 
 export type StatusTransaksi = 'SUKSES' | 'VOID'
+export type MetodeBayarKasir = 'SALDO' | 'TUNAI'
 
 export interface TransaksiItemDetail {
   menuId: number
@@ -55,6 +56,9 @@ export interface TransaksiSesiItem {
   pembeliNis?: string | null
   pembeliFotoUrl?: string | null
   kartuUid?: string
+  metodeBayar?: MetodeBayarKasir
+  uangDiterima?: number | null
+  kembalian?: number | null
   items: TransaksiItemDetail[]
   total: number
   status: StatusTransaksi
@@ -78,7 +82,10 @@ export interface TapItemPayload {
 }
 
 export interface TapTransaksiRequest {
-  rfidUid: string
+  rfidUid?: string
+  metodeBayar?: MetodeBayarKasir
+  uangDiterima?: number
+  namaPembeli?: string
   items: TapItemPayload[]
   idempotencyKey: string
   titikKasirId?: number
@@ -101,6 +108,9 @@ export interface TapTransaksiData {
   titikKasir?: string | null
   namaItem?: string[]
   total: number
+  metodeBayar?: MetodeBayarKasir
+  uangDiterima?: number | null
+  kembalian?: number | null
   waktu: string
   pembeli: TapBuyerInfo
 }
@@ -123,6 +133,9 @@ export interface ReceiptData {
   pembeliKelas?: string | null
   pembeliNis?: string | null
   pembeliFotoUrl?: string | null
+  metodeBayar?: MetodeBayarKasir
+  uangDiterima?: number | null
+  kembalian?: number | null
   items: ReceiptLineItem[]
   namaItemFallback?: string[]
   total: number

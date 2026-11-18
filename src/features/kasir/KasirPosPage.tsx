@@ -53,7 +53,9 @@ import type {
   TransaksiSesiItem,
   ReceiptData,
   ReceiptLineItem,
+  MetodeBayarKasir,
 } from './types'
+import { evaluateCashPayment } from './cash-payment'
 import CartSidebar from './components/CartSidebar'
 import ManualRfidModal from './components/ManualRfidModal'
 import CekSaldoModal from './components/CekSaldoModal'
@@ -99,6 +101,7 @@ export const KasirPosPage: React.FC = () => {
     sesi?.status === 'DITUTUP' || sessionClosedOverride
 
   // Modals & Transaksi state
+  const [metodeBayar, setMetodeBayar] = useState<MetodeBayarKasir>('SALDO')
   const [manualRfidOpen, setManualRfidOpen] = useState(false)
   const [cekSaldoOpen, setCekSaldoOpen] = useState(false)
   const [studentModalOpen, setStudentModalOpen] = useState(false)
@@ -106,6 +109,7 @@ export const KasirPosPage: React.FC = () => {
   const [errorModalOpen, setErrorModalOpen] = useState(false)
   const [confirmManualOpen, setConfirmManualOpen] = useState(false)
   const [pendingScannedUid, setPendingScannedUid] = useState<string | null>(null)
+  const [pendingCashAmount, setPendingCashAmount] = useState<number | null>(null)
   const [successData, setSuccessData] = useState<TapTransaksiData | null>(null)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [errorInfo, setErrorInfo] = useState<TransactionErrorInfo | null>(null)
@@ -379,6 +383,7 @@ export const KasirPosPage: React.FC = () => {
       try {
         const result = await kasirApi.prosesTap({
           rfidUid: cleanUid,
+          metodeBayar: 'SALDO',
           items: items.map((it) => ({
             menuId: it.menu.id,
             qty: it.qty,
@@ -420,6 +425,9 @@ export const KasirPosPage: React.FC = () => {
           pembeliNis: buyer?.nis ?? rawResult.nis ?? null,
           pembeliFotoUrl:
             buyer?.fotoUrl || buyer?.foto_url || rawResult.fotoUrl || null,
+          metodeBayar: result.metodeBayar ?? 'SALDO',
+          uangDiterima: result.uangDiterima ?? null,
+          kembalian: result.kembalian ?? null,
           items: snapshotItems,
           namaItemFallback: result.namaItem,
           total: Number(result.total ?? 0),
@@ -501,6 +509,7 @@ export const KasirPosPage: React.FC = () => {
 
       // Langkah konfirmasi manual sesuai pengaturan operasional kantin
       if (pengaturan.konfirmasiManual) {
+        setPendingCashAmount(null)
         setPendingScannedUid(cleanUid)
         setConfirmManualOpen(true)
         return
@@ -515,6 +524,178 @@ export const KasirPosPage: React.FC = () => {
       isProcessing,
       pengaturan.konfirmasiManual,
       executeTapTransaction,
+      playError,
+    ]
+  )
+
+  // Eksekusi transaksi TUNAI (Kartu Tamu / tanpa kartu, tanpa potong saldo)
+  const executeCashTransaction = useCallback(
+    async (uangDiterima: number) => {
+      if (isProcessing) return
+
+      const currentTotal = totalHarga()
+      const cashCheck = evaluateCashPayment(currentTotal, uangDiterima)
+      if (!cashCheck.isValid) {
+        playError()
+        setErrorInfo({
+          message: cashCheck.errorMessage || 'Uang tunai tidak mencukupi.',
+          kekurangan: cashCheck.kekurangan > 0 ? cashCheck.kekurangan : undefined,
+        })
+        setErrorModalOpen(true)
+        return
+      }
+
+      const idempotencyKey = generateIdempotencyKey()
+      setIsProcessing(true)
+
+      try {
+        const result = await kasirApi.prosesTap({
+          metodeBayar: 'TUNAI',
+          uangDiterima: cashCheck.uangDiterima,
+          items: items.map((it) => ({
+            menuId: it.menu.id,
+            qty: it.qty,
+          })),
+          idempotencyKey,
+          titikKasirId: activeTitikKasirId ?? undefined,
+        })
+
+        const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
+          menuId: it.menu.id,
+          namaMenu: it.menu.nama,
+          qty: it.qty,
+          hargaSatuan: it.menu.hargaJual,
+          subtotal: it.subtotal,
+        }))
+        const activeTitik = getActiveTitikKasir()
+        const finalTotal = Number(result.total ?? currentTotal)
+        const finalUangDiterima = Number(
+          result.uangDiterima ?? cashCheck.uangDiterima
+        )
+        const finalKembalian = Number(
+          result.kembalian ?? Math.max(0, finalUangDiterima - finalTotal)
+        )
+
+        const nextReceipt: ReceiptData = {
+          transaksiId: Number(result.transaksiId || result.transaksi_id || 0),
+          nomorStruk: result.nomorStruk || null,
+          waktu: result.waktu || new Date().toISOString(),
+          namaKantin: pengaturan.namaKantin || 'Kantin Sehat SKOOLIA',
+          titikKasir:
+            result.titikKasir ||
+            activeTitik?.nama ||
+            sesi?.titikKasirNama ||
+            null,
+          pembeliNama: result.pembeli?.nama || 'Tamu (Tunai)',
+          pembeliKelas: null,
+          pembeliNis: null,
+          pembeliFotoUrl: null,
+          metodeBayar: 'TUNAI',
+          uangDiterima: finalUangDiterima,
+          kembalian: finalKembalian,
+          items: snapshotItems,
+          namaItemFallback: result.namaItem,
+          total: finalTotal,
+          saldoSisa: 0,
+        }
+
+        // Transaksi Tunai Sukses: langsung bersihkan keranjang & buka struk (tanpa modal foto siswa)
+        playSuccess()
+        clearCart()
+        setMobileCartOpen(false)
+        setReceiptData(nextReceipt)
+        setReceiptModalOpen(true)
+        toast.success('Transaksi tunai berhasil!', {
+          description: `Total ${formatRupiah(finalTotal)} • Diterima ${formatRupiah(finalUangDiterima)} • Kembalian ${formatRupiah(finalKembalian)}`,
+        })
+        void loadKatalogData()
+        void loadSesiData()
+      } catch (err: unknown) {
+        playError()
+        const axiosErr = err as {
+          response?: {
+            status?: number
+            data?: { message?: string; kekurangan?: number }
+          }
+        }
+        const message =
+          axiosErr.response?.data?.message ||
+          'Terjadi kesalahan saat memproses transaksi tunai'
+        const kekurangan = axiosErr.response?.data?.kekurangan
+
+        setErrorInfo({
+          message,
+          kekurangan,
+        })
+        setErrorModalOpen(true)
+      } finally {
+        setIsProcessing(false)
+      }
+    },
+    [
+      isProcessing,
+      totalHarga,
+      items,
+      activeTitikKasirId,
+      getActiveTitikKasir,
+      pengaturan.namaKantin,
+      sesi,
+      playSuccess,
+      playError,
+      clearCart,
+      loadKatalogData,
+      loadSesiData,
+    ]
+  )
+
+  const handleProcessCash = useCallback(
+    async (uangDiterima: number) => {
+      if (!isOnline) {
+        playError()
+        toast.error('Offline - transaksi tidak tersedia saat koneksi terputus')
+        return
+      }
+
+      if (isSessionClosed) {
+        playError()
+        toast.error('Sesi kasir hari ini telah ditutup. Transaksi baru tidak diizinkan.')
+        return
+      }
+
+      if (isProcessing) return
+
+      if (items.length === 0) {
+        playError()
+        toast.warning(
+          'Keranjang belanja kosong! Pilih menu makanan atau minuman terlebih dahulu.'
+        )
+        return
+      }
+
+      const cashCheck = evaluateCashPayment(totalHarga(), uangDiterima)
+      if (!cashCheck.isValid) {
+        playError()
+        toast.error(cashCheck.errorMessage || 'Uang tunai kurang dari total belanja.')
+        return
+      }
+
+      if (pengaturan.konfirmasiManual) {
+        setPendingScannedUid(null)
+        setPendingCashAmount(cashCheck.uangDiterima)
+        setConfirmManualOpen(true)
+        return
+      }
+
+      await executeCashTransaction(cashCheck.uangDiterima)
+    },
+    [
+      isOnline,
+      isSessionClosed,
+      isProcessing,
+      items.length,
+      totalHarga,
+      pengaturan.konfirmasiManual,
+      executeCashTransaction,
       playError,
     ]
   )
@@ -538,10 +719,11 @@ export const KasirPosPage: React.FC = () => {
     [handleProcessTap]
   )
 
-  // Integrasi USB RFID Reader Hook
+  // Integrasi USB RFID Reader Hook (hanya aktif saat metode bayar Saldo)
   useRfidScanner({
     onScan: handleHardwareRfidScan,
     enabled:
+      metodeBayar === 'SALDO' &&
       isOnline &&
       !isSessionClosed &&
       !studentModalOpen &&
@@ -778,7 +960,10 @@ export const KasirPosPage: React.FC = () => {
       <div className='hidden h-full shrink-0 border-l border-border lg:flex'>
         <CartSidebar
           onCheckout={() => setManualRfidOpen(true)}
+          onCashCheckout={(uangDiterima) => void handleProcessCash(uangDiterima)}
           onManualRfidOpen={() => setManualRfidOpen(true)}
+          metodeBayar={metodeBayar}
+          onMetodeBayarChange={setMetodeBayar}
           isProcessing={isProcessing}
           isOffline={!isOnline}
           isSessionClosed={isSessionClosed}
@@ -797,7 +982,10 @@ export const KasirPosPage: React.FC = () => {
           </SheetHeader>
           <CartSidebar
             onCheckout={() => setManualRfidOpen(true)}
+            onCashCheckout={(uangDiterima) => void handleProcessCash(uangDiterima)}
             onManualRfidOpen={() => setManualRfidOpen(true)}
+            metodeBayar={metodeBayar}
+            onMetodeBayarChange={setMetodeBayar}
             isProcessing={isProcessing}
             isOffline={!isOnline}
             isSessionClosed={isSessionClosed}
@@ -850,35 +1038,76 @@ export const KasirPosPage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Pembayaran Kasir</AlertDialogTitle>
             <AlertDialogDescription>
-              Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.
+              {pendingCashAmount !== null
+                ? 'Mode konfirmasi manual aktif. Harap verifikasi kembali pembayaran tunai sebelum diproses.'
+                : 'Mode konfirmasi manual aktif. Harap verifikasi kembali sebelum memproses transaksi tap kartu.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className='space-y-2 rounded-xl border border-border bg-muted/40 p-3.5 text-sm'>
-            <div className='flex justify-between'>
-              <span className='text-muted-foreground'>UID Kartu:</span>
-              <span className='font-semibold tracking-wider text-foreground'>{pendingScannedUid}</span>
-            </div>
-            <div className='flex justify-between'>
-              <span className='text-muted-foreground'>Total Item:</span>
-              <span className='font-medium tabular-nums text-foreground'>{totalItems()} item</span>
-            </div>
-            <div className='flex justify-between border-t border-border pt-2 text-base font-bold'>
-              <span className='text-foreground'>Total Tagihan:</span>
-              <span className='tabular-nums text-primary'>{formatRupiah(totalHarga())}</span>
-            </div>
+            {pendingCashAmount !== null ? (
+              <>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>Metode Bayar:</span>
+                  <span className='font-semibold text-emerald-600 dark:text-emerald-400'>
+                    Tunai (Tamu / Tanpa Kartu)
+                  </span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>Total Item:</span>
+                  <span className='font-medium tabular-nums text-foreground'>{totalItems()} item</span>
+                </div>
+                <div className='flex justify-between border-t border-border pt-2 text-base font-bold'>
+                  <span className='text-foreground'>Total Tagihan:</span>
+                  <span className='tabular-nums text-primary'>{formatRupiah(totalHarga())}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>Uang Diterima:</span>
+                  <span className='font-semibold tabular-nums text-foreground'>
+                    {formatRupiah(pendingCashAmount)}
+                  </span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>Kembalian:</span>
+                  <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
+                    {formatRupiah(Math.max(0, pendingCashAmount - totalHarga()))}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>UID Kartu:</span>
+                  <span className='font-semibold tracking-wider text-foreground'>{pendingScannedUid}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>Total Item:</span>
+                  <span className='font-medium tabular-nums text-foreground'>{totalItems()} item</span>
+                </div>
+                <div className='flex justify-between border-t border-border pt-2 text-base font-bold'>
+                  <span className='text-foreground'>Total Tagihan:</span>
+                  <span className='tabular-nums text-primary'>{formatRupiah(totalHarga())}</span>
+                </div>
+              </>
+            )}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
                 setConfirmManualOpen(false)
                 setPendingScannedUid(null)
+                setPendingCashAmount(null)
               }}
             >
               Batalkan
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                if (pendingScannedUid) {
+                if (pendingCashAmount !== null) {
+                  const cashAmount = pendingCashAmount
+                  setConfirmManualOpen(false)
+                  setPendingCashAmount(null)
+                  await executeCashTransaction(cashAmount)
+                } else if (pendingScannedUid) {
                   const uid = pendingScannedUid
                   setConfirmManualOpen(false)
                   setPendingScannedUid(null)

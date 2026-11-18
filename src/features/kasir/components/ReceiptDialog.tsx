@@ -53,6 +53,10 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
   const kodeStrukDisplay =
     kodeStruk || (receipt.transaksiId ? `TRX-${receipt.transaksiId}` : '-')
   const hasCopyableKode = kodeStrukDisplay !== '-'
+  const isTunai = receipt.metodeBayar === 'TUNAI'
+  const uangDiterimaDisplay = receipt.uangDiterima ?? receipt.total
+  const kembalianDisplay =
+    receipt.kembalian ?? Math.max(0, uangDiterimaDisplay - receipt.total)
 
   useEffect(() => {
     return () => {
@@ -236,17 +240,21 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
             <div className='flex items-center justify-between gap-3'>
               <dt className='text-slate-600'>Status / Kelas</dt>
               <dd className='text-slate-700 text-right'>
-                {receipt.pembeliKelas
-                  ? `Siswa (${receipt.pembeliKelas})`
-                  : 'Siswa'}
+                {isTunai
+                  ? 'Tamu / Non-Kartu'
+                  : receipt.pembeliKelas
+                    ? `Siswa (${receipt.pembeliKelas})`
+                    : 'Siswa'}
               </dd>
             </div>
-            <div className='flex items-center justify-between gap-3'>
-              <dt className='text-slate-600'>NIS</dt>
-              <dd className='text-slate-700 tabular-nums text-right'>
-                {receipt.pembeliNis || '-'}
-              </dd>
-            </div>
+            {!isTunai && (
+              <div className='flex items-center justify-between gap-3'>
+                <dt className='text-slate-600'>NIS</dt>
+                <dd className='text-slate-700 tabular-nums text-right'>
+                  {receipt.pembeliNis || '-'}
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
 
@@ -295,7 +303,7 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
           </div>
         )}
 
-        {/* Ringkasan Total & Sisa Saldo */}
+        {/* Ringkasan Total & Metode Pembayaran */}
         <div className='space-y-1.5 pt-3 text-xs'>
           <div className='flex items-center justify-between gap-3'>
             <span className='font-semibold text-slate-900'>Total Belanja</span>
@@ -305,14 +313,33 @@ const ReceiptDialogBody: React.FC<ReceiptDialogBodyProps> = ({
           </div>
           <div className='flex items-center justify-between gap-3'>
             <span className='text-slate-600'>Pembayaran</span>
-            <span className='font-medium text-slate-800'>Kartu RFID</span>
-          </div>
-          <div className='flex items-center justify-between gap-3'>
-            <span className='text-slate-600'>Sisa Saldo</span>
-            <span className='font-bold text-emerald-700 tabular-nums'>
-              {formatRupiah(receipt.saldoSisa)}
+            <span className='font-medium text-slate-800'>
+              {isTunai ? 'Tunai' : 'Kartu RFID'}
             </span>
           </div>
+          {isTunai ? (
+            <>
+              <div className='flex items-center justify-between gap-3'>
+                <span className='text-slate-600'>Uang Diterima</span>
+                <span className='font-semibold text-slate-900 tabular-nums'>
+                  {formatRupiah(uangDiterimaDisplay)}
+                </span>
+              </div>
+              <div className='flex items-center justify-between gap-3'>
+                <span className='text-slate-600'>Kembalian</span>
+                <span className='font-bold text-emerald-700 tabular-nums'>
+                  {formatRupiah(kembalianDisplay)}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className='flex items-center justify-between gap-3'>
+              <span className='text-slate-600'>Sisa Saldo</span>
+              <span className='font-bold text-emerald-700 tabular-nums'>
+                {formatRupiah(receipt.saldoSisa)}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Catatan Footer Struk */}

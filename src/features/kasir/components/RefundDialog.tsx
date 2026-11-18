@@ -174,7 +174,10 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       )
       playVoid()
       toast.success(`Refund transaksi #${transaction.id} berhasil`, {
-        description: `${transaction.pembeliNama} — saldo pembeli dan stok menu telah dikembalikan.`,
+        description:
+          transaction.metodeBayar === 'TUNAI'
+            ? `${transaction.pembeliNama} — transaksi tunai dibatalkan dan stok menu telah dikembalikan (tanpa mutasi saldo).`
+            : `${transaction.pembeliNama} — saldo pembeli dan stok menu telah dikembalikan.`,
       })
       onClose()
       onSuccess?.()
@@ -238,7 +241,7 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
               variant='outline'
               className='rounded-full border border-border bg-muted/60 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-foreground'
             >
-              Siswa
+              {transaction.metodeBayar === 'TUNAI' ? 'Tunai' : 'Siswa'}
             </Badge>
           </div>
         </div>

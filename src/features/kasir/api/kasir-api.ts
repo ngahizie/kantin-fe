@@ -4,6 +4,7 @@ import type {
   TapTransaksiRequest,
   TapTransaksiData,
   TapBuyerInfo,
+  MetodeBayarKasir,
   SesiKasirData,
   RekapSesiData,
   TutupSesiPayload,
@@ -35,13 +36,15 @@ export function generateIdempotencyKey(): string {
 
 export const kasirApi = {
   /**
-   * Eksekusi transaksi tap kartu RFID di kasir (PRD §6.2)
+   * Eksekusi transaksi kasir: Saldo (tap kartu RFID, PRD §6.2) atau Tunai tanpa kartu (Issue #165)
    */
   async prosesTap(data: TapTransaksiRequest): Promise<TapTransaksiData> {
-    const cleanUid = data.rfidUid.trim().toUpperCase()
-    const payload = {
-      kartu_uid: cleanUid,
-      rfidUid: cleanUid,
+    const metodeBayar: MetodeBayarKasir = data.metodeBayar ?? 'SALDO'
+    const cleanUid = data.rfidUid ? data.rfidUid.trim().toUpperCase() : ''
+
+    const payload: Record<string, unknown> = {
+      metodeBayar,
+      metode_bayar: metodeBayar,
       items: data.items.map((it) => ({
         menu_id: it.menuId,
         menuId: it.menuId,
@@ -50,6 +53,20 @@ export const kasirApi = {
       idempotency_key: data.idempotencyKey,
       idempotencyKey: data.idempotencyKey,
       titikKasirId: data.titikKasirId || 1,
+    }
+
+    if (metodeBayar === 'SALDO' || cleanUid) {
+      payload.kartu_uid = cleanUid
+      payload.rfidUid = cleanUid
+    }
+
+    if (metodeBayar === 'TUNAI') {
+      const uangDiterima = Number(data.uangDiterima ?? 0)
+      payload.uangDiterima = uangDiterima
+      payload.uang_diterima = uangDiterima
+      if (data.namaPembeli?.trim()) {
+        payload.namaPembeli = data.namaPembeli.trim()
+      }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,8 +78,36 @@ export const kasirApi = {
     const raw = res.data?.data
     if (!raw) return raw as unknown as TapTransaksiData
 
+    const resMetodeRaw = String(
+      raw.metodeBayar ?? raw.metode_bayar ?? metodeBayar
+    ).toUpperCase()
+    const resMetodeBayar: MetodeBayarKasir =
+      resMetodeRaw === 'TUNAI' ? 'TUNAI' : 'SALDO'
+
+    const resTotal = Number(raw.total || 0)
+    const rawUangDiterima = raw.uangDiterima ?? raw.uang_diterima
+    const resUangDiterima =
+      rawUangDiterima !== undefined && rawUangDiterima !== null
+        ? Number(rawUangDiterima)
+        : resMetodeBayar === 'TUNAI'
+          ? Number(data.uangDiterima ?? resTotal)
+          : null
+
+    const rawKembalian = raw.kembalian
+    const resKembalian =
+      rawKembalian !== undefined && rawKembalian !== null
+        ? Number(rawKembalian)
+        : resMetodeBayar === 'TUNAI' && resUangDiterima !== null
+          ? Math.max(0, resUangDiterima - resTotal)
+          : null
+
+    const defaultBuyerName =
+      resMetodeBayar === 'TUNAI'
+        ? data.namaPembeli?.trim() || 'Tamu (Tunai)'
+        : 'Pembeli'
+
     const pembeli: TapBuyerInfo = {
-      nama: raw.pembeli?.nama || raw.nama || 'Pembeli',
+      nama: raw.pembeli?.nama || raw.nama || defaultBuyerName,
       kelas: raw.pembeli?.kelas || raw.kelas || null,
       nis: raw.pembeli?.nis || raw.nis || null,
       foto_url:
@@ -77,20 +122,26 @@ export const kasirApi = {
         raw.fotoUrl ||
         raw.foto_url ||
         null,
-      sisa_saldo: Number(
-        raw.pembeli?.sisa_saldo ??
-          raw.pembeli?.saldoSisa ??
-          raw.saldoSisa ??
-          raw.sisa_saldo ??
-          0
-      ),
-      saldoSisa: Number(
-        raw.pembeli?.saldoSisa ??
-          raw.pembeli?.sisa_saldo ??
-          raw.saldoSisa ??
-          raw.sisa_saldo ??
-          0
-      ),
+      sisa_saldo:
+        resMetodeBayar === 'TUNAI'
+          ? 0
+          : Number(
+              raw.pembeli?.sisa_saldo ??
+                raw.pembeli?.saldoSisa ??
+                raw.saldoSisa ??
+                raw.sisa_saldo ??
+                0
+            ),
+      saldoSisa:
+        resMetodeBayar === 'TUNAI'
+          ? 0
+          : Number(
+              raw.pembeli?.saldoSisa ??
+                raw.pembeli?.sisa_saldo ??
+                raw.saldoSisa ??
+                raw.sisa_saldo ??
+                0
+            ),
     }
 
     // Identitas pembeli murni dari respons BE (issue #294).
@@ -109,7 +160,10 @@ export const kasirApi = {
       namaItem: Array.isArray(raw.namaItem)
         ? raw.namaItem.map(String)
         : undefined,
-      total: Number(raw.total || 0),
+      total: resTotal,
+      metodeBayar: resMetodeBayar,
+      uangDiterima: resUangDiterima,
+      kembalian: resKembalian,
       waktu: raw.waktu || new Date().toISOString(),
       pembeli,
     }
