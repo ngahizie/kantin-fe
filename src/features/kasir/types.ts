@@ -33,6 +33,10 @@ export interface RekapSesiData {
   totalBruto: number
   totalVoid: number
   totalBersih: number
+  jumlahTunai?: number
+  jumlahSaldo?: number
+  totalTunai?: number
+  totalSaldo?: number
 }
 
 export type StatusTransaksi = 'SUKSES' | 'VOID'
