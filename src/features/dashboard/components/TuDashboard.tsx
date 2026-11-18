@@ -182,7 +182,7 @@ export const TuDashboard: React.FC = () => {
       </div>
 
       {/* ===== 4 Kartu Metrik Utama ===== */}
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch'>
         <DashboardStatCard
           title='Top-Up Tunai Hari Ini'
           value={formatRupiah(todayTopupSum)}
@@ -190,7 +190,7 @@ export const TuDashboard: React.FC = () => {
           iconColorClass='border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
           badgeText='Kas Masuk TU'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
-          subtext='• Tunai diterima hari ini'
+          subtext='• Hari ini'
           href='/tu/topup'
         />
 

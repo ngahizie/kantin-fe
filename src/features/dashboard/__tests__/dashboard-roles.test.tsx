@@ -118,6 +118,13 @@ describe('Role Dashboards Component Rendering', () => {
     await expect.element(screen.getByText('Dashboard Layanan TU')).toBeInTheDocument()
     await expect.element(screen.getByText('Top-Up Tunai Hari Ini', { exact: true })).toBeInTheDocument()
     await expect.element(screen.getByText('Status Setoran Kas TU').first()).toBeInTheDocument()
+
+    const statGrid = screen.container.querySelector('.lg\\:grid-cols-4')
+    const statCards = statGrid?.querySelectorAll('[data-slot="card"]')
+    expect(statCards?.length).toBe(4)
+    statCards?.forEach((card) => {
+      expect(card.className).toContain('h-full')
+    })
   })
 
   it('renders BendaharaDashboard correctly with cash audit reconciliation', async () => {
