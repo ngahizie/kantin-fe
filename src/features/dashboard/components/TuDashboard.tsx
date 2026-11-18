@@ -184,18 +184,18 @@ export const TuDashboard: React.FC = () => {
       {/* ===== 4 Kartu Metrik Utama ===== */}
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
         <DashboardStatCard
-          title='Total Top-Up Tunai Hari Ini'
+          title='Top-Up Tunai Hari Ini'
           value={formatRupiah(todayTopupSum)}
           icon={Banknote}
           iconColorClass='border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
           badgeText='Kas Masuk TU'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
-          subtext='• Uang tunai diterima hari ini'
+          subtext='• Tunai diterima hari ini'
           href='/tu/topup'
         />
 
         <DashboardStatCard
-          title='Frekuensi Layanan Top-Up'
+          title='Frekuensi Top-Up'
           value={todayTopupCount}
           unit='Trx'
           icon={ArrowUpRight}
@@ -222,20 +222,20 @@ export const TuDashboard: React.FC = () => {
           }
           subtext={
             isSetoranDisetor
-              ? '• Setoran diterima bendahara'
-              : '• Kas tunai siap disetor ke bendahara'
+              ? '• Diterima bendahara'
+              : '• Siap disetor'
           }
           href='/tu/setoran'
         />
 
         <DashboardStatCard
-          title='Total Saldo Mengendap Siswa'
+          title='Total Saldo Mengendap'
           value={formatRupiah(saldoMengendap?.total ?? saldoMengendap?.saldoSiswa ?? 0)}
           icon={Wallet}
           iconColorClass='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
           badgeText='Dana Titipan'
           badgeColorClass='text-purple-600 dark:text-purple-400 font-semibold'
-          subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} Siswa terdaftar`}
+          subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} siswa`}
           href='/laporan/saldo-mengendap'
         />
       </div>

@@ -33,7 +33,7 @@ export const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
   const content = (
     <Card className={href ? 'hover:border-primary/40 transition-colors cursor-pointer' : ''}>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
-        <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
+        <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 leading-snug'>
           {title}
         </CardTitle>
         <div
@@ -43,22 +43,22 @@ export const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-          {value}
+        <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums flex items-baseline flex-wrap'>
+          <span>{value}</span>
           {unit && (
-            <span className='text-base font-normal text-muted-foreground ms-1'>
+            <span className='text-xs font-normal text-muted-foreground ms-1.5'>
               {unit}
             </span>
           )}
         </div>
         {(badgeText || subtext) && (
-          <div className='flex items-center gap-1.5 text-xs text-muted-foreground mt-1 whitespace-nowrap overflow-hidden'>
+          <div className='flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1'>
             {badgeText && (
               <span className={`inline-flex items-center shrink-0 ${badgeColorClass}`}>
                 {badgeText}
               </span>
             )}
-            {subtext && <span className='min-w-0 truncate'>{subtext}</span>}
+            {subtext && <span className='min-w-0 leading-normal'>{subtext}</span>}
           </div>
         )}
       </CardContent>

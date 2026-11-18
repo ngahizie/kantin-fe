@@ -197,7 +197,7 @@ export const AdminDashboard: React.FC = () => {
         <DashboardStatCard
           title='Titik Kasir Aktif'
           value={activeTitikCount}
-          unit={`/ ${totalTitikCount} Perangkat`}
+          unit={`/ ${totalTitikCount} POS`}
           icon={Store}
           iconColorClass='border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300'
           badgeText={activeTitikCount > 0 ? 'Operasional' : 'Belum Aktif'}
@@ -206,12 +206,12 @@ export const AdminDashboard: React.FC = () => {
               ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
               : 'text-amber-600 dark:text-amber-400 font-semibold'
           }
-          subtext={`• ${totalTitikCount - activeTitikCount} Nonaktif`}
+          subtext={`• ${totalTitikCount - activeTitikCount} nonaktif`}
           href='/pengaturan/titik-kasir'
         />
 
         <DashboardStatCard
-          title='Pengawasan Kartu Siswa'
+          title='Status Kartu Siswa'
           value={totalSiswa}
           unit='Siswa'
           icon={ShieldCheck}
@@ -222,23 +222,23 @@ export const AdminDashboard: React.FC = () => {
               ? 'text-rose-600 dark:text-rose-400 font-semibold'
               : 'text-emerald-600 dark:text-emerald-400 font-semibold'
           }
-          subtext={`• ${limitCount} Limit Jajan Aktif`}
+          subtext={`• ${limitCount} batas limit`}
           href='/kontrol-siswa'
         />
 
         <DashboardStatCard
-          title='Total Transaksi Hari Ini'
+          title='Total Transaksi'
           value={todayTransactions}
           unit='Trx'
           icon={ShoppingCart}
           iconColorClass='border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'
           badgeText='Omset Terlayani'
           badgeColorClass='text-blue-600 dark:text-blue-400 font-semibold'
-          subtext={`• ${formatRupiah(todaySales)} omset`}
+          subtext={`• Omset ${formatRupiah(todaySales)}`}
         />
 
         <DashboardStatCard
-          title='Pembatalan Kasir (Refund)'
+          title='Pembatalan Kasir'
           value={todayPembatalan.length}
           unit='Trx'
           icon={RotateCcw}
@@ -249,7 +249,7 @@ export const AdminDashboard: React.FC = () => {
               ? 'text-rose-600 dark:text-rose-400 font-semibold'
               : 'text-emerald-600 dark:text-emerald-400 font-semibold'
           }
-          subtext={`• ${formatRupiah(todayBatalNominal)} dibatalkan`}
+          subtext={`• ${formatRupiah(todayBatalNominal)} batal`}
           href='/laporan/pembatalan'
         />
       </div>

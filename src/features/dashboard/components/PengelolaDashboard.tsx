@@ -271,7 +271,7 @@ export const PengelolaDashboard: React.FC = () => {
       {/* ===== 4 Kartu Metrik Utama ===== */}
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
         <DashboardStatCard
-          title='Total Penjualan Hari Ini'
+          title='Penjualan Hari Ini'
           value={formatRupiah(todaySales)}
           icon={Banknote}
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
@@ -281,7 +281,7 @@ export const PengelolaDashboard: React.FC = () => {
         />
 
         <DashboardStatCard
-          title='Total Transaksi Hari Ini'
+          title='Total Transaksi'
           value={todayTransactions}
           unit='Trx'
           icon={ShoppingCart}
@@ -307,11 +307,11 @@ export const PengelolaDashboard: React.FC = () => {
               ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
               : 'text-amber-600 dark:text-amber-400 font-semibold'
           }
-          subtext={`• ${habisCount} Habis, ${menipisCount} Menipis`}
+          subtext={`• ${habisCount} habis, ${menipisCount} menipis`}
         />
 
         <DashboardStatCard
-          title='Katalog Menu Aktif'
+          title='Menu Aktif'
           value={activeMenuCount}
           unit={`/ ${totalMenuCount} Menu`}
           icon={UtensilsCrossed}
@@ -322,7 +322,7 @@ export const PengelolaDashboard: React.FC = () => {
               ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
               : 'text-amber-600 dark:text-amber-400 font-semibold'
           }
-          subtext={`• ${totalMenuCount - activeMenuCount} Nonaktif`}
+          subtext={`• ${totalMenuCount - activeMenuCount} nonaktif`}
           href='/katalog/menu'
         />
       </div>

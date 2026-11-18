@@ -116,7 +116,7 @@ describe('Role Dashboards Component Rendering', () => {
   it('renders TuDashboard correctly with deposit & student balance', async () => {
     const screen = await render(<TuDashboard />)
     await expect.element(screen.getByText('Dashboard Layanan TU')).toBeInTheDocument()
-    await expect.element(screen.getByText('Total Top-Up Tunai Hari Ini')).toBeInTheDocument()
+    await expect.element(screen.getByText('Top-Up Tunai Hari Ini', { exact: true })).toBeInTheDocument()
     await expect.element(screen.getByText('Status Setoran Kas TU').first()).toBeInTheDocument()
   })
 

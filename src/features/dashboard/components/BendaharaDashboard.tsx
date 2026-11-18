@@ -215,35 +215,35 @@ export const BendaharaDashboard: React.FC = () => {
         />
 
         <DashboardStatCard
-          title='Total Penjualan Hari Ini'
+          title='Penjualan Hari Ini'
           value={formatRupiah(todaySales)}
           icon={Banknote}
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
           badgeText='Omset Bersih'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
-          subtext={`• ${todayTransactions} Transaksi kantin`}
+          subtext={`• ${todayTransactions} transaksi`}
           href='/laporan/penjualan'
         />
 
         <DashboardStatCard
-          title='Kas Masuk Terverifikasi'
+          title='Kas Terverifikasi'
           value={formatRupiah(kasMasukTotal > 0 ? kasMasukTotal : todaySales)}
           icon={ReceiptText}
           iconColorClass='border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300'
-          badgeText='Setoran Terkonfirmasi'
+          badgeText='Terkonfirmasi'
           badgeColorClass='text-indigo-600 dark:text-indigo-400 font-semibold'
-          subtext='• Arus kas terverifikasi bendahara'
+          subtext='• Setoran kas masuk'
           href='/tu/setoran'
         />
 
         <DashboardStatCard
-          title='Total Saldo Mengendap Siswa'
+          title='Total Saldo Mengendap'
           value={formatRupiah(saldoMengendap?.total ?? saldoMengendap?.saldoSiswa ?? saldoMengendapKas)}
           icon={Wallet}
           iconColorClass='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
           badgeText='Titipan Dana'
           badgeColorClass='text-purple-600 dark:text-purple-400 font-semibold'
-          subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} Siswa terdaftar`}
+          subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} siswa`}
           href='/laporan/saldo-mengendap'
         />
       </div>
