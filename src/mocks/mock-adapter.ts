@@ -97,6 +97,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       total: number
       nomorStruk: string
       siswaUid?: string
+      metodeBayar: 'SALDO' | 'TUNAI'
+      uangDiterima?: number | null
+      kembalian?: number | null
       items: { menuId: number; qty: number }[]
     }
   >()
@@ -111,6 +114,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     pembeliNis?: string | null
     pembeliFotoUrl?: string | null
     kartuUid?: string
+    metodeBayar?: 'SALDO' | 'TUNAI'
+    uangDiterima?: number | null
+    kembalian?: number | null
     items: {
       menuId: number
       namaMenu: string
@@ -960,10 +966,20 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     ) {
       const trxPayload = payload as TransaksiPayload & {
         rfidUid?: string
+        metodeBayar?: string
+        metode_bayar?: string
+        uangDiterima?: number
+        uang_diterima?: number
+        namaPembeli?: string
         idempotency_key?: string
         idempotencyKey?: string
         titikKasirId?: number
       }
+      const metodeRaw = String(
+        trxPayload.metodeBayar ?? trxPayload.metode_bayar ?? 'SALDO'
+      ).toUpperCase()
+      const metodeBayar: 'SALDO' | 'TUNAI' =
+        metodeRaw === 'TUNAI' ? 'TUNAI' : 'SALDO'
       const kartuUid = trxPayload.kartu_uid || trxPayload.rfidUid || ''
       const items = (trxPayload.items || []).map((it) => ({
         menu_id:
@@ -978,33 +994,37 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         return idempotencyStore.get(idempKey)!
       }
 
-      if (!kartuUid) {
-        return {
-          status: 400,
-          data: { message: 'UID kartu tidak boleh kosong' },
+      let siswa: (typeof siswaList)[number] | undefined
+
+      if (metodeBayar === 'SALDO') {
+        if (!kartuUid) {
+          return {
+            status: 400,
+            data: { message: 'UID kartu tidak boleh kosong' },
+          }
+        }
+
+        // Validasi 1: Kartu dikenal?
+        siswa = siswaList.find(
+          (s) => s.uid.toUpperCase() === kartuUid.toUpperCase()
+        )
+
+        if (!siswa) {
+          return { status: 404, data: { message: 'Kartu tidak dikenal' } }
+        }
+
+        // Validasi 2: Kartu diblokir?
+        if (siswa.is_blocked) {
+          return {
+            status: 400,
+            data: {
+              message: 'Kartu diblokir, hubungi orang tua',
+            },
+          }
         }
       }
 
-      // Validasi 1: Kartu dikenal?
-      const siswa = siswaList.find(
-        (s) => s.uid.toUpperCase() === kartuUid.toUpperCase()
-      )
-
-      if (!siswa) {
-        return { status: 404, data: { message: 'Kartu tidak dikenal' } }
-      }
-
-      // Validasi 2: Kartu diblokir?
-      if (siswa.is_blocked) {
-        return {
-          status: 400,
-          data: {
-            message: 'Kartu diblokir, hubungi orang tua',
-          },
-        }
-      }
-
-      // Hitung total belanja
+      // Hitung total belanja & cek stok
       let totalBelanja = 0
       for (const cartItem of items) {
         const menuItem = menuList.find((m) => m.id === cartItem.menu_id)
@@ -1025,63 +1045,86 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           }
         }
 
-        // Validasi 3: Item atau Kategori diblokir ortu?
-        const isItemBlocked = siswa?.blocked_items?.includes(menuItem.id)
-        const isCategoryBlocked = siswa?.blocked_categories?.includes(
-          menuItem.kategori_id
-        )
-        if (isItemBlocked || isCategoryBlocked) {
-          const detail = isCategoryBlocked
-            ? ` (Kategori ${menuItem.kategori_nama})`
-            : ''
-          return {
-            status: 400,
-            data: {
-              message: `Item ${menuItem.nama}${detail} diblokir oleh orang tua`,
-            },
+        // Validasi 3: Item atau Kategori diblokir ortu? (hanya metode Saldo siswa)
+        if (metodeBayar === 'SALDO' && siswa) {
+          const isItemBlocked = siswa.blocked_items?.includes(menuItem.id)
+          const isCategoryBlocked = siswa.blocked_categories?.includes(
+            menuItem.kategori_id
+          )
+          if (isItemBlocked || isCategoryBlocked) {
+            const detail = isCategoryBlocked
+              ? ` (Kategori ${menuItem.kategori_nama})`
+              : ''
+            return {
+              status: 400,
+              data: {
+                message: `Item ${menuItem.nama}${detail} diblokir oleh orang tua`,
+              },
+            }
           }
         }
 
         totalBelanja += menuItem.harga_jual * cartItem.qty
       }
 
-      // Validasi 5: Limit harian (hanya untuk siswa dengan limit aktif)
-      if (
-        siswa &&
-        siswa.limit_harian_enabled !== false &&
-        siswa.limit_harian > 0
-      ) {
-        if (siswa.belanja_hari_ini + totalBelanja > siswa.limit_harian) {
-          const sisaLimit = Math.max(
-            0,
-            siswa.limit_harian - siswa.belanja_hari_ini
-          )
+      let uangDiterima: number | null = null
+      let kembalian: number | null = null
+
+      if (metodeBayar === 'TUNAI') {
+        const cashVal = Number(
+          trxPayload.uangDiterima ?? trxPayload.uang_diterima ?? 0
+        )
+        if (!Number.isFinite(cashVal) || cashVal < totalBelanja) {
+          const kurang = Math.max(0, totalBelanja - (Number.isFinite(cashVal) ? cashVal : 0))
           return {
             status: 400,
             data: {
-              message: `Melebihi limit harian (sisa ${formatRupiah(sisaLimit)})`,
+              message: `Uang tunai kurang ${formatRupiah(kurang)}`,
+              kekurangan: kurang,
             },
           }
         }
-      }
-
-      // Validasi 6: Saldo cukup?
-      const saldoSaatIni = siswa.saldo
-      if (saldoSaatIni < totalBelanja) {
-        const kurang = totalBelanja - saldoSaatIni
-        return {
-          status: 400,
-          data: {
-            message: `Saldo kurang ${formatRupiah(kurang)}`,
-            kekurangan: kurang,
-          },
+        uangDiterima = cashVal
+        kembalian = cashVal - totalBelanja
+      } else if (siswa) {
+        // Validasi 5: Limit harian (hanya untuk siswa dengan limit aktif)
+        if (
+          siswa.limit_harian_enabled !== false &&
+          siswa.limit_harian > 0
+        ) {
+          if (siswa.belanja_hari_ini + totalBelanja > siswa.limit_harian) {
+            const sisaLimit = Math.max(
+              0,
+              siswa.limit_harian - siswa.belanja_hari_ini
+            )
+            return {
+              status: 400,
+              data: {
+                message: `Melebihi limit harian (sisa ${formatRupiah(sisaLimit)})`,
+              },
+            }
+          }
         }
+
+        // Validasi 6: Saldo cukup?
+        const saldoSaatIni = siswa.saldo
+        if (saldoSaatIni < totalBelanja) {
+          const kurang = totalBelanja - saldoSaatIni
+          return {
+            status: 400,
+            data: {
+              message: `Saldo kurang ${formatRupiah(kurang)}`,
+              kekurangan: kurang,
+            },
+          }
+        }
+
+        // Sukses metode Saldo: potong saldo siswa
+        siswa.saldo -= totalBelanja
+        siswa.belanja_hari_ini += totalBelanja
       }
 
-      // Sukses: potong saldo & kurangi stok
-      siswa.saldo -= totalBelanja
-      siswa.belanja_hari_ini += totalBelanja
-
+      // Kurangi stok menu
       for (const cartItem of items) {
         const menuItem = menuList.find((m) => m.id === cartItem.menu_id)
         if (menuItem) {
@@ -1099,10 +1142,18 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const titikKasirNama =
         targetTitikKasir?.nama || currentSesiMock.titikKasirNama
 
+      const buyerName =
+        metodeBayar === 'TUNAI'
+          ? trxPayload.namaPembeli?.trim() || 'Tamu (Tunai)'
+          : siswa?.nama || 'Pembeli'
+
       recordedTransactions.set(trxId, {
         total: totalBelanja,
         nomorStruk,
-        siswaUid: siswa.uid,
+        siswaUid: metodeBayar === 'SALDO' ? siswa?.uid : undefined,
+        metodeBayar,
+        uangDiterima,
+        kembalian,
         items: items.map((it) => ({ menuId: it.menu_id, qty: it.qty })),
       })
 
@@ -1124,11 +1175,14 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         transaksiId: trxId,
         nomorReferensi: nomorStruk,
         waktu: waktuStruk,
-        pembeliNama: siswa.nama,
-        pembeliKelas: siswa.kelas,
-        pembeliNis: siswa.nis,
-        pembeliFotoUrl: siswa.foto_url,
-        kartuUid,
+        pembeliNama: buyerName,
+        pembeliKelas: metodeBayar === 'SALDO' ? siswa?.kelas ?? null : null,
+        pembeliNis: metodeBayar === 'SALDO' ? siswa?.nis ?? null : null,
+        pembeliFotoUrl: metodeBayar === 'SALDO' ? siswa?.foto_url ?? null : null,
+        kartuUid: metodeBayar === 'SALDO' ? kartuUid : undefined,
+        metodeBayar,
+        uangDiterima,
+        kembalian,
         items: itemDetails,
         total: totalBelanja,
         status: 'SUKSES',
@@ -1146,15 +1200,18 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             nomorStruk,
             titikKasir: titikKasirNama,
             total: totalBelanja,
+            metodeBayar,
+            uangDiterima,
+            kembalian,
             waktu: waktuStruk,
             pembeli: {
-              nama: siswa.nama,
-              kelas: siswa.kelas,
-              nis: siswa.nis,
-              foto_url: siswa.foto_url,
-              fotoUrl: siswa.foto_url,
-              sisa_saldo: siswa.saldo,
-              saldoSisa: siswa.saldo,
+              nama: buyerName,
+              kelas: metodeBayar === 'SALDO' ? siswa?.kelas ?? null : null,
+              nis: metodeBayar === 'SALDO' ? siswa?.nis ?? null : null,
+              foto_url: metodeBayar === 'SALDO' ? siswa?.foto_url ?? null : null,
+              fotoUrl: metodeBayar === 'SALDO' ? siswa?.foto_url ?? null : null,
+              sisa_saldo: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : 0,
+              saldoSisa: metodeBayar === 'SALDO' ? siswa?.saldo ?? 0 : 0,
             },
           },
         },
@@ -1248,7 +1305,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
 
       if (trx) {
-        if (trx.siswaUid) {
+        // Refund transaksi TUNAI tidak boleh menambah saldo siswa mana pun (Issue #165)
+        if (trx.metodeBayar === 'SALDO' && trx.siswaUid) {
           const targetSiswa = siswaList.find((s) => s.uid === trx.siswaUid)
           if (targetSiswa) {
             targetSiswa.saldo += trx.total

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useId, useMemo, useRef, useState } from 'react'
 import {
   ShoppingCart,
   Trash2,
@@ -6,7 +6,9 @@ import {
   Minus,
   ShoppingBag,
   CreditCard,
+  Banknote,
   AlertTriangle,
+  AlertCircle,
 } from 'lucide-react'
 import { useCartStore } from '@/stores/useCartStore'
 import { formatRupiah } from '@/lib/formatters'
@@ -22,10 +24,20 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  evaluateCashPayment,
+  getQuickCashNominals,
+  parseCashInput,
+} from '../cash-payment'
+import type { MetodeBayarKasir } from '../types'
 
 export interface CartSidebarProps {
   onCheckout?: () => void
+  onCashCheckout?: (uangDiterima: number) => void
   onManualRfidOpen?: () => void
+  metodeBayar?: MetodeBayarKasir
+  onMetodeBayarChange?: (metode: MetodeBayarKasir) => void
   isProcessing?: boolean
   isOffline?: boolean
   isSessionClosed?: boolean
@@ -34,7 +46,10 @@ export interface CartSidebarProps {
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
   onCheckout,
+  onCashCheckout,
   onManualRfidOpen: _onManualRfidOpen,
+  metodeBayar: controlledMetode,
+  onMetodeBayarChange,
   isProcessing = false,
   isOffline = false,
   isSessionClosed = false,
@@ -50,15 +65,60 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     totalHarga,
   } = useCartStore()
 
+  const cashInputId = useId()
+  const cashInputRef = useRef<HTMLInputElement>(null)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [internalMetode, setInternalMetode] = useState<MetodeBayarKasir>('SALDO')
+  const [cashInputRaw, setCashInputRaw] = useState('')
+  const [cashSubmittedError, setCashSubmittedError] = useState(false)
+
+  const metodeBayar = controlledMetode ?? internalMetode
+  const setMetodeBayar = (next: MetodeBayarKasir) => {
+    setInternalMetode(next)
+    onMetodeBayarChange?.(next)
+    setCashSubmittedError(false)
+  }
 
   const totalCount = totalItems()
   const totalNominal = totalHarga()
   const isCartEmpty = items.length === 0
 
+  // Reset input tunai bila keranjang dikosongkan
+  const [prevTotalNominal, setPrevTotalNominal] = useState(totalNominal)
+  if (totalNominal !== prevTotalNominal) {
+    setPrevTotalNominal(totalNominal)
+    if (totalNominal === 0) {
+      setCashInputRaw('')
+      setCashSubmittedError(false)
+    }
+  }
+
+  const uangDiterima = useMemo(() => parseCashInput(cashInputRaw), [cashInputRaw])
+  const cashEval = useMemo(
+    () => evaluateCashPayment(totalNominal, uangDiterima),
+    [totalNominal, uangDiterima]
+  )
+  const quickNominals = useMemo(
+    () => getQuickCashNominals(totalNominal),
+    [totalNominal]
+  )
+
   const handleClearConfirmed = () => {
     clearCart()
+    setCashInputRaw('')
+    setCashSubmittedError(false)
     setClearDialogOpen(false)
+  }
+
+  const handleCashSubmit = () => {
+    if (isCartEmpty || isProcessing || isOffline || isSessionClosed) return
+    if (!cashEval.isValid) {
+      setCashSubmittedError(true)
+      cashInputRef.current?.focus()
+      return
+    }
+    setCashSubmittedError(false)
+    onCashCheckout?.(cashEval.uangDiterima)
   }
 
   return (
@@ -210,13 +270,56 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
       {/* Footer / Panel Pembayaran */}
       <div className='shrink-0 space-y-3 border-t border-border bg-muted/40 p-4'>
+        {/* Pilihan Metode Bayar: Saldo (Kartu Siswa) vs Tunai (Tamu/Tanpa Kartu) */}
+        <div className='space-y-1.5'>
+          <span className='block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+            Metode Pembayaran
+          </span>
+          <div
+            role='radiogroup'
+            aria-label='Metode Pembayaran Kasir'
+            className='grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-background p-1'
+          >
+            <button
+              type='button'
+              role='radio'
+              aria-checked={metodeBayar === 'SALDO'}
+              disabled={isProcessing}
+              onClick={() => setMetodeBayar('SALDO')}
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-all ${
+                metodeBayar === 'SALDO'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+              }`}
+            >
+              <CreditCard className='h-3.5 w-3.5 shrink-0' />
+              <span>Saldo (Kartu)</span>
+            </button>
+            <button
+              type='button'
+              role='radio'
+              aria-checked={metodeBayar === 'TUNAI'}
+              disabled={isProcessing}
+              onClick={() => setMetodeBayar('TUNAI')}
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-all ${
+                metodeBayar === 'TUNAI'
+                  ? 'bg-emerald-600 text-white shadow-xs dark:bg-emerald-600'
+                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+              }`}
+            >
+              <Banknote className='h-3.5 w-3.5 shrink-0' />
+              <span>Tunai (Tamu)</span>
+            </button>
+          </div>
+        </div>
+
         {/* Ringkasan Biaya */}
         <div className='space-y-1.5 text-xs'>
           <div className='flex justify-between text-muted-foreground'>
             <span>Total Kuantitas</span>
             <span className='font-semibold tabular-nums text-foreground'>{totalCount} Item</span>
           </div>
-          <div className='flex items-baseline justify-between pt-1.5'>
+          <div className='flex items-baseline justify-between pt-1'>
             <span className='text-sm font-bold text-foreground'>
               Total Belanja
             </span>
@@ -226,26 +329,146 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
           </div>
         </div>
 
-        {/* Tombol Lanjut ke Bayar / Tap RFID */}
+        {/* Panel Input Uang Diterima & Kembalian Otomatis (Khusus Metode Tunai) */}
+        {metodeBayar === 'TUNAI' && (
+          <div className='space-y-2 rounded-xl border border-border bg-background p-3'>
+            <div className='space-y-1'>
+              <label
+                htmlFor={cashInputId}
+                className='flex items-center justify-between text-[11px] font-semibold text-foreground'
+              >
+                <span>Uang Diterima (Rp)</span>
+                <span className='font-normal text-muted-foreground'>
+                  Tanpa potong saldo
+                </span>
+              </label>
+              <div className='relative'>
+                <span className='pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs font-semibold text-muted-foreground'>
+                  Rp
+                </span>
+                <Input
+                  ref={cashInputRef}
+                  id={cashInputId}
+                  type='text'
+                  inputMode='numeric'
+                  autoComplete='off'
+                  disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
+                  value={cashInputRaw}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '')
+                    setCashInputRaw(digits)
+                    if (cashSubmittedError) setCashSubmittedError(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleCashSubmit()
+                    }
+                  }}
+                  placeholder={totalNominal > 0 ? String(totalNominal) : '0'}
+                  aria-invalid={
+                    Boolean(
+                      !isCartEmpty &&
+                        !cashEval.isValid &&
+                        (cashInputRaw.length > 0 || cashSubmittedError)
+                    )
+                  }
+                  className='h-9 pl-9 font-mono text-sm font-bold tabular-nums'
+                />
+              </div>
+            </div>
+
+            {/* Pilihan Nominal Cepat */}
+            {quickNominals.length > 0 && (
+              <div className='flex flex-wrap gap-1.5'>
+                {quickNominals.map((nominal, idx) => (
+                  <button
+                    key={nominal}
+                    type='button'
+                    disabled={isProcessing || isOffline || isSessionClosed}
+                    onClick={() => {
+                      setCashInputRaw(String(nominal))
+                      setCashSubmittedError(false)
+                    }}
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors ${
+                      uangDiterima === nominal
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300'
+                        : 'border-border bg-muted/40 text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {idx === 0 ? 'Uang Pas' : formatRupiah(nominal)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Status Validasi Kurang / Kembalian Otomatis */}
+            {!isCartEmpty &&
+              !cashEval.isValid &&
+              (cashInputRaw.length > 0 || cashSubmittedError) && (
+                <div
+                  role='alert'
+                  className='flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive'
+                >
+                  <AlertCircle className='h-3.5 w-3.5 shrink-0' />
+                  <span className='tabular-nums'>{cashEval.errorMessage}</span>
+                </div>
+              )}
+
+            {!isCartEmpty && cashEval.isValid && (
+              <div className='flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-2 text-xs'>
+                <span className='font-semibold text-emerald-700 dark:text-emerald-300'>
+                  Kembalian
+                </span>
+                <span className='font-mono text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-300'>
+                  {formatRupiah(cashEval.kembalian)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tombol Lanjut ke Bayar */}
         <div className='flex flex-col gap-2'>
-          <Button
-            type='button'
-            size='lg'
-            disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
-            onClick={onCheckout}
-            className='h-11 w-full touch-manipulation gap-2 rounded-xl text-sm font-bold sm:text-base disabled:opacity-50'
-          >
-            <CreditCard className='h-5 w-5' />
-            <span>
-              {isOffline
-                ? 'Offline - Transaksi Tidak Tersedia'
-                : isSessionClosed
-                ? 'Sesi Kasir Telah Ditutup'
-                : isProcessing
-                ? 'Memproses Transaksi...'
-                : 'Bayar / Tap Kartu'}
-            </span>
-          </Button>
+          {metodeBayar === 'SALDO' ? (
+            <Button
+              type='button'
+              size='lg'
+              disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
+              onClick={onCheckout}
+              className='h-11 w-full touch-manipulation gap-2 rounded-xl text-sm font-bold sm:text-base disabled:opacity-50'
+            >
+              <CreditCard className='h-5 w-5' />
+              <span>
+                {isOffline
+                  ? 'Offline - Transaksi Tidak Tersedia'
+                  : isSessionClosed
+                  ? 'Sesi Kasir Telah Ditutup'
+                  : isProcessing
+                  ? 'Memproses Transaksi...'
+                  : 'Bayar / Tap Kartu'}
+              </span>
+            </Button>
+          ) : (
+            <Button
+              type='button'
+              size='lg'
+              disabled={isCartEmpty || isProcessing || isOffline || isSessionClosed}
+              onClick={handleCashSubmit}
+              className='h-11 w-full touch-manipulation gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white hover:bg-emerald-700 sm:text-base disabled:opacity-50'
+            >
+              <Banknote className='h-5 w-5' />
+              <span>
+                {isOffline
+                  ? 'Offline - Transaksi Tidak Tersedia'
+                  : isSessionClosed
+                  ? 'Sesi Kasir Telah Ditutup'
+                  : isProcessing
+                  ? 'Memproses Transaksi...'
+                  : 'Bayar Tunai'}
+              </span>
+            </Button>
+          )}
         </div>
       </div>
 

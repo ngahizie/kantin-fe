@@ -96,7 +96,10 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
           .toLowerCase()
           .includes(query)
         const matchNis = (trx.pembeliNis || '').toLowerCase().includes(query)
-        const matchTipe = 'siswa'.includes(query)
+        const matchTipe =
+          trx.metodeBayar === 'TUNAI'
+            ? 'tunai tamu'.includes(query)
+            : 'siswa saldo'.includes(query)
         const matchItem = trx.items.some((it) =>
           it.namaMenu.toLowerCase().includes(query)
         )
@@ -323,14 +326,19 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
                               </strong>
                               <Badge
                                 variant='outline'
-                                className='rounded-full border border-border bg-muted/60 px-2 py-0 text-[9px] font-medium text-muted-foreground'
+                                className={`rounded-full border px-2 py-0 text-[9px] font-medium ${
+                                  trx.metodeBayar === 'TUNAI'
+                                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                    : 'border-border bg-muted/60 text-muted-foreground'
+                                }`}
                               >
-                                Siswa
+                                {trx.metodeBayar === 'TUNAI' ? 'Tunai' : 'Siswa'}
                               </Badge>
                             </div>
                             <span className='block text-[11px] tabular-nums text-muted-foreground'>
-                              {trx.pembeliKelas ? `Kelas: ${trx.pembeliKelas} • ` : ''}
-                              NIS: {trx.pembeliNis || '-'}
+                              {trx.metodeBayar === 'TUNAI'
+                                ? 'Pembayaran Tunai (Tanpa Kartu)'
+                                : `${trx.pembeliKelas ? `Kelas: ${trx.pembeliKelas} • ` : ''}NIS: ${trx.pembeliNis || '-'}`}
                             </span>
                           </div>
                         </div>

@@ -451,4 +451,44 @@ describe('Alur berurutan Transaksi Berhasil -> Cetak Struk di KasirPosPage', () 
       .element(screen.getByText('TRX-20261110-4399'))
       .toBeInTheDocument()
   })
+
+  it('menampilkan metode bayar Tunai, Uang Diterima, dan Kembalian pada struk transaksi tunai (Issue #165)', async () => {
+    const cashReceipt: ReceiptData = {
+      transaksiId: 5101,
+      nomorStruk: 'TRX-20261118-5101',
+      waktu: '2026-11-18T10:15:00Z',
+      namaKantin: 'Kantin Sehat SKOOLIA',
+      titikKasir: 'Kasir 1',
+      pembeliNama: 'Tamu (Tunai)',
+      pembeliKelas: null,
+      pembeliNis: null,
+      pembeliFotoUrl: null,
+      metodeBayar: 'TUNAI',
+      uangDiterima: 20000,
+      kembalian: 5000,
+      items: [
+        {
+          menuId: 2,
+          namaMenu: 'Nasi Goreng Ayam',
+          qty: 1,
+          hargaSatuan: 15000,
+          subtotal: 15000,
+        },
+      ],
+      total: 15000,
+      saldoSisa: 0,
+    }
+
+    const screen = await render(
+      <ReceiptDialog open={true} onOpenChange={() => {}} receipt={cashReceipt} />
+    )
+
+    await expect.element(screen.getByText('Tunai', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Tamu / Non-Kartu')).toBeInTheDocument()
+    await expect.element(screen.getByText('Uang Diterima')).toBeInTheDocument()
+    await expect.element(screen.getByText('Kembalian')).toBeInTheDocument()
+    await expect.element(screen.getByText(/20\.000/)).toBeInTheDocument()
+    await expect.element(screen.getByText(/5\.000/)).toBeInTheDocument()
+    await expect.element(screen.getByText('Sisa Saldo')).not.toBeInTheDocument()
+  })
 })
