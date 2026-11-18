@@ -249,7 +249,7 @@ export const TuDashboard: React.FC = () => {
               Tren Pengisian Saldo 7 Hari Terakhir
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
-              Akumulasi nominal rupiah (Rp) penerimaan top-up tunai siswa di loket TU
+              Akumulasi nominal rupiah (Rp) penerimaan top-up tunai siswa di layanan TU
             </CardDescription>
           </CardHeader>
           <CardContent className='ps-1 pe-4 pb-4 pt-3'>
