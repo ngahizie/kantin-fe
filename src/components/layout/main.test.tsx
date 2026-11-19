@@ -29,6 +29,11 @@ vi.mock('@/components/profile-dropdown', () => ({
   ),
 }))
 
+const mockFetchPengaturan = vi.fn().mockResolvedValue(null)
+const mockUpdatePengaturan = vi.fn().mockResolvedValue(undefined)
+const mockSetActiveTitikKasirId = vi.fn()
+const mockFetchTitikKasir = vi.fn().mockResolvedValue([])
+
 vi.mock('@/stores/usePengaturanStore', () => ({
   usePengaturanStore: () => ({
     pengaturan: {
@@ -43,12 +48,12 @@ vi.mock('@/stores/usePengaturanStore', () => ({
       ambangHari: 90,
       updatedAt: null,
     },
-    fetchPengaturan: vi.fn().mockResolvedValue(null),
-    updatePengaturan: vi.fn().mockResolvedValue(undefined),
+    fetchPengaturan: mockFetchPengaturan,
+    updatePengaturan: mockUpdatePengaturan,
     loadingPengaturan: false,
     activeTitikKasirId: null,
-    setActiveTitikKasirId: vi.fn(),
-    fetchTitikKasir: vi.fn().mockResolvedValue([]),
+    setActiveTitikKasirId: mockSetActiveTitikKasirId,
+    fetchTitikKasir: mockFetchTitikKasir,
   }),
 }))
 

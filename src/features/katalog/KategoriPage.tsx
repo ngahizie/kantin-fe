@@ -295,7 +295,7 @@ export function KategoriPage() {
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)
     },
-    [syncKategori, syncSourceId]
+    [selectedKategori, syncKategori, syncSourceId]
   )
 
   const handleToggleAktif = async (kat: KategoriItem) => {
