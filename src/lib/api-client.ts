@@ -43,7 +43,7 @@ if (useMock) {
     setupMockAdapter(apiClient)
     setupMockAdapter(axios)
   })
-} else {
+} else if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   console.info(`[Kantin-FE] Terhubung ke server backend: ${baseURL}`)
 }
@@ -129,7 +129,10 @@ apiClient.interceptors.response.use(
       }
     } else if (status && status >= 500) {
       if (!isSilent) {
-        toast.error(`Kesalahan Server (${status}): ${message}`)
+        const safeMessage = import.meta.env.DEV
+          ? `Kesalahan Server (${status}): ${message}`
+          : 'Terjadi kendala pada server, silakan hubungi administrator'
+        toast.error(safeMessage)
       }
     }
 
