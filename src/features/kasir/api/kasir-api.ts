@@ -192,9 +192,12 @@ export const kasirApi = {
    */
   async voidTransaksi(
     transaksiId: number,
-    alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
-    kodeStruk = ''
+    alasan: string,
+    kodeStruk: string
   ): Promise<void> {
+    if (!kodeStruk || !kodeStruk.trim()) {
+      throw new Error('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
+    }
     await this.refundTransaksi(transaksiId, alasan, kodeStruk)
   },
 
