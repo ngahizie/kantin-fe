@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   AlertCircle,
@@ -37,6 +37,13 @@ import {
   saveStoredSaldo,
   saveTopupTransaction,
 } from './saldo-storage'
+import {
+  generateTopupReferenceId,
+  parseSafeTopupNominal,
+  sanitizePenyetorName,
+  MAX_PENYETOR_LENGTH,
+} from './topup-utils'
+import { sanitizeTopupErrorMessage } from './topup-error'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const DEFAULT_MAX_SALDO = 1000000
@@ -53,6 +60,7 @@ export function TopupTunaiPage() {
   const [nominal, setNominal] = useState<string>('')
   const [namaPenyetor, setNamaPenyetor] = useState<string>('Orang Tua / Wali')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSubmittingRef = useRef(false)
 
   const [slipData, setSlipData] = useState<TopupSlipData | null>(null)
   const [isSlipOpen, setIsSlipOpen] = useState(false)
@@ -159,7 +167,8 @@ export function TopupTunaiPage() {
   const batasSaldoSekolah =
     pengaturan?.batasSaldoSiswa ?? DEFAULT_MAX_SALDO
 
-  const nominalNum = Number(nominal) || 0
+  const nominalNum = parseSafeTopupNominal(nominal)
+  const cleanNamaPenyetor = sanitizePenyetorName(namaPenyetor)
   const saldoSaatIni = currentStudent?.saldo || 0
   const saldoBaru = saldoSaatIni + nominalNum
   const isUnderMinTopup = nominalNum > 0 && nominalNum < minTopup
@@ -173,7 +182,8 @@ export function TopupTunaiPage() {
     nominalNum >= minTopup &&
     !isOverMaksTopup &&
     !isExceedingLimit &&
-    namaPenyetor.trim().length > 0
+    cleanNamaPenyetor.length > 0 &&
+    cleanNamaPenyetor.length <= MAX_PENYETOR_LENGTH
 
   const handleSelectPreset = (amount: number) => {
     setNominal(amount.toString())
@@ -181,26 +191,37 @@ export function TopupTunaiPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmittingRef.current || isSubmitting) return
     if (!currentStudent || !isValidSubmit) return
 
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
       let result: TopupSlipData | null = null
 
       const currentUser = useAuthStore.getState().auth.user
+      const rawPetugasId = currentUser?.userId ? Number(currentUser.userId) : NaN
+      if (Number.isNaN(rawPetugasId) || rawPetugasId <= 0) {
+        toast.error('Sesi Petugas Tidak Valid', {
+          description: 'ID petugas tidak ditemukan. Silakan masuk kembali.',
+        })
+        return
+      }
+
       const petugasNama = currentUser?.nama || 'Petugas TU'
-      const petugasId = currentUser?.userId ? Number(currentUser.userId) : 2
+      const petugasId = rawPetugasId
 
       const now = new Date()
-      const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
-      const randomSeq = Math.floor(1000 + Math.random() * 9000)
-      const refNo = `TU-TOPUP-${dateCode}-${randomSeq}`
+      const refNo = generateTopupReferenceId(now)
+
+      const safePenyetor = sanitizePenyetorName(namaPenyetor)
+      if (!safePenyetor || nominalNum < minTopup) return
 
       const response = await apiClient.post('/api/saldo/topup', {
         subjekTipe: 'SISWA',
         siswaId: currentStudent.siswa_id,
         nominal: nominalNum,
-        penyetor: namaPenyetor.trim(),
+        penyetor: safePenyetor,
         referensiId: refNo,
       })
       const resData = response.data?.data
@@ -211,7 +232,7 @@ export function TopupTunaiPage() {
         ref_no: refNo,
         waktu: resData?.waktu || now.toISOString(),
         petugas_nama: petugasNama,
-        nama_penyetor: namaPenyetor.trim(),
+        nama_penyetor: safePenyetor,
         nominal: nominalNum,
         saldo_awal: saldoAwal,
         saldo_baru: saldoBaruRes,
@@ -268,14 +289,10 @@ export function TopupTunaiPage() {
         setNominal('')
       }
     } catch (err: unknown) {
-      const errorResponse = err as {
-        response?: { data?: { message?: string } }
-      }
-      const message =
-        errorResponse?.response?.data?.message ||
-        'Gagal mengisi saldo tunai.'
+      const message = sanitizeTopupErrorMessage(err)
       toast.error('Pengisian Saldo Gagal', { description: message })
     } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -416,11 +433,12 @@ export function TopupTunaiPage() {
                       </span>
                       <Input
                         id='nominal-input'
-                        type='number'
-                        min={1000}
+                        type='text'
+                        inputMode='numeric'
+                        maxLength={9}
                         placeholder='Masukkan nominal, contoh: 75000'
                         value={nominal}
-                        onChange={(e) => setNominal(e.target.value)}
+                        onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
                         className='pl-10 font-mono text-sm font-semibold tabular-nums'
                       />
                     </div>
@@ -428,18 +446,24 @@ export function TopupTunaiPage() {
 
                   {/* Input Nama Penyetor */}
                   <div className='space-y-2'>
-                    <Label
-                      htmlFor='penyetor-input'
-                      className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'
-                    >
-                      Nama Penyerah Uang (Orang Tua / Wali / Siswa)
-                    </Label>
+                    <div className='flex items-center justify-between'>
+                      <Label
+                        htmlFor='penyetor-input'
+                        className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'
+                      >
+                        Nama Penyerah Uang (Orang Tua / Wali / Siswa)
+                      </Label>
+                      <span className='text-[10px] text-muted-foreground tabular-nums'>
+                        {namaPenyetor.length}/{MAX_PENYETOR_LENGTH} karakter
+                      </span>
+                    </div>
                     <Input
                       id='penyetor-input'
                       type='text'
+                      maxLength={MAX_PENYETOR_LENGTH}
                       placeholder='Contoh: Bpk. Hendra (Orang Tua Budi)'
                       value={namaPenyetor}
-                      onChange={(e) => setNamaPenyetor(e.target.value)}
+                      onChange={(e) => setNamaPenyetor(e.target.value.slice(0, MAX_PENYETOR_LENGTH))}
                       required
                     />
                   </div>
