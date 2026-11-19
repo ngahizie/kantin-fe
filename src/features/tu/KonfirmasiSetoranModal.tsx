@@ -99,6 +99,8 @@ function KonfirmasiSetoranFormContent({
       return
     }
 
+    const cleanCatatan = catatan.trim().slice(0, 500)
+
     setIsSubmitting(true)
     try {
       const dateCode = (setoran.tanggal || new Date().toISOString().slice(0, 10)).replace(/-/g, '')
@@ -109,7 +111,7 @@ function KonfirmasiSetoranFormContent({
         petugasId: setoran.petugas_id || 1,
         jumlahDisetor: uangFisik,
         referensiId: refId,
-        catatan: catatan.trim() || undefined,
+        catatan: cleanCatatan || undefined,
       }
 
       const res = await apiClient.post('/api/saldo/setoran-tu', payload)
@@ -133,7 +135,7 @@ function KonfirmasiSetoranFormContent({
         status: beStatus === 'DIKONFIRMASI' ? 'DIKONFIRMASI' : 'TERKONFIRMASI',
         catatan:
           beData.catatan ||
-          catatan.trim() ||
+          cleanCatatan ||
           (selisih === 0
             ? 'Uang fisik pas sesuai total sistem'
             : `Selisih kas ${selisih < 0 ? 'kurang' : 'lebih'} ${formatRupiah(Math.abs(selisih))}`),
@@ -362,23 +364,35 @@ function KonfirmasiSetoranFormContent({
 
       {/* Field Catatan / Berita Acara */}
       <div className='space-y-1.5'>
-        <Label htmlFor={catatanInputId} className='text-xs font-semibold'>
-          Catatan Penyerahan Kas{' '}
-          {hasSelisih ? (
-            <span className='text-destructive'>
-              * (Wajib diisi karena ada selisih)
-            </span>
-          ) : (
-            <span className='font-normal text-muted-foreground'>
-              (Opsional)
-            </span>
-          )}
-        </Label>
+        <div className='flex items-center justify-between'>
+          <Label htmlFor={catatanInputId} className='text-xs font-semibold'>
+            Catatan Penyerahan Kas{' '}
+            {hasSelisih ? (
+              <span className='text-destructive'>
+                * (Wajib diisi karena ada selisih)
+              </span>
+            ) : (
+              <span className='font-normal text-muted-foreground'>
+                (Opsional)
+              </span>
+            )}
+          </Label>
+          <span
+            className={`text-[10px] tabular-nums ${
+              catatan.length >= 500
+                ? 'font-semibold text-destructive'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {catatan.length}/500
+          </span>
+        </div>
         <Textarea
           id={catatanInputId}
           rows={2}
+          maxLength={500}
           value={catatan}
-          onChange={(e) => setCatatan(e.target.value)}
+          onChange={(e) => setCatatan(e.target.value.slice(0, 500))}
           placeholder={
             hasSelisih
               ? 'Contoh: Kurang Rp2.000 karena selisih kembalian koin saat jam istirahat'
