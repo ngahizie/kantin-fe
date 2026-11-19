@@ -174,7 +174,7 @@ export const BendaharaDashboard: React.FC = () => {
       </div>
 
       {/* ===== 4 Kartu Metrik Utama ===== */}
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch'>
         <DashboardStatCard
           title='Status Rekonsiliasi Kas'
           value={

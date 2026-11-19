@@ -269,7 +269,7 @@ export const PengelolaDashboard: React.FC = () => {
       </div>
 
       {/* ===== 4 Kartu Metrik Utama ===== */}
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch'>
         <DashboardStatCard
           title='Penjualan Hari Ini'
           value={formatRupiah(todaySales)}
@@ -277,7 +277,7 @@ export const PengelolaDashboard: React.FC = () => {
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
           badgeText='Omset Bersih'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
-          subtext='• Akumulasi hari ini'
+          subtext='• Hari ini'
         />
 
         <DashboardStatCard
