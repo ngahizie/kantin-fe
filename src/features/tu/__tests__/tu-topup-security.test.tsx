@@ -11,6 +11,7 @@ import {
   sanitizePenyetorName,
   MAX_PENYETOR_LENGTH,
 } from '../topup-utils'
+import { sanitizeTopupErrorMessage } from '../topup-error'
 import apiClient from '@/lib/api-client'
 
 describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
@@ -241,6 +242,64 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
       expect(sanitizePenyetorName(null)).toBe('')
       expect(sanitizePenyetorName(undefined)).toBe('')
       expect(sanitizePenyetorName(12345)).toBe('')
+    })
+  })
+
+  describe('SEC-TOPUP-05: Error Message Sanitization', () => {
+    it('mengembalikan pesan aman saat sesi 401 kedaluwarsa', () => {
+      const err = { response: { status: 401 } }
+      expect(sanitizeTopupErrorMessage(err)).toBe('Sesi Anda telah kedaluwarsa. Silakan masuk kembali.')
+    })
+
+    it('mengembalikan pesan aman saat akses 403 ditolak', () => {
+      const err = { response: { status: 403 } }
+      expect(sanitizeTopupErrorMessage(err)).toBe(
+        'Akses ditolak. Anda tidak memiliki izin untuk melakukan pengisian saldo tunai.'
+      )
+    })
+
+    it('mengembalikan pesan aman saat data siswa 404 tidak ditemukan', () => {
+      const err = { response: { status: 404 } }
+      expect(sanitizeTopupErrorMessage(err)).toBe('Data siswa tidak ditemukan di sistem.')
+    })
+
+    it('mengembalikan pesan aman saat nomor referensi 409 terdeteksi duplikat', () => {
+      const err = { response: { status: 409 } }
+      expect(sanitizeTopupErrorMessage(err)).toBe(
+        'Transaksi pengisian saldo dengan nomor bukti ini sudah pernah diproses.'
+      )
+    })
+
+    it('menyembunyikan detail sensitif query SQL, Hibernate, dan stack trace internal', () => {
+      const sqlErr = {
+        response: {
+          status: 500,
+          data: {
+            message: 'org.hibernate.exception.ConstraintViolationException: duplicate key value violates unique constraint',
+          },
+        },
+      }
+      expect(sanitizeTopupErrorMessage(sqlErr)).toBe(
+        'Gagal mengisi saldo tunai. Silakan coba beberapa saat lagi.'
+      )
+
+      const stackErr = 'java.lang.NullPointerException at com.asqi.scholia_kantin_be.service.saldo.SaldoTopUpService'
+      expect(sanitizeTopupErrorMessage(stackErr)).toBe(
+        'Gagal mengisi saldo tunai. Silakan coba beberapa saat lagi.'
+      )
+    })
+
+    it('mempertahankan pesan bisnis valid yang aman dan membersihkan tag kode internal', () => {
+      const validErr = {
+        response: {
+          data: {
+            message: 'Nominal top-up melebihi batas saldo maksimal siswa (PRD 8.2)',
+          },
+        },
+      }
+      expect(sanitizeTopupErrorMessage(validErr)).toBe(
+        'Nominal top-up melebihi batas saldo maksimal siswa'
+      )
     })
   })
 })

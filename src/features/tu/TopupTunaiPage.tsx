@@ -43,6 +43,7 @@ import {
   sanitizePenyetorName,
   MAX_PENYETOR_LENGTH,
 } from './topup-utils'
+import { sanitizeTopupErrorMessage } from './topup-error'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const DEFAULT_MAX_SALDO = 1000000
@@ -280,12 +281,7 @@ export function TopupTunaiPage() {
         setNominal('')
       }
     } catch (err: unknown) {
-      const errorResponse = err as {
-        response?: { data?: { message?: string } }
-      }
-      const message =
-        errorResponse?.response?.data?.message ||
-        'Gagal mengisi saldo tunai.'
+      const message = sanitizeTopupErrorMessage(err)
       toast.error('Pengisian Saldo Gagal', { description: message })
     } finally {
       isSubmittingRef.current = false
