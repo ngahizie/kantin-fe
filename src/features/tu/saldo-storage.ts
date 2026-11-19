@@ -253,12 +253,13 @@ export function saveTopupTransaction(
 ): void {
   const tgl = tx.tanggal || new Date().toISOString().slice(0, 10)
   const activeUser = getActiveUser()
-  const fallbackPetugasId = activeUser?.userId ? Number(activeUser.userId) : 2
+  const activeUserId = activeUser?.userId ? Number(activeUser.userId) : 0
+  const resolvedPetugasId = tx.petugas_id ?? (activeUserId > 0 ? activeUserId : 0)
 
   const fullTx: StoredTopupTransaction = {
     ...tx,
     tanggal: tgl,
-    petugas_id: tx.petugas_id ?? fallbackPetugasId,
+    petugas_id: resolvedPetugasId,
   }
 
   if (typeof window !== 'undefined' && window.localStorage) {

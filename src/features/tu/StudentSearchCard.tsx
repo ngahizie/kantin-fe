@@ -34,6 +34,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { sanitizeRfidInput, MAX_RFID_INPUT_LENGTH } from './topup-utils'
+import { mapInfoSiswaToKartuSiswa } from './types'
 
 interface StudentSearchCardProps {
   students: KartuSiswaMock[]
@@ -54,7 +56,7 @@ export function StudentSearchCard({
   const [isSearchingRfid, setIsSearchingRfid] = useState(false)
 
   const handleFindRfid = async (uidToFind?: string) => {
-    const rawUid = (uidToFind || rfidInput).trim()
+    const rawUid = sanitizeRfidInput(uidToFind || rfidInput)
     if (!rawUid) return
     const targetUid = rawUid.toUpperCase()
 
@@ -67,25 +69,26 @@ export function StudentSearchCard({
           (s.nis || '').toUpperCase() === targetUid
       )
 
-      // 2. Jika belum ditemukan di memory lokal (misal proses sinkronisasi awal belum selesai),
-      // cek RFID per siswa secara on-the-fly dari backend
+      // 2. Jika belum ditemukan di cache lokal, panggil API pencarian terpusat (hindari N+1 loop)
       if (!found) {
-        for (const s of students) {
-          if (!s.uid || s.uid.startsWith('UID-')) {
-            try {
-              const rfidRes = await apiClient.get(`/api/siswa/${s.siswa_id}/rfid`)
-              const liveUid = rfidRes.data?.data?.rfidUid
-              if (liveUid) {
-                s.uid = liveUid
-                if (liveUid.toUpperCase() === targetUid) {
-                  found = s
-                  break
-                }
-              }
-            } catch {
-              // Abaikan kegagalan per siswa
+        try {
+          const res = await apiClient.get('/api/siswa', {
+            params: { q: targetUid, batas: 5 },
+          })
+          const list = res.data?.data
+          if (Array.isArray(list) && list.length > 0) {
+            const matched = list.find(
+              (item: { nis?: string; uid?: string; rfidUid?: string }) =>
+                (item.uid || '').toUpperCase() === targetUid ||
+                (item.rfidUid || '').toUpperCase() === targetUid ||
+                (item.nis || '').toUpperCase() === targetUid
+            )
+            if (matched) {
+              found = mapInfoSiswaToKartuSiswa(matched)
             }
           }
+        } catch {
+          // Abaikan kegagalan jaringan saat pencarian online
         }
       }
 
@@ -218,7 +221,8 @@ export function StudentSearchCard({
             <Input
               placeholder='Tempelkan kartu ke reader atau ketik nomor kartu...'
               value={rfidInput}
-              onChange={(e) => setRfidInput(e.target.value)}
+              maxLength={MAX_RFID_INPUT_LENGTH}
+              onChange={(e) => setRfidInput(sanitizeRfidInput(e.target.value))}
               className='font-mono text-xs tabular-nums'
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
