@@ -31,6 +31,7 @@ import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-acti
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { KategoriItem, MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -231,36 +232,28 @@ export function InventarisPage() {
       else if (stok <= min) status = 'MENIPIS'
 
       const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
-      const nilai = item.nilaiPersediaan ?? (stok * item.hpp)
+      const hpp = item.hpp ?? 0
+      const nilai = item.nilaiPersediaan ?? (stok * hpp)
       const barcode = item.kodeBarcode || menuMap.get(item.menuId)?.kodeBarcode || '-'
 
       return [
         item.menuId,
-        `"${barcode.replace(/"/g, '""')}"`,
-        `"${(item.namaMenu || item.nama).replace(/"/g, '""')}"`,
-        `"${kategoriNama}"`,
+        sanitizeCsvCell(barcode),
+        sanitizeCsvCell(item.namaMenu || item.nama),
+        sanitizeCsvCell(kategoriNama),
         stok,
         min,
         status,
-        item.hpp,
+        hpp,
         nilai,
       ]
     })
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
-
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute(
-      'download',
-      `laporan-inventaris-kantin-${new Date().toISOString().slice(0, 10)}.csv`
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
+    downloadCsvBlob(
+      `laporan-inventaris-kantin-${new Date().toISOString().slice(0, 10)}.csv`,
+      csvContent
     )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
     toast.success('Laporan inventaris berhasil diunduh dalam format CSV')
   }
 

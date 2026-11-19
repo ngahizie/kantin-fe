@@ -26,6 +26,7 @@ import { Main } from '@/components/layout/main'
 import { ExportButton } from '@/components/export-button'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
 import type { RiwayatStokItem } from './types'
 
@@ -119,9 +120,9 @@ export function KartuStokPage() {
 
     const rows = riwayat.map((r, idx) => [
       idx + 1,
-      `"${r.waktu}"`,
-      `"${r.referensiId}"`,
-      `"${r.menuNama || 'Menu #' + r.menuId}"`,
+      sanitizeCsvCell(r.waktu),
+      sanitizeCsvCell(r.referensiId),
+      sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
       r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
       r.arah,
       r.qty,
@@ -129,24 +130,15 @@ export function KartuStokPage() {
       r.hppSnapshot ?? '',
       r.hargaBeliSatuan ?? '',
       r.totalNilai ?? '',
-      `"${r.aktorNama || r.aktorId || 'Sistem'}"`,
-      `"${(r.alasan || '').replace(/"/g, '""')}"`,
+      sanitizeCsvCell(r.aktorNama || r.aktorId || 'Sistem'),
+      sanitizeCsvCell(r.alasan || ''),
     ])
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
-
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute(
-      'download',
-      `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
+    downloadCsvBlob(
+      `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
+      csvContent
     )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
     toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
   }
 
