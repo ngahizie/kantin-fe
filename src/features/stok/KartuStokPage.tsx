@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Boxes,
   ArrowDownLeft,
@@ -40,6 +40,8 @@ export function KartuStokPage() {
 
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const isExportingRef = useRef(false)
   const [currentPage, setCurrentPage] = useState(1)
 
   const PAGE_SIZE = 10
@@ -106,53 +108,61 @@ export function KartuStokPage() {
       toast.warning('Tidak ada data mutasi untuk diekspor')
       return
     }
+    if (isExportingRef.current) return
+    isExportingRef.current = true
+    setIsExporting(true)
 
-    const headers = [
-      'No.',
-      'Waktu',
-      'Nomor Referensi',
-      'Menu',
-      'Jenis Mutasi',
-      'Arah',
-      'Qty',
-      'Saldo Akhir',
-      'HPP Satuan (Rp)',
-      'Harga Beli Satuan (Rp)',
-      'Total Nilai (Rp)',
-      'Aktor',
-      'Alasan/Catatan',
-    ]
+    try {
+      const headers = [
+        'No.',
+        'Waktu',
+        'Nomor Referensi',
+        'Menu',
+        'Jenis Mutasi',
+        'Arah',
+        'Qty',
+        'Saldo Akhir',
+        'HPP Satuan (Rp)',
+        'Harga Beli Satuan (Rp)',
+        'Total Nilai (Rp)',
+        'Aktor',
+        'Alasan/Catatan',
+      ]
 
-    const rows = riwayat.map((r, idx) => [
-      idx + 1,
-      sanitizeCsvCell(r.waktu),
-      sanitizeCsvCell(r.referensiId),
-      sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
-      r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
-      r.arah,
-      r.qty,
-      r.stokSetelah,
-      r.hppSnapshot ?? '',
-      r.hargaBeliSatuan ?? '',
-      r.totalNilai ?? '',
-      sanitizeCsvCell(r.aktorNama || r.aktorId || 'Sistem'),
-      sanitizeCsvCell(r.alasan || ''),
-    ])
+      const rows = riwayat.map((r, idx) => [
+        idx + 1,
+        sanitizeCsvCell(r.waktu),
+        sanitizeCsvCell(r.referensiId),
+        sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
+        r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
+        r.arah,
+        r.qty,
+        r.stokSetelah,
+        r.hppSnapshot ?? '',
+        r.hargaBeliSatuan ?? '',
+        r.totalNilai ?? '',
+        sanitizeCsvCell(r.aktorNama || r.aktorId || 'Sistem'),
+        sanitizeCsvCell(r.alasan || ''),
+      ])
 
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
-    downloadCsvBlob(
-      `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
-      csvContent
-    )
-    void logStokAuditEvent({
-      action: 'STOK_EXPORT_CSV',
-      menuId: menuIdParam,
-      detail: {
-        totalBaris: rows.length,
-        menuId: menuIdParam ?? null,
-      },
-    })
-    toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
+      const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
+      downloadCsvBlob(
+        `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
+        csvContent
+      )
+      void logStokAuditEvent({
+        action: 'STOK_EXPORT_CSV',
+        menuId: menuIdParam,
+        detail: {
+          totalBaris: rows.length,
+          menuId: menuIdParam ?? null,
+        },
+      })
+      toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
+    } finally {
+      isExportingRef.current = false
+      setIsExporting(false)
+    }
   }
 
   const handleExportPdf = () => {
@@ -160,6 +170,9 @@ export function KartuStokPage() {
       toast.warning('Tidak ada data mutasi untuk diekspor')
       return
     }
+    if (isExportingRef.current) return
+    isExportingRef.current = true
+    setIsExporting(true)
 
     try {
       const rows = riwayat.map((r) => ({
@@ -219,6 +232,9 @@ export function KartuStokPage() {
       const rawMsg = error.response?.data?.message || error.message || ''
       const msg = sanitizeStokErrorMessage(rawMsg, 'Gagal mengekspor PDF')
       toast.error('Gagal Ekspor PDF', { description: msg })
+    } finally {
+      isExportingRef.current = false
+      setIsExporting(false)
     }
   }
 
@@ -266,7 +282,7 @@ export function KartuStokPage() {
             <ExportButton
               onExportCsv={handleExportCsv}
               onExportPdf={handleExportPdf}
-              disabled={riwayat.length === 0}
+              disabled={riwayat.length === 0 || isExporting}
               data-testid='btn-kartu-stok-export'
             />
           </div>

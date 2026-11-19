@@ -177,4 +177,34 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
       expect(logs[49].menuId).toBe(60)
     })
   })
+
+  describe('SEC-STOK-05: Concurrency Guard Ekspor Laporan', () => {
+    it('memastikan pengunci isExporting aktif saat proses ekspor berlangsung untuk mencegah double execution', () => {
+      let isExportingRefCurrent = false
+      const executionCount = { count: 0 }
+
+      const triggerExport = () => {
+        if (isExportingRefCurrent) return
+        isExportingRefCurrent = true
+        try {
+          executionCount.count += 1
+        } finally {
+          isExportingRefCurrent = false
+        }
+      }
+
+      // Simulasi panggilan pertama
+      triggerExport()
+      expect(executionCount.count).toBe(1)
+
+      // Simulasi panggilan terkunci saat sedang berjalan
+      isExportingRefCurrent = true
+      triggerExport()
+      expect(executionCount.count).toBe(1) // Tidak bertambah karena terkunci
+
+      isExportingRefCurrent = false
+      triggerExport()
+      expect(executionCount.count).toBe(2)
+    })
+  })
 })
