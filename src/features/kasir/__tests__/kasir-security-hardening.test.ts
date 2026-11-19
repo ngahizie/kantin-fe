@@ -53,4 +53,36 @@ describe('Security Hardening Kasir (OWASP & NIST)', () => {
       expect(locked?.sesiId).toBe(101)
     })
   })
+
+  describe('SEC-KASIR-03: Kriptografi Idempotency Key (CSPRNG)', () => {
+    it('menghasilkan UUID v4 valid dan tidak menggunakan Math.random', async () => {
+      const { generateIdempotencyKey } = await import('../api/kasir-api')
+      const mathRandomSpy = vi.spyOn(Math, 'random')
+      mathRandomSpy.mockClear()
+
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+      const key = generateIdempotencyKey()
+      expect(key).toMatch(uuidRegex)
+      expect(mathRandomSpy).not.toHaveBeenCalled()
+    })
+
+    it('menggunakan fallback crypto.getRandomValues saat crypto.randomUUID tidak tersedia', async () => {
+      const { generateIdempotencyKey } = await import('../api/kasir-api')
+      const originalRandomUUID = crypto.randomUUID
+
+      // @ts-expect-error Mock penghapusan crypto.randomUUID untuk menguji CSPRNG fallback
+      crypto.randomUUID = undefined
+
+      try {
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        const fallbackKey = generateIdempotencyKey()
+        expect(fallbackKey).toMatch(uuidRegex)
+      } finally {
+        crypto.randomUUID = originalRandomUUID
+      }
+    })
+  })
 })
