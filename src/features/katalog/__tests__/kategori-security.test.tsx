@@ -1,7 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { render } from 'vitest-browser-react'
 import { Route } from '@/routes/_authenticated/kategori/index'
 import { useAuthStore } from '@/stores/auth-store'
 import { getKategoriDeleteBlockedReason } from '../menu-utils'
+import { KategoriFormModal } from '../KategoriFormModal'
+import { katalogApi } from '../api/katalog-api'
 
 describe('Security Hardening Kategori (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -95,6 +98,38 @@ describe('Security Hardening Kategori (OWASP & NIST)', () => {
         jumlahItem: 0,
       })
       expect(reason).toBeNull()
+    })
+  })
+
+  describe('SEC-KAT-04: Submission Lock Mencegah Double Submit', () => {
+    it('mengunci tombol dan mencegah double submit saat proses create masih berjalan', async () => {
+      let resolvePromise: (val: unknown) => void = () => {}
+      const pendingPromise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+
+      const createSpy = vi.spyOn(katalogApi, 'createKategori').mockImplementation(() => pendingPromise as never)
+
+      const screen = await render(
+        <KategoriFormModal
+          open={true}
+          onOpenChange={vi.fn()}
+          onSuccess={vi.fn()}
+        />
+      )
+
+      const input = screen.getByLabelText(/Nama Kategori/i)
+      await input.fill('Kategori Anti Double')
+
+      const submitBtn = screen.getByRole('button', { name: /Buat Kategori/i })
+      await submitBtn.click()
+
+      expect(createSpy).toHaveBeenCalledTimes(1)
+
+      const savingBtn = screen.getByRole('button', { name: /Menyimpan/i })
+      await expect.element(savingBtn).toBeDisabled()
+
+      resolvePromise({ id: 10, nama: 'Kategori Anti Double', urutan: 0, aktif: true })
     })
   })
 })
