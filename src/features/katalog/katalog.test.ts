@@ -60,6 +60,24 @@ describe('Katalog Kategori Zod Validation Schema', () => {
     }
   })
 
+  it('gagal jika nama kategori mengandung tag HTML atau karakter kontrol (SEC-KAT-01)', () => {
+    const maliciousNames = [
+      '<script>alert(1)</script>',
+      'Snack <img src=x onerror=alert(1)>',
+      'Makanan<b>Berat</b>',
+      'Minuman\u0000Dingin',
+    ]
+
+    for (const nama of maliciousNames) {
+      const result = kategoriFormSchema.safeParse({
+        nama,
+        urutan: 1,
+        aktif: true,
+      })
+      expect(result.success).toBe(false)
+    }
+  })
+
   it('mendukung status aktif pada form kategori untuk reaktivasi', () => {
     const nonaktifData = {
       nama: 'Kategori Lama',
