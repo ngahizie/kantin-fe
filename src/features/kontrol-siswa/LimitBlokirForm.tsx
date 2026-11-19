@@ -33,6 +33,11 @@ import {
   type MenuItemMock,
   type KategoriMock,
 } from '@/types/kantin'
+import {
+  MAX_ALASAN_BLOKIR_LENGTH,
+  MIN_LIMIT_HARIAN,
+  MAX_LIMIT_HARIAN,
+} from './types'
 
 interface LimitBlokirFormProps {
   open: boolean
@@ -175,8 +180,9 @@ function LimitBlokirFormContent({
     return matchCat && matchText
   })
 
-  const nominalLimitNum = limitEnabled ? Number(limitNominal) || 0 : 0
-  const isValidNominal = !limitEnabled || nominalLimitNum >= 5000
+  const nominalLimitNum = limitEnabled ? Math.round(Math.max(0, Number(limitNominal) || 0)) : 0
+  const isValidNominal =
+    !limitEnabled || (nominalLimitNum >= MIN_LIMIT_HARIAN && nominalLimitNum <= MAX_LIMIT_HARIAN)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -387,13 +393,19 @@ function LimitBlokirFormContent({
 
             {cardBlocked && (
               <div className='pt-3 space-y-2 border-t border-border'>
-                <Label htmlFor='alasanBlokirKartu' className='text-xs font-medium'>
-                  Alasan Pemblokiran Kartu
-                </Label>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor='alasanBlokirKartu' className='text-xs font-medium'>
+                    Alasan Pemblokiran Kartu
+                  </Label>
+                  <span className='text-[10px] text-muted-foreground tabular-nums'>
+                    {alasanBlokir.length}/{MAX_ALASAN_BLOKIR_LENGTH} karakter
+                  </span>
+                </div>
                 <Input
                   id='alasanBlokirKartu'
                   value={alasanBlokir}
-                  onChange={(e) => setAlasanBlokir(e.target.value)}
+                  maxLength={MAX_ALASAN_BLOKIR_LENGTH}
+                  onChange={(e) => setAlasanBlokir(e.target.value.slice(0, MAX_ALASAN_BLOKIR_LENGTH))}
                   placeholder='Contoh: Kartu hilang / Permintaan orang tua siswa'
                   className='text-xs'
                 />
@@ -452,6 +464,7 @@ function LimitBlokirFormContent({
                     <Input
                       id='customLimit'
                       value={limitNominal}
+                      maxLength={12}
                       onChange={(e) => setLimitNominal(e.target.value.replace(/\D/g, ''))}
                       placeholder='25000'
                       className='pl-9 font-mono text-sm font-semibold tabular-nums'
@@ -459,7 +472,9 @@ function LimitBlokirFormContent({
                   </div>
                   {!isValidNominal && (
                     <p className='text-[11px] text-destructive'>
-                      Batas belanja harian minimal Rp 5.000
+                      {nominalLimitNum < MIN_LIMIT_HARIAN
+                        ? `Batas belanja harian minimal ${formatRupiah(MIN_LIMIT_HARIAN)}`
+                        : `Batas belanja harian maksimal ${formatRupiah(MAX_LIMIT_HARIAN)}`}
                     </p>
                   )}
                 </div>
