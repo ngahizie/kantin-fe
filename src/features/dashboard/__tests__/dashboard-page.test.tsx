@@ -279,6 +279,16 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     await expect.element(screen.getByText('Peringatan Stok Barang')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Stok Menipis')).not.toBeInTheDocument()
   })
+
+  it('menampilkan fallback fail-closed (Akses Tidak Dikenal) untuk peran yang tidak sah', async () => {
+    mockRole = 'unknown_role'
+    const screen = await render(<DashboardPage />)
+
+    await expect.element(screen.getByTestId('unauthorized-role-fallback')).toBeInTheDocument()
+    await expect.element(screen.getByText('Akses Tidak Dikenal')).toBeInTheDocument()
+    await expect.element(screen.getByText('Peran akun Anda tidak memiliki izin untuk melihat dashboard ini.')).toBeInTheDocument()
+    await expect.element(screen.getByText('Dashboard Pengelola Kantin')).not.toBeInTheDocument()
+  })
 })
 
 describe('getStatusBadgeClass color semantics', () => {

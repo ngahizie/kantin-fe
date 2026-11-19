@@ -128,4 +128,24 @@ describe('useAuthStore', () => {
     useAuthStore.getState().auth.setUser({ ...sampleUser, userId: '2', nama: 'Kasir Baru' })
     expect(useCartStore.getState().items).toHaveLength(0)
   })
+
+  it('isAuthenticated mengembalikan false jika token JWT kedaluwarsa (exp lampau)', async () => {
+    const useAuthStore = await importAuthStore()
+    const expPast = Math.floor(Date.now() / 1000) - 3600 // 1 jam lalu
+    const expiredPayload = btoa(JSON.stringify({ exp: expPast, sub: 'user1' }))
+    const expiredJwt = `header.${expiredPayload}.signature`
+
+    useAuthStore.getState().auth.setAccessToken(expiredJwt)
+    expect(useAuthStore.getState().auth.isAuthenticated()).toBe(false)
+  })
+
+  it('isAuthenticated mengembalikan true jika token JWT masih aktif (exp masa depan)', async () => {
+    const useAuthStore = await importAuthStore()
+    const expFuture = Math.floor(Date.now() / 1000) + 3600 // 1 jam ke depan
+    const validPayload = btoa(JSON.stringify({ exp: expFuture, sub: 'user1' }))
+    const validJwt = `header.${validPayload}.signature`
+
+    useAuthStore.getState().auth.setAccessToken(validJwt)
+    expect(useAuthStore.getState().auth.isAuthenticated()).toBe(true)
+  })
 })
