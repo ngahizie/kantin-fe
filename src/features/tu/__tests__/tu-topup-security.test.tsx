@@ -5,7 +5,12 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { Route } from '@/routes/_authenticated/tu/topup/index'
 import { useAuthStore } from '@/stores/auth-store'
 import { TopupTunaiPage } from '../TopupTunaiPage'
-import { generateTopupReferenceId } from '../topup-utils'
+import {
+  generateTopupReferenceId,
+  parseSafeTopupNominal,
+  sanitizePenyetorName,
+  MAX_PENYETOR_LENGTH,
+} from '../topup-utils'
 import apiClient from '@/lib/api-client'
 
 describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
@@ -199,6 +204,43 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
           },
         },
       })
+    })
+  })
+
+  describe('SEC-TOPUP-04: Input Validation & Sanitization (Nominal & Penyetor)', () => {
+    it('memvalidasi nominal ke bilangan bulat positif non-desimal', () => {
+      expect(parseSafeTopupNominal(50000)).toBe(50000)
+      expect(parseSafeTopupNominal('75000')).toBe(75000)
+      expect(parseSafeTopupNominal('100.000')).toBe(100000)
+      expect(parseSafeTopupNominal(25000.85)).toBe(25000)
+      expect(parseSafeTopupNominal(-50000)).toBe(0)
+      expect(parseSafeTopupNominal('invalid-str')).toBe(0)
+      expect(parseSafeTopupNominal(NaN)).toBe(0)
+      expect(parseSafeTopupNominal(Infinity)).toBe(0)
+      expect(parseSafeTopupNominal(null)).toBe(0)
+      expect(parseSafeTopupNominal(undefined)).toBe(0)
+    })
+
+    it('membersihkan dan membatasi panjang nama penyetor maksimal 120 karakter', () => {
+      const normal = sanitizePenyetorName('Bpk. Hendra Wijaya')
+      expect(normal).toBe('Bpk. Hendra Wijaya')
+
+      const trimmed = sanitizePenyetorName('   Ibu Ratna Dewi   ')
+      expect(trimmed).toBe('Ibu Ratna Dewi')
+
+      const withControl = sanitizePenyetorName('\u0000Penyetor Asli\u001F')
+      expect(withControl).toBe('Penyetor Asli')
+
+      const longText = 'A'.repeat(MAX_PENYETOR_LENGTH + 50)
+      const sanitized = sanitizePenyetorName(longText)
+      expect(sanitized.length).toBe(MAX_PENYETOR_LENGTH)
+      expect(sanitized).toBe('A'.repeat(MAX_PENYETOR_LENGTH))
+    })
+
+    it('mengembalikan string kosong jika tipe penyetor bukan string', () => {
+      expect(sanitizePenyetorName(null)).toBe('')
+      expect(sanitizePenyetorName(undefined)).toBe('')
+      expect(sanitizePenyetorName(12345)).toBe('')
     })
   })
 })

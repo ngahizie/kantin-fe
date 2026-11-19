@@ -32,7 +32,14 @@ export function parseSafeTopupNominal(value: unknown): number {
     return 0
   }
 
-  const cleanStr = typeof value === 'string' ? value.trim().replace(/[^\d.-]/g, '') : value
+  let cleanStr: string
+  if (typeof value === 'string') {
+    // Hapus format ribuan titik khas Indonesia (mis. "100.000") dan karakter non-digit
+    cleanStr = value.trim().replace(/\./g, '').replace(/[^\d-]/g, '')
+  } else {
+    cleanStr = String(value)
+  }
+
   const num = Number(cleanStr)
 
   if (typeof num !== 'number' || Number.isNaN(num) || !Number.isFinite(num)) {
