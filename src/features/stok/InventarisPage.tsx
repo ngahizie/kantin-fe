@@ -127,15 +127,17 @@ export function InventarisPage() {
         return true
       })
       .sort((a, b) => {
-        const valA = a.nilaiPersediaan ?? (a.stok * a.hpp)
-        const valB = b.nilaiPersediaan ?? (b.stok * b.hpp)
         const stokA = a.stokBerjalan ?? a.stok ?? 0
         const stokB = b.stokBerjalan ?? b.stok ?? 0
+        const hppA = a.hpp ?? 0
+        const hppB = b.hpp ?? 0
+        const valA = a.nilaiPersediaan ?? (stokA * hppA)
+        const valB = b.nilaiPersediaan ?? (stokB * hppB)
         const nameA = a.namaMenu || a.nama || ''
         const nameB = b.namaMenu || b.nama || ''
 
-        if (sortBy === 'NILAI_DESC') return valB - valA
-        if (sortBy === 'NILAI_ASC') return valA - valB
+        if (sortBy === 'NILAI_DESC') return (valB || 0) - (valA || 0)
+        if (sortBy === 'NILAI_ASC') return (valA || 0) - (valB || 0)
         if (sortBy === 'STOK_DESC') return stokB - stokA
         if (sortBy === 'STOK_ASC') return stokA - stokB
         if (sortBy === 'NAMA_ASC') return nameA.localeCompare(nameB)

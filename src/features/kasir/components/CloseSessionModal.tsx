@@ -112,7 +112,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         id: sesiId,
         status: sesiStatus ?? 'TERBUKA',
         tanggal: sesiTanggal ?? '',
-        titikKasirId: sesiTitikKasirId,
+        titikKasirId: sesiTitikKasirId ?? 0,
       })
       if (externalLock) {
         setStep('RECONCILE')
