@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Route } from '@/routes/_authenticated/stok/kartu/index'
 import { useAuthStore } from '@/stores/auth-store'
+import { parseSafeMenuId } from '../stok-utils'
 
 describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -65,6 +66,33 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
           location: { href: '/stok/kartu' },
         } as never)
       ).not.toThrow()
+    })
+  })
+
+  describe('SEC-STOK-02: Validasi Parameter menuId (Mencegah NaN / Negatif)', () => {
+    it('menerima menuId valid berupa angka positif atau string angka bulat', () => {
+      expect(parseSafeMenuId(10)).toBe(10)
+      expect(parseSafeMenuId('42')).toBe(42)
+    })
+
+    it('menolak string non-angka, NaN, dan nilai kosong dengan mengembalikan undefined', () => {
+      expect(parseSafeMenuId('abc')).toBeUndefined()
+      expect(parseSafeMenuId('NaN')).toBeUndefined()
+      expect(parseSafeMenuId(NaN)).toBeUndefined()
+      expect(parseSafeMenuId('')).toBeUndefined()
+      expect(parseSafeMenuId(null)).toBeUndefined()
+      expect(parseSafeMenuId(undefined)).toBeUndefined()
+    })
+
+    it('menolak angka negatif, nol, bilangan desimal, dan tak hingga (Infinity)', () => {
+      expect(parseSafeMenuId(-1)).toBeUndefined()
+      expect(parseSafeMenuId('-10')).toBeUndefined()
+      expect(parseSafeMenuId(0)).toBeUndefined()
+      expect(parseSafeMenuId('0')).toBeUndefined()
+      expect(parseSafeMenuId(12.5)).toBeUndefined()
+      expect(parseSafeMenuId('3.14')).toBeUndefined()
+      expect(parseSafeMenuId(Infinity)).toBeUndefined()
+      expect(parseSafeMenuId(-Infinity)).toBeUndefined()
     })
   })
 })

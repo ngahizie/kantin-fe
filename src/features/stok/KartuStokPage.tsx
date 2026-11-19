@@ -28,12 +28,13 @@ import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
+import { parseSafeMenuId } from './stok-utils'
 import type { RiwayatStokItem } from './types'
 
 export function KartuStokPage() {
   // Baca menuId opsional jika ada navigasi spesifik dari halaman lain
-  const searchParams = useSearch({ strict: false }) as { menuId?: string | number }
-  const menuIdParam = searchParams?.menuId ? Number(searchParams.menuId) : undefined
+  const searchParams = useSearch({ strict: false }) as { menuId?: unknown }
+  const menuIdParam = parseSafeMenuId(searchParams?.menuId)
 
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)

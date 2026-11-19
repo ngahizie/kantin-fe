@@ -1,6 +1,7 @@
 export * from './types'
 export * from './api/stok-api'
 export * from './utils/hpp-calculator'
+export * from './stok-utils'
 export * from './components/HppSimulationBadge'
 export * from './KartuStokPage'
 export * from './InventarisPage'
