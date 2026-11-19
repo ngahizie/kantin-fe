@@ -38,8 +38,12 @@ export interface PengaturanStoreState {
 export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
   const savedTitikId =
     typeof window !== 'undefined'
-      ? Number(localStorage.getItem(ACTIVE_TITIK_KASIR_STORAGE_KEY)) || 1
-      : 1
+      ? (() => {
+          const stored = localStorage.getItem(ACTIVE_TITIK_KASIR_STORAGE_KEY)
+          const parsed = Number(stored)
+          return stored && Number.isInteger(parsed) && parsed > 0 ? parsed : null
+        })()
+      : null
 
   return {
     pengaturan: DEFAULT_PENGATURAN,
@@ -119,9 +123,10 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
 
     getActiveTitikKasir: () => {
       const { titikKasirList, activeTitikKasirId } = get()
+      if (!activeTitikKasirId) return undefined
       return (
         titikKasirList.find((t) => t.id === activeTitikKasirId) ||
-        titikKasirList[0]
+        titikKasirList.find((t) => t.aktif)
       )
     },
   }

@@ -41,6 +41,7 @@ import {
   saveCloseSessionLock,
   updateCloseSessionLockCatatan,
 } from '../close-session-lock'
+import { logKasirAuditEvent } from '../api/kasir-audit'
 
 export interface CloseSessionModalProps {
   open: boolean
@@ -111,7 +112,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         id: sesiId,
         status: sesiStatus ?? 'TERBUKA',
         tanggal: sesiTanggal ?? '',
-        titikKasirId: sesiTitikKasirId ?? 1,
+        titikKasirId: sesiTitikKasirId,
       })
       if (externalLock) {
         setStep('RECONCILE')
@@ -212,8 +213,8 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
 
     const existingLock = getCloseSessionLock(sesi)
     const authoritativeCash = existingLock ? existingLock.cashValue : cashValue
-    const authoritativeKasSeharusnya =
-      existingLock?.kasSeharusnya ?? kasSeharusnya
+    // Nilai kas seharusnya selalu bersumber dari kalkulasi otoritatif sistem/rekap, bukan dari local storage
+    const authoritativeKasSeharusnya = kasSeharusnya
     const authoritativeSelisih = authoritativeCash - authoritativeKasSeharusnya
 
     if (authoritativeSelisih !== 0 && !catatanSelisih.trim()) {
@@ -228,6 +229,20 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         selisih: authoritativeSelisih,
         catatan: catatanSelisih.trim() || undefined,
       })
+
+      if (authoritativeSelisih !== 0) {
+        void logKasirAuditEvent({
+          action: 'TUTUP_SESI_SELISIH',
+          titikKasirId: sesi.titikKasirId,
+          sesiId: sesi.id,
+          detail: {
+            uangFisik: authoritativeCash,
+            kasSeharusnya: authoritativeKasSeharusnya,
+            selisih: authoritativeSelisih,
+            catatan: catatanSelisih.trim(),
+          },
+        })
+      }
 
       const deskripsiNotif =
         authoritativeSelisih === 0
@@ -309,7 +324,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             />
             <span>Titik:</span>
             <strong className='text-foreground'>
-              {sesi?.titikKasirNama || `Titik #${sesi?.titikKasirId || 1}`}
+              {sesi?.titikKasirNama || (sesi?.titikKasirId ? `Titik #${sesi.titikKasirId}` : 'Titik Kasir')}
             </strong>
           </div>
           <div className='flex items-center gap-1.5 text-muted-foreground'>

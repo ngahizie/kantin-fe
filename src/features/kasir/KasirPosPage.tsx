@@ -47,6 +47,8 @@ import {
   generateIdempotencyKey,
   type TapTransaksiData,
 } from './api/kasir-api'
+import { sanitizeKasirErrorMessage } from './kasir-error'
+import { logKasirAuditEvent } from './api/kasir-audit'
 import type {
   SesiKasirData,
   RekapSesiData,
@@ -377,6 +379,12 @@ export const KasirPosPage: React.FC = () => {
       const cleanUid = scannedUid.trim().toUpperCase()
       if (!cleanUid || isProcessing) return
 
+      const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
+      if (!targetTitikKasirId || targetTitikKasirId <= 0) {
+        toast.warning('Titik kasir belum dipilih. Silakan pilih titik kasir terlebih dahulu.')
+        return
+      }
+
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
 
@@ -389,7 +397,7 @@ export const KasirPosPage: React.FC = () => {
             qty: it.qty,
           })),
           idempotencyKey,
-          titikKasirId: activeTitikKasirId ?? undefined,
+          titikKasirId: targetTitikKasirId,
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
@@ -454,9 +462,14 @@ export const KasirPosPage: React.FC = () => {
             data?: { message?: string; kekurangan?: number }
           }
         }
-        const message =
+        const rawMsg =
           axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
           'Terjadi kesalahan saat memproses transaksi tap'
+        const message = sanitizeKasirErrorMessage(
+          rawMsg,
+          'Terjadi kesalahan saat memproses transaksi tap'
+        )
         const kekurangan = axiosErr.response?.data?.kekurangan
 
         setErrorInfo({
@@ -465,6 +478,17 @@ export const KasirPosPage: React.FC = () => {
           uid: cleanUid,
         })
         setErrorModalOpen(true)
+
+        void logKasirAuditEvent({
+          action: 'TRANSAKSI_GAGAL',
+          titikKasirId: targetTitikKasirId,
+          sesiId: sesi?.id,
+          detail: {
+            alasan: message,
+            kekurangan,
+            metodeBayar: 'SALDO',
+          },
+        })
       } finally {
         setIsProcessing(false)
       }
@@ -533,6 +557,12 @@ export const KasirPosPage: React.FC = () => {
     async (uangDiterima: number) => {
       if (isProcessing) return
 
+      const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
+      if (!targetTitikKasirId || targetTitikKasirId <= 0) {
+        toast.warning('Titik kasir belum dipilih. Silakan pilih titik kasir terlebih dahulu.')
+        return
+      }
+
       const currentTotal = totalHarga()
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
@@ -546,7 +576,7 @@ export const KasirPosPage: React.FC = () => {
             qty: it.qty,
           })),
           idempotencyKey,
-          titikKasirId: activeTitikKasirId ?? undefined,
+          titikKasirId: targetTitikKasirId,
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
@@ -613,9 +643,14 @@ export const KasirPosPage: React.FC = () => {
             data?: { message?: string; kekurangan?: number }
           }
         }
-        const message =
+        const rawMsg =
           axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
           'Terjadi kesalahan saat memproses transaksi tunai'
+        const message = sanitizeKasirErrorMessage(
+          rawMsg,
+          'Terjadi kesalahan saat memproses transaksi tunai'
+        )
         const kekurangan = axiosErr.response?.data?.kekurangan
 
         setErrorInfo({
@@ -623,6 +658,17 @@ export const KasirPosPage: React.FC = () => {
           kekurangan,
         })
         setErrorModalOpen(true)
+
+        void logKasirAuditEvent({
+          action: 'TRANSAKSI_GAGAL',
+          titikKasirId: targetTitikKasirId,
+          sesiId: sesi?.id,
+          detail: {
+            alasan: message,
+            kekurangan,
+            metodeBayar: 'TUNAI',
+          },
+        })
       } finally {
         setIsProcessing(false)
       }

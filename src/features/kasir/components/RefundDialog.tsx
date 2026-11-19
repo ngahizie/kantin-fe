@@ -30,6 +30,7 @@ import {
   type TransaksiSesiItem,
   type AlasanVoidType,
 } from '../api/kasir-api'
+import { logKasirAuditEvent } from '../api/kasir-audit'
 
 export interface RefundDialogProps {
   open: boolean
@@ -173,6 +174,16 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
         kodeStrukFinal
       )
       playVoid()
+      void logKasirAuditEvent({
+        action: 'VOID_TRANSAKSI',
+        titikKasirId: transaction.titikKasirId,
+        sesiId: transaction.sesiKasirId,
+        detail: {
+          transaksiId: transaction.id,
+          alasan: alasanFinal,
+          nomorStruk: kodeStrukFinal,
+        },
+      })
       toast.success(`Refund transaksi #${transaction.id} berhasil`, {
         description:
           transaction.metodeBayar === 'TUNAI'

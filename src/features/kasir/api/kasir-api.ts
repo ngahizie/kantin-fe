@@ -25,13 +25,20 @@ interface ApiResponse<T> {
  * Generate idempotency key unik (UUIDv4) untuk mencegah transaksi ganda (PRD §11.3)
  */
 export function generateIdempotencyKey(): string {
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
-    return crypto.randomUUID()
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID()
+    }
+    if (typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16)
+      crypto.getRandomValues(bytes)
+      bytes[6] = (bytes[6] & 0x0f) | 0x40
+      bytes[8] = (bytes[8] & 0x3f) | 0x80
+      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+    }
   }
-  return `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+  throw new Error('Web Crypto API tidak tersedia untuk pembangkitan idempotency key')
 }
 
 export const kasirApi = {
@@ -39,6 +46,11 @@ export const kasirApi = {
    * Eksekusi transaksi kasir: Saldo (tap kartu RFID, PRD §6.2) atau Tunai tanpa kartu (Issue #165)
    */
   async prosesTap(data: TapTransaksiRequest): Promise<TapTransaksiData> {
+    if (data.titikKasirId !== undefined && data.titikKasirId <= 0) {
+      throw new Error('Titik kasir belum dipilih atau tidak valid')
+    }
+    const titikKasirId = data.titikKasirId ?? 1
+
     const metodeBayar: MetodeBayarKasir = data.metodeBayar ?? 'SALDO'
     const cleanUid = data.rfidUid ? data.rfidUid.trim().toUpperCase() : ''
 
@@ -52,7 +64,7 @@ export const kasirApi = {
       })),
       idempotency_key: data.idempotencyKey,
       idempotencyKey: data.idempotencyKey,
-      titikKasirId: data.titikKasirId || 1,
+      titikKasirId,
     }
 
     if (metodeBayar === 'SALDO' || cleanUid) {
@@ -180,9 +192,12 @@ export const kasirApi = {
    */
   async voidTransaksi(
     transaksiId: number,
-    alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
-    kodeStruk = ''
+    alasan: string,
+    kodeStruk: string
   ): Promise<void> {
+    if (!kodeStruk || !kodeStruk.trim()) {
+      throw new Error('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
+    }
     await this.refundTransaksi(transaksiId, alasan, kodeStruk)
   },
 
