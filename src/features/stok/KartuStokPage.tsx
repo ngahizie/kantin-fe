@@ -29,6 +29,7 @@ import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
 import { parseSafeMenuId } from './stok-utils'
+import { sanitizeStokErrorMessage } from './stok-error'
 import type { RiwayatStokItem } from './types'
 
 export function KartuStokPage() {
@@ -64,7 +65,9 @@ export function KartuStokPage() {
         setRiwayat(riwayatRes.items || [])
       } catch (err: unknown) {
         if (!isMounted) return
-        const msg = err instanceof Error ? err.message : 'Gagal memuat mutasi stok'
+        const error = err as { response?: { data?: { message?: string } }; message?: string }
+        const rawMsg = error.response?.data?.message || error.message || ''
+        const msg = sanitizeStokErrorMessage(rawMsg, 'Gagal memuat mutasi stok')
         toast.error('Gagal Memuat Mutasi', { description: msg })
       } finally {
         if (isMounted) setIsLoadingRiwayat(false)
@@ -194,7 +197,9 @@ export function KartuStokPage() {
         description: 'Mutasi Stok (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const rawMsg = error.response?.data?.message || error.message || ''
+      const msg = sanitizeStokErrorMessage(rawMsg, 'Gagal mengekspor PDF')
       toast.error('Gagal Ekspor PDF', { description: msg })
     }
   }

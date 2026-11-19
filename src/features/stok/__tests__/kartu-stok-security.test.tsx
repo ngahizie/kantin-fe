@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Route } from '@/routes/_authenticated/stok/kartu/index'
 import { useAuthStore } from '@/stores/auth-store'
 import { parseSafeMenuId } from '../stok-utils'
+import { sanitizeStokErrorMessage } from '../stok-error'
 
 describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -93,6 +94,29 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
       expect(parseSafeMenuId('3.14')).toBeUndefined()
       expect(parseSafeMenuId(Infinity)).toBeUndefined()
       expect(parseSafeMenuId(-Infinity)).toBeUndefined()
+    })
+  })
+
+  describe('SEC-STOK-03: Sanitasi Pesan Error Mutasi & Stok', () => {
+    it('menyembunyikan detail SQL, psql, constraint, dan stack trace internal backend', () => {
+      const sqlError = 'ERROR: relation "riwayat_stok" does not exist (SQLSTATE 42P01)'
+      const sanitized = sanitizeStokErrorMessage(sqlError, 'Gagal memuat mutasi stok')
+      expect(sanitized).toBe('Gagal memuat mutasi stok')
+      expect(sanitized).not.toContain('SQLSTATE')
+      expect(sanitized).not.toContain('riwayat_stok')
+
+      const stackError = 'java.lang.NullPointerException at com.asqi.scholia_kantin_be.service.stok.StokOperasiService.riwayat'
+      expect(sanitizeStokErrorMessage(stackError, 'Gagal memuat mutasi stok')).toBe('Gagal memuat mutasi stok')
+    })
+
+    it('mempertahankan pesan bisnis valid yang aman dan membatasi panjang teks', () => {
+      const safeMsg = 'Rentang tanggal filter mutasi tidak valid'
+      expect(sanitizeStokErrorMessage(safeMsg)).toBe(safeMsg)
+
+      const longMsg = 'X'.repeat(200)
+      const truncated = sanitizeStokErrorMessage(longMsg)
+      expect(truncated.length).toBeLessThanOrEqual(150)
+      expect(truncated.endsWith('...')).toBe(true)
     })
   })
 })
