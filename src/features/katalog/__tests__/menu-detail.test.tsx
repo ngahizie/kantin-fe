@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { MenuDetailPage } from '../MenuDetailPage'
+import {
+  sanitizeMenuErrorMessage,
+  extractMenuErrorMessage,
+  sanitizeParamId,
+} from '../menu-error'
 import { katalogApi } from '../api/katalog-api'
 import { stokApi } from '../../stok/api/stok-api'
 import type { MenuItem } from '../types'
@@ -162,5 +167,56 @@ describe('MenuDetailPage', () => {
     expect(gambar?.getAttribute('src')).toContain(
       `/api/storage/file?path=${encodeURIComponent('menu/4.jpg')}`
     )
+  })
+
+  it('memotong parameter menuId yang terlalu panjang pada pesan galat untuk mencegah UI overflow', async () => {
+    route.menuId = 'invalid_param_yang_sangat_panjang_sekali_dan_melebihi_tiga_puluh_karakter'
+    const screen = await renderHalaman()
+
+    await expect
+      .element(screen.getByText(/Nomor menu "invalid_param_yang_sangat_panj\.\.\." tidak valid/i))
+      .toBeInTheDocument()
+  })
+
+  it('menampilkan pesan terstruktur dari respons error server (403)', async () => {
+    vi.spyOn(katalogApi, 'getMenuDetail').mockRejectedValue({
+      response: { status: 403, data: { message: 'Akses ditolak' } },
+    })
+
+    const screen = await renderHalaman()
+
+    await expect
+      .element(screen.getByText('Anda tidak memiliki hak akses untuk melihat menu ini.'))
+      .toBeInTheDocument()
+  })
+})
+
+describe('menu-error utilities', () => {
+  it('menyaring pesan error yang mengandung detail database/internal', () => {
+    const rawError = 'PSQL Exception: foreign key violation on table menu_kategori'
+    expect(sanitizeMenuErrorMessage(rawError)).toBe('Terjadi kesalahan saat memproses data menu')
+  })
+
+  it('memotong pesan error yang terlalu panjang (> 150 karakter)', () => {
+    const longMsg = 'Pesan error yang sengaja dibuat sangat panjang sekali '.repeat(4)
+    const sanitized = sanitizeMenuErrorMessage(longMsg)
+    expect(sanitized.length).toBeLessThanOrEqual(150)
+    expect(sanitized.endsWith('...')).toBe(true)
+  })
+
+  it('memotong ID parameter yang terlalu panjang via sanitizeParamId', () => {
+    const longId = '1234567890123456789012345678901234567890'
+    expect(sanitizeParamId(longId)).toBe('123456789012345678901234567890...')
+    expect(sanitizeParamId('123')).toBe('123')
+  })
+
+  it('mengekstrak pesan error ramah dari berbagai jenis respons', () => {
+    expect(extractMenuErrorMessage({ response: { status: 404 } })).toContain('tidak ditemukan')
+    expect(extractMenuErrorMessage({ response: { status: 403 } })).toContain('tidak memiliki hak akses')
+    expect(
+      extractMenuErrorMessage({
+        response: { status: 400, data: { message: 'Menu telah dinonaktifkan' } },
+      })
+    ).toBe('Menu telah dinonaktifkan')
   })
 })

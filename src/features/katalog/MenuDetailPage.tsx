@@ -38,6 +38,7 @@ import type { RiwayatStokItem } from '../stok/types'
 import { katalogApi } from './api/katalog-api'
 import { MenuFormModal } from './MenuFormModal'
 import type { KategoriItem, MenuItem } from './types'
+import { extractMenuErrorMessage, sanitizeParamId } from './menu-error'
 
 interface MenuDetailContentProps {
   menuId: string
@@ -131,13 +132,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
         if (!masihAktif) return
         setMenu(null)
         setRiwayatStok([])
-        const status = (err as { response?: { status?: number } })?.response?.status
-        const pesanMentah = err instanceof Error ? err.message : ''
-        setError(
-          status === 404 || pesanMentah.includes('404')
-            ? 'Menu dengan nomor ini tidak ditemukan. Mungkin sudah dihapus atau tautannya salah.'
-            : pesanMentah || 'Menu tidak dapat dimuat'
-        )
+        setError(extractMenuErrorMessage(err))
       } finally {
         if (masihAktif) {
           setLoading(false)
@@ -179,9 +174,10 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
     }
   }
 
+  const sanitizedMenuId = sanitizeParamId(menuId)
   const pesanGalat = idValid
     ? error
-    : `Nomor menu "${menuId}" tidak valid. Alamat halaman harus berisi angka, misalnya /menu/4.`
+    : `Nomor menu "${sanitizedMenuId}" tidak valid. Alamat halaman harus berisi angka, misalnya /menu/4.`
   const kategoriSiap = kategoriList.length > 0
   const fotoSrc =
     menu?.fotoUrl && !fotoGagal ? katalogApi.getImageUrl(menu.fotoUrl) : ''
