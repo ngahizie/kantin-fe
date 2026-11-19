@@ -546,7 +546,6 @@ export function KategoriPage() {
                 ) : (
                   filteredKategori.map((kat, idx) => {
                     const isAktif = kat.isActive !== false && kat.aktif !== false
-                    const itemQty = kat.jumlahItem ?? 0
                     const deleteBlockedReason = getKategoriDeleteBlockedReason(kat)
                     const isDeleteDisabled = Boolean(deleteBlockedReason)
                     const deleteButtonTitle = deleteBlockedReason || 'Hapus Kategori'
