@@ -212,8 +212,8 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
 
     const existingLock = getCloseSessionLock(sesi)
     const authoritativeCash = existingLock ? existingLock.cashValue : cashValue
-    const authoritativeKasSeharusnya =
-      existingLock?.kasSeharusnya ?? kasSeharusnya
+    // Nilai kas seharusnya selalu bersumber dari kalkulasi otoritatif sistem/rekap, bukan dari local storage
+    const authoritativeKasSeharusnya = kasSeharusnya
     const authoritativeSelisih = authoritativeCash - authoritativeKasSeharusnya
 
     if (authoritativeSelisih !== 0 && !catatanSelisih.trim()) {
