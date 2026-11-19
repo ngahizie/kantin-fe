@@ -158,6 +158,7 @@ export function KartuStokPage() {
         menuId: menuIdParam,
         detail: {
           totalBaris: rows.length,
+          cakupan: exportMeta.cakupan,
           menuId: menuIdParam ?? null,
         },
       })
@@ -225,6 +226,7 @@ export function KartuStokPage() {
         menuId: menuIdParam,
         detail: {
           totalBaris: rows.length,
+          cakupan: exportMeta.cakupan,
           menuId: menuIdParam ?? null,
         },
       })
