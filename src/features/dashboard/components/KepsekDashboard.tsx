@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/table'
 import { DashboardStatCard } from './DashboardStatCard'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
-import { formatTimeWithZone, formatNumber } from '@/lib/formatters'
+import { formatNumber } from '@/lib/formatters'
 import {
   formatRupiah,
   getLast7Days,
@@ -74,11 +74,12 @@ export const KepsekDashboard: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const [penjualanRes, rekonRes, saldoRes, trxRes] = await Promise.allSettled([
+        // RBAC note: Sesuai PRD §9.5 & RbacKepsekGuardTest, peran Kepsek dibatasi hanya baca sebagian laporan
+        // dan tidak memiliki akses ke endpoint /api/laporan/transaksi-keseluruhan (khusus TU/Admin/Pengelola).
+        const [penjualanRes, rekonRes, saldoRes] = await Promise.allSettled([
           typeof laporanApi.getPenjualan === 'function' ? laporanApi.getPenjualan() : Promise.resolve(null),
           typeof laporanApi.getRekonsiliasi === 'function' ? laporanApi.getRekonsiliasi(undefined, { silent: true }) : Promise.resolve(null),
           typeof laporanApi.getSaldoMengendap === 'function' ? laporanApi.getSaldoMengendap() : Promise.resolve(null),
-          typeof laporanApi.getRiwayatTransaksiKeseluruhan === 'function' ? laporanApi.getRiwayatTransaksiKeseluruhan({ batas: 25 }) : Promise.resolve([]),
         ])
 
         if (!isMounted) return
@@ -97,42 +98,6 @@ export const KepsekDashboard: React.FC = () => {
 
         if (saldoRes.status === 'fulfilled' && saldoRes.value) {
           setSaldoMengendap(saldoRes.value)
-        }
-
-        if (trxRes.status === 'fulfilled' && Array.isArray(trxRes.value)) {
-          const kasirRows = trxRes.value
-            .filter((trx) => trx.jenis === 'BELANJA' || trx.jenis === 'VOID')
-            .slice(0, 5)
-
-          const mapped: RecentTransactionDisplayItem[] = kasirRows.map((trx) => {
-            const timeStr = formatTimeWithZone(trx.waktu)
-            const hasRealItems = Array.isArray(trx.items) && trx.items.length > 0
-            const itemSummary = hasRealItems
-              ? trx.items!
-                  .map((it) => {
-                    const menuName =
-                      (it as { namaMenu?: string; nama?: string }).namaMenu ||
-                      it.nama ||
-                      'Item'
-                    return (it.qty && it.qty > 1 ? `${it.qty}x ` : '') + menuName
-                  })
-                  .join(', ')
-              : trx.titikKasir && trx.titikKasir !== '-'
-                ? `POS ${trx.titikKasir}`
-                : 'Transaksi Kantin'
-
-            return {
-              id: `TRX-${trx.id}`,
-              waktu: timeStr,
-              nama:
-                trx.siswaNama ||
-                (trx.siswaId ? `Siswa #${trx.siswaId}` : 'Pelanggan Tunai'),
-              item: itemSummary,
-              total: Number(trx.nominal ?? 0),
-              status: trx.jenis === 'VOID' ? 'REFUND' : 'SUKSES',
-            }
-          })
-          setRecentTransactions(mapped)
         }
 
         // Hitung omset mingguan
