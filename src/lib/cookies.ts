@@ -20,17 +20,29 @@ export function getCookie(name: string): string | undefined {
   return undefined
 }
 
+export interface SetCookieOptions {
+  sameSite?: 'Lax' | 'Strict' | 'None'
+  secure?: boolean
+}
+
 /**
- * Set a cookie with name, value, and optional max age
+ * Set a cookie with name, value, optional max age, and security flags (SameSite, Secure)
  */
 export function setCookie(
   name: string,
   value: string,
-  maxAge: number = DEFAULT_MAX_AGE
+  maxAge: number = DEFAULT_MAX_AGE,
+  options?: SetCookieOptions
 ): void {
   if (typeof document === 'undefined') return
 
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}`
+  const sameSite = options?.sameSite ?? 'Lax'
+  const isSecure =
+    options?.secure ??
+    (typeof window !== 'undefined' && window.location.protocol === 'https:')
+  const secureDirective = isSecure ? '; Secure' : ''
+
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=${sameSite}${secureDirective}`
 }
 
 /**
@@ -39,5 +51,9 @@ export function setCookie(
 export function removeCookie(name: string): void {
   if (typeof document === 'undefined') return
 
-  document.cookie = `${name}=; path=/; max-age=0`
+  const isSecure =
+    typeof window !== 'undefined' && window.location.protocol === 'https:'
+  const secureDirective = isSecure ? '; Secure' : ''
+
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secureDirective}`
 }

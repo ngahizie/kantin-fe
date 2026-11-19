@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
-import { UserAuthForm } from './user-auth-form'
+import { UserAuthForm, resolveUserRole } from './user-auth-form'
 import { getRoleHomePath } from '@/stores/useRoleStore'
 
 const FORM_MESSAGES = {
@@ -91,6 +91,16 @@ describe('UserAuthForm', () => {
         .toBeInTheDocument()
     })
 
+    it('rejects passwords shorter than 8 characters per NIST policy (SEC-05)', async () => {
+      await userEvent.fill(emailInput, 'admin@skoolia.id')
+      await userEvent.fill(passwordInput, 'pass123') // 7 characters
+      await userEvent.click(signInButton)
+
+      await expect
+        .element(screen.getByText('Kata sandi minimal 8 karakter.'))
+        .toBeInTheDocument()
+    })
+
     it('authenticates and navigates to default route on success', async () => {
       await userEvent.fill(emailInput, 'admin@skoolia.id')
       await userEvent.fill(passwordInput, 'password123')
@@ -147,6 +157,60 @@ describe('UserAuthForm', () => {
       expect(getRoleHomePath('bendahara')).toBe('/')
       expect(getRoleHomePath('kepsek')).toBe('/')
       expect(getRoleHomePath('admin')).toBe('/')
+    })
+  })
+
+  describe('resolveUserRole security helper (SEC-01)', () => {
+    it('resolves valid currentRole directly', () => {
+      expect(resolveUserRole([], 'kasir')).toBe('kasir')
+      expect(resolveUserRole([], 'pengelola')).toBe('pengelola')
+      expect(resolveUserRole([], 'kepsek')).toBe('kepsek')
+    })
+
+    it('resolves roles array correctly', () => {
+      expect(resolveUserRole(['ROLE_ADMIN'])).toBe('admin')
+      expect(resolveUserRole(['ROLE_PENGELOLA_KANTIN'])).toBe('pengelola')
+      expect(resolveUserRole(['ROLE_PETUGAS_KANTIN'])).toBe('kasir')
+      expect(resolveUserRole(['ROLE_TU_SEKOLAH'])).toBe('tu')
+      expect(resolveUserRole(['ROLE_BENDAHARA'])).toBe('bendahara')
+      expect(resolveUserRole(['ROLE_KEPSEK'])).toBe('kepsek')
+    })
+
+    it('throws error when no valid role or roles array is provided (fail-closed)', () => {
+      expect(() => resolveUserRole([], undefined)).toThrow(
+        'Akun Anda tidak memiliki peran operasional yang valid.'
+      )
+      expect(() => resolveUserRole(undefined, 'invalid_role')).toThrow(
+        'Akun Anda tidak memiliki peran operasional yang valid.'
+      )
+    })
+  })
+
+  describe('Brute-force protection & Lockout (SEC-04)', () => {
+    it('locks the form and displays lockout message when 429 Too Many Requests is returned', async () => {
+      const { apiClient } = await import('@/lib/api-client')
+      vi.mocked(apiClient.post).mockRejectedValueOnce({
+        response: {
+          status: 429,
+          data: { message: 'Too Many Requests' },
+        },
+      })
+
+      const screen = await render(<UserAuthForm />)
+      const emailInput = screen.getByRole('textbox', { name: /(Username|Email)/i })
+      const passwordInput = screen.getByLabelText(/^(Kata Sandi|Password)$/i)
+      const signInButton = screen.getByRole('button', { name: /(^Masuk$|Masuk ke Sistem Kantin)/i })
+
+      await userEvent.fill(emailInput, 'admin@skoolia.id')
+      await userEvent.fill(passwordInput, 'password123')
+      await userEvent.click(signInButton)
+
+      await expect
+        .element(screen.getByRole('alert'))
+        .toBeInTheDocument()
+      await expect
+        .element(screen.getByText(/Terlalu banyak percobaan gagal/i))
+        .toBeInTheDocument()
     })
   })
 })

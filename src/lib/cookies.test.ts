@@ -31,4 +31,10 @@ describe('cookies', () => {
 
     expect(getCookie(name)).toBeUndefined()
   })
+
+  it('supports custom SameSite option without breaking cookie retrieval', () => {
+    const name = uniqueName()
+    setCookie(name, 'secure-val', 3600, { sameSite: 'Strict' })
+    expect(getCookie(name)).toBe('secure-val')
+  })
 })
