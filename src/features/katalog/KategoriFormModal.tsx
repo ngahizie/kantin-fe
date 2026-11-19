@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
+import { sanitizeKategoriErrorMessage } from './kategori-error'
 import {
   kategoriFormSchema,
   type KategoriFormValues,
@@ -94,8 +95,8 @@ export function KategoriFormModal({
       onOpenChange(false)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message = error.response?.data?.message || error.message || 'Gagal menyimpan kategori'
-      toast.error(message)
+      const rawMessage = error.response?.data?.message || error.message || ''
+      toast.error(sanitizeKategoriErrorMessage(rawMessage, 'Gagal menyimpan kategori'))
     } finally {
       isSubmittingRef.current = false
     }

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { getKategoriDeleteBlockedReason } from '../menu-utils'
 import { KategoriFormModal } from '../KategoriFormModal'
 import { katalogApi } from '../api/katalog-api'
+import { sanitizeKategoriErrorMessage } from '../kategori-error'
 
 describe('Security Hardening Kategori (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -130,6 +131,29 @@ describe('Security Hardening Kategori (OWASP & NIST)', () => {
       await expect.element(savingBtn).toBeDisabled()
 
       resolvePromise({ id: 10, nama: 'Kategori Anti Double', urutan: 0, aktif: true })
+    })
+  })
+
+  describe('SEC-KAT-05: Sanitasi Pesan Error Kategori', () => {
+    it('menyembunyikan detail SQL, psql, constraint, dan stack trace internal backend', () => {
+      const sqlError = 'ERROR: duplicate key value violates unique constraint "kategori_nama_key" (SQLSTATE 23505)'
+      const sanitized = sanitizeKategoriErrorMessage(sqlError, 'Gagal menyimpan kategori')
+      expect(sanitized).toBe('Gagal menyimpan kategori')
+      expect(sanitized).not.toContain('SQLSTATE')
+      expect(sanitized).not.toContain('kategori_nama_key')
+
+      const stackError = 'java.lang.NullPointerException at com.kantin.service.KategoriService.save'
+      expect(sanitizeKategoriErrorMessage(stackError, 'Gagal menyimpan kategori')).toBe('Gagal menyimpan kategori')
+    })
+
+    it('mempertahankan pesan bisnis valid yang aman dan membatasi panjang teks', () => {
+      const safeMsg = 'Nama kategori sudah digunakan pada kantin ini'
+      expect(sanitizeKategoriErrorMessage(safeMsg)).toBe(safeMsg)
+
+      const longMsg = 'X'.repeat(200)
+      const truncated = sanitizeKategoriErrorMessage(longMsg)
+      expect(truncated.length).toBeLessThanOrEqual(150)
+      expect(truncated.endsWith('...')).toBe(true)
     })
   })
 })

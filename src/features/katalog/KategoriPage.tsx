@@ -39,6 +39,7 @@ import {
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
 import { KategoriFormModal } from './KategoriFormModal'
+import { sanitizeKategoriErrorMessage } from './kategori-error'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
   getKategoriDeleteBlockedReason,
@@ -151,7 +152,12 @@ export function KategoriPage() {
       } catch (err: unknown) {
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           const error = err as { message?: string }
-          toast.error(error.message || 'Gagal memuat daftar kategori')
+          toast.error(
+            sanitizeKategoriErrorMessage(
+              error.message || '',
+              'Gagal memuat daftar kategori'
+            )
+          )
         }
       } finally {
         inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
@@ -306,9 +312,14 @@ export function KategoriPage() {
       await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message =
-        error.response?.data?.message || error.message || 'Gagal memperbarui status kategori'
-      toast.error(message)
+      const rawMessage =
+        error.response?.data?.message || error.message || ''
+      toast.error(
+        sanitizeKategoriErrorMessage(
+          rawMessage,
+          'Gagal memperbarui status kategori'
+        )
+      )
     } finally {
       setTogglingId(null)
     }
@@ -336,11 +347,16 @@ export function KategoriPage() {
       await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message =
+      const rawMessage =
         error.response?.data?.message ||
         error.message ||
-        'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
-      toast.error(message)
+        ''
+      toast.error(
+        sanitizeKategoriErrorMessage(
+          rawMessage,
+          'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
+        )
+      )
     } finally {
       setIsDeleting(false)
     }
