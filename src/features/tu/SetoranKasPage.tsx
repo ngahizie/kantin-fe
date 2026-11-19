@@ -44,6 +44,7 @@ import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-acti
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, formatTime, formatTimeWithZone } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import {
   LaporanDateFilter,
   getDefaultDateFilter,
@@ -132,6 +133,7 @@ export function SetoranKasPage() {
       try {
         let items: SetoranKasItem[] = []
 
+        let isBackendAvailable = false
         try {
           const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
             params: dateFilterParams,
@@ -146,78 +148,98 @@ export function SetoranKasPage() {
                   : defaultFallbackDate
               )
             )
+            isBackendAvailable = true
           }
         } catch {
           // Abaikan jika live query rekap backend mengembalikan error atau 404
         }
 
-        // Ambil transaksi top-up lokal untuk setiap tanggal pada periode yang dipilih agar mutasi top-up
-        // terbaru selalu terangkum di rekapitulasi setoran kas TU
-        for (const tgl of targetDates) {
-          const localTxs = getStoredTopupTransactions(tgl)
-          if (localTxs.length === 0) continue
-
-          const groupedByPetugas = new Map<number, TransaksiTopupDetail[]>()
-          for (const tx of localTxs) {
-            const pId =
-              tx.petugas_id ??
-              (auth.user?.userId ? Number(auth.user.userId) : 2)
-            const currentGroup = groupedByPetugas.get(pId) || []
-            currentGroup.push(tx)
-            groupedByPetugas.set(pId, currentGroup)
-          }
-
-          for (const [pId, txs] of groupedByPetugas.entries()) {
-            const existingIdx = items.findIndex(
-              (it) => it.petugas_id === pId && it.tanggal === tgl
-            )
-            const totalSiswa = txs.reduce(
-              (sum, t) => sum + (t.nominal || 0),
-              0
-            )
-            const totalSistem = totalSiswa
-
-            if (existingIdx >= 0) {
-              const existing = items[existingIdx]
-              items[existingIdx] = {
-                ...existing,
-                total_transaksi: Math.max(existing.total_transaksi, txs.length),
-                total_topup_siswa: Math.max(
-                  existing.total_topup_siswa,
-                  totalSiswa
-                ),
-                total_sistem: Math.max(existing.total_sistem, totalSistem),
-                rincian_transaksi:
-                  existing.rincian_transaksi &&
-                  existing.rincian_transaksi.length > 0
-                    ? existing.rincian_transaksi
-                    : txs,
+        if (isBackendAvailable) {
+          // Ketika backend tersedia sebagai SSOT (Single Source of Truth),
+          // gunakan data ledger resmi backend untuk angka finansial dan status konfirmasi.
+          // Hanya tambahkan rincian transaksi lokal bila backend tidak menyediakan rincian.
+          for (const item of items) {
+            if (!item.rincian_transaksi || item.rincian_transaksi.length === 0) {
+              const localTxs = getStoredTopupTransactions(
+                item.tanggal,
+                item.petugas_id
+              )
+              if (localTxs.length > 0) {
+                item.rincian_transaksi = localTxs
               }
-            } else {
-              const currentUser = auth.user
-              const isCurrentPetugas =
-                currentUser?.userId && Number(currentUser.userId) === pId
-              const petugasNama = isCurrentPetugas
-                ? currentUser?.nama || 'Petugas TU'
-                : KNOWN_PETUGAS_MAP[pId]?.nama || `Petugas TU #${pId}`
-              const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
-
-              items.push({
-                id: `SETOR-${tgl.replace(/-/g, '')}-${pId}`,
-                tanggal: tgl,
-                petugas_id: pId,
-                petugas_nama: petugasNama,
-                petugas_nip: petugasNip,
-                total_transaksi: txs.length,
-                total_topup_siswa: totalSiswa,
-                total_sistem: totalSistem,
-                uang_fisik: null,
-                selisih: null,
-                status: 'MENUNGGU_KONFIRMASI',
-                rincian_transaksi: txs,
-              })
             }
           }
+        } else {
+          // Fallback offline / dev: ambil transaksi top-up lokal dan konfirmasi lokal
+          for (const tgl of targetDates) {
+            const localTxs = getStoredTopupTransactions(tgl)
+            if (localTxs.length === 0) continue
+
+            const groupedByPetugas = new Map<number, TransaksiTopupDetail[]>()
+            for (const tx of localTxs) {
+              const pId =
+                tx.petugas_id ??
+                (auth.user?.userId ? Number(auth.user.userId) : 2)
+              const currentGroup = groupedByPetugas.get(pId) || []
+              currentGroup.push(tx)
+              groupedByPetugas.set(pId, currentGroup)
+            }
+
+            for (const [pId, txs] of groupedByPetugas.entries()) {
+              const existingIdx = items.findIndex(
+                (it) => it.petugas_id === pId && it.tanggal === tgl
+              )
+              const totalSiswa = txs.reduce(
+                (sum, t) => sum + (t.nominal || 0),
+                0
+              )
+              const totalSistem = totalSiswa
+
+              if (existingIdx >= 0) {
+                const existing = items[existingIdx]
+                items[existingIdx] = {
+                  ...existing,
+                  total_transaksi: Math.max(existing.total_transaksi, txs.length),
+                  total_topup_siswa: Math.max(
+                    existing.total_topup_siswa,
+                    totalSiswa
+                  ),
+                  total_sistem: Math.max(existing.total_sistem, totalSistem),
+                  rincian_transaksi:
+                    existing.rincian_transaksi &&
+                    existing.rincian_transaksi.length > 0
+                      ? existing.rincian_transaksi
+                      : txs,
+                }
+              } else {
+                const currentUser = auth.user
+                const isCurrentPetugas =
+                  currentUser?.userId && Number(currentUser.userId) === pId
+                const petugasNama = isCurrentPetugas
+                  ? currentUser?.nama || 'Petugas TU'
+                  : KNOWN_PETUGAS_MAP[pId]?.nama || `Petugas TU #${pId}`
+                const petugasNip = KNOWN_PETUGAS_MAP[pId]?.nip
+
+                items.push({
+                  id: `SETOR-${tgl.replace(/-/g, '')}-${pId}`,
+                  tanggal: tgl,
+                  petugas_id: pId,
+                  petugas_nama: petugasNama,
+                  petugas_nip: petugasNip,
+                  total_transaksi: txs.length,
+                  total_topup_siswa: totalSiswa,
+                  total_sistem: totalSistem,
+                  uang_fisik: null,
+                  selisih: null,
+                  status: 'MENUNGGU_KONFIRMASI',
+                  rincian_transaksi: txs,
+                })
+              }
+            }
+          }
+
+          // Terapkan data konfirmasi yang tersimpan di storage lokal jika mode fallback lokal
+          items = applyStoredSetoranConfirmations(items)
         }
 
         // Urutkan terbaru lebih dulu untuk mode rentang
@@ -225,9 +247,6 @@ export function SetoranKasPage() {
           if (a.tanggal !== b.tanggal) return b.tanggal.localeCompare(a.tanggal)
           return a.petugas_id - b.petugas_id
         })
-
-        // Terapkan data konfirmasi yang tersimpan di storage lokal jika ada
-        items = applyStoredSetoranConfirmations(items)
 
         if (isMounted) {
           setSetoranList(items)
@@ -315,36 +334,31 @@ export function SetoranKasPage() {
       'Waktu Konfirmasi',
     ]
 
-    const rows = filteredList.map((item) => [
-      item.id,
-      item.tanggal,
-      item.petugas_nama,
-      item.petugas_nip || '-',
-      item.total_transaksi,
-      item.total_topup_siswa,
-      item.total_sistem,
-      item.uang_fisik !== null ? item.uang_fisik : '-',
-      item.selisih !== null ? item.selisih : '-',
-      item.status,
-      `"${(item.catatan || '-').replace(/"/g, '""')}"`,
-      item.bendahara_nama || '-',
-      item.konfirmasi_pada || '-',
-    ])
+    const headerRow = headers.map(sanitizeCsvCell).join(',')
+    const dataRows = filteredList.map((item) =>
+      [
+        sanitizeCsvCell(item.id),
+        sanitizeCsvCell(item.tanggal),
+        sanitizeCsvCell(item.petugas_nama),
+        sanitizeCsvCell(item.petugas_nip || '-'),
+        sanitizeCsvCell(item.total_transaksi),
+        sanitizeCsvCell(item.total_topup_siswa),
+        sanitizeCsvCell(item.total_sistem),
+        sanitizeCsvCell(item.uang_fisik !== null ? item.uang_fisik : '-'),
+        sanitizeCsvCell(item.selisih !== null ? item.selisih : '-'),
+        sanitizeCsvCell(item.status),
+        sanitizeCsvCell(item.catatan || '-'),
+        sanitizeCsvCell(item.bendahara_nama || '-'),
+        sanitizeCsvCell(item.konfirmasi_pada || '-'),
+      ].join(',')
+    )
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+    const csvContent = [headerRow, ...dataRows].join('\r\n')
 
     const fileSlug =
       dateFilterParams.tanggal ||
       `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${fileSlug}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    downloadCsvBlob(`Rekap_Setoran_Kas_TU_${fileSlug}.csv`, csvContent)
     toast.success('Laporan rekapitulasi setoran kas berhasil diekspor ke CSV')
   }
 
