@@ -8,7 +8,7 @@ describe('LaporanExportButton', () => {
     const onExportExcel = vi.fn()
     const onExportPdf = vi.fn()
 
-    const screen = await render(
+    const { getByRole, getByText, unmount } = await render(
       <LaporanExportButton
         onExportExcel={onExportExcel}
         onExportPdf={onExportPdf}
@@ -16,64 +16,78 @@ describe('LaporanExportButton', () => {
     )
 
     // Tombol tunggal awal memakai varian default (solid primary)
-    const exportBtn = screen.getByRole('button', { name: /Ekspor/i })
+    const exportBtn = getByRole('button', { name: /Ekspor/i })
     await expect.element(exportBtn).toBeInTheDocument()
     await expect.element(exportBtn).toHaveClass('bg-primary')
 
     // Dialog belum terbuka
-    await expect.element(screen.getByText('Pilih Format Ekspor')).not.toBeInTheDocument()
+    await expect.element(getByText('Pilih Format Ekspor')).not.toBeInTheDocument()
 
     // Klik tombol Ekspor
     await userEvent.click(exportBtn)
 
-    // Dialog muncul
-    await expect.element(screen.getByText('Pilih Format Ekspor')).toBeInTheDocument()
-    await expect.element(screen.getByText('Spreadsheet Excel')).toBeInTheDocument()
-    await expect.element(screen.getByText('Dokumen PDF')).toBeInTheDocument()
-    await expect.element(screen.getByRole('button', { name: 'Batal' })).toBeInTheDocument()
+    // Menu muncul
+    await expect.element(getByText('Pilih Format Ekspor')).toBeInTheDocument()
+    await expect.element(getByText('Spreadsheet Excel')).toBeInTheDocument()
+    await expect.element(getByText('Dokumen PDF')).toBeInTheDocument()
+
+    // Menutup menu kembali
+    await userEvent.keyboard('{Escape}')
+    await expect.element(getByText('Pilih Format Ekspor')).not.toBeInTheDocument()
+    await unmount()
   })
 
   it('memanggil onExportExcel saat opsi Excel dipilih', async () => {
     const onExportExcel = vi.fn()
     const onExportPdf = vi.fn()
 
-    const screen = await render(
+    const { getByRole, getByTestId, getByText, unmount } = await render(
       <LaporanExportButton
         onExportExcel={onExportExcel}
         onExportPdf={onExportPdf}
       />
     )
 
-    await userEvent.click(screen.getByRole('button', { name: /Ekspor/i }))
-    await userEvent.click(screen.getByTestId('btn-export-excel-option'))
+    const trigger = getByRole('button', { name: /Ekspor/i })
+    await expect.element(trigger).toBeInTheDocument()
+    await userEvent.click(trigger)
+
+    await expect.element(getByText('Spreadsheet Excel')).toBeInTheDocument()
+    await userEvent.click(getByTestId('btn-export-excel-option'))
 
     expect(onExportExcel).toHaveBeenCalledOnce()
     expect(onExportPdf).not.toHaveBeenCalled()
+    await unmount()
   })
 
   it('memanggil onExportPdf saat opsi PDF dipilih', async () => {
     const onExportExcel = vi.fn()
     const onExportPdf = vi.fn()
 
-    const screen = await render(
+    const { getByRole, getByTestId, getByText, unmount } = await render(
       <LaporanExportButton
         onExportExcel={onExportExcel}
         onExportPdf={onExportPdf}
       />
     )
 
-    await userEvent.click(screen.getByRole('button', { name: /Ekspor/i }))
-    await userEvent.click(screen.getByTestId('btn-export-pdf-option'))
+    const trigger = getByRole('button', { name: /Ekspor/i })
+    await expect.element(trigger).toBeInTheDocument()
+    await userEvent.click(trigger)
+
+    await expect.element(getByText('Dokumen PDF')).toBeInTheDocument()
+    await userEvent.click(getByTestId('btn-export-pdf-option'))
 
     expect(onExportPdf).toHaveBeenCalledOnce()
     expect(onExportExcel).not.toHaveBeenCalled()
+    await unmount()
   })
 
   it('tidak dapat dibuka bila tombol dalam kondisi disabled', async () => {
     const onExportExcel = vi.fn()
     const onExportPdf = vi.fn()
 
-    const screen = await render(
+    const { getByRole, unmount } = await render(
       <LaporanExportButton
         onExportExcel={onExportExcel}
         onExportPdf={onExportPdf}
@@ -81,26 +95,31 @@ describe('LaporanExportButton', () => {
       />
     )
 
-    const exportBtn = screen.getByRole('button', { name: /Ekspor/i })
+    const exportBtn = getByRole('button', { name: /Ekspor/i })
     await expect.element(exportBtn).toBeDisabled()
+    await unmount()
   })
 
-  it('menutup dialog saat tombol Batal diklik tanpa mengeksekusi callback ekspor', async () => {
+  it('menutup menu saat Escape ditekan tanpa mengeksekusi callback ekspor', async () => {
     const onExportExcel = vi.fn()
     const onExportPdf = vi.fn()
 
-    const screen = await render(
+    const { getByRole, getByText, unmount } = await render(
       <LaporanExportButton
         onExportExcel={onExportExcel}
         onExportPdf={onExportPdf}
       />
     )
 
-    await userEvent.click(screen.getByRole('button', { name: /Ekspor/i }))
-    await expect.element(screen.getByText('Pilih Format Ekspor')).toBeInTheDocument()
+    const trigger = getByRole('button', { name: /Ekspor/i })
+    await expect.element(trigger).toBeInTheDocument()
+    await userEvent.click(trigger)
+    await expect.element(getByText('Pilih Format Ekspor')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Batal' }))
+    await userEvent.keyboard('{Escape}')
     expect(onExportExcel).not.toHaveBeenCalled()
     expect(onExportPdf).not.toHaveBeenCalled()
+    await expect.element(getByText('Pilih Format Ekspor')).not.toBeInTheDocument()
+    await unmount()
   })
 })

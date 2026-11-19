@@ -82,21 +82,21 @@ describe('ExportButton', () => {
     await expect.element(getByTestId('btn-test-export')).toBeDisabled()
   })
 
-  it('menutup dialog saat tombol Batal diklik tanpa memanggil handler', async () => {
+  it('dapat membuka menu lewat hover atau klik dan menutup saat Escape ditekan tanpa memanggil handler', async () => {
     const onExportCsv = vi.fn()
     const onExportPdf = vi.fn()
 
-    const { getByRole } = await render(
+    const { getByRole, getByText } = await render(
       <ExportButton onExportCsv={onExportCsv} onExportPdf={onExportPdf} />
     )
 
-    await userEvent.click(getByRole('button', { name: /Ekspor/i }))
-    await userEvent.click(getByRole('button', { name: 'Batal' }))
+    const trigger = getByRole('button', { name: /Ekspor/i })
+    await userEvent.hover(trigger)
+    await expect.element(getByText('Pilih Format Ekspor')).toBeInTheDocument()
 
+    await userEvent.keyboard('{Escape}')
     expect(onExportCsv).not.toHaveBeenCalled()
     expect(onExportPdf).not.toHaveBeenCalled()
-    await expect
-      .element(getByRole('heading', { name: 'Pilih Format Ekspor' }))
-      .not.toBeInTheDocument()
+    await expect.element(getByText('Pilih Format Ekspor')).not.toBeInTheDocument()
   })
 })
