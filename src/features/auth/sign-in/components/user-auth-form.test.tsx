@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
-import { UserAuthForm } from './user-auth-form'
+import { UserAuthForm, resolveUserRole } from './user-auth-form'
 import { getRoleHomePath } from '@/stores/useRoleStore'
 
 const FORM_MESSAGES = {
@@ -147,6 +147,32 @@ describe('UserAuthForm', () => {
       expect(getRoleHomePath('bendahara')).toBe('/')
       expect(getRoleHomePath('kepsek')).toBe('/')
       expect(getRoleHomePath('admin')).toBe('/')
+    })
+  })
+
+  describe('resolveUserRole security helper (SEC-01)', () => {
+    it('resolves valid currentRole directly', () => {
+      expect(resolveUserRole([], 'kasir')).toBe('kasir')
+      expect(resolveUserRole([], 'pengelola')).toBe('pengelola')
+      expect(resolveUserRole([], 'kepsek')).toBe('kepsek')
+    })
+
+    it('resolves roles array correctly', () => {
+      expect(resolveUserRole(['ROLE_ADMIN'])).toBe('admin')
+      expect(resolveUserRole(['ROLE_PENGELOLA_KANTIN'])).toBe('pengelola')
+      expect(resolveUserRole(['ROLE_PETUGAS_KANTIN'])).toBe('kasir')
+      expect(resolveUserRole(['ROLE_TU_SEKOLAH'])).toBe('tu')
+      expect(resolveUserRole(['ROLE_BENDAHARA'])).toBe('bendahara')
+      expect(resolveUserRole(['ROLE_KEPSEK'])).toBe('kepsek')
+    })
+
+    it('throws error when no valid role or roles array is provided (fail-closed)', () => {
+      expect(() => resolveUserRole([], undefined)).toThrow(
+        'Akun Anda tidak memiliki peran operasional yang valid.'
+      )
+      expect(() => resolveUserRole(undefined, 'invalid_role')).toThrow(
+        'Akun Anda tidak memiliki peran operasional yang valid.'
+      )
     })
   })
 })

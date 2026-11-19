@@ -52,6 +52,23 @@ interface LoginResponseData {
   }
 }
 
+const VALID_ROLES: UserRole[] = ['kasir', 'pengelola', 'tu', 'bendahara', 'kepsek', 'admin']
+
+export function resolveUserRole(roles?: string[], currentRole?: string): UserRole {
+  if (currentRole && VALID_ROLES.includes(currentRole as UserRole)) {
+    return currentRole as UserRole
+  }
+  if (roles && roles.length > 0) {
+    if (roles.includes('ROLE_ADMIN')) return 'admin'
+    if (roles.includes('ROLE_PENGELOLA_KANTIN')) return 'pengelola'
+    if (roles.includes('ROLE_PETUGAS_KANTIN')) return 'kasir'
+    if (roles.includes('ROLE_TU_SEKOLAH')) return 'tu'
+    if (roles.includes('ROLE_BENDAHARA')) return 'bendahara'
+    if (roles.includes('ROLE_KEPSEK')) return 'kepsek'
+  }
+  throw new Error('Akun Anda tidak memiliki peran operasional yang valid.')
+}
+
 export function UserAuthForm({
   className,
   redirectTo,
@@ -95,15 +112,7 @@ export function UserAuthForm({
 
       const inputUsername = data.email.trim()
       const serverUsername = resData.user.email || inputUsername
-      let rawRole = (resData.user.currentRole || 'admin') as UserRole
-
-      if (
-        resData.user.roles?.includes('ROLE_KEPSEK') ||
-        serverUsername.toLowerCase().includes('kepsek') ||
-        inputUsername.toLowerCase().includes('kepsek')
-      ) {
-        rawRole = 'kepsek'
-      }
+      const rawRole = resolveUserRole(resData.user.roles, resData.user.currentRole)
 
       const cleanNama = (resData.user.nama || 'Staf Kantin').replace(/\s*\([^)]*\)$/, '')
       const authenticatedUser: AuthUser = {
@@ -113,7 +122,7 @@ export function UserAuthForm({
         username: serverUsername,
         sekolahId: resData.user.sekolah?.id || 10,
         sekolahNama: resData.user.sekolah?.nama || 'PAUD SKOOLIA',
-        roles: resData.user.roles || ['ROLE_ADMIN'],
+        roles: resData.user.roles || [],
         currentRole: rawRole,
       }
 
