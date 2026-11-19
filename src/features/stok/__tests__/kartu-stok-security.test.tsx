@@ -3,6 +3,12 @@ import { Route } from '@/routes/_authenticated/stok/kartu/index'
 import { useAuthStore } from '@/stores/auth-store'
 import { parseSafeMenuId } from '../stok-utils'
 import { sanitizeStokErrorMessage } from '../stok-error'
+import {
+  logStokAuditEvent,
+  getStokAuditLogs,
+  clearStokAuditLogs,
+} from '../api/stok-audit'
+import apiClient from '@/lib/api-client'
 
 describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -117,6 +123,58 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
       const truncated = sanitizeStokErrorMessage(longMsg)
       expect(truncated.length).toBeLessThanOrEqual(150)
       expect(truncated.endsWith('...')).toBe(true)
+    })
+  })
+
+  describe('SEC-STOK-04: Client Audit Logging Ekspor Stok', () => {
+    beforeEach(() => {
+      clearStokAuditLogs()
+    })
+
+    it('mencatat audit event saat ekspor CSV dan PDF', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { success: true } })
+
+      await logStokAuditEvent({
+        action: 'STOK_EXPORT_CSV',
+        menuId: 5,
+        detail: { totalBaris: 25 },
+      })
+
+      await logStokAuditEvent({
+        action: 'STOK_EXPORT_PDF',
+        menuId: null,
+        detail: { totalBaris: 100 },
+      })
+
+      const logs = getStokAuditLogs()
+      expect(logs).toHaveLength(2)
+      expect(logs[0].action).toBe('STOK_EXPORT_CSV')
+      expect(logs[0].menuId).toBe(5)
+      expect(logs[0].timestamp).toBeDefined()
+      expect(logs[1].action).toBe('STOK_EXPORT_PDF')
+
+      expect(postSpy).toHaveBeenCalledTimes(2)
+      expect(postSpy).toHaveBeenCalledWith('/api/stok/audit', expect.objectContaining({
+        action: 'STOK_EXPORT_CSV',
+        menuId: 5,
+      }))
+    })
+
+    it('membatasi ukuran antrean buffer audit klien maksimum 50 entri', async () => {
+      vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { success: true } })
+
+      for (let i = 1; i <= 60; i++) {
+        await logStokAuditEvent({
+          action: 'STOK_EXPORT_CSV',
+          menuId: i,
+          detail: { index: i },
+        })
+      }
+
+      const logs = getStokAuditLogs()
+      expect(logs).toHaveLength(50)
+      expect(logs[0].menuId).toBe(11)
+      expect(logs[49].menuId).toBe(60)
     })
   })
 })

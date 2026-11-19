@@ -1,5 +1,6 @@
 export * from './types'
 export * from './api/stok-api'
+export * from './api/stok-audit'
 export * from './utils/hpp-calculator'
 export * from './stok-utils'
 export * from './stok-error'

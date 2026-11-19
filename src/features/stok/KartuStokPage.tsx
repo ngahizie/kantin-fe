@@ -28,6 +28,7 @@ import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
+import { logStokAuditEvent } from './api/stok-audit'
 import { parseSafeMenuId } from './stok-utils'
 import { sanitizeStokErrorMessage } from './stok-error'
 import type { RiwayatStokItem } from './types'
@@ -143,6 +144,14 @@ export function KartuStokPage() {
       `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
       csvContent
     )
+    void logStokAuditEvent({
+      action: 'STOK_EXPORT_CSV',
+      menuId: menuIdParam,
+      detail: {
+        totalBaris: rows.length,
+        menuId: menuIdParam ?? null,
+      },
+    })
     toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
   }
 
@@ -191,6 +200,15 @@ export function KartuStokPage() {
           { header: 'Alasan / Keterangan', key: 'alasan' },
         ],
         data: rows,
+      })
+
+      void logStokAuditEvent({
+        action: 'STOK_EXPORT_PDF',
+        menuId: menuIdParam,
+        detail: {
+          totalBaris: rows.length,
+          menuId: menuIdParam ?? null,
+        },
       })
 
       toast.success('Ekspor PDF Berhasil', {
