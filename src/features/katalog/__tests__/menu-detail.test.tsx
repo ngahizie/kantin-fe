@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { userEvent } from 'vitest/browser'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { MenuDetailPage } from '../MenuDetailPage'
 import {
@@ -188,6 +189,103 @@ describe('MenuDetailPage', () => {
     await expect
       .element(screen.getByText('Anda tidak memiliki hak akses untuk melihat menu ini.'))
       .toBeInTheDocument()
+  })
+
+  it('memanggil getRiwayatStok dengan server-side pagination (halaman 0, ukuran 10)', async () => {
+    vi.spyOn(katalogApi, 'getMenuDetail').mockResolvedValue(menuContoh)
+    const riwayatSpy = vi.spyOn(stokApi, 'getRiwayatStok').mockResolvedValue({
+      items: [
+        {
+          id: 1,
+          menuId: 4,
+          jenis: 'BARANG_MASUK',
+          arah: 'MASUK',
+          qty: 10,
+          stokSetelah: 14,
+          dapatDibalik: true,
+          waktu: new Date().toISOString(),
+          referensiId: 'REF-001',
+          alasan: 'Restock rutin',
+        },
+      ],
+      total: 25,
+      halaman: 0,
+      ukuran: 10,
+      totalHalaman: 3,
+    })
+
+    const screen = await renderHalaman()
+
+    await expect.element(screen.getByText('Air Mineral')).toBeInTheDocument()
+    await expect.element(screen.getByText('REF-001')).toBeInTheDocument()
+    await expect.element(screen.getByText('Halaman 1 dari 3')).toBeInTheDocument()
+    expect(riwayatSpy).toHaveBeenCalledWith({
+      menuId: 4,
+      halaman: 0,
+      ukuran: 10,
+    })
+  })
+
+  it('dapat melakukan navigasi ke halaman riwayat berikutnya secara server-side', async () => {
+    vi.spyOn(katalogApi, 'getMenuDetail').mockResolvedValue(menuContoh)
+    const riwayatSpy = vi.spyOn(stokApi, 'getRiwayatStok').mockImplementation(async (params = {}) => {
+      if ((params.halaman ?? 0) === 0) {
+        return {
+          items: [
+            {
+              id: 1,
+              menuId: 4,
+              jenis: 'BARANG_MASUK',
+              arah: 'MASUK',
+              qty: 10,
+              stokSetelah: 14,
+              dapatDibalik: true,
+              waktu: new Date().toISOString(),
+              referensiId: 'REF-HAL-1',
+              alasan: 'Halaman satu',
+            },
+          ],
+          total: 25,
+          halaman: 0,
+          ukuran: 10,
+          totalHalaman: 3,
+        }
+      }
+      return {
+        items: [
+          {
+            id: 2,
+            menuId: 4,
+            jenis: 'PENJUALAN',
+            arah: 'KELUAR',
+            qty: 2,
+            stokSetelah: 12,
+            dapatDibalik: false,
+            waktu: new Date().toISOString(),
+            referensiId: 'REF-HAL-2',
+            alasan: 'Halaman dua',
+          },
+        ],
+        total: 25,
+        halaman: 1,
+        ukuran: 10,
+        totalHalaman: 3,
+      }
+    })
+
+    const screen = await renderHalaman()
+    await expect.element(screen.getByText('REF-HAL-1')).toBeInTheDocument()
+
+    const btnNext = screen.getByRole('button', { name: /Selanjutnya/i })
+    await userEvent.click(btnNext)
+
+    await expect.element(screen.getByText('REF-HAL-2')).toBeInTheDocument()
+    await expect.element(screen.getByText('Halaman 2 dari 3')).toBeInTheDocument()
+    expect(riwayatSpy).toHaveBeenCalledWith({
+      menuId: 4,
+      halaman: 1,
+      ukuran: 10,
+    })
   })
 })
 

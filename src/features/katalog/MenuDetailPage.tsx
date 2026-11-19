@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   AlertTriangle,
@@ -80,19 +80,15 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
 
   // Riwayat mutasi stok per item & pagination
   const [riwayatStok, setRiwayatStok] = useState<RiwayatStokItem[]>([])
+  const [totalRiwayat, setTotalRiwayat] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [loadingRiwayat, setLoadingRiwayat] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
   const PAGE_SIZE = 10
-  const totalPages = Math.max(1, Math.ceil(riwayatStok.length / PAGE_SIZE))
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
-  const paginatedRiwayat = useMemo(() => {
-    const start = (safeCurrentPage - 1) * PAGE_SIZE
-    return riwayatStok.slice(start, start + PAGE_SIZE)
-  }, [riwayatStok, safeCurrentPage])
-
   const [versiMuat, setVersiMuat] = useState(0)
 
+  // Ambil data detail menu dan kategori
   useEffect(() => {
     if (!idValid) return
     let masihAktif = true
@@ -100,9 +96,8 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
     void (async () => {
       try {
         setLoading(true)
-        setLoadingRiwayat(true)
 
-        const [detail, hasilKategori, riwayatRes] = await Promise.all([
+        const [detail, hasilKategori] = await Promise.all([
           katalogApi.getMenuDetail(idMenu),
           katalogApi
             .getKategoriList()
@@ -112,9 +107,6 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
               list: [] as KategoriItem[],
               err,
             })),
-          stokApi
-            .getRiwayatStok({ menuId: idMenu, ukuran: 50 })
-            .catch(() => ({ items: [] as RiwayatStokItem[] })),
         ])
 
         if (!masihAktif) return
@@ -126,17 +118,14 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
             ? null
             : 'Daftar kategori gagal dimuat, jadi nama kategori belum bisa ditampilkan dan menu belum bisa diubah.'
         )
-        setRiwayatStok(riwayatRes.items || [])
         setError(null)
       } catch (err) {
         if (!masihAktif) return
         setMenu(null)
-        setRiwayatStok([])
         setError(extractMenuErrorMessage(err))
       } finally {
         if (masihAktif) {
           setLoading(false)
-          setLoadingRiwayat(false)
         }
       }
     })()
@@ -145,6 +134,41 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
       masihAktif = false
     }
   }, [idMenu, idValid, versiMuat])
+
+  // Ambil riwayat mutasi stok berbasis server-side pagination (MD-01)
+  useEffect(() => {
+    if (!idValid) return
+    let masihAktif = true
+
+    void (async () => {
+      try {
+        setLoadingRiwayat(true)
+        const res = await stokApi.getRiwayatStok({
+          menuId: idMenu,
+          halaman: Math.max(0, currentPage - 1),
+          ukuran: PAGE_SIZE,
+        })
+
+        if (!masihAktif) return
+        setRiwayatStok(res.items || [])
+        setTotalRiwayat(res.total ?? 0)
+        setTotalPages(Math.max(1, res.totalHalaman ?? 1))
+      } catch {
+        if (!masihAktif) return
+        setRiwayatStok([])
+        setTotalRiwayat(0)
+        setTotalPages(1)
+      } finally {
+        if (masihAktif) {
+          setLoadingRiwayat(false)
+        }
+      }
+    })()
+
+    return () => {
+      masihAktif = false
+    }
+  }, [idMenu, idValid, currentPage, versiMuat])
 
   const muatUlang = () => {
     if (!idValid) return
@@ -477,8 +501,8 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                           </TableCell>
                         </TableRow>
                       ) : (
-                        paginatedRiwayat.map((item, idx) => {
-                          const itemIndex = (safeCurrentPage - 1) * PAGE_SIZE + idx + 1
+                        riwayatStok.map((item, idx) => {
+                          const itemIndex = (currentPage - 1) * PAGE_SIZE + idx + 1
                           const isMasuk = item.arah === 'MASUK'
                           const aktorDisplay =
                             item.aktorNama ||
@@ -533,21 +557,21 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                 </div>
 
                 {/* Pagination Footer */}
-                {!loadingRiwayat && riwayatStok.length > 0 && (
+                {!loadingRiwayat && totalRiwayat > 0 && (
                   <div className='p-3.5 border-t border-border flex flex-wrap items-center justify-between gap-2 bg-muted/20'>
                     <div className='text-xs font-medium text-muted-foreground tabular-nums'>
                       Menampilkan{' '}
                       <span className='font-semibold text-foreground'>
-                        {(safeCurrentPage - 1) * PAGE_SIZE + 1}–
-                        {Math.min(safeCurrentPage * PAGE_SIZE, riwayatStok.length)}
+                        {(currentPage - 1) * PAGE_SIZE + 1}–
+                        {Math.min(currentPage * PAGE_SIZE, totalRiwayat)}
                       </span>{' '}
                       dari{' '}
-                      <span className='font-semibold text-foreground'>{riwayatStok.length}</span>{' '}
+                      <span className='font-semibold text-foreground'>{totalRiwayat}</span>{' '}
                       riwayat
                     </div>
                     <div className='flex items-center gap-3'>
                       <span className='text-xs font-medium text-muted-foreground tabular-nums'>
-                        Halaman <span className='font-semibold text-foreground'>{safeCurrentPage}</span> dari{' '}
+                        Halaman <span className='font-semibold text-foreground'>{currentPage}</span> dari{' '}
                         <span className='font-semibold text-foreground'>{totalPages}</span>
                       </span>
                       <div className='flex items-center gap-1.5'>
@@ -555,7 +579,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                           variant='outline'
                           size='sm'
                           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          disabled={safeCurrentPage === 1}
+                          disabled={currentPage <= 1 || loadingRiwayat}
                           className='gap-1 h-8 text-xs'
                         >
                           <ChevronLeft className='size-3.5' />
@@ -565,7 +589,7 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                           variant='outline'
                           size='sm'
                           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          disabled={safeCurrentPage === totalPages}
+                          disabled={currentPage >= totalPages || loadingRiwayat}
                           className='gap-1 h-8 text-xs'
                         >
                           Selanjutnya
