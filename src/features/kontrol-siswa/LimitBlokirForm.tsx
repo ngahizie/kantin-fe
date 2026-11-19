@@ -212,75 +212,139 @@ function LimitBlokirFormContent({
         ? alasanBlokir.trim() || 'Diblokir oleh Admin Sekolah'
         : 'Blokir dibuka oleh Admin Sekolah'
 
-      const requests: Promise<unknown>[] = [
-        ...(blockChanged
-          ? [
-              apiClient.post('/api/kontrol-kartu/blokir', {
-                subjekTipe: 'SISWA',
-                siswaId: student.siswa_id,
-                diblokir: cardBlocked,
-                alasan: resolvedAlasan,
-              }),
-            ]
-          : []),
-        apiClient.put('/api/kontrol-kartu/limit-harian', {
-          subjekTipe: 'SISWA',
-          siswaId: student.siswa_id,
-          nominal: limitEnabled ? nominalLimitNum : null,
-        }),
-        ...itemsToBlock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-item', {
-            subjekTipe: 'SISWA',
-            siswaId: student.siswa_id,
-            menuId: id,
-            diblokir: true,
-          })
-        ),
-        ...itemsToUnblock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-item', {
-            subjekTipe: 'SISWA',
-            siswaId: student.siswa_id,
-            menuId: id,
-            diblokir: false,
-          })
-        ),
-        ...catsToBlock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-item', {
-            subjekTipe: 'SISWA',
-            siswaId: student.siswa_id,
-            kategoriId: id,
-            diblokir: true,
-          })
-        ),
-        ...catsToUnblock.map((id) =>
-          apiClient.post('/api/kontrol-kartu/blokir-item', {
-            subjekTipe: 'SISWA',
-            siswaId: student.siswa_id,
-            kategoriId: id,
-            diblokir: false,
-          })
-        ),
-      ]
-
-      await Promise.all(requests)
-
-      const updatedStudent: KartuSiswaMock = {
-        ...student,
-        is_blocked: cardBlocked,
-        alasan_blokir: cardBlocked ? resolvedAlasan : null,
-        limit_harian: nominalLimitNum,
-        limit_harian_enabled: limitEnabled,
-        blocked_items: blockedItemIds,
-        blocked_categories: blockedCategoryIds,
-        updated_at: new Date().toISOString(),
+      interface MutationTask {
+        label: string
+        execute: () => Promise<unknown>
       }
 
-      toast.success(`Pengaturan kontrol untuk ${student.nama} berhasil disimpan!`, {
-        description: 'Status kartu, limit belanja, dan larangan menu langsung aktif di kasir.',
+      const tasks: MutationTask[] = []
+
+      if (blockChanged) {
+        tasks.push({
+          label: cardBlocked ? 'Pemblokiran kartu RFID' : 'Buka blokir kartu RFID',
+          execute: () =>
+            apiClient.post('/api/kontrol-kartu/blokir', {
+              subjekTipe: 'SISWA',
+              siswaId: student.siswa_id,
+              diblokir: cardBlocked,
+              alasan: resolvedAlasan,
+            }),
+        })
+      }
+
+      tasks.push({
+        label: limitEnabled
+          ? `Set limit harian ${formatRupiah(nominalLimitNum)}`
+          : 'Hapus limit harian',
+        execute: () =>
+          apiClient.put('/api/kontrol-kartu/limit-harian', {
+            subjekTipe: 'SISWA',
+            siswaId: student.siswa_id,
+            nominal: limitEnabled ? nominalLimitNum : null,
+          }),
       })
 
-      onClose()
-      onSaveSuccess(updatedStudent)
+      for (const id of itemsToBlock) {
+        const itemObj = menuList.find((m) => m.id === id)
+        tasks.push({
+          label: `Blokir menu "${itemObj?.nama || `ID ${id}`}"`,
+          execute: () =>
+            apiClient.post('/api/kontrol-kartu/blokir-item', {
+              subjekTipe: 'SISWA',
+              siswaId: student.siswa_id,
+              menuId: id,
+              diblokir: true,
+            }),
+        })
+      }
+
+      for (const id of itemsToUnblock) {
+        const itemObj = menuList.find((m) => m.id === id)
+        tasks.push({
+          label: `Buka blokir menu "${itemObj?.nama || `ID ${id}`}"`,
+          execute: () =>
+            apiClient.post('/api/kontrol-kartu/blokir-item', {
+              subjekTipe: 'SISWA',
+              siswaId: student.siswa_id,
+              menuId: id,
+              diblokir: false,
+            }),
+        })
+      }
+
+      for (const id of catsToBlock) {
+        const catObj = categories.find((c) => c.id === id)
+        tasks.push({
+          label: `Blokir kategori "${catObj?.nama || `ID ${id}`}"`,
+          execute: () =>
+            apiClient.post('/api/kontrol-kartu/blokir-item', {
+              subjekTipe: 'SISWA',
+              siswaId: student.siswa_id,
+              kategoriId: id,
+              diblokir: true,
+            }),
+        })
+      }
+
+      for (const id of catsToUnblock) {
+        const catObj = categories.find((c) => c.id === id)
+        tasks.push({
+          label: `Buka blokir kategori "${catObj?.nama || `ID ${id}`}"`,
+          execute: () =>
+            apiClient.post('/api/kontrol-kartu/blokir-item', {
+              subjekTipe: 'SISWA',
+              siswaId: student.siswa_id,
+              kategoriId: id,
+              diblokir: false,
+            }),
+        })
+      }
+
+      const results = await Promise.allSettled(tasks.map((t) => t.execute()))
+      const failed = results
+        .map((res, i) => ({ res, task: tasks[i] }))
+        .filter(
+          (entry): entry is { res: PromiseRejectedResult; task: MutationTask } =>
+            entry.res.status === 'rejected'
+        )
+
+      if (failed.length === 0) {
+        const updatedStudent: KartuSiswaMock = {
+          ...student,
+          is_blocked: cardBlocked,
+          alasan_blokir: cardBlocked ? resolvedAlasan : null,
+          limit_harian: nominalLimitNum,
+          limit_harian_enabled: limitEnabled,
+          blocked_items: blockedItemIds,
+          blocked_categories: blockedCategoryIds,
+          updated_at: new Date().toISOString(),
+        }
+
+        toast.success(`Pengaturan kontrol untuk ${student.nama} berhasil disimpan!`, {
+          description: 'Status kartu, limit belanja, dan larangan menu langsung aktif di kasir.',
+        })
+
+        onClose()
+        onSaveSuccess(updatedStudent)
+      } else if (failed.length === tasks.length) {
+        const firstErr = failed[0].res.reason as
+          | { response?: { data?: { message?: string } } }
+          | undefined
+        const errorMsg =
+          firstErr?.response?.data?.message ||
+          'Gagal menyimpan seluruh pengaturan kontrol siswa ke backend.'
+        toast.error(errorMsg)
+      } else {
+        const failedLabels = failed
+          .map((f) => f.task.label)
+          .slice(0, 3)
+          .join(', ')
+        const extraText =
+          failed.length > 3 ? ` dan ${failed.length - 3} mutasi lainnya` : ''
+        toast.warning(
+          `Sebagian pengaturan berhasil disimpan (${tasks.length - failed.length}/${tasks.length}), namun gagal pada: ${failedLabels}${extraText}. Silakan periksa kembali.`
+        )
+      }
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
