@@ -60,7 +60,7 @@ export const KepsekDashboard: React.FC = () => {
   const [rekonsiliasi, setRekonsiliasi] = useState<RingkasanRekonsiliasi | null>(null)
   const [rekonsiliasiStatus, setRekonsiliasiStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [saldoMengendap, setSaldoMengendap] = useState<RingkasanSaldoMengendap | null>(null)
-  const [recentTransactions, setRecentTransactions] = useState<RecentTransactionDisplayItem[]>([])
+  const [recentTransactions] = useState<RecentTransactionDisplayItem[]>([])
   const [weeklyOmsetData, setWeeklyOmsetData] = useState<OmsetDayItem[]>(() => {
     return getLast7Days().map((d) => ({
       hari: d.label,
