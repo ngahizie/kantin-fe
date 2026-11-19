@@ -3,15 +3,26 @@ import type { KartuSiswaMock, MenuItemMock, KategoriMock } from '@/types/kantin'
 
 export type { KartuSiswaMock, MenuItemMock, KategoriMock }
 
+export const MAX_ALASAN_BLOKIR_LENGTH = 500
+export const MIN_LIMIT_HARIAN = 5000
+export const MAX_LIMIT_HARIAN = 100_000_000
+
 export const kontrolSiswaFormSchema = z.object({
   siswaId: z.number().int().positive('ID siswa tidak valid'),
   limitHarianEnabled: z.boolean(),
   limitHarian: z
     .number()
     .int('Nominal limit harus bilangan bulat')
-    .min(0, 'Nominal limit tidak boleh negatif'),
+    .min(0, 'Nominal limit tidak boleh negatif')
+    .max(MAX_LIMIT_HARIAN, `Nominal limit maksimal Rp ${MAX_LIMIT_HARIAN.toLocaleString('id-ID')}`),
   blockedCategories: z.array(z.number().int()),
   blockedItems: z.array(z.number().int()),
+  isBlocked: z.boolean().optional(),
+  alasanBlokir: z
+    .string()
+    .trim()
+    .max(MAX_ALASAN_BLOKIR_LENGTH, `Alasan pemblokiran maksimal ${MAX_ALASAN_BLOKIR_LENGTH} karakter`)
+    .optional(),
   catatanKontrol: z
     .string()
     .trim()
@@ -20,7 +31,7 @@ export const kontrolSiswaFormSchema = z.object({
 }).refine(
   (data) => {
     if (data.limitHarianEnabled) {
-      return data.limitHarian >= 5000
+      return data.limitHarian >= MIN_LIMIT_HARIAN
     }
     return true
   },
