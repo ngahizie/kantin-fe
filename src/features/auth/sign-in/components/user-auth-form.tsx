@@ -28,7 +28,7 @@ const formSchema = z.object({
   password: z
     .string()
     .min(1, 'Masukkan kata sandi staf.')
-    .min(6, 'Kata sandi minimal 6 karakter.'),
+    .min(8, 'Kata sandi minimal 8 karakter.'),
 })
 
 type FormValues = z.infer<typeof formSchema>

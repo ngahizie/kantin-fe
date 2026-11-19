@@ -91,6 +91,16 @@ describe('UserAuthForm', () => {
         .toBeInTheDocument()
     })
 
+    it('rejects passwords shorter than 8 characters per NIST policy (SEC-05)', async () => {
+      await userEvent.fill(emailInput, 'admin@skoolia.id')
+      await userEvent.fill(passwordInput, 'pass123') // 7 characters
+      await userEvent.click(signInButton)
+
+      await expect
+        .element(screen.getByText('Kata sandi minimal 8 karakter.'))
+        .toBeInTheDocument()
+    })
+
     it('authenticates and navigates to default route on success', async () => {
       await userEvent.fill(emailInput, 'admin@skoolia.id')
       await userEvent.fill(passwordInput, 'password123')
