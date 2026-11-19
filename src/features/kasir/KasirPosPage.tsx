@@ -377,6 +377,12 @@ export const KasirPosPage: React.FC = () => {
       const cleanUid = scannedUid.trim().toUpperCase()
       if (!cleanUid || isProcessing) return
 
+      const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
+      if (!targetTitikKasirId || targetTitikKasirId <= 0) {
+        toast.warning('Titik kasir belum dipilih. Silakan pilih titik kasir terlebih dahulu.')
+        return
+      }
+
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
 
@@ -389,7 +395,7 @@ export const KasirPosPage: React.FC = () => {
             qty: it.qty,
           })),
           idempotencyKey,
-          titikKasirId: activeTitikKasirId ?? undefined,
+          titikKasirId: targetTitikKasirId,
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
@@ -533,6 +539,12 @@ export const KasirPosPage: React.FC = () => {
     async (uangDiterima: number) => {
       if (isProcessing) return
 
+      const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
+      if (!targetTitikKasirId || targetTitikKasirId <= 0) {
+        toast.warning('Titik kasir belum dipilih. Silakan pilih titik kasir terlebih dahulu.')
+        return
+      }
+
       const currentTotal = totalHarga()
       const idempotencyKey = generateIdempotencyKey()
       setIsProcessing(true)
@@ -546,7 +558,7 @@ export const KasirPosPage: React.FC = () => {
             qty: it.qty,
           })),
           idempotencyKey,
-          titikKasirId: activeTitikKasirId ?? undefined,
+          titikKasirId: targetTitikKasirId,
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({

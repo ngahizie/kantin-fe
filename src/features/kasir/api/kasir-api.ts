@@ -39,6 +39,11 @@ export const kasirApi = {
    * Eksekusi transaksi kasir: Saldo (tap kartu RFID, PRD §6.2) atau Tunai tanpa kartu (Issue #165)
    */
   async prosesTap(data: TapTransaksiRequest): Promise<TapTransaksiData> {
+    if (data.titikKasirId !== undefined && data.titikKasirId <= 0) {
+      throw new Error('Titik kasir belum dipilih atau tidak valid')
+    }
+    const titikKasirId = data.titikKasirId ?? 1
+
     const metodeBayar: MetodeBayarKasir = data.metodeBayar ?? 'SALDO'
     const cleanUid = data.rfidUid ? data.rfidUid.trim().toUpperCase() : ''
 
@@ -52,7 +57,7 @@ export const kasirApi = {
       })),
       idempotency_key: data.idempotencyKey,
       idempotencyKey: data.idempotencyKey,
-      titikKasirId: data.titikKasirId || 1,
+      titikKasirId,
     }
 
     if (metodeBayar === 'SALDO' || cleanUid) {

@@ -111,7 +111,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         id: sesiId,
         status: sesiStatus ?? 'TERBUKA',
         tanggal: sesiTanggal ?? '',
-        titikKasirId: sesiTitikKasirId ?? 1,
+        titikKasirId: sesiTitikKasirId,
       })
       if (externalLock) {
         setStep('RECONCILE')
@@ -309,7 +309,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
             />
             <span>Titik:</span>
             <strong className='text-foreground'>
-              {sesi?.titikKasirNama || `Titik #${sesi?.titikKasirId || 1}`}
+              {sesi?.titikKasirNama || (sesi?.titikKasirId ? `Titik #${sesi.titikKasirId}` : 'Titik Kasir')}
             </strong>
           </div>
           <div className='flex items-center gap-1.5 text-muted-foreground'>
