@@ -37,6 +37,7 @@ import {
   saveStoredSaldo,
   saveTopupTransaction,
 } from './saldo-storage'
+import { generateTopupReferenceId } from './topup-utils'
 
 const PRESET_NOMINALS = [20000, 50000, 100000, 200000]
 const DEFAULT_MAX_SALDO = 1000000
@@ -192,9 +193,7 @@ export function TopupTunaiPage() {
       const petugasId = currentUser?.userId ? Number(currentUser.userId) : 2
 
       const now = new Date()
-      const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
-      const randomSeq = Math.floor(1000 + Math.random() * 9000)
-      const refNo = `TU-TOPUP-${dateCode}-${randomSeq}`
+      const refNo = generateTopupReferenceId(now)
 
       const response = await apiClient.post('/api/saldo/topup', {
         subjekTipe: 'SISWA',

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Route } from '@/routes/_authenticated/tu/topup/index'
 import { useAuthStore } from '@/stores/auth-store'
+import { generateTopupReferenceId } from '../topup-utils'
 
 describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
   beforeEach(() => {
@@ -67,5 +68,30 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
       // @ts-expect-error - testing TanStack beforeLoad hook directly
       Route.options.beforeLoad?.({ location: mockLocation })
     }).not.toThrow()
+  })
+
+  describe('SEC-TOPUP-02: Collision-Resistant Reference ID Generator', () => {
+    it('menghasilkan nomor referensi unik dengan panjang maksimal 60 karakter', () => {
+      const ref = generateTopupReferenceId()
+      expect(ref).toBeDefined()
+      expect(ref.startsWith('TU-TOPUP-')).toBe(true)
+      expect(ref.length).toBeLessThanOrEqual(60)
+    })
+
+    it('menghasilkan nilai unik tanpa tabrakan pada pemanggilan berulang (1.000 iterasi)', () => {
+      const set = new Set<string>()
+      const count = 1000
+      for (let i = 0; i < count; i++) {
+        const ref = generateTopupReferenceId()
+        set.add(ref)
+      }
+      expect(set.size).toBe(count)
+    })
+
+    it('memiliki format tanggal ISO yang konsisten pada prefix referensi', () => {
+      const testDate = new Date('2026-11-19T10:30:00Z')
+      const ref = generateTopupReferenceId(testDate)
+      expect(ref).toContain('TU-TOPUP-20261119-')
+    })
   })
 })
