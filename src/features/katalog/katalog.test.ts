@@ -209,6 +209,56 @@ describe('Katalog Menu Zod Validation Schema', () => {
       expect(res2.data.aktif).toBe(true)
     }
   })
+
+  it('validasi fotoUrl menerima URL HTTP/HTTPS, path storage tenant, atau path internal', () => {
+    const baseMenu = {
+      nama: 'Bakso Sapi',
+      kategoriId: 1,
+      hargaJual: 12000,
+      satuan: 'PORSI' as const,
+      stokMinimum: 5,
+      aktif: true,
+    }
+
+    const testUrls = [
+      'https://cdn.sekolah.id/kantin/sekolah-1/menu/bakso.jpg',
+      'http://localhost:9000/sekolah-1/menu/bakso.jpg',
+      '/api/storage/file?path=sekolah-1%2Fmenu%2Fbakso.jpg',
+      'sekolah-1/menu/uuid-bakso.jpg',
+      '',
+    ]
+
+    for (const url of testUrls) {
+      const res = menuFormSchema.safeParse({ ...baseMenu, fotoUrl: url })
+      expect(res.success).toBe(true)
+    }
+  })
+
+  it('validasi fotoUrl menolak skema berbahaya (javascript:, data:, vbscript:, file:)', () => {
+    const baseMenu = {
+      nama: 'Es Teh Manis',
+      kategoriId: 2,
+      hargaJual: 3000,
+      satuan: 'BOTOL' as const,
+      stokMinimum: 10,
+      aktif: true,
+    }
+
+    const maliciousUrls = [
+      'javascript:alert(1)',
+      'data:text/html,<script>alert(1)</script>',
+      'vbscript:msgbox(1)',
+      'file:///etc/passwd',
+    ]
+
+    for (const url of maliciousUrls) {
+      const res = menuFormSchema.safeParse({ ...baseMenu, fotoUrl: url })
+      expect(res.success).toBe(false)
+      if (!res.success) {
+        expect(res.error.issues[0].message).toContain('Format URL foto tidak valid')
+      }
+    }
+  })
 })
 describe('Ekstraksi Pesan Error Respons Backend (Issue #110)', () => {
   it('memprioritaskan response.data.message spesifik dari server dibanding pesan Axios generik', () => {

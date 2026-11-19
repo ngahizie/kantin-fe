@@ -63,7 +63,35 @@ export const menuFormSchema = z.object({
     .number()
     .int('Stok minimum harus berupa bilangan bulat')
     .min(0, 'Stok minimum tidak boleh negatif'),
-  fotoUrl: z.string().max(500, 'URL foto maksimal 500 karakter').optional().or(z.literal('')),
+  fotoUrl: z
+    .string()
+    .max(500, 'URL foto maksimal 500 karakter')
+    .refine(
+      (val) => {
+        if (!val || val.trim() === '') return true
+        const trimmed = val.trim().toLowerCase()
+        if (
+          trimmed.startsWith('javascript:') ||
+          trimmed.startsWith('vbscript:') ||
+          trimmed.startsWith('file:') ||
+          trimmed.startsWith('data:')
+        ) {
+          return false
+        }
+        return (
+          trimmed.startsWith('http://') ||
+          trimmed.startsWith('https://') ||
+          trimmed.startsWith('/') ||
+          trimmed.startsWith('sekolah-')
+        )
+      },
+      {
+        message:
+          'Format URL foto tidak valid atau menggunakan protokol yang tidak diizinkan',
+      }
+    )
+    .optional()
+    .or(z.literal('')),
   aktif: z.boolean(),
 })
 
