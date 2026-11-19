@@ -175,4 +175,32 @@ describe('UserAuthForm', () => {
       )
     })
   })
+
+  describe('Brute-force protection & Lockout (SEC-04)', () => {
+    it('locks the form and displays lockout message when 429 Too Many Requests is returned', async () => {
+      const { apiClient } = await import('@/lib/api-client')
+      vi.mocked(apiClient.post).mockRejectedValueOnce({
+        response: {
+          status: 429,
+          data: { message: 'Too Many Requests' },
+        },
+      })
+
+      const screen = await render(<UserAuthForm />)
+      const emailInput = screen.getByRole('textbox', { name: /(Username|Email)/i })
+      const passwordInput = screen.getByLabelText(/^(Kata Sandi|Password)$/i)
+      const signInButton = screen.getByRole('button', { name: /(^Masuk$|Masuk ke Sistem Kantin)/i })
+
+      await userEvent.fill(emailInput, 'admin@skoolia.id')
+      await userEvent.fill(passwordInput, 'password123')
+      await userEvent.click(signInButton)
+
+      await expect
+        .element(screen.getByRole('alert'))
+        .toBeInTheDocument()
+      await expect
+        .element(screen.getByText(/Terlalu banyak percobaan gagal/i))
+        .toBeInTheDocument()
+    })
+  })
 })
