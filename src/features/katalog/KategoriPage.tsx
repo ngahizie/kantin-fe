@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
+import { logKategoriAuditEvent } from './api/kategori-audit'
 import { KategoriFormModal } from './KategoriFormModal'
 import { sanitizeKategoriErrorMessage } from './kategori-error'
 import {
@@ -95,6 +96,15 @@ export function KategoriPage() {
     const blockedReason = getKategoriDeleteBlockedReason(kat)
     if (blockedReason) {
       toast.error(blockedReason)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE_BLOCKED',
+        kategoriId: kat.id,
+        kategoriNama: kat.nama,
+        detail: {
+          alasan: blockedReason,
+          jumlahItem: kat.jumlahItem,
+        },
+      })
       return
     }
     setDeleteTarget(kat)
@@ -253,6 +263,16 @@ export function KategoriPage() {
     async (savedKategori?: KategoriItem) => {
       mutationEpochRef.current += 1
       if (savedKategori && typeof savedKategori === 'object') {
+        const isUpdate = Boolean(selectedKategori)
+        void logKategoriAuditEvent({
+          action: isUpdate ? 'KATEGORI_UPDATE' : 'KATEGORI_CREATE',
+          kategoriId: savedKategori.id,
+          kategoriNama: savedKategori.nama,
+          detail: {
+            urutan: savedKategori.urutan,
+            aktif: savedKategori.aktif ?? savedKategori.isActive,
+          },
+        })
         setKategoriList((prev) => {
           const exists = prev.some((k) => k.id === savedKategori.id)
           if (exists) {
@@ -308,6 +328,15 @@ export function KategoriPage() {
           ? `Kategori "${kat.nama}" diaktifkan`
           : `Kategori "${kat.nama}" dinonaktifkan`
       )
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_TOGGLE_STATUS',
+        kategoriId: kat.id,
+        kategoriNama: kat.nama,
+        detail: {
+          sebelum: currentAktif,
+          sesudah: nextAktif,
+        },
+      })
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)
     } catch (err: unknown) {
@@ -332,6 +361,15 @@ export function KategoriPage() {
     const blockedReason = getKategoriDeleteBlockedReason(latestTarget)
     if (blockedReason) {
       toast.error(blockedReason)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE_BLOCKED',
+        kategoriId: latestTarget.id,
+        kategoriNama: latestTarget.nama,
+        detail: {
+          alasan: blockedReason,
+          jumlahItem: latestTarget.jumlahItem,
+        },
+      })
       setDeleteTarget(null)
       return
     }
@@ -342,6 +380,14 @@ export function KategoriPage() {
       mutationEpochRef.current += 1
       setKategoriList((prev) => prev.filter((k) => k.id !== target.id))
       toast.success(`Kategori "${target.nama}" berhasil dihapus`)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE',
+        kategoriId: target.id,
+        kategoriNama: target.nama,
+        detail: {
+          jumlahItem: latestTarget.jumlahItem ?? 0,
+        },
+      })
       setDeleteTarget(null)
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)

@@ -6,6 +6,12 @@ import { getKategoriDeleteBlockedReason } from '../menu-utils'
 import { KategoriFormModal } from '../KategoriFormModal'
 import { katalogApi } from '../api/katalog-api'
 import { sanitizeKategoriErrorMessage } from '../kategori-error'
+import {
+  logKategoriAuditEvent,
+  getKategoriAuditLogs,
+  clearKategoriAuditLogs,
+} from '../api/kategori-audit'
+import apiClient from '@/lib/api-client'
 
 describe('Security Hardening Kategori (OWASP & NIST)', () => {
   beforeEach(() => {
@@ -154,6 +160,68 @@ describe('Security Hardening Kategori (OWASP & NIST)', () => {
       const truncated = sanitizeKategoriErrorMessage(longMsg)
       expect(truncated.length).toBeLessThanOrEqual(150)
       expect(truncated.endsWith('...')).toBe(true)
+    })
+  })
+
+  describe('SEC-KAT-06: Client Audit Logging Kategori', () => {
+    beforeEach(() => {
+      clearKategoriAuditLogs()
+    })
+
+    it('mencatat audit log event saat create, toggle status, dan delete kategori', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { success: true } })
+
+      await logKategoriAuditEvent({
+        action: 'KATEGORI_CREATE',
+        kategoriId: 101,
+        kategoriNama: 'Makanan Sehat',
+        detail: { urutan: 1, aktif: true },
+      })
+
+      await logKategoriAuditEvent({
+        action: 'KATEGORI_TOGGLE_STATUS',
+        kategoriId: 101,
+        kategoriNama: 'Makanan Sehat',
+        detail: { sebelum: true, sesudah: false },
+      })
+
+      await logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE_BLOCKED',
+        kategoriId: 101,
+        kategoriNama: 'Makanan Sehat',
+        detail: { alasan: 'Masih ada 3 menu terkait' },
+      })
+
+      const logs = getKategoriAuditLogs()
+      expect(logs).toHaveLength(3)
+      expect(logs[0].action).toBe('KATEGORI_CREATE')
+      expect(logs[0].kategoriNama).toBe('Makanan Sehat')
+      expect(logs[0].timestamp).toBeDefined()
+      expect(logs[1].action).toBe('KATEGORI_TOGGLE_STATUS')
+      expect(logs[2].action).toBe('KATEGORI_DELETE_BLOCKED')
+
+      expect(postSpy).toHaveBeenCalledTimes(3)
+      expect(postSpy).toHaveBeenCalledWith('/api/katalog/audit', expect.objectContaining({
+        action: 'KATEGORI_CREATE',
+        kategoriId: 101,
+      }))
+    })
+
+    it('membatasi ukuran antrean buffer audit klien tidak melebihi 50 entri', async () => {
+      vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { success: true } })
+
+      for (let i = 1; i <= 60; i++) {
+        await logKategoriAuditEvent({
+          action: 'KATEGORI_UPDATE',
+          kategoriId: i,
+          kategoriNama: `Kategori ${i}`,
+        })
+      }
+
+      const logs = getKategoriAuditLogs()
+      expect(logs).toHaveLength(50)
+      expect(logs[0].kategoriId).toBe(11)
+      expect(logs[49].kategoriId).toBe(60)
     })
   })
 })
