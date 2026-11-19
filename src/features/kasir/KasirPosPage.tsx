@@ -47,6 +47,7 @@ import {
   generateIdempotencyKey,
   type TapTransaksiData,
 } from './api/kasir-api'
+import { sanitizeKasirErrorMessage } from './kasir-error'
 import type {
   SesiKasirData,
   RekapSesiData,
@@ -460,9 +461,14 @@ export const KasirPosPage: React.FC = () => {
             data?: { message?: string; kekurangan?: number }
           }
         }
-        const message =
+        const rawMsg =
           axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
           'Terjadi kesalahan saat memproses transaksi tap'
+        const message = sanitizeKasirErrorMessage(
+          rawMsg,
+          'Terjadi kesalahan saat memproses transaksi tap'
+        )
         const kekurangan = axiosErr.response?.data?.kekurangan
 
         setErrorInfo({
@@ -625,9 +631,14 @@ export const KasirPosPage: React.FC = () => {
             data?: { message?: string; kekurangan?: number }
           }
         }
-        const message =
+        const rawMsg =
           axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
           'Terjadi kesalahan saat memproses transaksi tunai'
+        const message = sanitizeKasirErrorMessage(
+          rawMsg,
+          'Terjadi kesalahan saat memproses transaksi tunai'
+        )
         const kekurangan = axiosErr.response?.data?.kekurangan
 
         setErrorInfo({

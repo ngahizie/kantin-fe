@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { formatRupiah, getInitials } from '@/lib/formatters'
 import { kasirApi, type InfoSaldoData } from '../api/kasir-api'
+import { sanitizeKasirErrorMessage } from '../kasir-error'
 import { useRfidScanner } from '@/hooks/useRfidScanner'
 
 export interface CekSaldoModalProps {
@@ -48,8 +49,13 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
       setResult(data)
     } catch (err: unknown) {
       const errObj = err as { message?: string }
-      setErrorMessage(
+      const rawMsg =
         errObj.message || 'Gagal mengecek saldo. Kartu tidak dikenali.'
+      setErrorMessage(
+        sanitizeKasirErrorMessage(
+          rawMsg,
+          'Gagal mengecek saldo. Kartu tidak dikenali.'
+        )
       )
     } finally {
       isSearchingRef.current = false

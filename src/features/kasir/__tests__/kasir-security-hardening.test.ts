@@ -97,4 +97,38 @@ describe('Security Hardening Kasir (OWASP & NIST)', () => {
       ).rejects.toThrow('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
     })
   })
+
+  describe('SEC-KASIR-05: Sanitasi Pesan Error (Anti-Verbose Disclosure)', () => {
+    it('menyembunyikan detail exception internal / database dan mengembalikan pesan fallback', async () => {
+      const { sanitizeKasirErrorMessage } = await import('../kasir-error')
+
+      const sqlError = 'org.postgresql.util.PSQLException: ERROR: syntax error at or near "SELECT"'
+      expect(sanitizeKasirErrorMessage(sqlError)).toBe(
+        'Terjadi kesalahan saat memproses transaksi kasir'
+      )
+
+      const javaError = 'java.lang.NullPointerException at com.asqi.scholia_kantin_be.service'
+      expect(sanitizeKasirErrorMessage(javaError)).toBe(
+        'Terjadi kesalahan saat memproses transaksi kasir'
+      )
+    })
+
+    it('memotong pesan yang melebihi batas 150 karakter', async () => {
+      const { sanitizeKasirErrorMessage } = await import('../kasir-error')
+
+      const longMessage = 'A'.repeat(200)
+      const sanitized = sanitizeKasirErrorMessage(longMessage)
+      expect(sanitized.length).toBeLessThanOrEqual(150)
+      expect(sanitized.endsWith('...')).toBe(true)
+    })
+
+    it('tetap meloloskan pesan validasi bisnis yang ramah pengguna', async () => {
+      const { sanitizeKasirErrorMessage } = await import('../kasir-error')
+
+      const normalMsg = 'Saldo kartu tidak mencukupi untuk transaksi ini (PRD §6.2)'
+      expect(sanitizeKasirErrorMessage(normalMsg)).toBe(
+        'Saldo kartu tidak mencukupi untuk transaksi ini'
+      )
+    })
+  })
 })
