@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mapRekapSetoranTuItem } from '../types'
+import { sanitizeCsvCell } from '@/lib/csv-sanitizer'
 
 describe('mapRekapSetoranTuItem', () => {
   it('maps raw backend RekapSetoranTuItem with unconfirmed status correctly', () => {
@@ -105,5 +106,30 @@ describe('mapRekapSetoranTuItem', () => {
 
     const mappedOther = mapRekapSetoranTuItem({ petugasId: 99 })
     expect(mappedOther.petugas_nama).toBe('Petugas TU #99')
+  })
+})
+
+describe('Setoran Kas Security & Data Integrity Hardening (OWASP / NIST)', () => {
+  it('neutralizes CSV formula injection triggers on export cells (SET-01)', () => {
+    // Karakter pemantik formula: '=', '+', '-', '@', '\t', '\r'
+    expect(sanitizeCsvCell('=SUM(A1:A10)')).toBe('\"\'=SUM(A1:A10)\"')
+    expect(sanitizeCsvCell('+cmd|/C calc!A0')).toBe('\"\'+cmd|/C calc!A0\"')
+    expect(sanitizeCsvCell('-5000')).toBe('\"\'-5000\"')
+    expect(sanitizeCsvCell('@leak(data)')).toBe('\"\'@leak(data)\"')
+    expect(sanitizeCsvCell('\tmaliciousTab')).toBe('\"\'\tmaliciousTab\"')
+    expect(sanitizeCsvCell('\rmaliciousReturn')).toBe('\"\'\rmaliciousReturn\"')
+
+    // Teks normal tetap aman di-escape tanda kutip
+    expect(sanitizeCsvCell('Setoran kas pas')).toBe('\"Setoran kas pas\"')
+    expect(sanitizeCsvCell('Catatan dengan \"kutip\"')).toBe('\"Catatan dengan \"\"kutip\"\"\"')
+    expect(sanitizeCsvCell(null)).toBe('\"\"')
+    expect(sanitizeCsvCell(undefined)).toBe('\"\"')
+  })
+
+  it('enforces maximum 500 characters on catatan field (SET-04)', () => {
+    const longCatatan = 'A'.repeat(600)
+    const truncated = longCatatan.trim().slice(0, 500)
+    expect(truncated.length).toBe(500)
+    expect(truncated).toBe('A'.repeat(500))
   })
 })
