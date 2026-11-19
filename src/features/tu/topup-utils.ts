@@ -69,3 +69,20 @@ export function sanitizePenyetorName(
   const clean = value.replace(/[\u0000-\u001F\u007F-\u009F]/g, '').trim()
   return clean.slice(0, maxLength)
 }
+
+/**
+ * Membersihkan input UID nomor kartu RFID dari karakter tak terduga
+ * dan membatasi panjang maksimum agar tidak membebani pemrosesan.
+ */
+export function sanitizeRfidInput(
+  value: unknown,
+  maxLength: number = MAX_RFID_INPUT_LENGTH
+): string {
+  if (typeof value !== 'string') {
+    return ''
+  }
+
+  // Hanya izinkan karakter alfanumerik dan tanda hubung
+  const clean = value.replace(/[^A-Za-z0-9-]/g, '').trim()
+  return clean.slice(0, maxLength)
+}

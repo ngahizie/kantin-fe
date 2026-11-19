@@ -9,7 +9,9 @@ import {
   generateTopupReferenceId,
   parseSafeTopupNominal,
   sanitizePenyetorName,
+  sanitizeRfidInput,
   MAX_PENYETOR_LENGTH,
+  MAX_RFID_INPUT_LENGTH,
 } from '../topup-utils'
 import { sanitizeTopupErrorMessage } from '../topup-error'
 import apiClient from '@/lib/api-client'
@@ -339,6 +341,23 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
 
       // Tidak boleh memanggil API jika sesi petugas tidak memiliki userId
       expect(postSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('SEC-TOPUP-07: RFID Input Hygiene & DoS Prevention', () => {
+    it('membersihkan karakter tak aman dan membatasi panjang input RFID maksimal 32 karakter', () => {
+      expect(sanitizeRfidInput('UID-A101')).toBe('UID-A101')
+      expect(sanitizeRfidInput('  RFID12345  ')).toBe('RFID12345')
+      expect(sanitizeRfidInput('RFID_UID@#$%^&*()')).toBe('RFIDUID')
+
+      const longRfid = 'A'.repeat(MAX_RFID_INPUT_LENGTH + 20)
+      const sanitized = sanitizeRfidInput(longRfid)
+      expect(sanitized.length).toBe(MAX_RFID_INPUT_LENGTH)
+      expect(sanitized).toBe('A'.repeat(MAX_RFID_INPUT_LENGTH))
+
+      expect(sanitizeRfidInput(null)).toBe('')
+      expect(sanitizeRfidInput(undefined)).toBe('')
+      expect(sanitizeRfidInput(99999)).toBe('')
     })
   })
 })
