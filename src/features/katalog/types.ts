@@ -36,6 +36,7 @@ export const kategoriFormSchema = z.object({
     .refine((val) => !/[<>]/.test(val), {
       message: 'Nama kategori tidak boleh mengandung karakter tag HTML (< atau >)',
     })
+    // eslint-disable-next-line no-control-regex
     .refine((val) => !/[\u0000-\u001F\u007F]/.test(val), {
       message: 'Nama kategori tidak boleh mengandung karakter kontrol',
     }),

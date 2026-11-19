@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Save } from 'lucide-react'
@@ -54,13 +54,12 @@ export function KategoriFormModal({
     },
   })
 
-  const isSubmittingRef = useRef(false)
-  const isSubmitting = form.formState.isSubmitting || isSubmittingRef.current
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false)
+  const isSubmitting = form.formState.isSubmitting || isSubmittingManual
 
   // Sinkronisasi data saat modal dibuka untuk mode edit
   useEffect(() => {
     if (open) {
-      isSubmittingRef.current = false
       if (selectedKategori) {
         const isAktif =
           selectedKategori.isActive !== false && selectedKategori.aktif !== false
@@ -80,8 +79,8 @@ export function KategoriFormModal({
   }, [open, selectedKategori, form])
 
   async function onSubmit(values: KategoriFormValues) {
-    if (isSubmittingRef.current) return
-    isSubmittingRef.current = true
+    if (isSubmitting) return
+    setIsSubmittingManual(true)
     try {
       let savedKategori: KategoriItem | undefined
       if (isEditing && selectedKategori) {
@@ -98,7 +97,7 @@ export function KategoriFormModal({
       const rawMessage = error.response?.data?.message || error.message || ''
       toast.error(sanitizeKategoriErrorMessage(rawMessage, 'Gagal menyimpan kategori'))
     } finally {
-      isSubmittingRef.current = false
+      setIsSubmittingManual(false)
     }
   }
 

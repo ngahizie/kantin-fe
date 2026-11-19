@@ -77,7 +77,7 @@ describe('TitikKasirPage Admin UI', () => {
     localStorage.clear()
     const deleteSpy = vi.spyOn(apiClient, 'delete').mockResolvedValue({
       data: { code: 200, status: 'SUCCESS' },
-    } as any)
+    } as never)
 
     vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
       if (url === '/api/pengaturan-kantin/titik-kasir') {
