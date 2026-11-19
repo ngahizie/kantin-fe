@@ -32,7 +32,13 @@ export const kategoriFormSchema = z.object({
     .string()
     .trim()
     .min(1, 'Nama kategori wajib diisi')
-    .max(100, 'Nama kategori maksimal 100 karakter'),
+    .max(100, 'Nama kategori maksimal 100 karakter')
+    .refine((val) => !/[<>]/.test(val), {
+      message: 'Nama kategori tidak boleh mengandung karakter tag HTML (< atau >)',
+    })
+    .refine((val) => !/[\u0000-\u001F\u007F]/.test(val), {
+      message: 'Nama kategori tidak boleh mengandung karakter kontrol',
+    }),
   urutan: z.number().int().min(0, 'Urutan minimal 0').optional(),
   aktif: z.boolean().optional(),
 })

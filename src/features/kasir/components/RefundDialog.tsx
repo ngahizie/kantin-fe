@@ -176,8 +176,8 @@ const RefundDialogBody: React.FC<RefundDialogBodyProps> = ({
       playVoid()
       void logKasirAuditEvent({
         action: 'VOID_TRANSAKSI',
-        titikKasirId: transaction.titikKasirId,
-        sesiId: transaction.sesiKasirId,
+        titikKasirId: (transaction as unknown as { titikKasirId?: number }).titikKasirId,
+        sesiId: (transaction as unknown as { sesiKasirId?: number }).sesiKasirId,
         detail: {
           transaksiId: transaction.id,
           alasan: alasanFinal,
