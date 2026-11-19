@@ -17,6 +17,39 @@ import apiClient from '@/lib/api-client'
 describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/siswa') {
+        return {
+          data: {
+            data: [
+              {
+                siswaId: 101,
+                nis: '24250101',
+                nama: 'Ahmad Siswa',
+                kelas: '7A',
+                saldo: 50000,
+                isBlocked: false,
+              },
+            ],
+          },
+        }
+      }
+      if (url === '/api/saldo' || url.includes('/rfid')) {
+        return { data: { data: { saldo: 50000, rfidUid: 'UID-A101' } } }
+      }
+      if (url.includes('/api/pengaturan')) {
+        return {
+          data: {
+            data: {
+              minTopup: 5000,
+              maksTopup: 500000,
+              batasSaldoSiswa: 1000000,
+            },
+          },
+        }
+      }
+      return { data: { data: null } }
+    })
   })
 
   it('mengalihkan user yang belum terautentikasi ke /sign-in beserta return redirect URL', () => {
@@ -115,40 +148,6 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
           user: { userId: 2, nama: 'Petugas TU Sri', role: 'tu' },
         },
       } as unknown as ReturnType<typeof useAuthStore.getState>)
-
-      vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
-        if (url === '/api/siswa') {
-          return {
-            data: {
-              data: [
-                {
-                  siswaId: 101,
-                  nis: '24250101',
-                  nama: 'Ahmad Siswa',
-                  kelas: '7A',
-                  saldo: 50000,
-                  isBlocked: false,
-                },
-              ],
-            },
-          }
-        }
-        if (url === '/api/saldo' || url.includes('/rfid')) {
-          return { data: { data: { saldo: 50000, rfidUid: 'UID-A101' } } }
-        }
-        if (url.includes('/api/pengaturan')) {
-          return {
-            data: {
-              data: {
-                minTopup: 5000,
-                maksTopup: 500000,
-                batasSaldoSiswa: 1000000,
-              },
-            },
-          }
-        }
-        return { data: { data: null } }
-      })
 
       let postResolve: (val: unknown) => void = () => {}
       const postPromise = new Promise((resolve) => {
@@ -300,6 +299,46 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
       expect(sanitizeTopupErrorMessage(validErr)).toBe(
         'Nominal top-up melebihi batas saldo maksimal siswa'
       )
+    })
+  })
+
+  describe('SEC-TOPUP-06: Fail-Closed Attribution & Removal of Hardcoded Petugas ID', () => {
+    it('menolak proses top-up jika ID petugas tidak valid (fail-closed)', async () => {
+      vi.spyOn(useAuthStore, 'getState').mockReturnValue({
+        auth: {
+          isAuthenticated: () => true,
+          hasRole: (roles: string[]) => roles.includes('tu'),
+          user: { nama: 'Petugas Tanpa ID' }, // userId sengaja undefined
+        },
+      } as unknown as ReturnType<typeof useAuthStore.getState>)
+
+      const postSpy = vi.spyOn(apiClient, 'post')
+
+      const screen = await render(
+        <SidebarProvider>
+          <TopupTunaiPage />
+        </SidebarProvider>
+      )
+
+      // Cari dan pilih siswa
+      const comboboxBtn = screen.getByRole('combobox')
+      await userEvent.click(comboboxBtn)
+
+      const studentItem = screen.getByText('Ahmad Siswa')
+      await userEvent.click(studentItem)
+
+      // Pilih preset nominal Rp 50.000
+      const presetBtn = screen.getByRole('button', { name: /50\.000/ })
+      await userEvent.click(presetBtn)
+
+      // Klik submit
+      const submitBtn = screen.getByRole('button', {
+        name: /Simpan & Cetak Bukti Penerimaan/i,
+      })
+      await userEvent.click(submitBtn)
+
+      // Tidak boleh memanggil API jika sesi petugas tidak memiliki userId
+      expect(postSpy).not.toHaveBeenCalled()
     })
   })
 })

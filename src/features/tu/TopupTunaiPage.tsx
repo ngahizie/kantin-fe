@@ -200,8 +200,16 @@ export function TopupTunaiPage() {
       let result: TopupSlipData | null = null
 
       const currentUser = useAuthStore.getState().auth.user
+      const rawPetugasId = currentUser?.userId ? Number(currentUser.userId) : NaN
+      if (Number.isNaN(rawPetugasId) || rawPetugasId <= 0) {
+        toast.error('Sesi Petugas Tidak Valid', {
+          description: 'ID petugas tidak ditemukan. Silakan masuk kembali.',
+        })
+        return
+      }
+
       const petugasNama = currentUser?.nama || 'Petugas TU'
-      const petugasId = currentUser?.userId ? Number(currentUser.userId) : 2
+      const petugasId = rawPetugasId
 
       const now = new Date()
       const refNo = generateTopupReferenceId(now)
