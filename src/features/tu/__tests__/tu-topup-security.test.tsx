@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render } from 'vitest-browser-react'
+import { userEvent } from 'vitest/browser'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import { Route } from '@/routes/_authenticated/tu/topup/index'
 import { useAuthStore } from '@/stores/auth-store'
+import { TopupTunaiPage } from '../TopupTunaiPage'
 import { generateTopupReferenceId } from '../topup-utils'
+import apiClient from '@/lib/api-client'
 
 describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
   beforeEach(() => {
@@ -92,6 +97,108 @@ describe('SEC-TOPUP-01: Route Guard /tu/topup/ Security', () => {
       const testDate = new Date('2026-11-19T10:30:00Z')
       const ref = generateTopupReferenceId(testDate)
       expect(ref).toContain('TU-TOPUP-20261119-')
+    })
+  })
+
+  describe('SEC-TOPUP-03: Concurrency Guard / Anti-Double Submit', () => {
+    it('mencegah pengiriman ganda (double-click submit) selama proses transaksi berlangsung', async () => {
+      vi.spyOn(useAuthStore, 'getState').mockReturnValue({
+        auth: {
+          isAuthenticated: () => true,
+          hasRole: (roles: string[]) => roles.includes('tu'),
+          user: { userId: 2, nama: 'Petugas TU Sri', role: 'tu' },
+        },
+      } as unknown as ReturnType<typeof useAuthStore.getState>)
+
+      vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+        if (url === '/api/siswa') {
+          return {
+            data: {
+              data: [
+                {
+                  siswaId: 101,
+                  nis: '24250101',
+                  nama: 'Ahmad Siswa',
+                  kelas: '7A',
+                  saldo: 50000,
+                  isBlocked: false,
+                },
+              ],
+            },
+          }
+        }
+        if (url === '/api/saldo' || url.includes('/rfid')) {
+          return { data: { data: { saldo: 50000, rfidUid: 'UID-A101' } } }
+        }
+        if (url.includes('/api/pengaturan')) {
+          return {
+            data: {
+              data: {
+                minTopup: 5000,
+                maksTopup: 500000,
+                batasSaldoSiswa: 1000000,
+              },
+            },
+          }
+        }
+        return { data: { data: null } }
+      })
+
+      let postResolve: (val: unknown) => void = () => {}
+      const postPromise = new Promise((resolve) => {
+        postResolve = resolve
+      })
+      const postSpy = vi.spyOn(apiClient, 'post').mockReturnValue(postPromise as never)
+
+      const screen = await render(
+        <SidebarProvider>
+          <TopupTunaiPage />
+        </SidebarProvider>
+      )
+
+      // Cari dan pilih siswa
+      const comboboxBtn = screen.getByRole('combobox')
+      await userEvent.click(comboboxBtn)
+
+      const studentItem = screen.getByText('Ahmad Siswa')
+      await userEvent.click(studentItem)
+
+      // Pilih preset nominal Rp 50.000
+      const presetBtn = screen.getByRole('button', { name: /50\.000/ })
+      await userEvent.click(presetBtn)
+
+      // Dapatkan tombol submit awal
+      const submitBtn = screen.getByRole('button', {
+        name: /Simpan & Cetak Bukti Penerimaan/i,
+      })
+
+      // Klik submit pertama
+      await userEvent.click(submitBtn)
+
+      // Verifikasi tombol berubah ke status loading dan dinonaktifkan
+      const loadingBtn = screen.getByRole('button', {
+        name: /Menyimpan Transaksi/i,
+      })
+      expect(loadingBtn.element().hasAttribute('disabled')).toBe(true)
+
+      // Dispatch event submit ganda pada form saat transaksi masih pending
+      const formEl = screen.container.querySelector('form')
+      formEl?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+
+      // Pastikan post hanya dipanggil 1 kali (tidak ada double execution)
+      expect(postSpy).toHaveBeenCalledTimes(1)
+
+      // Selesaikan request pertama
+      postResolve({
+        data: {
+          code: 200,
+          data: {
+            saldoSebelum: 50000,
+            saldoSetelah: 100000,
+            waktu: new Date().toISOString(),
+          },
+        },
+      })
     })
   })
 })

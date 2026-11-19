@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   AlertCircle,
@@ -54,6 +54,7 @@ export function TopupTunaiPage() {
   const [nominal, setNominal] = useState<string>('')
   const [namaPenyetor, setNamaPenyetor] = useState<string>('Orang Tua / Wali')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSubmittingRef = useRef(false)
 
   const [slipData, setSlipData] = useState<TopupSlipData | null>(null)
   const [isSlipOpen, setIsSlipOpen] = useState(false)
@@ -182,8 +183,10 @@ export function TopupTunaiPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmittingRef.current || isSubmitting) return
     if (!currentStudent || !isValidSubmit) return
 
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
       let result: TopupSlipData | null = null
@@ -275,6 +278,7 @@ export function TopupTunaiPage() {
         'Gagal mengisi saldo tunai.'
       toast.error('Pengisian Saldo Gagal', { description: message })
     } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
