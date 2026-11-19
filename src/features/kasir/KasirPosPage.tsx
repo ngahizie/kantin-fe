@@ -48,6 +48,7 @@ import {
   type TapTransaksiData,
 } from './api/kasir-api'
 import { sanitizeKasirErrorMessage } from './kasir-error'
+import { logKasirAuditEvent } from './api/kasir-audit'
 import type {
   SesiKasirData,
   RekapSesiData,
@@ -477,6 +478,17 @@ export const KasirPosPage: React.FC = () => {
           uid: cleanUid,
         })
         setErrorModalOpen(true)
+
+        void logKasirAuditEvent({
+          action: 'TRANSAKSI_GAGAL',
+          titikKasirId: targetTitikKasirId,
+          sesiId: sesi?.id,
+          detail: {
+            alasan: message,
+            kekurangan,
+            metodeBayar: 'SALDO',
+          },
+        })
       } finally {
         setIsProcessing(false)
       }
@@ -646,6 +658,17 @@ export const KasirPosPage: React.FC = () => {
           kekurangan,
         })
         setErrorModalOpen(true)
+
+        void logKasirAuditEvent({
+          action: 'TRANSAKSI_GAGAL',
+          titikKasirId: targetTitikKasirId,
+          sesiId: sesi?.id,
+          detail: {
+            alasan: message,
+            kekurangan,
+            metodeBayar: 'TUNAI',
+          },
+        })
       } finally {
         setIsProcessing(false)
       }

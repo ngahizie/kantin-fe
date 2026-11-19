@@ -131,4 +131,41 @@ describe('Security Hardening Kasir (OWASP & NIST)', () => {
       )
     })
   })
+
+  describe('SEC-KASIR-06: Pencatatan Client Audit Trail untuk Insiden Kasir', () => {
+    it('mencatat audit log saat terjadi kegagalan transaksi, selisih kas, atau void', async () => {
+      const { logKasirAuditEvent, getKasirAuditLogs, clearKasirAuditLogs } =
+        await import('../api/kasir-audit')
+
+      clearKasirAuditLogs()
+      expect(getKasirAuditLogs()).toHaveLength(0)
+
+      await logKasirAuditEvent({
+        action: 'TRANSAKSI_GAGAL',
+        titikKasirId: 2,
+        sesiId: 44,
+        detail: { alasan: 'Kartu diblokir', uid: '04A1B2C3' },
+      })
+
+      await logKasirAuditEvent({
+        action: 'TUTUP_SESI_SELISIH',
+        titikKasirId: 2,
+        sesiId: 44,
+        detail: { uangFisik: 45000, kasSeharusnya: 50000, selisih: -5000 },
+      })
+
+      const logs = getKasirAuditLogs()
+      expect(logs).toHaveLength(2)
+      expect(logs[0].action).toBe('TRANSAKSI_GAGAL')
+      expect(logs[0].titikKasirId).toBe(2)
+      expect(logs[0].detail.alasan).toBe('Kartu diblokir')
+      expect(logs[0].timestamp).toBeDefined()
+
+      expect(logs[1].action).toBe('TUTUP_SESI_SELISIH')
+      expect(logs[1].detail.selisih).toBe(-5000)
+
+      clearKasirAuditLogs()
+      expect(getKasirAuditLogs()).toHaveLength(0)
+    })
+  })
 })

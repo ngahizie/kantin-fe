@@ -41,6 +41,7 @@ import {
   saveCloseSessionLock,
   updateCloseSessionLockCatatan,
 } from '../close-session-lock'
+import { logKasirAuditEvent } from '../api/kasir-audit'
 
 export interface CloseSessionModalProps {
   open: boolean
@@ -228,6 +229,20 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
         selisih: authoritativeSelisih,
         catatan: catatanSelisih.trim() || undefined,
       })
+
+      if (authoritativeSelisih !== 0) {
+        void logKasirAuditEvent({
+          action: 'TUTUP_SESI_SELISIH',
+          titikKasirId: sesi.titikKasirId,
+          sesiId: sesi.id,
+          detail: {
+            uangFisik: authoritativeCash,
+            kasSeharusnya: authoritativeKasSeharusnya,
+            selisih: authoritativeSelisih,
+            catatan: catatanSelisih.trim(),
+          },
+        })
+      }
 
       const deskripsiNotif =
         authoritativeSelisih === 0
