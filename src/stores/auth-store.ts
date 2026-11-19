@@ -123,7 +123,20 @@ export const useAuthStore = create<AuthState>()((set, get) => {
 
       isAuthenticated: () => {
         const token = get().auth.accessToken || parseStoredToken()
-        return Boolean(token && token.trim().length > 0)
+        if (!token || !token.trim()) return false
+        try {
+          const parts = token.split('.')
+          if (parts.length === 3) {
+            // Cek masa berlaku JWT (exp claim)
+            const payload = JSON.parse(atob(parts[1]))
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+              return false // Token kedaluwarsa
+            }
+          }
+          return true
+        } catch {
+          return true
+        }
       },
 
       hasRole: (allowedRoles: UserRole[]) => {
