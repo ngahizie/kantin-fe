@@ -93,17 +93,22 @@ export function UserAuthForm({
       // Bersihkan sisa token/sesi usang sebelum mengirim permintaan login baru
       auth.reset()
 
+      const defaultSekolahId = Number(import.meta.env.VITE_DEFAULT_SEKOLAH_ID) || 10
+      const loginPayload: Record<string, unknown> = {
+        email: data.email,
+        username: data.email,
+        password: data.password,
+      }
+      if (defaultSekolahId) {
+        loginPayload.sekolah_id = defaultSekolahId
+      }
+
       const response = await apiClient.post<{
         code: number
         status: string
         message: string
         data: LoginResponseData
-      }>('/api/v1/auth/login', {
-        email: data.email,
-        username: data.email,
-        password: data.password,
-        sekolah_id: 10,
-      })
+      }>('/api/v1/auth/login', loginPayload)
 
       const resData = response.data?.data
       if (!resData || !resData.token) {
@@ -115,12 +120,13 @@ export function UserAuthForm({
       const rawRole = resolveUserRole(resData.user.roles, resData.user.currentRole)
 
       const cleanNama = (resData.user.nama || 'Staf Kantin').replace(/\s*\([^)]*\)$/, '')
+      const userSekolahId = resData.user.sekolah?.id || defaultSekolahId
       const authenticatedUser: AuthUser = {
         userId: resData.user.id,
         nama: cleanNama,
         email: resData.user.email,
         username: serverUsername,
-        sekolahId: resData.user.sekolah?.id || 10,
+        sekolahId: userSekolahId,
         sekolahNama: resData.user.sekolah?.nama || 'PAUD SKOOLIA',
         roles: resData.user.roles || [],
         currentRole: rawRole,
