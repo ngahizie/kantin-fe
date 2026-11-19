@@ -10,7 +10,7 @@ export function generateTopupReferenceId(now: Date = new Date()): string {
   const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
   const timeMs = now.getTime().toString(36).toUpperCase()
 
-  let randomPart = ''
+  let randomPart: string
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const bytes = new Uint8Array(6)
     crypto.getRandomValues(bytes)
@@ -66,6 +66,7 @@ export function sanitizePenyetorName(
   }
 
   // Hapus karakter kontrol ASCII non-printable
+  // eslint-disable-next-line no-control-regex
   const clean = value.replace(/[\u0000-\u001F\u007F-\u009F]/g, '').trim()
   return clean.slice(0, maxLength)
 }
