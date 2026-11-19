@@ -44,6 +44,7 @@ import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-acti
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, formatTime, formatTimeWithZone } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import {
   LaporanDateFilter,
   getDefaultDateFilter,
@@ -315,36 +316,31 @@ export function SetoranKasPage() {
       'Waktu Konfirmasi',
     ]
 
-    const rows = filteredList.map((item) => [
-      item.id,
-      item.tanggal,
-      item.petugas_nama,
-      item.petugas_nip || '-',
-      item.total_transaksi,
-      item.total_topup_siswa,
-      item.total_sistem,
-      item.uang_fisik !== null ? item.uang_fisik : '-',
-      item.selisih !== null ? item.selisih : '-',
-      item.status,
-      `"${(item.catatan || '-').replace(/"/g, '""')}"`,
-      item.bendahara_nama || '-',
-      item.konfirmasi_pada || '-',
-    ])
+    const headerRow = headers.map(sanitizeCsvCell).join(',')
+    const dataRows = filteredList.map((item) =>
+      [
+        sanitizeCsvCell(item.id),
+        sanitizeCsvCell(item.tanggal),
+        sanitizeCsvCell(item.petugas_nama),
+        sanitizeCsvCell(item.petugas_nip || '-'),
+        sanitizeCsvCell(item.total_transaksi),
+        sanitizeCsvCell(item.total_topup_siswa),
+        sanitizeCsvCell(item.total_sistem),
+        sanitizeCsvCell(item.uang_fisik !== null ? item.uang_fisik : '-'),
+        sanitizeCsvCell(item.selisih !== null ? item.selisih : '-'),
+        sanitizeCsvCell(item.status),
+        sanitizeCsvCell(item.catatan || '-'),
+        sanitizeCsvCell(item.bendahara_nama || '-'),
+        sanitizeCsvCell(item.konfirmasi_pada || '-'),
+      ].join(',')
+    )
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+    const csvContent = [headerRow, ...dataRows].join('\r\n')
 
     const fileSlug =
       dateFilterParams.tanggal ||
       `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Rekap_Setoran_Kas_TU_${fileSlug}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    downloadCsvBlob(`Rekap_Setoran_Kas_TU_${fileSlug}.csv`, csvContent)
     toast.success('Laporan rekapitulasi setoran kas berhasil diekspor ke CSV')
   }
 
