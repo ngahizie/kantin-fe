@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Boxes,
   ArrowDownLeft,
@@ -28,15 +28,20 @@ import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
+import { logStokAuditEvent } from './api/stok-audit'
+import { parseSafeMenuId, formatJenisMutasi, getStokExportMetadata } from './stok-utils'
+import { sanitizeStokErrorMessage } from './stok-error'
 import type { RiwayatStokItem } from './types'
 
 export function KartuStokPage() {
   // Baca menuId opsional jika ada navigasi spesifik dari halaman lain
-  const searchParams = useSearch({ strict: false }) as { menuId?: string | number }
-  const menuIdParam = searchParams?.menuId ? Number(searchParams.menuId) : undefined
+  const searchParams = useSearch({ strict: false }) as { menuId?: unknown }
+  const menuIdParam = parseSafeMenuId(searchParams?.menuId)
 
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const isExportingRef = useRef(false)
   const [currentPage, setCurrentPage] = useState(1)
 
   const PAGE_SIZE = 10
@@ -63,7 +68,9 @@ export function KartuStokPage() {
         setRiwayat(riwayatRes.items || [])
       } catch (err: unknown) {
         if (!isMounted) return
-        const msg = err instanceof Error ? err.message : 'Gagal memuat mutasi stok'
+        const error = err as { response?: { data?: { message?: string } }; message?: string }
+        const rawMsg = error.response?.data?.message || error.message || ''
+        const msg = sanitizeStokErrorMessage(rawMsg, 'Gagal memuat mutasi stok')
         toast.error('Gagal Memuat Mutasi', { description: msg })
       } finally {
         if (isMounted) setIsLoadingRiwayat(false)
@@ -101,45 +108,65 @@ export function KartuStokPage() {
       toast.warning('Tidak ada data mutasi untuk diekspor')
       return
     }
+    if (isExportingRef.current) return
+    isExportingRef.current = true
+    setIsExporting(true)
 
-    const headers = [
-      'No.',
-      'Waktu',
-      'Nomor Referensi',
-      'Menu',
-      'Jenis Mutasi',
-      'Arah',
-      'Qty',
-      'Saldo Akhir',
-      'HPP Satuan (Rp)',
-      'Harga Beli Satuan (Rp)',
-      'Total Nilai (Rp)',
-      'Aktor',
-      'Alasan/Catatan',
-    ]
+    try {
+      const headers = [
+        'No.',
+        'Waktu',
+        'Nomor Referensi',
+        'Menu',
+        'Jenis Mutasi',
+        'Arah',
+        'Qty',
+        'Saldo Akhir',
+        'HPP Satuan (Rp)',
+        'Harga Beli Satuan (Rp)',
+        'Total Nilai (Rp)',
+        'Aktor',
+        'Alasan/Catatan',
+      ]
 
-    const rows = riwayat.map((r, idx) => [
-      idx + 1,
-      sanitizeCsvCell(r.waktu),
-      sanitizeCsvCell(r.referensiId),
-      sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
-      r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
-      r.arah,
-      r.qty,
-      r.stokSetelah,
-      r.hppSnapshot ?? '',
-      r.hargaBeliSatuan ?? '',
-      r.totalNilai ?? '',
-      sanitizeCsvCell(r.aktorNama || r.aktorId || 'Sistem'),
-      sanitizeCsvCell(r.alasan || ''),
-    ])
+      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const filename = menuIdParam
+        ? `mutasi-stok-menu-${menuIdParam}-${dateStr}.csv`
+        : `mutasi-stok-${dateStr}.csv`
 
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
-    downloadCsvBlob(
-      `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
-      csvContent
-    )
-    toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
+      const rows = riwayat.map((r, idx) => [
+        idx + 1,
+        sanitizeCsvCell(r.waktu),
+        sanitizeCsvCell(r.referensiId),
+        sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
+        formatJenisMutasi(r.jenis),
+        r.arah,
+        r.qty,
+        r.stokSetelah,
+        r.hppSnapshot ?? '',
+        r.hargaBeliSatuan ?? '',
+        r.totalNilai ?? '',
+        sanitizeCsvCell(r.aktorNama || r.aktorId || 'Sistem'),
+        sanitizeCsvCell(r.alasan || ''),
+      ])
+
+      const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
+      downloadCsvBlob(filename, csvContent)
+      void logStokAuditEvent({
+        action: 'STOK_EXPORT_CSV',
+        menuId: menuIdParam,
+        detail: {
+          totalBaris: rows.length,
+          cakupan: exportMeta.cakupan,
+          menuId: menuIdParam ?? null,
+        },
+      })
+      toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
+    } finally {
+      isExportingRef.current = false
+      setIsExporting(false)
+    }
   }
 
   const handleExportPdf = () => {
@@ -147,13 +174,18 @@ export function KartuStokPage() {
       toast.warning('Tidak ada data mutasi untuk diekspor')
       return
     }
+    if (isExportingRef.current) return
+    isExportingRef.current = true
+    setIsExporting(true)
 
     try {
+      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const dateStr = new Date().toISOString().split('T')[0]
       const rows = riwayat.map((r) => ({
         waktu: formatDateTime(r.waktu),
         referensiId: r.referensiId,
         menu: r.menuNama || `Menu #${r.menuId}`,
-        jenis: r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis.replace(/_/g, ' '),
+        jenis: formatJenisMutasi(r.jenis),
         arah: r.arah,
         qty: `${r.arah === 'MASUK' ? '+' : '-'}${r.qty}`,
         stokSetelah: r.stokSetelah,
@@ -164,12 +196,12 @@ export function KartuStokPage() {
       }))
 
       exportTableToPdf({
-        filename: `Mutasi_Stok_${new Date().toISOString().split('T')[0]}`,
+        filename: `Mutasi_Stok${exportMeta.fileSuffix}_${dateStr}`,
         title: 'LAPORAN HISTORI MUTASI STOK',
-        subtitle: 'Seluruh Mutasi Produk & Menu Kantin',
+        subtitle: exportMeta.subtitle,
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Cakupan': 'Seluruh Menu Kantin',
+          'Cakupan': exportMeta.cakupan,
           'Total Transaksi': `${riwayat.length} Transaksi`,
           'Total Masuk': `${kpiData.totalMasuk} Unit`,
           'Total Keluar': `${kpiData.totalKeluar} Unit`,
@@ -189,12 +221,27 @@ export function KartuStokPage() {
         data: rows,
       })
 
+      void logStokAuditEvent({
+        action: 'STOK_EXPORT_PDF',
+        menuId: menuIdParam,
+        detail: {
+          totalBaris: rows.length,
+          cakupan: exportMeta.cakupan,
+          menuId: menuIdParam ?? null,
+        },
+      })
+
       toast.success('Ekspor PDF Berhasil', {
         description: 'Mutasi Stok (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
+      const error = err as { response?: { data?: { message?: string } }; message?: string }
+      const rawMsg = error.response?.data?.message || error.message || ''
+      const msg = sanitizeStokErrorMessage(rawMsg, 'Gagal mengekspor PDF')
       toast.error('Gagal Ekspor PDF', { description: msg })
+    } finally {
+      isExportingRef.current = false
+      setIsExporting(false)
     }
   }
 
@@ -242,7 +289,7 @@ export function KartuStokPage() {
             <ExportButton
               onExportCsv={handleExportCsv}
               onExportPdf={handleExportPdf}
-              disabled={riwayat.length === 0}
+              disabled={riwayat.length === 0 || isExporting}
               data-testid='btn-kartu-stok-export'
             />
           </div>
@@ -401,9 +448,7 @@ export function KartuStokPage() {
                                   item.arah
                                 )}`}
                               >
-                                {item.jenis === 'PENJUALAN_VOID'
-                                  ? 'REFUND PENJUALAN'
-                                  : item.jenis.replace(/_/g, ' ')}
+                                {formatJenisMutasi(item.jenis)}
                               </Badge>
                             </TableCell>
                             <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>
