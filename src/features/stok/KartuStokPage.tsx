@@ -29,7 +29,7 @@ import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
 import { logStokAuditEvent } from './api/stok-audit'
-import { parseSafeMenuId } from './stok-utils'
+import { parseSafeMenuId, formatJenisMutasi, getStokExportMetadata } from './stok-utils'
 import { sanitizeStokErrorMessage } from './stok-error'
 import type { RiwayatStokItem } from './types'
 
@@ -129,12 +129,18 @@ export function KartuStokPage() {
         'Alasan/Catatan',
       ]
 
+      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const filename = menuIdParam
+        ? `mutasi-stok-menu-${menuIdParam}-${dateStr}.csv`
+        : `mutasi-stok-${dateStr}.csv`
+
       const rows = riwayat.map((r, idx) => [
         idx + 1,
         sanitizeCsvCell(r.waktu),
         sanitizeCsvCell(r.referensiId),
         sanitizeCsvCell(r.menuNama || 'Menu #' + r.menuId),
-        r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis,
+        formatJenisMutasi(r.jenis),
         r.arah,
         r.qty,
         r.stokSetelah,
@@ -146,10 +152,7 @@ export function KartuStokPage() {
       ])
 
       const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
-      downloadCsvBlob(
-        `mutasi-stok-${new Date().toISOString().slice(0, 10)}.csv`,
-        csvContent
-      )
+      downloadCsvBlob(filename, csvContent)
       void logStokAuditEvent({
         action: 'STOK_EXPORT_CSV',
         menuId: menuIdParam,
@@ -175,11 +178,13 @@ export function KartuStokPage() {
     setIsExporting(true)
 
     try {
+      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const dateStr = new Date().toISOString().split('T')[0]
       const rows = riwayat.map((r) => ({
         waktu: formatDateTime(r.waktu),
         referensiId: r.referensiId,
         menu: r.menuNama || `Menu #${r.menuId}`,
-        jenis: r.jenis === 'PENJUALAN_VOID' ? 'REFUND PENJUALAN' : r.jenis.replace(/_/g, ' '),
+        jenis: formatJenisMutasi(r.jenis),
         arah: r.arah,
         qty: `${r.arah === 'MASUK' ? '+' : '-'}${r.qty}`,
         stokSetelah: r.stokSetelah,
@@ -190,12 +195,12 @@ export function KartuStokPage() {
       }))
 
       exportTableToPdf({
-        filename: `Mutasi_Stok_${new Date().toISOString().split('T')[0]}`,
+        filename: `Mutasi_Stok${exportMeta.fileSuffix}_${dateStr}`,
         title: 'LAPORAN HISTORI MUTASI STOK',
-        subtitle: 'Seluruh Mutasi Produk & Menu Kantin',
+        subtitle: exportMeta.subtitle,
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Cakupan': 'Seluruh Menu Kantin',
+          'Cakupan': exportMeta.cakupan,
           'Total Transaksi': `${riwayat.length} Transaksi`,
           'Total Masuk': `${kpiData.totalMasuk} Unit`,
           'Total Keluar': `${kpiData.totalKeluar} Unit`,
@@ -441,9 +446,7 @@ export function KartuStokPage() {
                                   item.arah
                                 )}`}
                               >
-                                {item.jenis === 'PENJUALAN_VOID'
-                                  ? 'REFUND PENJUALAN'
-                                  : item.jenis.replace(/_/g, ' ')}
+                                {formatJenisMutasi(item.jenis)}
                               </Badge>
                             </TableCell>
                             <TableCell className='text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums'>

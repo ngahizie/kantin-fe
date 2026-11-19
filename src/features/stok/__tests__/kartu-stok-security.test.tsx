@@ -1,7 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Route } from '@/routes/_authenticated/stok/kartu/index'
 import { useAuthStore } from '@/stores/auth-store'
-import { parseSafeMenuId } from '../stok-utils'
+import {
+  parseSafeMenuId,
+  formatJenisMutasi,
+  getStokExportMetadata,
+} from '../stok-utils'
 import { sanitizeStokErrorMessage } from '../stok-error'
 import {
   logStokAuditEvent,
@@ -205,6 +209,34 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
       isExportingRefCurrent = false
       triggerExport()
       expect(executionCount.count).toBe(2)
+    })
+  })
+
+  describe('SEC-STOK-06: Penanganan Safe String Mutasi & Integritas Metadata PDF', () => {
+    it('memformat jenis mutasi dengan aman tanpa melempar unhandled exception saat null atau undefined', () => {
+      expect(formatJenisMutasi(null)).toBe('-')
+      expect(formatJenisMutasi(undefined)).toBe('-')
+      expect(formatJenisMutasi('')).toBe('-')
+      expect(formatJenisMutasi('PENJUALAN_VOID')).toBe('REFUND PENJUALAN')
+      expect(formatJenisMutasi('BARANG_MASUK')).toBe('BARANG MASUK')
+      expect(formatJenisMutasi('OPNAME_KELUAR')).toBe('OPNAME KELUAR')
+    })
+
+    it('menghasilkan metadata laporan yang akurat untuk mode seluruh menu maupun single menu', () => {
+      const globalMeta = getStokExportMetadata(undefined)
+      expect(globalMeta.cakupan).toBe('Seluruh Menu Kantin')
+      expect(globalMeta.subtitle).toBe('Seluruh Mutasi Produk & Menu Kantin')
+      expect(globalMeta.fileSuffix).toBe('')
+
+      const menuMeta = getStokExportMetadata(5, 'Nasi Uduk Spesial')
+      expect(menuMeta.cakupan).toBe('Menu: Nasi Uduk Spesial')
+      expect(menuMeta.subtitle).toBe('Mutasi Produk: Nasi Uduk Spesial')
+      expect(menuMeta.fileSuffix).toBe('_Menu_5')
+
+      const fallbackMenuMeta = getStokExportMetadata(12, null)
+      expect(fallbackMenuMeta.cakupan).toBe('Menu: Menu #12')
+      expect(fallbackMenuMeta.subtitle).toBe('Mutasi Produk: Menu #12')
+      expect(fallbackMenuMeta.fileSuffix).toBe('_Menu_12')
     })
   })
 })
