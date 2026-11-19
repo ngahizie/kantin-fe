@@ -50,11 +50,18 @@ import {
 } from './menu-utils'
 import type { KategoriItem } from './types'
 
-async function fetchKategoriWithMenuCounts(): Promise<KategoriItem[]> {
+async function fetchKategoriWithMenuCounts(previousList?: KategoriItem[]): Promise<KategoriItem[]> {
   const [kategoris, menus] = await Promise.all([
     katalogApi.getKategoriList(false),
     katalogApi.getMenuList(undefined, false).catch(() => null),
   ])
+  if (!Array.isArray(menus) && previousList && previousList.length > 0) {
+    const prevMap = new Map(previousList.map((k) => [k.id, k.jumlahItem]))
+    return kategoris.map((kat) => ({
+      ...kat,
+      jumlahItem: prevMap.get(kat.id),
+    }))
+  }
   return mergeKategoriMenuCounts(kategoris, menus)
 }
 
@@ -77,6 +84,7 @@ export function KategoriPage() {
 
   const syncSourceId = useId()
   const isMountedRef = useRef(true)
+  const kategoriListRef = useRef<KategoriItem[]>([])
   const inFlightCountRef = useRef(0)
   const activeSyncIdRef = useRef(0)
   const mutationEpochRef = useRef(0)
@@ -101,6 +109,7 @@ export function KategoriPage() {
   })
 
   const commitKategoriData = useCallback((data: KategoriItem[]) => {
+    kategoriListRef.current = data
     setKategoriList(sortCategoriesNewestFirst(data))
     lastSyncedAtRef.current = new Date()
   }, [])
@@ -115,7 +124,7 @@ export function KategoriPage() {
       const requestEpoch = mutationEpochRef.current
 
       try {
-        const data = await fetchKategoriWithMenuCounts()
+        const data = await fetchKategoriWithMenuCounts(kategoriListRef.current)
         if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
         if (!force && requestEpoch !== mutationEpochRef.current) return
 
@@ -135,7 +144,7 @@ export function KategoriPage() {
       inFlightCountRef.current += 1
       const syncId = ++activeSyncIdRef.current
       try {
-        const data = await fetchKategoriWithMenuCounts()
+        const data = await fetchKategoriWithMenuCounts(kategoriListRef.current)
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           commitKategoriData(data)
         }
@@ -499,7 +508,9 @@ export function KategoriPage() {
                             className='rounded-full border border-border bg-muted/40 text-foreground font-medium text-xs px-2.5 py-0.5 gap-1'
                           >
                             <UtensilsCrossed className='size-3 text-muted-foreground' />
-                            <span className='tabular-nums'>{itemQty} menu</span>
+                            <span className='tabular-nums'>
+                              {kat.jumlahItem !== undefined ? `${kat.jumlahItem} menu` : 'Belum diverifikasi'}
+                            </span>
                           </Badge>
                         </TableCell>
                         <TableCell className='text-center py-3.5'>
