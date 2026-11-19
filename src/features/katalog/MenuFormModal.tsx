@@ -150,6 +150,8 @@ export function MenuFormModal({
   const currentMenuId = open ? (selectedMenu?.id ?? 0) : null
   if (currentMenuId !== prevMenuId) {
     setPrevMenuId(currentMenuId)
+    setLocalPreviewUrl(null)
+    setFotoGagal(false)
     setAksiStok(initialAksiStok)
     setQtyMasuk('')
     setHargaBeliMasuk('')
@@ -162,15 +164,20 @@ export function MenuFormModal({
     setQtyOpnameFisik(initialStok)
   }
 
-  // Sinkronisasi data form saat modal dibuka
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       if (localPreviewUrl) {
         URL.revokeObjectURL(localPreviewUrl)
         setLocalPreviewUrl(null)
       }
       setFotoGagal(false)
+    }
+    onOpenChange(nextOpen)
+  }
 
+  // Sinkronisasi data form saat modal dibuka
+  useEffect(() => {
+    if (open) {
       if (selectedMenu) {
         form.reset({
           nama: selectedMenu.nama,
@@ -363,7 +370,7 @@ export function MenuFormModal({
         toast.success(`Menu "${payload.nama}" berhasil ditambahkan`)
       }
       onSuccess()
-      onOpenChange(false)
+      handleOpenChange(false)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
       const message = error.response?.data?.message || error.message || 'Gagal menyimpan menu'
@@ -375,7 +382,7 @@ export function MenuFormModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>{isEditing ? 'Ubah Menu Kantin' : 'Tambah Menu Baru'}</DialogTitle>
@@ -879,7 +886,7 @@ export function MenuFormModal({
               <Button
                 type='button'
                 variant='outline'
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Batal
