@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Save } from 'lucide-react'
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
+import { sanitizeKategoriErrorMessage } from './kategori-error'
 import {
   kategoriFormSchema,
   type KategoriFormValues,
@@ -53,11 +54,13 @@ export function KategoriFormModal({
     },
   })
 
-  const { isSubmitting } = form.formState
+  const isSubmittingRef = useRef(false)
+  const isSubmitting = form.formState.isSubmitting || isSubmittingRef.current
 
   // Sinkronisasi data saat modal dibuka untuk mode edit
   useEffect(() => {
     if (open) {
+      isSubmittingRef.current = false
       if (selectedKategori) {
         const isAktif =
           selectedKategori.isActive !== false && selectedKategori.aktif !== false
@@ -77,6 +80,8 @@ export function KategoriFormModal({
   }, [open, selectedKategori, form])
 
   async function onSubmit(values: KategoriFormValues) {
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
     try {
       let savedKategori: KategoriItem | undefined
       if (isEditing && selectedKategori) {
@@ -90,8 +95,10 @@ export function KategoriFormModal({
       onOpenChange(false)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message = error.response?.data?.message || error.message || 'Gagal menyimpan kategori'
-      toast.error(message)
+      const rawMessage = error.response?.data?.message || error.message || ''
+      toast.error(sanitizeKategoriErrorMessage(rawMessage, 'Gagal menyimpan kategori'))
+    } finally {
+      isSubmittingRef.current = false
     }
   }
 

@@ -44,12 +44,7 @@ describe('Security Hardening Kasir (OWASP & NIST)', () => {
       const { saveCloseSessionLock, getCloseSessionLock } =
         await import('../close-session-lock')
 
-      const sesiDummy = {
-        id: 101,
-        tanggal: '2026-11-19',
-        titikKasirId: 1,
-        status: 'TERBUKA' as const,
-      }
+      const sesiDummy = { id: 101, tanggal: '2026-11-19', titikKasirId: 1, status: 'TERBUKA' as const }
       saveCloseSessionLock(sesiDummy, 50000, 'Pas', 50000)
 
       const locked = getCloseSessionLock(sesiDummy)

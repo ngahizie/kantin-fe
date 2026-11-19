@@ -38,7 +38,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { katalogApi } from './api/katalog-api'
+import { logKategoriAuditEvent } from './api/kategori-audit'
 import { KategoriFormModal } from './KategoriFormModal'
+import { sanitizeKategoriErrorMessage } from './kategori-error'
 import {
   MENU_AUTO_REFRESH_INTERVAL_MS,
   getKategoriDeleteBlockedReason,
@@ -50,11 +52,18 @@ import {
 } from './menu-utils'
 import type { KategoriItem } from './types'
 
-async function fetchKategoriWithMenuCounts(): Promise<KategoriItem[]> {
+async function fetchKategoriWithMenuCounts(previousList?: KategoriItem[]): Promise<KategoriItem[]> {
   const [kategoris, menus] = await Promise.all([
     katalogApi.getKategoriList(false),
     katalogApi.getMenuList(undefined, false).catch(() => null),
   ])
+  if (!Array.isArray(menus) && previousList && previousList.length > 0) {
+    const prevMap = new Map(previousList.map((k) => [k.id, k.jumlahItem]))
+    return kategoris.map((kat) => ({
+      ...kat,
+      jumlahItem: prevMap.get(kat.id),
+    }))
+  }
   return mergeKategoriMenuCounts(kategoris, menus)
 }
 
@@ -77,6 +86,7 @@ export function KategoriPage() {
 
   const syncSourceId = useId()
   const isMountedRef = useRef(true)
+  const kategoriListRef = useRef<KategoriItem[]>([])
   const inFlightCountRef = useRef(0)
   const activeSyncIdRef = useRef(0)
   const mutationEpochRef = useRef(0)
@@ -86,6 +96,15 @@ export function KategoriPage() {
     const blockedReason = getKategoriDeleteBlockedReason(kat)
     if (blockedReason) {
       toast.error(blockedReason)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE_BLOCKED',
+        kategoriId: kat.id,
+        kategoriNama: kat.nama,
+        detail: {
+          alasan: blockedReason,
+          jumlahItem: kat.jumlahItem,
+        },
+      })
       return
     }
     setDeleteTarget(kat)
@@ -101,6 +120,7 @@ export function KategoriPage() {
   })
 
   const commitKategoriData = useCallback((data: KategoriItem[]) => {
+    kategoriListRef.current = data
     setKategoriList(sortCategoriesNewestFirst(data))
     lastSyncedAtRef.current = new Date()
   }, [])
@@ -115,7 +135,7 @@ export function KategoriPage() {
       const requestEpoch = mutationEpochRef.current
 
       try {
-        const data = await fetchKategoriWithMenuCounts()
+        const data = await fetchKategoriWithMenuCounts(kategoriListRef.current)
         if (!isMountedRef.current || syncId !== activeSyncIdRef.current) return
         if (!force && requestEpoch !== mutationEpochRef.current) return
 
@@ -135,14 +155,19 @@ export function KategoriPage() {
       inFlightCountRef.current += 1
       const syncId = ++activeSyncIdRef.current
       try {
-        const data = await fetchKategoriWithMenuCounts()
+        const data = await fetchKategoriWithMenuCounts(kategoriListRef.current)
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           commitKategoriData(data)
         }
       } catch (err: unknown) {
         if (isMountedRef.current && syncId === activeSyncIdRef.current) {
           const error = err as { message?: string }
-          toast.error(error.message || 'Gagal memuat daftar kategori')
+          toast.error(
+            sanitizeKategoriErrorMessage(
+              error.message || '',
+              'Gagal memuat daftar kategori'
+            )
+          )
         }
       } finally {
         inFlightCountRef.current = Math.max(0, inFlightCountRef.current - 1)
@@ -238,6 +263,16 @@ export function KategoriPage() {
     async (savedKategori?: KategoriItem) => {
       mutationEpochRef.current += 1
       if (savedKategori && typeof savedKategori === 'object') {
+        const isUpdate = Boolean(selectedKategori)
+        void logKategoriAuditEvent({
+          action: isUpdate ? 'KATEGORI_UPDATE' : 'KATEGORI_CREATE',
+          kategoriId: savedKategori.id,
+          kategoriNama: savedKategori.nama,
+          detail: {
+            urutan: savedKategori.urutan,
+            aktif: savedKategori.aktif ?? savedKategori.isActive,
+          },
+        })
         setKategoriList((prev) => {
           const exists = prev.some((k) => k.id === savedKategori.id)
           if (exists) {
@@ -293,13 +328,27 @@ export function KategoriPage() {
           ? `Kategori "${kat.nama}" diaktifkan`
           : `Kategori "${kat.nama}" dinonaktifkan`
       )
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_TOGGLE_STATUS',
+        kategoriId: kat.id,
+        kategoriNama: kat.nama,
+        detail: {
+          sebelum: currentAktif,
+          sesudah: nextAktif,
+        },
+      })
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message =
-        error.response?.data?.message || error.message || 'Gagal memperbarui status kategori'
-      toast.error(message)
+      const rawMessage =
+        error.response?.data?.message || error.message || ''
+      toast.error(
+        sanitizeKategoriErrorMessage(
+          rawMessage,
+          'Gagal memperbarui status kategori'
+        )
+      )
     } finally {
       setTogglingId(null)
     }
@@ -312,6 +361,15 @@ export function KategoriPage() {
     const blockedReason = getKategoriDeleteBlockedReason(latestTarget)
     if (blockedReason) {
       toast.error(blockedReason)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE_BLOCKED',
+        kategoriId: latestTarget.id,
+        kategoriNama: latestTarget.nama,
+        detail: {
+          alasan: blockedReason,
+          jumlahItem: latestTarget.jumlahItem,
+        },
+      })
       setDeleteTarget(null)
       return
     }
@@ -322,16 +380,29 @@ export function KategoriPage() {
       mutationEpochRef.current += 1
       setKategoriList((prev) => prev.filter((k) => k.id !== target.id))
       toast.success(`Kategori "${target.nama}" berhasil dihapus`)
+      void logKategoriAuditEvent({
+        action: 'KATEGORI_DELETE',
+        kategoriId: target.id,
+        kategoriNama: target.nama,
+        detail: {
+          jumlahItem: latestTarget.jumlahItem ?? 0,
+        },
+      })
       setDeleteTarget(null)
       notifyKategoriChanged(syncSourceId)
       await syncKategori(true)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string }
-      const message =
+      const rawMessage =
         error.response?.data?.message ||
         error.message ||
-        'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
-      toast.error(message)
+        ''
+      toast.error(
+        sanitizeKategoriErrorMessage(
+          rawMessage,
+          'Gagal menghapus kategori. Pastikan tidak ada menu terkait yang menggunakannya.'
+        )
+      )
     } finally {
       setIsDeleting(false)
     }
@@ -475,7 +546,6 @@ export function KategoriPage() {
                 ) : (
                   filteredKategori.map((kat, idx) => {
                     const isAktif = kat.isActive !== false && kat.aktif !== false
-                    const itemQty = kat.jumlahItem ?? 0
                     const deleteBlockedReason = getKategoriDeleteBlockedReason(kat)
                     const isDeleteDisabled = Boolean(deleteBlockedReason)
                     const deleteButtonTitle = deleteBlockedReason || 'Hapus Kategori'
@@ -499,7 +569,9 @@ export function KategoriPage() {
                             className='rounded-full border border-border bg-muted/40 text-foreground font-medium text-xs px-2.5 py-0.5 gap-1'
                           >
                             <UtensilsCrossed className='size-3 text-muted-foreground' />
-                            <span className='tabular-nums'>{itemQty} menu</span>
+                            <span className='tabular-nums'>
+                              {kat.jumlahItem !== undefined ? `${kat.jumlahItem} menu` : 'Belum diverifikasi'}
+                            </span>
                           </Badge>
                         </TableCell>
                         <TableCell className='text-center py-3.5'>
