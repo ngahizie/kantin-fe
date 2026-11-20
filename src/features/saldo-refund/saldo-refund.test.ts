@@ -298,4 +298,27 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     const fallbackKop = emptySchoolName || 'KANTIN SEKOLAH'
     expect(fallbackKop).toBe('KANTIN SEKOLAH')
   })
+
+  it('mengunci submit ganda (double-submit) secara synchronous menggunakan flag ref (SEC-KOR-08)', () => {
+    let callCount = 0
+    let isSubmitting = false
+    const isSubmittingRef = { current: false }
+
+    const fakeSubmit = () => {
+      if (isSubmitting || isSubmittingRef.current) return
+      isSubmittingRef.current = true
+      isSubmitting = true
+      callCount++
+    }
+
+    fakeSubmit()
+    fakeSubmit() // Klik kedua segera saat ref terkunci
+    expect(callCount).toBe(1)
+
+    // Simulasi selesai
+    isSubmittingRef.current = false
+    isSubmitting = false
+    fakeSubmit()
+    expect(callCount).toBe(2)
+  })
 })

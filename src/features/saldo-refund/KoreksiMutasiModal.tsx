@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   ShieldAlert,
@@ -103,6 +103,7 @@ function KoreksiMutasiFormContent({
 
   const [isAgreed, setIsAgreed] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const isSubmittingRef = useRef<boolean>(false)
 
   // Unique IDs for form accessibility
   const referensiInputId = useId()
@@ -145,6 +146,7 @@ function KoreksiMutasiFormContent({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting || isSubmittingRef.current) return
     if (!isValidSubmit) {
       if (isSaldoMinus) {
         toast.error(
@@ -162,6 +164,7 @@ function KoreksiMutasiFormContent({
       return
     }
 
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
       let newKoreksi: MutasiKoreksiItem
@@ -286,6 +289,7 @@ function KoreksiMutasiFormContent({
           ?.message || 'Gagal mengeksekusi koreksi saldo'
       toast.error(errorMsg)
     } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
