@@ -49,6 +49,7 @@ import { Main } from '@/components/layout/main'
 import { ExportButton } from '@/components/export-button'
 import { formatDateTime, formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { type KartuSiswaMock } from '@/types/kantin'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import {
@@ -64,6 +65,7 @@ export function KoreksiBendaharaPage() {
   const [transaksiList, setTransaksiList] = useState<TransaksiSesiTutupItem[]>(
     []
   )
+  const [totalKoreksiDb, setTotalKoreksiDb] = useState<number | null>(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [errorKoreksi, setErrorKoreksi] = useState<string | null>(null)
@@ -88,16 +90,17 @@ export function KoreksiBendaharaPage() {
     useState<MutasiKoreksiItem | null>(null)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
 
-  const { currentRole } = useRoleStore()
+  const { currentRole, schoolName, userName } = useRoleStore()
   const isKepsek = currentRole === 'kepsek'
   const canAccessSesiTutup = !isKepsek
 
   const executeFetch = useCallback(async () => {
     const [resSiswa, resKoreksi, resTx] = await Promise.allSettled([
-      apiClient.get('/api/siswa', { params: { batas: 50 } }),
-      apiClient.get('/api/saldo/koreksi'),
+      apiClient.get('/api/siswa', { params: { batas: 100 } }),
+      apiClient.get('/api/saldo/koreksi', { params: { ukuran: 100 } }),
       canAccessSesiTutup
         ? apiClient.get('/api/kasir/transaksi', {
+            params: { ukuran: 100 },
             silent: true,
           } as unknown as Record<string, unknown>)
         : Promise.resolve({ data: { data: { items: [] } } }),
@@ -139,6 +142,11 @@ export function KoreksiBendaharaPage() {
           : Array.isArray(rawData)
             ? rawData
             : [])
+      const totalCount =
+        typeof rawData?.data?.total === 'number'
+          ? rawData.data.total
+          : items.length
+      setTotalKoreksiDb(totalCount)
       setKoreksiList(
         items.map((it: unknown) =>
           mapMutasiKoreksiItem(it as Record<string, unknown>, loadedStudents)
@@ -349,34 +357,29 @@ export function KoreksiBendaharaPage() {
     ]
 
     const rows = filteredKoreksi.map((k) => [
-      k.referensi_id,
-      k.waktu,
-      k.siswa_nama,
-      k.siswa_info,
-      k.jenis_koreksi,
-      k.arah,
-      k.nominal,
-      k.saldo_sebelum,
-      k.saldo_setelah,
-      `"${k.alasan.replace(/"/g, '""')}"`,
-      k.bendahara_nama,
-      k.transaksi_terkait_id || '-',
+      sanitizeCsvCell(k.referensi_id),
+      sanitizeCsvCell(k.waktu),
+      sanitizeCsvCell(k.siswa_nama),
+      sanitizeCsvCell(k.siswa_info),
+      sanitizeCsvCell(k.jenis_koreksi),
+      sanitizeCsvCell(k.arah),
+      sanitizeCsvCell(k.nominal),
+      sanitizeCsvCell(k.saldo_sebelum),
+      sanitizeCsvCell(k.saldo_setelah),
+      sanitizeCsvCell(k.alasan),
+      sanitizeCsvCell(k.bendahara_nama),
+      sanitizeCsvCell(k.transaksi_terkait_id || '-'),
     ])
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+    const csvContent = [
+      headers.map(sanitizeCsvCell).join(','),
+      ...rows.map((e) => e.join(',')),
+    ].join('\r\n')
 
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute(
-      'download',
-      `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`
+    downloadCsvBlob(
+      `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`,
+      csvContent
     )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
     toast.success('Log audit mutasi koreksi berhasil diekspor ke CSV')
   }
 
@@ -492,7 +495,7 @@ export function KoreksiBendaharaPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-                {koreksiList.length} Mutasi
+                {totalKoreksiDb !== null ? totalKoreksiDb : koreksiList.length} Mutasi
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
                 Tercatat rapi dan aman di buku besar
@@ -1125,7 +1128,7 @@ export function KoreksiBendaharaPage() {
             >
               <div className='space-y-1 border-b border-border pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
-                  SMA NEGERI 1 SKOOLIA
+                  {schoolName || 'KANTIN SEKOLAH'}
                 </h3>
                 <p className='text-[11px] text-muted-foreground'>
                   BAGIAN KEUANGAN & BENDAHARA SEKOLAH
@@ -1223,7 +1226,7 @@ export function KoreksiBendaharaPage() {
                     Mengetahui Kepala Sekolah,
                   </p>
                   <p className='font-semibold underline'>
-                    Dr. Ir. H. Supriyanto, M.Pd.
+                    {isKepsek && userName ? userName : 'Kepala Sekolah'}
                   </p>
                 </div>
               </div>

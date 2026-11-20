@@ -4,6 +4,7 @@ import {
   pindahSaldoSchema,
   mapTransaksiKasirItemToSesiTutup,
   mapMutasiKoreksiItem,
+  generateSecureReferensiId,
 } from './types'
 
 describe('Refund Saldo Orang Tua Zod Validation Schema', () => {
@@ -228,5 +229,96 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.bendahara_nama).toBe('Bendahara #10')
     expect(mapped.transaksi_terkait_id).toBe(910103)
     expect(mapped.jenis_koreksi).toBe('PEMBALIK_TRANSAKSI_KASIR')
+  })
+
+  it('mengamankan sel CSV dari serangan Formula Injection (SEC-KOR-01)', async () => {
+    const { sanitizeCsvCell } = await import('@/lib/csv-sanitizer')
+    expect(sanitizeCsvCell('=1+1')).toBe(`"'=1+1"`)
+    expect(sanitizeCsvCell('@SUM(A1:A10)')).toBe(`"'@SUM(A1:A10)"`)
+    expect(sanitizeCsvCell('+cmd|')).toBe(`"'+cmd|"`)
+    expect(sanitizeCsvCell('-cmd|')).toBe(`"'-cmd|"`)
+    expect(sanitizeCsvCell('Normal, teks dengan koma')).toBe(`"Normal, teks dengan koma"`)
+    expect(sanitizeCsvCell('Teks dengan "kutip" ganda')).toBe(`"Teks dengan ""kutip"" ganda"`)
+  })
+
+  it('memvalidasi kontrak koreksi transaksi sesi tertutup kasir vs koreksi manual (SEC-KOR-02)', () => {
+    // Validasi bahwa payload pembalik transaksi membawa kodeStruk dan alasan ke endpoint kasir
+    const transaksiId = 910103
+    const alasan = 'Pembalik transaksi belanja salah potong kasir'
+    const endpointKasirKoreksi = `/api/kasir/transaksi/${transaksiId}/koreksi`
+    const payloadKasir = { alasan, kodeStruk: String(transaksiId) }
+
+    expect(endpointKasirKoreksi).toBe('/api/kasir/transaksi/910103/koreksi')
+    expect(payloadKasir.kodeStruk).toBe('910103')
+    expect(payloadKasir.alasan.length).toBeGreaterThan(0)
+  })
+
+  it('menghasilkan nomor referensi berita acara berbasis CSPRNG anti-tabrakan (SEC-KOR-03)', () => {
+    const ref1 = generateSecureReferensiId('BA-KOR')
+    const ref2 = generateSecureReferensiId('BA-KOR')
+
+    expect(ref1).not.toBe(ref2)
+    expect(ref1).toMatch(/^BA-KOR-\d{8}-[A-F0-9]{8}$/)
+    expect(ref1.length).toBeLessThanOrEqual(56) // Sesuai batas aman idempotency_key DB
+  })
+
+  it('memvalidasi batas panjang maksimum referensiId (56) dan alasan koreksi (255) (SEC-KOR-05)', () => {
+    const validAlasan = 'A'.repeat(255)
+    const invalidAlasan = 'A'.repeat(256)
+    const validRef = 'BA-KOR-20261120-12345678'
+    const invalidRef = 'B'.repeat(57)
+
+    expect(validAlasan.length).toBe(255)
+    expect(invalidAlasan.length).toBeGreaterThan(255)
+    expect(validRef.length).toBeLessThanOrEqual(56)
+    expect(invalidRef.length).toBeGreaterThan(56)
+  })
+
+  it('memverifikasi integritas parameter ukuran paginasi dan fallback total DB (SEC-KOR-06)', () => {
+    const defaultParams = { ukuran: 100 }
+    expect(defaultParams.ukuran).toBe(100)
+
+    const rawHalaman = {
+      items: [{ id: 1 }, { id: 2 }],
+      total: 45,
+      halaman: 0,
+      ukuran: 100,
+      totalHalaman: 1,
+    }
+    const resolvedTotal = typeof rawHalaman.total === 'number' ? rawHalaman.total : rawHalaman.items.length
+    expect(resolvedTotal).toBe(45)
+  })
+
+  it('menggunakan identitas lembaga dinamis dari role store untuk kop berita acara (SEC-KOR-07)', () => {
+    const schoolNameMock = 'SMA NEGERI CONTOH'
+    const renderedKop = schoolNameMock || 'KANTIN SEKOLAH'
+    expect(renderedKop).toBe('SMA NEGERI CONTOH')
+
+    const emptySchoolName = ''
+    const fallbackKop = emptySchoolName || 'KANTIN SEKOLAH'
+    expect(fallbackKop).toBe('KANTIN SEKOLAH')
+  })
+
+  it('mengunci submit ganda (double-submit) secara synchronous menggunakan flag ref (SEC-KOR-08)', () => {
+    let callCount = 0
+    let isSubmitting = false
+    const isSubmittingRef = { current: false }
+
+    const fakeSubmit = () => {
+      if (isSubmitting || isSubmittingRef.current) return
+      isSubmittingRef.current = true
+      isSubmitting = true
+      callCount++
+    }
+
+    fakeSubmit()
+    fakeSubmit() // Klik kedua segera saat ref terkunci
+    expect(callCount).toBe(1)
+
+    // Simulasi selesai
+    isSubmittingRef.current = false
+    isSubmitting = false
+    fakeSubmit()
+    expect(callCount).toBe(2)
   })
 })

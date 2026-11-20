@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { type KartuSiswaMock } from '@/types/kantin'
 import {
   ShieldAlert,
@@ -35,6 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import {
   mapMutasiKoreksiItem,
+  generateSecureReferensiId,
   type JenisKoreksi,
   type ArahMutasi,
   type MutasiKoreksiItem,
@@ -96,15 +97,13 @@ function KoreksiMutasiFormContent({
     return ''
   })
 
-  const [referensiId, setReferensiId] = useState<string>(() => {
-    const now = new Date()
-    const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
-    const rand = Math.floor(1000 + Math.random() * 9000)
-    return `BA-KOR-${dateCode}-${rand}`
-  })
+  const [referensiId, setReferensiId] = useState<string>(() =>
+    generateSecureReferensiId('BA-KOR')
+  )
 
   const [isAgreed, setIsAgreed] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const isSubmittingRef = useRef<boolean>(false)
 
   // Unique IDs for form accessibility
   const referensiInputId = useId()
@@ -140,91 +139,147 @@ function KoreksiMutasiFormContent({
     nominalNum > 0 &&
     !isSaldoMinus &&
     alasan.trim().length >= 5 &&
+    alasan.trim().length <= 255 &&
     referensiId.trim().length > 0 &&
+    referensiId.trim().length <= 56 &&
     isAgreed
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting || isSubmittingRef.current) return
     if (!isValidSubmit) {
       if (isSaldoMinus) {
         toast.error(
           'Koreksi DEBIT ditolak: Saldo berjalan tidak boleh menjadi minus!'
         )
+      } else if (alasan.trim().length < 5) {
+        toast.error('Alasan penyesuaian saldo minimal 5 karakter!')
+      } else if (alasan.trim().length > 255) {
+        toast.error('Alasan penyesuaian saldo maksimal 255 karakter!')
+      } else if (referensiId.trim().length > 56) {
+        toast.error('Nomor Berita Acara maksimal 56 karakter!')
       } else if (!isAgreed) {
         toast.error('Harap centang persetujuan otorisasi audit Bendahara!')
       }
       return
     }
 
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     try {
-      const payload = {
-        subjekTipe: 'SISWA' as const,
-        siswaId: Number(selectedSiswaId),
-        arah,
-        nominal: nominalNum,
-        alasan: alasan.trim(),
-        referensiId: referensiId.trim(),
-        jenisKoreksi,
-        transaksiTerkaitId: initialTransaction?.id,
+      let newKoreksi: MutasiKoreksiItem
+
+      if (initialTransaction) {
+        // Pembalik transaksi kasir sesi tertutup (PRD §6.3, §9.2, issue #212)
+        // Panggil endpoint resmi transaksi koreksi agar stok dipulihkan dan status transaksi VOID ditegakkan di backend
+        await apiClient.post(
+          `/api/kasir/transaksi/${initialTransaction.id}/koreksi`,
+          {
+            alasan: alasan.trim(),
+            kodeStruk: String(initialTransaction.id),
+          }
+        )
+
+        const fallbackId = `KOR-${referensiId.trim()}`
+        const fallbackItem: MutasiKoreksiItem = {
+          id: fallbackId,
+          referensi_id: referensiId.trim(),
+          referensiId: referensiId.trim(),
+          waktu: new Date().toISOString(),
+          siswa_id: Number(selectedSiswaId),
+          siswaId: Number(selectedSiswaId),
+          siswa_nama: siswaNama,
+          siswaNama,
+          siswa_info: siswaInfo,
+          siswaInfo,
+          jenis_koreksi: 'PEMBALIK_TRANSAKSI_KASIR',
+          jenisKoreksi: 'PEMBALIK_TRANSAKSI_KASIR',
+          arah: 'KREDIT',
+          nominal: nominalNum,
+          saldo_sebelum: saldoSaatIni,
+          saldoSebelum: saldoSaatIni,
+          saldo_setelah: saldoSetelah,
+          saldoSetelah,
+          alasan: alasan.trim(),
+          keterangan: alasan.trim(),
+          bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendahara_nama: bendaharaNama,
+          bendaharaNama,
+          transaksi_terkait_id: initialTransaction.id,
+          transaksiTerkaitId: initialTransaction.id,
+          sesi_kasir_id: initialTransaction.sesi_kasir_id,
+          sesiKasirId: initialTransaction.sesi_kasir_id,
+        }
+        newKoreksi = fallbackItem
+
+        toast.success(
+          `Transaksi ${initialTransaction.id} berhasil dibalik dan dikoreksi!`
+        )
+      } else {
+        const payload = {
+          subjekTipe: 'SISWA' as const,
+          siswaId: Number(selectedSiswaId),
+          arah,
+          nominal: nominalNum,
+          alasan: alasan.trim(),
+          referensiId: referensiId.trim(),
+          jenisKoreksi,
+        }
+
+        const res = await apiClient.post('/api/saldo/koreksi', payload)
+
+        const fallbackId = `KOR-${referensiId.trim()}`
+        const rawData =
+          (res.data?.data as Record<string, unknown>)?.mutasi ??
+          (res.data?.data && typeof res.data.data === 'object' && ('referensiId' in res.data.data || 'referensi_id' in res.data.data)
+            ? res.data.data
+            : null)
+
+        const fallbackItem: MutasiKoreksiItem = {
+          id: fallbackId,
+          referensi_id: referensiId.trim(),
+          referensiId: referensiId.trim(),
+          waktu: new Date().toISOString(),
+          siswa_id: Number(selectedSiswaId),
+          siswaId: Number(selectedSiswaId),
+          siswa_nama: siswaNama,
+          siswaNama,
+          siswa_info: siswaInfo,
+          siswaInfo,
+          jenis_koreksi: jenisKoreksi,
+          jenisKoreksi,
+          arah,
+          nominal: nominalNum,
+          saldo_sebelum: saldoSaatIni,
+          saldoSebelum: saldoSaatIni,
+          saldo_setelah: saldoSetelah,
+          saldoSetelah,
+          alasan: alasan.trim(),
+          keterangan: alasan.trim(),
+          bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendahara_nama: bendaharaNama,
+          bendaharaNama,
+        }
+
+        newKoreksi = rawData
+          ? mapMutasiKoreksiItem(
+              {
+                ...fallbackItem,
+                ...(rawData as Record<string, unknown>),
+                siswaNama: (rawData as Record<string, unknown>).siswaNama ?? siswaNama,
+                siswaInfo: (rawData as Record<string, unknown>).siswaInfo ?? siswaInfo,
+                bendaharaNama: (rawData as Record<string, unknown>).bendaharaNama ?? bendaharaNama,
+              },
+              students
+            )
+          : fallbackItem
+
+        toast.success(
+          `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
+        )
       }
-
-      const res = await apiClient.post('/api/saldo/koreksi', payload)
-
-      const fallbackId = `KOR-${referensiId.trim()}`
-      const rawData =
-        res.data?.data?.mutasi ??
-        (res.data?.data && typeof res.data.data === 'object' && ('referensiId' in res.data.data || 'referensi_id' in res.data.data)
-          ? res.data.data
-          : null)
-
-      const fallbackItem: MutasiKoreksiItem = {
-        id: fallbackId,
-        referensi_id: referensiId.trim(),
-        referensiId: referensiId.trim(),
-        waktu: new Date().toISOString(),
-        siswa_id: Number(selectedSiswaId),
-        siswaId: Number(selectedSiswaId),
-        siswa_nama: siswaNama,
-        siswaNama,
-        siswa_info: siswaInfo,
-        siswaInfo,
-        jenis_koreksi: jenisKoreksi,
-        jenisKoreksi,
-        arah,
-        nominal: nominalNum,
-        saldo_sebelum: saldoSaatIni,
-        saldoSebelum: saldoSaatIni,
-        saldo_setelah: saldoSetelah,
-        saldoSetelah,
-        alasan: alasan.trim(),
-        keterangan: alasan.trim(),
-        bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
-        bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
-        bendahara_nama: bendaharaNama,
-        bendaharaNama,
-        transaksi_terkait_id: initialTransaction?.id,
-        transaksiTerkaitId: initialTransaction?.id,
-        sesi_kasir_id: initialTransaction?.sesi_kasir_id,
-        sesiKasirId: initialTransaction?.sesi_kasir_id,
-      }
-
-      const newKoreksi: MutasiKoreksiItem = rawData
-        ? mapMutasiKoreksiItem(
-            {
-              ...fallbackItem,
-              ...(rawData as Record<string, unknown>),
-              siswaNama: (rawData as Record<string, unknown>).siswaNama ?? siswaNama,
-              siswaInfo: (rawData as Record<string, unknown>).siswaInfo ?? siswaInfo,
-              bendaharaNama: (rawData as Record<string, unknown>).bendaharaNama ?? bendaharaNama,
-            },
-            students
-          )
-        : fallbackItem
-
-      toast.success(
-        `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
-      )
 
       onSuccess?.(newKoreksi)
       onCancel()
@@ -234,6 +289,7 @@ function KoreksiMutasiFormContent({
           ?.message || 'Gagal mengeksekusi koreksi saldo'
       toast.error(errorMsg)
     } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -244,16 +300,28 @@ function KoreksiMutasiFormContent({
       {/* Nomor Berita Acara & Jenis Koreksi */}
       <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
         <div className='space-y-1.5'>
-          <Label htmlFor={referensiInputId} className='text-xs font-semibold'>
-            No. Berita Acara / Referensi Audit{' '}
-            <span className='text-destructive'>*</span>
-          </Label>
+          <div className='flex items-center justify-between'>
+            <Label htmlFor={referensiInputId} className='text-xs font-semibold'>
+              No. Berita Acara / Referensi Audit{' '}
+              <span className='text-destructive'>*</span>
+            </Label>
+            <span
+              className={`font-mono text-[10px] tabular-nums ${
+                referensiId.length > 50
+                  ? 'text-destructive font-semibold'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {referensiId.length}/56
+            </span>
+          </div>
           <Input
             id={referensiInputId}
             value={referensiId}
             onChange={(e) => setReferensiId(e.target.value)}
             placeholder='BA-KOR-YYYYMMDD-XXXX'
             className='font-mono text-xs'
+            maxLength={56}
             required
           />
         </div>
@@ -477,10 +545,21 @@ function KoreksiMutasiFormContent({
 
       {/* Alasan Audit Koreksi (Wajib) */}
       <div className='space-y-1.5'>
-        <Label htmlFor={alasanInputId} className='text-xs font-semibold'>
-          Alasan Penyesuaian Saldo{' '}
-          <span className='text-destructive'>* (Wajib Diisi Jelas)</span>
-        </Label>
+        <div className='flex items-center justify-between'>
+          <Label htmlFor={alasanInputId} className='text-xs font-semibold'>
+            Alasan Penyesuaian Saldo{' '}
+            <span className='text-destructive'>* (Wajib Diisi Jelas)</span>
+          </Label>
+          <span
+            className={`font-mono text-[10px] tabular-nums ${
+              alasan.length > 240
+                ? 'text-destructive font-semibold'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {alasan.length}/255
+          </span>
+        </div>
         <Textarea
           id={alasanInputId}
           rows={2}
@@ -488,10 +567,11 @@ function KoreksiMutasiFormContent({
           onChange={(e) => setAlasan(e.target.value)}
           placeholder='Contoh: Pengembalian saldo karena terpotong dua kali saat kasir ramai'
           className='resize-none text-xs'
+          maxLength={255}
           required
         />
         <p className='text-[10px] text-muted-foreground'>
-          Keterangan penyesuaian akan tersimpan aman di buku besar sekolah.
+          Keterangan penyesuaian akan tersimpan aman di buku besar sekolah (maks. 255 karakter).
         </p>
       </div>
 

@@ -220,6 +220,18 @@ export interface TransaksiKasirItemResponse {
   dapatDikoreksi: boolean
 }
 
+export function generateSecureReferensiId(prefix = 'BA-KOR'): string {
+  const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(4)
+    crypto.getRandomValues(bytes)
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase()
+    return `${prefix}-${dateCode}-${hex}`
+  }
+  const rand = Math.floor(100000 + Math.random() * 900000)
+  return `${prefix}-${dateCode}-${rand}`
+}
+
 export function mapTransaksiKasirItemToSesiTutup(
   raw: unknown,
   siswaList?: Array<{ siswa_id: number; nama: string; kelas?: string; nis?: string }>
