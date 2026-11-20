@@ -184,14 +184,14 @@ export function LaporanSaldoMengendapPage() {
       // Sheet Ringkasan untuk Kepala Sekolah (jika tidak memiliki akses rincian)
       if (sheets.length === 0) {
         sheets.push({
-          sheetName: 'Ringkasan Eksekutif',
-          title: 'LAPORAN RINGKASAN TOTAL SALDO SISWA (KEWAJIBAN SEKOLAH)',
+          sheetName: 'Ringkasan Utama',
+          title: 'LAPORAN RINGKASAN TOTAL SALDO SISWA (TITIPAN)',
           metadata: {
             'Tanggal Cetak': formatDateTime(new Date()),
             'Total Dana Titipan': formatRupiah(ringkasan.saldoSiswa),
           },
           columns: [
-            { header: 'Kategori', key: 'kategori', width: 28 },
+            { header: 'Jenis Data', key: 'kategori', width: 28 },
             { header: 'Jumlah', key: 'jumlah', width: 18 },
             { header: 'Total Saldo Siswa (Rp)', key: 'total', width: 25 },
           ],
@@ -281,9 +281,9 @@ export function LaporanSaldoMengendapPage() {
       // Section Ringkasan jika Kepala Sekolah atau rincian kosong
       if (sections.length === 0) {
         sections.push({
-          sectionTitle: 'Ringkasan Eksekutif Total Saldo Siswa (Kewajiban Sekolah)',
+          sectionTitle: 'Ringkasan Total Saldo Siswa (Titipan)',
           columns: [
-            { header: 'Kategori Akun', key: 'kategori' },
+            { header: 'Jenis Data', key: 'kategori' },
             { header: 'Jumlah Pemegang', key: 'jumlah' },
             { header: 'Total Saldo Siswa', key: 'total' },
           ],
@@ -299,8 +299,8 @@ export function LaporanSaldoMengendapPage() {
 
       exportMultiSectionPdf({
         filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN TOTAL SALDO SISWA & KEWAJIBAN DANA TITIPAN',
-        subtitle: 'Audit Akuntabilitas Dana Titipan Siswa',
+        title: 'LAPORAN TOTAL SALDO SISWA (DANA TITIPAN)',
+        subtitle: 'Laporan Rincian Dana Titipan Saldo Kartu Siswa',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
           'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
@@ -359,7 +359,7 @@ export function LaporanSaldoMengendapPage() {
                   {ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Akumulasi dana titipan orang tua yang belum dibelanjakan
+                  Total dana titipan orang tua yang belum dibelanjakan
                 </p>
               </CardContent>
             </Card>
@@ -395,7 +395,7 @@ export function LaporanSaldoMengendapPage() {
                   </CardTitle>
                 </div>
                 <CardDescription className="mt-1">
-                  Sebagai Kepala Sekolah, hak akses Anda difokuskan pada ringkasan akumulasi total saldo siswa dan kewajiban sekolah di atas. Rincian data siswa dikelola secara operasional oleh Petugas TU dan Admin Sekolah.
+                  Sebagai Kepala Sekolah, hak akses Anda difokuskan pada ringkasan total saldo titipan siswa di atas. Rincian data per siswa dikelola secara operasional oleh Petugas TU dan Admin Sekolah.
                 </CardDescription>
               </CardHeader>
             </Card>

@@ -130,7 +130,7 @@ describe('Role Dashboards Component Rendering', () => {
   it('renders BendaharaDashboard correctly with cash audit reconciliation', async () => {
     const screen = await render(<BendaharaDashboard />)
     await expect.element(screen.getByText('Dashboard Bendahara Sekolah')).toBeInTheDocument()
-    await expect.element(screen.getByText('Status Rekonsiliasi Kas')).toBeInTheDocument()
+    await expect.element(screen.getByText('Status Kecocokan Uang')).toBeInTheDocument()
     await expect.element(screen.getByText('Ringkasan Cek Selisih')).toBeInTheDocument()
   })
 
@@ -145,7 +145,7 @@ describe('Role Dashboards Component Rendering', () => {
   it('renders KepsekDashboard correctly with executive financial breakdown & margin', async () => {
     const screen = await render(<KepsekDashboard />)
     await expect.element(screen.getByText('Dashboard Kepala Sekolah')).toBeInTheDocument()
-    await expect.element(screen.getByText('Laba Kotor Kantin', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText('Keuntungan Penjualan', { exact: true }).first()).toBeInTheDocument()
     await expect.element(screen.getByText('Ringkasan Keuangan')).toBeInTheDocument()
   })
 })

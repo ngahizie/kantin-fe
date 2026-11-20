@@ -51,26 +51,26 @@ export function HppSimulationBadge({
                 ) : (
                   <Minus className='h-3 w-3 text-muted-foreground' />
                 )}
-                <span>HPP: {formatRupiah(hppSesudah)}</span>
+                <span>Harga Modal: {formatRupiah(hppSesudah)}</span>
               </Badge>
               <Info className='h-3.5 w-3.5 text-muted-foreground hover:text-foreground' />
             </div>
           </TooltipTrigger>
           <TooltipContent className='max-w-xs space-y-1.5 p-3 text-xs'>
             <p className='border-b border-border pb-1 text-sm font-semibold'>
-              Estimasi Dampak Restock
+              Perkiraan Dampak Tambah Stok
             </p>
             <div className='grid grid-cols-2 gap-x-2 gap-y-1'>
-              <span className='text-muted-foreground'>Stok Berjalan:</span>
+              <span className='text-muted-foreground'>Stok Saat Ini:</span>
               <span className='text-right font-medium tabular-nums'>
                 {formatNumber(stokSebelum)} &rarr; {formatNumber(stokSesudah)}{' '}
                 unit
               </span>
-              <span className='text-muted-foreground'>HPP Berjalan:</span>
+              <span className='text-muted-foreground'>Harga Modal Saat Ini:</span>
               <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(hppSebelum)} &rarr; {formatRupiah(hppSesudah)}
               </span>
-              <span className='text-muted-foreground'>Perubahan HPP:</span>
+              <span className='text-muted-foreground'>Perubahan Harga Modal:</span>
               <span
                 className={`text-right font-semibold tabular-nums ${
                   selisihHpp > 0
@@ -88,7 +88,7 @@ export function HppSimulationBadge({
               <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(totalBiayaMasuk)}
               </span>
-              <span className='text-muted-foreground'>Nilai Persediaan:</span>
+              <span className='text-muted-foreground'>Total Nilai Stok:</span>
               <span className='text-right font-medium tabular-nums'>
                 {formatRupiah(totalNilaiSesudah)}
               </span>
@@ -111,7 +111,7 @@ export function HppSimulationBadge({
         </span>
       </div>
       <div className='flex items-center justify-between gap-2'>
-        <span className='text-muted-foreground'>Estimasi HPP:</span>
+        <span className='text-muted-foreground'>Perkiraan Harga Modal:</span>
         <span className='flex items-center gap-1 font-semibold text-foreground tabular-nums'>
           {formatRupiah(hppSebelum)} &rarr;{' '}
           <span className='font-bold text-primary'>

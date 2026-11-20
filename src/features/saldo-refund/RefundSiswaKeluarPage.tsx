@@ -484,7 +484,7 @@ export function RefundSiswaKeluarPage() {
                         <TableRow>
                           <TableCell colSpan={8} className='h-32 text-center text-muted-foreground text-xs'>
                             <CheckCircle2 className='h-8 w-8 text-emerald-500 mx-auto mb-2' />
-                            Tidak ada sisa saldo siswa nonaktif yang tertahan. Seluruh kewajiban telah selesai!
+                            Tidak ada sisa saldo siswa nonaktif yang belum dikembalikan.
                           </TableCell>
                         </TableRow>
                       ) : (

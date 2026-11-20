@@ -105,36 +105,36 @@ describe('DashboardPage Role-Based Data Fetching & UI Proteksi', () => {
     // Pastikan getRekonsiliasi TIDAK terpanggil untuk peran pengelola
     expect(laporanApi.getRekonsiliasi).not.toHaveBeenCalled()
 
-    // Memverifikasi card rekonsiliasi kas tidak ditampilkan untuk pengelola
-    await expect.element(screen.getByText('Status Rekonsiliasi Kas')).not.toBeInTheDocument()
+    // Memverifikasi card kecocokan uang tidak ditampilkan untuk pengelola
+    await expect.element(screen.getByText('Status Kecocokan Uang')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Akses Terbatas')).not.toBeInTheDocument()
   })
 
-  it('memanggil getRekonsiliasi dan menampilkan saldo mengendap serta status seimbang untuk peran bendahara', async () => {
+  it('memanggil getRekonsiliasi dan menampilkan saldo siswa serta status cocok untuk peran bendahara', async () => {
     mockRole = 'bendahara'
     const screen = await render(<DashboardPage />)
 
     // Pastikan getRekonsiliasi terpanggil untuk peran bendahara
     expect(laporanApi.getRekonsiliasi).toHaveBeenCalled()
 
-    // Memverifikasi card rekonsiliasi menampilkan nominal saldo mengendap dan status seimbang dalam satu baris
+    // Memverifikasi card kecocokan uang menampilkan nominal saldo siswa dan status cocok dalam satu baris
     await expect.element(screen.getByText(/Rp\s*500\.000/).first()).toBeInTheDocument()
-    const seimbangLabel = screen.getByText('Seimbang', { exact: true })
-    await expect.element(seimbangLabel).toBeInTheDocument()
+    const cocokLabel = screen.getByText('Cocok', { exact: true })
+    await expect.element(cocokLabel).toBeInTheDocument()
     await expect.element(screen.getByText(/• Selisih Rp\s*0/).first()).toBeInTheDocument()
 
-    const statusRow = (await seimbangLabel.element()).parentElement
+    const statusRow = (await cocokLabel.element()).parentElement
     expect(statusRow?.className).toContain('flex')
     expect(statusRow?.className).toContain('flex-wrap')
   })
 
-  it('tidak menampilkan Rp 0 atau Seimbang palsu saat getRekonsiliasi gagal dimuat', async () => {
+  it('tidak menampilkan Rp 0 atau Cocok palsu saat getRekonsiliasi gagal dimuat', async () => {
     mockRole = 'bendahara'
     vi.mocked(laporanApi.getRekonsiliasi).mockRejectedValueOnce(new Error('Network error'))
     const screen = await render(<DashboardPage />)
 
     await expect.element(screen.getByText('Belum dimuat')).toBeInTheDocument()
-    await expect.element(screen.getByText('Seimbang')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Cocok', { exact: true })).not.toBeInTheDocument()
   })
 
   it('menampilkan item menu riil dan pembeda siswa dari transaksi-keseluruhan tanpa kategori dummy untuk kepsek', async () => {

@@ -165,7 +165,7 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
 
     const screen = await render(<LaporanPenjualanPage />)
 
-    await expect.element(screen.getByText('Margin: 51.72%')).toBeInTheDocument()
+    await expect.element(screen.getByText('Persen Untung: 51.72%')).toBeInTheDocument()
     await expect.element(screen.getByText('1 transaksi di-refund')).toBeInTheDocument()
     await expect.element(screen.getByText('Nasi Goreng Spesial')).toBeInTheDocument()
     await expect.element(screen.getByText('Makanan Berat')).toBeInTheDocument()
@@ -254,7 +254,7 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
 
     const screen = await render(<LaporanPenjualanPage />)
 
-    await expect.element(screen.getByText('Margin: 0%')).toBeInTheDocument()
+    await expect.element(screen.getByText('Persen Untung: 0%')).toBeInTheDocument()
     await expect.element(screen.getByText('Kerupuk Putih')).toBeInTheDocument()
 
     const bodyText = screen.container.textContent || ''
@@ -288,11 +288,11 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
 
     await expect.element(screen.getByText('Laporan Penjualan Kantin')).toBeInTheDocument()
     await expect.element(screen.getByText('Nasi Goreng Spesial')).toBeInTheDocument()
-    await expect.element(screen.getByText('Total Modal (HPP)')).not.toBeInTheDocument()
-    await expect.element(screen.getByText('Laba Kotor')).not.toBeInTheDocument()
-    await expect.element(screen.getByRole('columnheader', { name: 'Modal Unit' })).not.toBeInTheDocument()
-    await expect.element(screen.getByRole('columnheader', { name: 'Laba' })).not.toBeInTheDocument()
-    await expect.element(screen.getByRole('columnheader', { name: 'Margin' })).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Total Harga Modal')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Keuntungan Penjualan')).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Modal Satuan' })).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Keuntungan' })).not.toBeInTheDocument()
+    await expect.element(screen.getByRole('columnheader', { name: 'Persen Untung' })).not.toBeInTheDocument()
   })
 
   it('menampilkan banner peringatan dan tombol muat ulang saat endpoint kasir gagal dimuat (SEC-04)', async () => {

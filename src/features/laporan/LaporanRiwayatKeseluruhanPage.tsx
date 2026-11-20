@@ -544,7 +544,7 @@ export function LaporanRiwayatKeseluruhanPage() {
                   {formatRupiah(ringkasan.totalBelanja)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Akumulasi omzet transaksi belanja dari seluruh siswa
+                  Total transaksi belanja dari seluruh siswa
                 </p>
               </CardContent>
             </Card>

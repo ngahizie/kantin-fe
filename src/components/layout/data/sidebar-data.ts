@@ -136,22 +136,22 @@ export const sidebarData: SidebarData = {
           items: [
             {
               title: 'Cek Selisih Uang',
-              url: '/laporan/rekonsiliasi',
+              url: '/laporan/cek-selisih',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {
-              title: 'Penjualan & Laba Kotor',
+              title: 'Penjualan & Keuntungan',
               url: '/laporan/penjualan',
               roles: ['admin', 'pengelola', 'bendahara', 'kepsek'],
             },
             {
-              title: 'Analisis Laba Kotor',
-              url: '/laporan/laba-kotor',
+              title: 'Laporan Keuntungan',
+              url: '/laporan/keuntungan',
               roles: ['pengelola', 'bendahara', 'kepsek'],
             },
             {
               title: 'Total Saldo Siswa',
-              url: '/laporan/saldo-mengendap',
+              url: '/laporan/saldo-siswa',
               roles: ['admin', 'bendahara', 'tu', 'kepsek'],
             },
             {

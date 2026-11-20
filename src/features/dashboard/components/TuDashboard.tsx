@@ -162,7 +162,7 @@ export const TuDashboard: React.FC = () => {
             Dashboard Layanan TU
           </h1>
           <p className='text-sm text-muted-foreground'>
-            Pantau layanan pengisian saldo tunai siswa, rekap setoran kas harian, dan mutasi saldo mengendap.
+            Pantau layanan pengisian saldo tunai siswa, rekap setoran kas harian, dan perubahan total saldo siswa.
           </p>
         </div>
         <div className='flex items-center gap-2'>
@@ -229,14 +229,14 @@ export const TuDashboard: React.FC = () => {
         />
 
         <DashboardStatCard
-          title='Total Saldo Mengendap'
+          title='Total Saldo Siswa (Titipan)'
           value={formatRupiah(saldoMengendap?.total ?? saldoMengendap?.saldoSiswa ?? 0)}
           icon={Wallet}
           iconColorClass='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
           badgeText='Dana Titipan'
           badgeColorClass='text-purple-600 dark:text-purple-400 font-semibold'
           subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} siswa`}
-          href='/laporan/saldo-mengendap'
+          href='/laporan/saldo-siswa'
         />
       </div>
 
@@ -249,7 +249,7 @@ export const TuDashboard: React.FC = () => {
               Tren Pengisian Saldo 7 Hari Terakhir
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
-              Akumulasi nominal rupiah (Rp) penerimaan top-up tunai siswa di layanan TU
+              Total nominal rupiah (Rp) penerimaan top-up tunai siswa di layanan TU
             </CardDescription>
           </CardHeader>
           <CardContent className='ps-1 pe-4 pb-4 pt-3'>

@@ -98,17 +98,17 @@ export function LaporanRekonsiliasiPage() {
       },
       {
         id: '4',
-        pos: 'Penjualan Bersih Kantin',
+        pos: 'Total Penjualan Akhir Kantin',
         arah: 'TETAP',
         nominal: data.penjualanBersih,
-        keterangan: `Penjualan kotor ${formatRupiah(data.penjualan)} dikurangi refund ${formatRupiah(data.voidPenjualan)}`,
+        keterangan: `Total penjualan ${formatRupiah(data.penjualan)} dikurangi pembatalan/refund ${formatRupiah(data.voidPenjualan)}`,
       },
       {
         id: '5',
-        pos: 'Saldo Mengendap Siswa',
+        pos: 'Total Saldo Siswa (Titipan)',
         arah: 'TETAP',
         nominal: data.saldoSiswa,
-        keterangan: 'Total dana titipan tersimpan di kartu seluruh siswa (kewajiban sekolah)',
+        keterangan: 'Total uang titipan yang tersimpan di kartu seluruh siswa',
       },
       {
         id: '7',
@@ -155,40 +155,40 @@ export function LaporanRekonsiliasiPage() {
           keterangan: item.keterangan,
         })),
         {
-          pos: 'TOTAL TOP-UP BERSIH (Topup - Refund)',
+          pos: 'TOTAL ISI SALDO AKHIR (Top-up - Refund)',
           arah: 'EVALUASI',
           nominal: data.topupBersih,
-          keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
+          keterangan: 'Hitungan: (Isi Saldo Online + Isi Saldo Tunai) - Pengembalian Saldo',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
+          pos: 'TOTAL UANG TERPAKAI & SISA SALDO (Siswa + Penjualan)',
           arah: 'EVALUASI',
           nominal: data.totalPenggunaan,
-          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
+          keterangan: 'Hitungan: Total Saldo Siswa + Total Penjualan Akhir',
         },
         {
-          pos: 'SELISIH INVARIANT AKUNTANSI',
+          pos: 'SELISIH HITUNGAN UANG',
           arah: 'EVALUASI',
           nominal: data.selisih,
-          keterangan: data.seimbang ? 'SEIMBANG (Rp 0)' : 'SELISIH - PERIKSA KAS!',
+          keterangan: data.seimbang ? 'COCOK (Selisih Rp 0)' : 'ADA SELISIH - PERIKSA UANG KAS!',
         },
       ]
 
       exportTableToExcel({
-        filename: `Laporan_Rekonsiliasi_Harian_${new Date().toISOString().split('T')[0]}`,
-        sheetName: 'Rekonsiliasi Harian',
-        title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
+        filename: `Laporan_Cek_Selisih_Uang_${new Date().toISOString().split('T')[0]}`,
+        sheetName: 'Cek Selisih Uang',
+        title: 'LAPORAN CEK SELISIH UANG HARIAN',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Periode Rekonsiliasi': dateFilterLabel,
-          'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
+          'Periode Pengecekan': dateFilterLabel,
+          'Status Kecocokan': data.seimbang ? 'COCOK (SEIMBANG)' : 'TIDAK COCOK (ADA SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
-          'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
-          'Penjualan Bersih': formatRupiah(data.penjualanBersih),
+          'Total Saldo Siswa (Titipan)': formatRupiah(data.saldoMengendap),
+          'Total Penjualan Akhir': formatRupiah(data.penjualanBersih),
         },
         columns: [
           { header: 'No', width: 6 },
-          { header: 'Pos Akuntansi / Ledger', key: 'pos', width: 35 },
+          { header: 'Rincian Catatan Uang', key: 'pos', width: 35 },
           { header: 'Arah', key: 'arah', width: 14 },
           {
             header: 'Nominal (Rp)',
@@ -196,7 +196,7 @@ export function LaporanRekonsiliasiPage() {
             formatter: (v) => Number(v),
             width: 18,
           },
-          { header: 'Keterangan Akuntansi', key: 'keterangan', width: 45 },
+          { header: 'Keterangan', key: 'keterangan', width: 45 },
         ],
         data: exportRows,
         summaryRow: {
@@ -209,7 +209,7 @@ export function LaporanRekonsiliasiPage() {
       })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: 'Berkas Laporan Rekonsiliasi (.xlsx) berhasil diunduh.',
+        description: 'Berkas Laporan Cek Selisih Uang (.xlsx) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
@@ -232,43 +232,43 @@ export function LaporanRekonsiliasiPage() {
           keterangan: item.keterangan,
         })),
         {
-          pos: 'TOTAL TOP-UP BERSIH (Topup - Refund)',
+          pos: 'TOTAL ISI SALDO AKHIR (Top-up - Refund)',
           arah: 'EVALUASI',
           nominal: formatRupiah(data.topupBersih),
-          keterangan: 'Formula: (Topup Online + Topup Tunai) - Refund',
+          keterangan: 'Hitungan: (Isi Saldo Online + Isi Saldo Tunai) - Pengembalian Saldo',
         },
         {
-          pos: 'TOTAL PENGGUNAAN & SALDO (Siswa + Penjualan)',
+          pos: 'TOTAL UANG TERPAKAI & SISA SALDO (Siswa + Penjualan)',
           arah: 'EVALUASI',
           nominal: formatRupiah(data.totalPenggunaan),
-          keterangan: 'Formula: Saldo Siswa + Penjualan Bersih',
+          keterangan: 'Hitungan: Total Saldo Siswa + Total Penjualan Akhir',
         },
         {
-          pos: 'SELISIH INVARIANT AKUNTANSI',
+          pos: 'SELISIH HITUNGAN UANG',
           arah: 'EVALUASI',
           nominal: formatRupiah(data.selisih),
-          keterangan: data.seimbang ? 'SEIMBANG (Rp 0)' : 'SELISIH - PERIKSA KAS!',
+          keterangan: data.seimbang ? 'COCOK (Selisih Rp 0)' : 'ADA SELISIH - PERIKSA UANG KAS!',
         },
       ]
 
       exportTableToPdf({
-        filename: `Laporan_Rekonsiliasi_Harian_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN REKONSILIASI HARIAN & INVARIANT SALDO',
-        subtitle: 'Sistem Kasir & Pembukuan',
+        filename: `Laporan_Cek_Selisih_Uang_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN CEK SELISIH UANG HARIAN',
+        subtitle: 'Pencocokan Uang Masuk, Keluar & Saldo Siswa',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Periode Rekonsiliasi': dateFilterLabel,
-          'Status Rekonsiliasi': data.seimbang ? 'SEIMBANG (VALID)' : 'TIDAK SEIMBANG (SELISIH)',
+          'Periode Pengecekan': dateFilterLabel,
+          'Status Kecocokan': data.seimbang ? 'COCOK (SEIMBANG)' : 'TIDAK COCOK (ADA SELISIH)',
           'Total Selisih': formatRupiah(data.selisih),
-          'Saldo Mengendap Sekolah': formatRupiah(data.saldoMengendap),
-          'Penjualan Bersih': formatRupiah(data.penjualanBersih),
+          'Total Saldo Siswa (Titipan)': formatRupiah(data.saldoMengendap),
+          'Total Penjualan Akhir': formatRupiah(data.penjualanBersih),
         },
         columns: [
           { header: 'No' },
-          { header: 'Pos Akuntansi / Ledger', key: 'pos' },
+          { header: 'Rincian Catatan Uang', key: 'pos' },
           { header: 'Arah', key: 'arah' },
           { header: 'Nominal', key: 'nominal' },
-          { header: 'Keterangan Akuntansi', key: 'keterangan' },
+          { header: 'Keterangan', key: 'keterangan' },
         ],
         data: exportRows,
         summaryRow: {
@@ -281,7 +281,7 @@ export function LaporanRekonsiliasiPage() {
       })
 
       toast.success('Ekspor PDF Berhasil', {
-        description: 'Berkas Laporan Rekonsiliasi (.pdf) berhasil diunduh.',
+        description: 'Berkas Laporan Cek Selisih Uang (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
@@ -355,13 +355,13 @@ export function LaporanRekonsiliasiPage() {
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs tabular-nums">
                       <span className="rounded-md bg-red-200/80 px-2.5 py-1 font-medium text-red-900 dark:bg-red-900/60 dark:text-red-200">
-                        Topup Bersih: {formatRupiah(data.topupBersih)}
+                        Total Isi Saldo Akhir: {formatRupiah(data.topupBersih)}
                       </span>
                       <span className="rounded-md bg-red-200/80 px-2.5 py-1 font-medium text-red-900 dark:bg-red-900/60 dark:text-red-200">
-                        Total Penggunaan: {formatRupiah(data.totalPenggunaan)}
+                        Total Pemakaian & Sisa: {formatRupiah(data.totalPenggunaan)}
                       </span>
                       <span className="rounded-md bg-red-600 px-2.5 py-1 font-bold text-white">
-                        Perlu Investigasi Bendahara & TU
+                        Perlu Pengecekan Bendahara & TU
                       </span>
                     </div>
                   </div>
@@ -370,12 +370,12 @@ export function LaporanRekonsiliasiPage() {
             </div>
           )}
 
-          {/* INVARIANT FORMULA EVALUATION CARD */}
+          {/* PERBANDINGAN UANG MASUK VS TERPAKAI & SISA */}
           {data && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-                  Invariant Saldo
+                  Pencocokan Saldo Masuk vs Pemakaian
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -383,15 +383,15 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kiri */}
                   <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 1: Total Kredit Sistem
+                      Sisi 1: Total Uang Masuk (Penambahan Saldo)
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary tabular-nums">
                       {formatRupiah(data.totalKreditSemua || data.topupBersih)}
                     </p>
                     <p className="text-[11px] text-muted-foreground tabular-nums">
                       {data.totalKreditSemua > 0
-                        ? `Akumulasi Uang Masuk & Kredit (${formatRupiah(data.totalKreditSemua)})`
-                        : `Topup Tunai (${formatRupiah(data.topupTunai)}) + Online (${formatRupiah(data.topupOnline)}) − Refund (${formatRupiah(data.totalRefundSemua)})`}
+                        ? `Total Uang Masuk & Tambah Saldo (${formatRupiah(data.totalKreditSemua)})`
+                        : `Isi Saldo Tunai (${formatRupiah(data.topupTunai)}) + Online (${formatRupiah(data.topupOnline)}) − Pengembalian (${formatRupiah(data.totalRefundSemua)})`}
                     </p>
                   </div>
 
@@ -412,7 +412,7 @@ export function LaporanRekonsiliasiPage() {
                       }`}
                     >
                       {data.seimbang
-                        ? 'Seimbang (Selisih Rp 0)'
+                        ? 'Cocok (Selisih Rp 0)'
                         : `Selisih: ${formatRupiah(data.selisih)}`}
                     </span>
                   </div>
@@ -420,7 +420,7 @@ export function LaporanRekonsiliasiPage() {
                   {/* Sisi Kanan */}
                   <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1">
                     <p className="text-xs text-muted-foreground font-medium uppercase">
-                      Sisi 2: Penggunaan & Saldo Siswa
+                      Sisi 2: Total Terpakai & Sisa Saldo Siswa
                     </p>
                     <p className="text-2xl font-bold font-mono tracking-tight text-primary tabular-nums">
                       {formatRupiah(
@@ -431,7 +431,7 @@ export function LaporanRekonsiliasiPage() {
                     </p>
                     <p className="text-[11px] text-muted-foreground tabular-nums">
                       {data.totalKreditSemua > 0
-                        ? `Debit Terpakai (${formatRupiah(data.totalDebitSemua)}) + Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)})`
+                        ? `Uang Keluar Terpakai (${formatRupiah(data.totalDebitSemua)}) + Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)})`
                         : `Saldo Siswa (${formatRupiah(data.saldoSiswa || data.saldoMengendap)}) + Penjualan (${formatRupiah(data.penjualanBersih)})`}
                     </p>
                   </div>
@@ -465,7 +465,7 @@ export function LaporanRekonsiliasiPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Penjualan Bersih
+                  Total Penjualan Akhir
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                   <Store className="h-4 w-4" />
@@ -476,7 +476,7 @@ export function LaporanRekonsiliasiPage() {
                   {data ? formatRupiah(data.penjualanBersih) : '...'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex justify-between gap-2 tabular-nums">
-                  <span>Kotor: {data ? formatRupiah(data.penjualan) : '-'}</span>
+                  <span>Sebelum Refund: {data ? formatRupiah(data.penjualan) : '-'}</span>
                   <span className="text-amber-600 dark:text-amber-400 font-medium">Refund: {data ? formatRupiah(data.voidPenjualan) : '-'}</span>
                 </div>
               </CardContent>
@@ -485,7 +485,7 @@ export function LaporanRekonsiliasiPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Saldo Mengendap (Kewajiban)
+                  Total Saldo Siswa (Titipan)
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Wallet className="h-4 w-4" />
@@ -558,7 +558,7 @@ export function LaporanRekonsiliasiPage() {
                   <TableHeader className="bg-muted/50">
                     <TableRow className="border-b border-border hover:bg-transparent">
                       <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pos Akuntansi / Ledger</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rincian Catatan Uang</TableHead>
                       <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Arah</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal (Rp)</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Keterangan & Rujukan</TableHead>
@@ -570,7 +570,7 @@ export function LaporanRekonsiliasiPage() {
                         <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Memuat data rekonsiliasi harian...</span>
+                            <span>Memuat data pengecekan selisih uang...</span>
                           </div>
                         </TableCell>
                       </TableRow>

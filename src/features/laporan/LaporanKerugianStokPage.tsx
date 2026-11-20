@@ -132,11 +132,11 @@ export function LaporanKerugianStokPage() {
           {
             header: 'Jenis Kerugian',
             key: 'jenis',
-            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Opname Keluar (Audit)' : 'Barang Rusak / Basi'),
+            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Stok Berkurang (Cek Fisik)' : 'Barang Rusak / Basi'),
             width: 20,
           },
           { header: 'Qty Hilang', key: 'qty', width: 12 },
-          { header: 'HPP Unit (Rp)', key: 'hppSnapshot', width: 16 },
+          { header: 'Modal Satuan (Rp)', key: 'hppSnapshot', width: 16 },
           { header: 'Total Kerugian (Rp)', key: 'totalNilai', width: 18 },
           { header: 'Alasan / Berita Acara', key: 'alasan', width: 35 },
           { header: 'Petugas Pencatat', key: 'petugas', width: 20 },
@@ -199,11 +199,11 @@ export function LaporanKerugianStokPage() {
           {
             header: 'Jenis Kerugian',
             key: 'jenis',
-            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Opname Keluar (Audit)' : 'Barang Rusak / Basi'),
+            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Stok Berkurang (Cek Fisik)' : 'Barang Rusak / Basi'),
           },
           { header: 'Qty Hilang', key: 'qty' },
           {
-            header: 'HPP Unit',
+            header: 'Modal Satuan',
             key: 'hppSnapshot',
             formatter: (v) => formatRupiah(Number(v)),
           },
@@ -292,7 +292,7 @@ export function LaporanKerugianStokPage() {
                   {ringkasan ? formatRupiah(ringkasan.totalKerugian) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Akumulasi Qty × HPP unit saat kejadian
+                  Total Qty × Modal satuan saat kejadian
                 </p>
               </CardContent>
             </Card>
@@ -338,7 +338,7 @@ export function LaporanKerugianStokPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Selisih Audit Opname
+                  Selisih Cek Stok Fisik
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                   <ClipboardList className="h-4 w-4" />
@@ -366,7 +366,7 @@ export function LaporanKerugianStokPage() {
                   title: 'Jenis Kerugian',
                   options: [
                     { label: 'Barang Rusak / Basi', value: 'BARANG_RUSAK' },
-                    { label: 'Opname Keluar (Audit)', value: 'OPNAME_KELUAR' },
+                    { label: 'Stok Berkurang (Cek Fisik)', value: 'OPNAME_KELUAR' },
                   ],
                   selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
                   onSelect: (vals) => setJenisFilter((vals[0] as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK') || 'ALL'),
@@ -413,7 +413,7 @@ export function LaporanKerugianStokPage() {
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</TableHead>
                       <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jenis</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty Hilang</TableHead>
-                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">HPP Unit</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Satuan</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-destructive">Total Kerugian</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Alasan / Keterangan</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Petugas</TableHead>

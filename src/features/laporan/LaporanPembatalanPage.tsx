@@ -251,7 +251,7 @@ export function LaporanPembatalanPage() {
                 {formatRupiah(totalNominalBatal)}
               </div>
               <p className='text-xs text-muted-foreground mt-1'>
-                Otomatis dikreditkan kembali ke saldo siswa
+                Otomatis dikembalikan ke saldo siswa
               </p>
             </CardContent>
           </Card>

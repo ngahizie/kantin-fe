@@ -304,7 +304,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
               <DialogTitle className='text-lg font-bold text-foreground'>
                 {step === 'INPUT_CASH'
                   ? 'Tutup Sesi Kasir Harian'
-                  : 'Rekonsiliasi & Tutup Sesi Kasir'}
+                  : 'Cek Selisih Uang & Tutup Sesi Kasir'}
               </DialogTitle>
               <DialogDescription className='text-xs text-muted-foreground'>
                 {step === 'INPUT_CASH'
@@ -480,7 +480,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Total Penjualan Kotor */}
+              {/* Total Penjualan Sebelum Refund */}
               <Card className='col-span-2 gap-0 py-0 sm:col-span-1'>
                 <CardContent className='p-2.5'>
                   <span className='mb-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
@@ -488,7 +488,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                       className='h-3 w-3 text-muted-foreground'
                       aria-hidden='true'
                     />{' '}
-                    Penjualan Kotor
+                    Penjualan Awal
                   </span>
                   <span className='block text-xs font-semibold tabular-nums text-foreground'>
                     {formatRupiah(totalBruto)}
@@ -532,7 +532,7 @@ const CloseSessionModalBody: React.FC<CloseSessionModalProps> = ({
                 </div>
                 {totalVoid > 0 && (
                   <span className='mt-1 block text-[10px] tabular-nums text-muted-foreground/75'>
-                    (Kotor {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
+                    (Sebelum Refund {formatRupiah(totalBruto)} - Refund {formatRupiah(totalVoid)})
                   </span>
                 )}
               </div>

@@ -160,7 +160,7 @@ export const KepsekDashboard: React.FC = () => {
           Dashboard Kepala Sekolah
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Ringkasan eksekutif kinerja finansial, perputaran omset, margin laba kotor, dan kesehatan kas kantin sekolah.
+          Ringkasan eksekutif penjualan kantin, keuntungan, persen untung, dan kecocokan uang kas kantin sekolah.
         </p>
       </div>
 
@@ -171,25 +171,25 @@ export const KepsekDashboard: React.FC = () => {
           value={formatRupiah(todaySales)}
           icon={Banknote}
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
-          badgeText='Omset Bersih'
+          badgeText='Penjualan Akhir'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
           subtext={`• ${todayTransactions} transaksi`}
           href='/laporan/penjualan'
         />
 
         <DashboardStatCard
-          title='Laba Kotor Kantin'
+          title='Keuntungan Penjualan'
           value={formatRupiah(todayLabaKotor)}
           icon={TrendingUp}
           iconColorClass='border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
-          badgeText={`Margin ${todayMargin}%`}
+          badgeText={`Persen Untung ${todayMargin}%`}
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
           subtext={`• Modal ${formatRupiah(todayHpp)}`}
-          href='/laporan/laba-kotor'
+          href='/laporan/keuntungan'
         />
 
         <DashboardStatCard
-          title='Kesehatan Kas'
+          title='Kecocokan Uang Kas'
           value={
             rekonsiliasiStatus === 'loading'
               ? '—'
@@ -208,7 +208,7 @@ export const KepsekDashboard: React.FC = () => {
           badgeText={
             rekonsiliasi
               ? isKasSeimbang
-                ? 'Seimbang'
+                ? 'Cocok'
                 : 'Ada Selisih'
               : rekonsiliasiStatus === 'loading'
                 ? 'Memuat...'
@@ -222,33 +222,33 @@ export const KepsekDashboard: React.FC = () => {
           subtext={
             rekonsiliasi
               ? `• Selisih ${formatRupiah(selisihKas)}`
-              : '• Data audit nihil'
+              : '• Data pengecekan kosong'
           }
-          href='/laporan/rekonsiliasi'
+          href='/laporan/cek-selisih'
         />
 
         <DashboardStatCard
-          title='Saldo Siswa Tersimpan'
+          title='Total Saldo Siswa (Titipan)'
           value={formatRupiah(saldoMengendap?.total ?? saldoMengendap?.saldoSiswa ?? saldoMengendapKas)}
           icon={Wallet}
           iconColorClass='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
-          badgeText='Plafon Dana Siswa'
+          badgeText='Titipan Dana Siswa'
           badgeColorClass='text-purple-600 dark:text-purple-400 font-semibold'
           subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} siswa`}
-          href='/laporan/saldo-mengendap'
+          href='/laporan/saldo-siswa'
         />
       </div>
 
-      {/* ===== Grid Konten Tengah: Grafik Omset & Ringkasan Performa Finansial ===== */}
+      {/* ===== Grid Konten Tengah: Grafik Penjualan & Ringkasan Keuangan ===== */}
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-7'>
-        {/* Kolom Kiri: Tren Omset 7 Hari Terakhir */}
+        {/* Kolom Kiri: Tren Penjualan 7 Hari Terakhir */}
         <Card className='col-span-1 lg:col-span-4'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base font-semibold'>
-              Tren Pertumbuhan Omset 7 Hari
+              Tren Penjualan 7 Hari Terakhir
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
-              Akumulasi penjualan bersih harian kantin sekolah (Rupiah)
+              Total penjualan akhir harian kantin sekolah (Rupiah)
             </CardDescription>
           </CardHeader>
           <CardContent className='ps-1 pe-4 pb-4 pt-3'>
@@ -291,7 +291,7 @@ export const KepsekDashboard: React.FC = () => {
                           <div className='rounded-xl border border-border bg-popover/95 p-3 text-xs shadow-lg backdrop-blur-sm min-w-[190px]'>
                             <p className='font-semibold text-foreground mb-1.5'>{label}</p>
                             <div className='flex items-center justify-between gap-6 py-0.5 text-muted-foreground'>
-                              <span>Omset Penjualan:</span>
+                              <span>Total Penjualan:</span>
                               <span className='font-bold tabular-nums text-foreground'>
                                 {formatRupiah(row.omset)}
                               </span>
@@ -322,11 +322,11 @@ export const KepsekDashboard: React.FC = () => {
                 <span>Ringkasan Keuangan</span>
               </CardTitle>
               <CardDescription className='text-xs mt-0.5'>
-                Struktur pendapatan, beban modal (HPP), dan laba kotor hari ini
+                Rincian penjualan, total harga modal, dan keuntungan hari ini
               </CardDescription>
             </div>
             <Link
-              to='/laporan/laba-kotor'
+              to='/laporan/keuntungan'
               className='text-xs font-semibold text-primary hover:underline shrink-0 pt-0.5'
             >
               Laporan
@@ -335,7 +335,7 @@ export const KepsekDashboard: React.FC = () => {
           <CardContent className='flex-1 p-4 border-t border-border space-y-3'>
             <div className='rounded-lg border border-border bg-muted/30 p-3 space-y-2'>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Penjualan Bruto:</span>
+                <span className='text-muted-foreground'>Total Penjualan (Sebelum Refund):</span>
                 <span className='font-semibold tabular-nums text-foreground'>
                   {formatRupiah(todayBruto)}
                 </span>
@@ -347,7 +347,7 @@ export const KepsekDashboard: React.FC = () => {
                 </span>
               </div>
               <div className='flex items-center justify-between text-xs pt-1 border-t border-border/80'>
-                <span className='font-medium text-foreground'>Penjualan Bersih:</span>
+                <span className='font-medium text-foreground'>Total Penjualan Akhir:</span>
                 <span className='font-bold tabular-nums text-foreground'>
                   {formatRupiah(todaySales)}
                 </span>
@@ -356,24 +356,24 @@ export const KepsekDashboard: React.FC = () => {
 
             <div className='rounded-lg border border-border bg-muted/30 p-3 space-y-2'>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Beban Modal (HPP):</span>
+                <span className='text-muted-foreground'>Total Harga Modal:</span>
                 <span className='font-semibold tabular-nums text-foreground'>
                   {formatRupiah(todayHpp)}
                 </span>
               </div>
               <div className='flex items-center justify-between text-xs pt-1 border-t border-border/80'>
-                <span className='font-medium text-emerald-600 dark:text-emerald-400'>Laba Kotor Kantin:</span>
+                <span className='font-medium text-emerald-600 dark:text-emerald-400'>Keuntungan Penjualan:</span>
                 <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
                   {formatRupiah(todayLabaKotor)}
                 </span>
               </div>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Margin Keuntungan:</span>
+                <span className='text-muted-foreground'>Persen Untung:</span>
                 <Badge
                   variant='outline'
                   className='rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                 >
-                  {todayMargin}% Margin
+                  {todayMargin}% Untung
                 </Badge>
               </div>
             </div>

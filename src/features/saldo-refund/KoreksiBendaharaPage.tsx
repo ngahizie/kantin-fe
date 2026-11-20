@@ -343,16 +343,16 @@ export function KoreksiBendaharaPage() {
 
     const headers = [
       'No. Berita Acara',
-      'Waktu Audit',
+      'Waktu Pencatatan',
       'Nama Siswa',
       'Info / NIS',
       'Jenis Masalah',
-      'Arah Mutasi',
+      'Jenis Perubahan Saldo',
       'Nominal (Rp)',
       'Saldo Sebelum (Rp)',
       'Saldo Setelah (Rp)',
-      'Alasan Audit Koreksi',
-      'Bendahara Otorisator',
+      'Alasan Penyesuaian',
+      'Bendahara Penyetuju',
       'ID Transaksi Terkait',
     ]
 
@@ -377,10 +377,10 @@ export function KoreksiBendaharaPage() {
     ].join('\r\n')
 
     downloadCsvBlob(
-      `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`,
+      `Catatan_Penyesuaian_Saldo_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`,
       csvContent
     )
-    toast.success('Log audit mutasi koreksi berhasil diekspor ke CSV')
+    toast.success('Catatan penyesuaian saldo berhasil diekspor ke CSV')
   }
 
   const handleExportPdf = () => {
@@ -398,21 +398,21 @@ export function KoreksiBendaharaPage() {
         .reduce((acc, item) => acc + item.nominal, 0)
 
       exportTableToPdf({
-        filename: `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}`,
-        title: 'LOG AUDIT PENYESUAIAN SALDO BENDAHARA',
-        subtitle: 'Rekapitulasi riwayat mutasi koreksi saldo kantin',
+        filename: `Catatan_Penyesuaian_Saldo_Bendahara_${new Date().toISOString().slice(0, 10)}`,
+        title: 'LAPORAN PENYESUAIAN SALDO BENDAHARA',
+        subtitle: 'Rekap riwayat penyesuaian saldo kantin',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Total Mutasi': `${filteredKoreksi.length} transaksi`,
-          'Total Koreksi Kredit': formatRupiah(filteredKredit),
-          'Total Koreksi Debit': formatRupiah(filteredDebit),
+          'Total Penyesuaian': `${filteredKoreksi.length} transaksi`,
+          'Total Penambahan Saldo (+)': formatRupiah(filteredKredit),
+          'Total Pengurangan Saldo (-)': formatRupiah(filteredDebit),
         },
         columns: [
           { header: 'Ref ID', key: 'referensi_id' },
           { header: 'Waktu', key: 'waktu' },
           { header: 'Siswa', key: 'siswa' },
           { header: 'Jenis', key: 'jenis_koreksi' },
-          { header: 'Arah', key: 'arah' },
+          { header: 'Jenis Perubahan', key: 'arah' },
           { header: 'Nominal', key: 'nominal' },
           { header: 'Saldo Sebelum', key: 'saldo_sebelum' },
           { header: 'Saldo Setelah', key: 'saldo_setelah' },
@@ -426,7 +426,7 @@ export function KoreksiBendaharaPage() {
             ? `${item.siswa_nama} (${item.siswa_info})`
             : item.siswa_nama,
           jenis_koreksi: item.jenis_koreksi,
-          arah: item.arah === 'KREDIT' ? '+ Kredit' : '- Debit',
+          arah: item.arah === 'KREDIT' ? '+ Penambahan' : '- Pengurangan',
           nominal: formatRupiah(item.nominal),
           saldo_sebelum: formatRupiah(item.saldo_sebelum),
           saldo_setelah: formatRupiah(item.saldo_setelah),
@@ -436,7 +436,7 @@ export function KoreksiBendaharaPage() {
       })
 
       toast.success('Ekspor PDF Berhasil', {
-        description: 'Log audit mutasi koreksi (.pdf) berhasil diunduh.',
+        description: 'Laporan penyesuaian saldo (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor PDF'
@@ -495,10 +495,10 @@ export function KoreksiBendaharaPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-                {totalKoreksiDb !== null ? totalKoreksiDb : koreksiList.length} Mutasi
+                {totalKoreksiDb !== null ? totalKoreksiDb : koreksiList.length} Catatan
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Tercatat rapi dan aman di buku besar
+                Tercatat rapi dan aman di riwayat sistem
               </p>
             </CardContent>
           </Card>
@@ -641,7 +641,7 @@ export function KoreksiBendaharaPage() {
                     variant='outline'
                     className='rounded-full border-border bg-muted/50 px-2.5 py-0.5 font-mono text-xs font-medium text-muted-foreground tabular-nums'
                   >
-                    {filteredKoreksi.length} Rekaman Audit
+                    {filteredKoreksi.length} Catatan Penyesuaian
                   </Badge>
                 </div>
               </CardHeader>
@@ -663,7 +663,7 @@ export function KoreksiBendaharaPage() {
                           Jenis Masalah
                         </TableHead>
                         <TableHead className='text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                          Arah Mutasi
+                          Jenis Perubahan
                         </TableHead>
                         <TableHead className='text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Nominal
@@ -672,7 +672,7 @@ export function KoreksiBendaharaPage() {
                           Saldo (Sebelum → Sesudah)
                         </TableHead>
                         <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                          Alasan Audit Koreksi
+                          Alasan Penyesuaian
                         </TableHead>
                         <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                           Bendahara
@@ -759,7 +759,7 @@ export function KoreksiBendaharaPage() {
                                   variant='outline'
                                   className='rounded-full border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
                                 >
-                                  Penyesuaian Audit
+                                  Penyesuaian Saldo
                                 </Badge>
                               )}
                             </TableCell>
@@ -771,7 +771,7 @@ export function KoreksiBendaharaPage() {
                                   className='gap-1 rounded-full border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
                                 >
                                   <ArrowDownRight className='h-3 w-3' />
-                                  DEBIT (Pengurangan)
+                                  Pengurangan Saldo (-)
                                 </Badge>
                               ) : (
                                 <Badge
@@ -779,7 +779,7 @@ export function KoreksiBendaharaPage() {
                                   className='gap-1 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 >
                                   <ArrowUpRight className='h-3 w-3' />
-                                  KREDIT (Penambahan)
+                                  Penambahan Saldo (+)
                                 </Badge>
                               )}
                             </TableCell>
@@ -1114,10 +1114,10 @@ export function KoreksiBendaharaPage() {
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 text-base font-semibold'>
               <Printer className='h-4 w-4 text-primary' />
-              Berita Acara Koreksi Saldo Audit
+              Berita Acara Penyesuaian Saldo
             </DialogTitle>
             <DialogDescription className='text-xs'>
-              Dokumen resmi Berita Acara penyesuaian/pembalik saldo append-only ledger
+              Dokumen resmi Berita Acara penyesuaian/pembalik saldo catatan riwayat saldo
             </DialogDescription>
           </DialogHeader>
 
@@ -1134,7 +1134,7 @@ export function KoreksiBendaharaPage() {
                   BAGIAN KEUANGAN & BENDAHARA SEKOLAH
                 </p>
                 <h4 className='pt-1 text-xs font-semibold tracking-wide text-amber-600 uppercase dark:text-amber-400'>
-                  BERITA ACARA MUTASI KOREKSI SALDO KANTIN
+                  BERITA ACARA PENYESUAIAN SALDO KANTIN
                 </h4>
                 <p className='font-mono text-[10px] text-muted-foreground'>
                   Nomor Dokumen: {selectedKoreksiForPrint.referensi_id}
@@ -1144,7 +1144,7 @@ export function KoreksiBendaharaPage() {
               <div className='space-y-2'>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>
-                    Waktu Eksekusi Audit:
+                    Waktu Pencatatan:
                   </span>
                   <span className='font-semibold'>
                     {formatDateTime(selectedKoreksiForPrint.waktu)}
@@ -1182,11 +1182,11 @@ export function KoreksiBendaharaPage() {
 
               <div className='space-y-1.5 rounded-md border border-border bg-muted/30 p-3 font-mono tabular-nums'>
                 <div className='flex justify-between'>
-                  <span>Arah Mutasi:</span>
+                  <span>Jenis Perubahan:</span>
                   <span className='font-bold uppercase'>
                     {selectedKoreksiForPrint.arah === 'DEBIT'
-                      ? 'DEBIT (Pengurangan Saldo)'
-                      : 'KREDIT (Pengembalian/Penambahan Saldo)'}
+                      ? 'Pengurangan Saldo (-)'
+                      : 'Penambahan Saldo (+)'}
                   </span>
                 </div>
                 <div className='flex justify-between'>
@@ -1207,7 +1207,7 @@ export function KoreksiBendaharaPage() {
 
               <div className='space-y-1 rounded border border-border bg-muted/20 p-2.5'>
                 <span className='block text-[10px] font-semibold text-muted-foreground'>
-                  Alasan Audit Koreksi Wajib:
+                  Alasan Penyesuaian Wajib:
                 </span>
                 <p className='text-[11px] leading-relaxed text-foreground italic'>
                   "{selectedKoreksiForPrint.alasan}"

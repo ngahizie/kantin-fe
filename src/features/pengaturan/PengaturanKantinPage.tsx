@@ -517,17 +517,17 @@ export const PengaturanKantinPage: React.FC = () => {
                       </p>
                     )}
                     <p className='text-[11px] text-muted-foreground'>
-                      Maksimal akumulasi saldo di kartu RFID siswa.
+                      Maksimal total saldo di kartu RFID siswa.
                     </p>
                   </div>
 
-                  {/* Kebijakan Saldo Mengendap */}
+                  {/* Kebijakan Sisa Saldo Siswa */}
                   <div className='space-y-1.5'>
                     <Label
                       htmlFor='kebijakanSaldoMengendap'
                       className='text-xs font-semibold'
                     >
-                      Kebijakan Saldo Mengendap (Lulus/Keluar)
+                      Kebijakan Sisa Saldo Siswa (Lulus/Keluar)
                     </Label>
                     <Controller
                       control={control}
@@ -542,7 +542,7 @@ export const PengaturanKantinPage: React.FC = () => {
                             id='kebijakanSaldoMengendap'
                             className='text-sm'
                           >
-                            <SelectValue placeholder='Pilih kebijakan saldo mengendap' />
+                            <SelectValue placeholder='Pilih kebijakan sisa saldo siswa' />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value='REFUND'>
@@ -552,7 +552,7 @@ export const PengaturanKantinPage: React.FC = () => {
                               Pindahkan ke Saudara Kandung
                             </SelectItem>
                             <SelectItem value='TETAP_MENGENDAP'>
-                              Tetap Mengendap (Kewajiban Sekolah)
+                              Disimpan Sekolah (Dana Titipan)
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -564,18 +564,18 @@ export const PengaturanKantinPage: React.FC = () => {
                       </p>
                     )}
                     <p className='text-[11px] text-muted-foreground'>
-                      Tindakan default jika sisa saldo siswa nonaktif belum diklaim setelah ambang hari.
+                      Tindakan default jika sisa saldo siswa nonaktif belum diambil setelah batas hari.
                     </p>
                   </div>
 
-                  {/* Ambang Hari Saldo Mengendap */}
+                  {/* Batas Hari Sisa Saldo */}
                   <div className='space-y-1.5'>
                     <div className='flex items-center justify-between'>
                       <Label
                         htmlFor='ambangHari'
                         className='text-xs font-semibold'
                       >
-                        Ambang Hari Saldo Mengendap
+                        Batas Hari Sisa Saldo Mengendap
                       </Label>
                       <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
                         {Number.isFinite(watchedAmbangHari) ? watchedAmbangHari : 90} hari
