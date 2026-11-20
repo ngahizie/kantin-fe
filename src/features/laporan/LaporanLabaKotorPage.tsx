@@ -56,12 +56,17 @@ const getCategoryBadgeClass = (kategori: string) => {
 
 // Helper pencegahan Excel/CSV Formula Injection (CWE-1236)
 export function sanitizeFormulaCell(text: string | null | undefined): string {
-  if (!text) return '-'
-  const str = String(text).trim()
-  if (/^[=+@\-\t\r]/i.test(str)) {
+  if (text === null || text === undefined) return '-'
+  const str = String(text)
+  if (!str.trim()) return '-'
+  if (/^[=+@\-\t\r]/.test(str)) {
     return `'${str}`
   }
-  return str
+  const trimmed = str.trim()
+  if (/^[=+@\-\t\r]/.test(trimmed)) {
+    return `'${trimmed}`
+  }
+  return trimmed
 }
 
 export function LaporanLabaKotorPage() {
