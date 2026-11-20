@@ -101,6 +101,24 @@ export function sanitizeCellValue(val: unknown): unknown {
 }
 
 /**
+ * Helper pencegahan CSV/Excel Formula Injection (CWE-1236).
+ * Menambahkan prefix petik tunggal (') bila nilai string diawali karakter formula (=, +, -, @, \t, \r).
+ */
+export function sanitizeFormulaCell(text: string | null | undefined): string {
+  if (text === null || text === undefined) return '-'
+  const str = String(text)
+  if (!str.trim()) return '-'
+  if (/^[=+@\-\t\r]/.test(str)) {
+    return `'${str}`
+  }
+  const trimmed = str.trim()
+  if (/^[=+@\-\t\r]/.test(trimmed)) {
+    return `'${trimmed}`
+  }
+  return trimmed
+}
+
+/**
  * Mendeteksi perataan kolom berdasarkan header / key jika tidak dispesifikasikan manual
  */
 function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'right' {
