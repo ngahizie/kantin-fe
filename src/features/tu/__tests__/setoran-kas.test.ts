@@ -112,18 +112,18 @@ describe('mapRekapSetoranTuItem', () => {
 describe('Setoran Kas Security & Data Integrity Hardening (OWASP / NIST)', () => {
   it('neutralizes CSV formula injection triggers on export cells (SET-01)', () => {
     // Karakter pemantik formula: '=', '+', '-', '@', '\t', '\r'
-    expect(sanitizeCsvCell('=SUM(A1:A10)')).toBe('\"\'=SUM(A1:A10)\"')
-    expect(sanitizeCsvCell('+cmd|/C calc!A0')).toBe('\"\'+cmd|/C calc!A0\"')
-    expect(sanitizeCsvCell('-5000')).toBe('\"\'-5000\"')
-    expect(sanitizeCsvCell('@leak(data)')).toBe('\"\'@leak(data)\"')
-    expect(sanitizeCsvCell('\tmaliciousTab')).toBe('\"\'\tmaliciousTab\"')
-    expect(sanitizeCsvCell('\rmaliciousReturn')).toBe('\"\'\rmaliciousReturn\"')
+    expect(sanitizeCsvCell('=SUM(A1:A10)')).toBe('"\'=SUM(A1:A10)"')
+    expect(sanitizeCsvCell('+cmd|/C calc!A0')).toBe('"\'+cmd|/C calc!A0"')
+    expect(sanitizeCsvCell('-5000')).toBe('"\'-5000"')
+    expect(sanitizeCsvCell('@leak(data)')).toBe('"\'@leak(data)"')
+    expect(sanitizeCsvCell('\tmaliciousTab')).toBe('"\'\tmaliciousTab"')
+    expect(sanitizeCsvCell('\rmaliciousReturn')).toBe('"\'\rmaliciousReturn"')
 
     // Teks normal tetap aman di-escape tanda kutip
-    expect(sanitizeCsvCell('Setoran kas pas')).toBe('\"Setoran kas pas\"')
-    expect(sanitizeCsvCell('Catatan dengan \"kutip\"')).toBe('\"Catatan dengan \"\"kutip\"\"\"')
-    expect(sanitizeCsvCell(null)).toBe('\"\"')
-    expect(sanitizeCsvCell(undefined)).toBe('\"\"')
+    expect(sanitizeCsvCell('Setoran kas pas')).toBe('"Setoran kas pas"')
+    expect(sanitizeCsvCell('Catatan dengan "kutip"')).toBe('"Catatan dengan ""kutip"""')
+    expect(sanitizeCsvCell(null)).toBe('""')
+    expect(sanitizeCsvCell(undefined)).toBe('""')
   })
 
   it('enforces maximum 500 characters on catatan field (SET-04)', () => {
