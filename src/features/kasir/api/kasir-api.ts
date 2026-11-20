@@ -81,6 +81,13 @@ export const kasirApi = {
       }
     }
 
+    if (data.izinkanStokMinus === true) {
+      payload.izinkanStokMinus = true
+      if (data.alasanStokMinus?.trim()) {
+        payload.alasanStokMinus = data.alasanStokMinus.trim().slice(0, 200)
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await apiClient.post<ApiResponse<any>>(
       '/api/kasir/tap',

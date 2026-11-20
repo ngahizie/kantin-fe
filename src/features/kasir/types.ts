@@ -80,6 +80,14 @@ export const PILIHAN_ALASAN_VOID = [
 
 export type AlasanVoidType = (typeof PILIHAN_ALASAN_VOID)[number]
 
+export const PILIHAN_ALASAN_STOK_MINUS = [
+  'Barang ada di gudang',
+  'Belum dicatat barang masuk',
+  'Lain-lain',
+] as const
+
+export type AlasanStokMinusType = (typeof PILIHAN_ALASAN_STOK_MINUS)[number]
+
 export interface TapItemPayload {
   menuId: number
   qty: number
@@ -93,6 +101,8 @@ export interface TapTransaksiRequest {
   items: TapItemPayload[]
   idempotencyKey: string
   titikKasirId?: number
+  izinkanStokMinus?: boolean
+  alasanStokMinus?: string
 }
 
 export interface TapBuyerInfo {
