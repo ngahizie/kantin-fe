@@ -25,9 +25,17 @@ import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { LaporanExportButton } from './components'
+import {
+  LaporanDateFilter,
+  getDefaultDateFilter,
+  LaporanExportButton,
+} from './components'
 import { laporanApi } from './api/laporan-api'
-import type { RingkasanPenjualan, BarisPenjualanItem } from './types'
+import type {
+  RingkasanPenjualan,
+  BarisPenjualanItem,
+  LaporanFilterParams,
+} from './types'
 
 const getCategoryBadgeClass = (kategori: string) => {
   const k = (kategori || '').toLowerCase()
@@ -46,6 +54,16 @@ const getCategoryBadgeClass = (kategori: string) => {
   return 'border-border bg-muted text-muted-foreground'
 }
 
+// Helper pencegahan Excel/CSV Formula Injection (CWE-1236)
+export function sanitizeFormulaCell(text: string | null | undefined): string {
+  if (!text) return '-'
+  const str = String(text).trim()
+  if (/^[=+@\-\t\r]/i.test(str)) {
+    return `'${str}`
+  }
+  return str
+}
+
 export function LaporanLabaKotorPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanPenjualan | null>(null)
   const [items, setItems] = useState<BarisPenjualanItem[]>([])
@@ -55,13 +73,22 @@ export function LaporanLabaKotorPage() {
   const [marginFilter, setMarginFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
   const [sortBy, setSortBy] = useState<'laba_desc' | 'margin_desc' | 'omset_desc'>('laba_desc')
 
+  // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
+  const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
+    () => getDefaultDateFilter().params
+  )
+  const [dateFilterLabel, setDateFilterLabel] = useState<string>(
+    () => getDefaultDateFilter().label
+  )
+
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
+        setIsLoading(true)
         const [resRingkasan, resItems] = await Promise.all([
-          laporanApi.getPenjualan(),
-          laporanApi.getPenjualanPerItem(),
+          laporanApi.getPenjualan(dateFilterParams),
+          laporanApi.getPenjualanPerItem(dateFilterParams),
         ])
         if (!isMounted) return
         setRingkasan(resRingkasan)
@@ -78,33 +105,61 @@ export function LaporanLabaKotorPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [dateFilterParams])
 
   // Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
   const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
-  const getItemOmset = (i: BarisPenjualanItem) => i.total ?? i.penjualanBersih ?? 0
-  const getItemModal = (i: BarisPenjualanItem) => i.modal ?? i.totalHpp ?? 0
-  const getItemLaba = (i: BarisPenjualanItem) =>
-    i.laba ?? i.labaKotor ?? getItemOmset(i) - getItemModal(i)
-  const getItemMargin = (i: BarisPenjualanItem) => i.marginPersen ?? i.margin ?? 0
-  const getItemHarga = (i: BarisPenjualanItem) =>
-    i.hargaSatuan ?? i.hargaJual ?? (i.qty > 0 ? Math.round(getItemOmset(i) / i.qty) : 0)
-  const getItemUnitModal = (i: BarisPenjualanItem) =>
-    i.hpp ?? (i.qty > 0 ? Math.round(getItemModal(i) / i.qty) : 0)
+  const getItemOmset = (i: BarisPenjualanItem) =>
+    Math.max(0, Number(i.total ?? i.penjualanBersih) || 0)
+  const getItemModal = (i: BarisPenjualanItem) =>
+    Math.max(0, Number(i.modal ?? i.totalHpp) || 0)
+  const getItemLaba = (i: BarisPenjualanItem) => {
+    const rawLaba = i.laba ?? i.labaKotor
+    if (rawLaba !== undefined && rawLaba !== null && Number.isFinite(Number(rawLaba))) {
+      return Number(rawLaba)
+    }
+    return getItemOmset(i) - getItemModal(i)
+  }
+  const getItemMargin = (i: BarisPenjualanItem) => {
+    const rawMargin = i.marginPersen ?? i.margin
+    if (rawMargin !== undefined && rawMargin !== null && Number.isFinite(Number(rawMargin))) {
+      return Number(rawMargin)
+    }
+    const omset = getItemOmset(i)
+    return omset > 0 ? Number(((getItemLaba(i) / omset) * 100).toFixed(1)) : 0
+  }
+  const getItemHarga = (i: BarisPenjualanItem) => {
+    const rawHarga = i.hargaSatuan ?? i.hargaJual
+    if (rawHarga !== undefined && rawHarga !== null && Number.isFinite(Number(rawHarga))) {
+      return Math.max(0, Number(rawHarga))
+    }
+    const qty = Number(i.qty) || 0
+    return qty > 0 ? Math.max(0, Math.round(getItemOmset(i) / qty)) : 0
+  }
+  const getItemUnitModal = (i: BarisPenjualanItem) => {
+    const rawHpp = i.hpp
+    if (rawHpp !== undefined && rawHpp !== null && Number.isFinite(Number(rawHpp))) {
+      return Math.max(0, Number(rawHpp))
+    }
+    const qty = Number(i.qty) || 0
+    return qty > 0 ? Math.max(0, Math.round(getItemModal(i) / qty)) : 0
+  }
 
-  const summaryTotalModal =
-    ringkasan?.totalModal ??
-    (ringkasan as (RingkasanPenjualan & { totalHpp?: number }) | null)?.totalHpp ??
-    0
-  const summaryLaba =
+  const summaryTotalModal = Math.max(
+    0,
+    Number(
+      ringkasan?.totalModal ??
+      (ringkasan as (RingkasanPenjualan & { totalHpp?: number }) | null)?.totalHpp
+    ) || 0
+  )
+  const summaryLaba = Number(
     ringkasan?.laba ??
-    (ringkasan as (RingkasanPenjualan & { labaKotor?: number }) | null)?.labaKotor ??
-    0
-  const summaryMargin =
+    (ringkasan as (RingkasanPenjualan & { labaKotor?: number }) | null)?.labaKotor
+  ) || 0
+  const summaryMargin = Number(
     ringkasan?.marginPersen ??
-    (ringkasan as (RingkasanPenjualan & { marginLabaPersen?: number }) | null)
-      ?.marginLabaPersen ??
-    0
+    (ringkasan as (RingkasanPenjualan & { marginLabaPersen?: number }) | null)?.marginLabaPersen
+  ) || 0
 
   // Filter & Urutan
   const filteredItems = useMemo(() => {
@@ -168,9 +223,9 @@ export function LaporanLabaKotorPage() {
     try {
       const exportRows = filteredItems.map((item) => ({
         menuId: getItemId(item),
-        nama: item.nama || '-',
-        kategoriNama: item.kategoriNama || 'Umum',
-        qty: item.qty ?? 0,
+        nama: sanitizeFormulaCell(item.nama),
+        kategoriNama: sanitizeFormulaCell(item.kategoriNama || 'Umum'),
+        qty: Math.max(0, Number(item.qty) || 0),
         hargaSatuan: getItemHarga(item),
         hpp: getItemUnitModal(item),
         total: getItemOmset(item),
@@ -184,6 +239,7 @@ export function LaporanLabaKotorPage() {
         sheetName: 'Laba Kotor',
         title: 'LAPORAN ANALISIS LABA KOTOR',
         metadata: {
+          'Periode': dateFilterLabel,
           'Tanggal Cetak': formatDateTime(new Date()),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
@@ -240,9 +296,9 @@ export function LaporanLabaKotorPage() {
     try {
       const exportRows = filteredItems.map((item) => ({
         menuId: getItemId(item),
-        nama: item.nama || '-',
-        kategoriNama: item.kategoriNama || 'Umum',
-        qty: item.qty ?? 0,
+        nama: sanitizeFormulaCell(item.nama),
+        kategoriNama: sanitizeFormulaCell(item.kategoriNama || 'Umum'),
+        qty: Math.max(0, Number(item.qty) || 0),
         hargaSatuan: getItemHarga(item),
         hpp: getItemUnitModal(item),
         total: getItemOmset(item),
@@ -256,6 +312,7 @@ export function LaporanLabaKotorPage() {
         title: 'LAPORAN ANALISIS LABA KOTOR',
         subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
         metadata: {
+          'Periode': dateFilterLabel,
           'Tanggal Cetak': formatDateTime(new Date()),
           'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
           'Total Modal (HPP)': formatRupiah(summaryTotalModal),
@@ -339,6 +396,14 @@ export function LaporanLabaKotorPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <LaporanDateFilter
+                hidePresets
+                initialPreset="TODAY"
+                onChange={(params, label) => {
+                  setDateFilterParams(params)
+                  setDateFilterLabel(label)
+                }}
+              />
               <LaporanExportButton
                 onExportExcel={handleExportExcel}
                 onExportPdf={handleExportPdf}
