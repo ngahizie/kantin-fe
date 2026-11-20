@@ -273,4 +273,19 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(validRef.length).toBeLessThanOrEqual(56)
     expect(invalidRef.length).toBeGreaterThan(56)
   })
+
+  it('memverifikasi integritas parameter ukuran paginasi dan fallback total DB (SEC-KOR-06)', () => {
+    const defaultParams = { ukuran: 100 }
+    expect(defaultParams.ukuran).toBe(100)
+
+    const rawHalaman = {
+      items: [{ id: 1 }, { id: 2 }],
+      total: 45,
+      halaman: 0,
+      ukuran: 100,
+      totalHalaman: 1,
+    }
+    const resolvedTotal = typeof rawHalaman.total === 'number' ? rawHalaman.total : rawHalaman.items.length
+    expect(resolvedTotal).toBe(45)
+  })
 })

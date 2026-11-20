@@ -65,6 +65,7 @@ export function KoreksiBendaharaPage() {
   const [transaksiList, setTransaksiList] = useState<TransaksiSesiTutupItem[]>(
     []
   )
+  const [totalKoreksiDb, setTotalKoreksiDb] = useState<number | null>(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [errorKoreksi, setErrorKoreksi] = useState<string | null>(null)
@@ -95,10 +96,11 @@ export function KoreksiBendaharaPage() {
 
   const executeFetch = useCallback(async () => {
     const [resSiswa, resKoreksi, resTx] = await Promise.allSettled([
-      apiClient.get('/api/siswa', { params: { batas: 50 } }),
-      apiClient.get('/api/saldo/koreksi'),
+      apiClient.get('/api/siswa', { params: { batas: 100 } }),
+      apiClient.get('/api/saldo/koreksi', { params: { ukuran: 100 } }),
       canAccessSesiTutup
         ? apiClient.get('/api/kasir/transaksi', {
+            params: { ukuran: 100 },
             silent: true,
           } as unknown as Record<string, unknown>)
         : Promise.resolve({ data: { data: { items: [] } } }),
@@ -140,6 +142,11 @@ export function KoreksiBendaharaPage() {
           : Array.isArray(rawData)
             ? rawData
             : [])
+      const totalCount =
+        typeof rawData?.data?.total === 'number'
+          ? rawData.data.total
+          : items.length
+      setTotalKoreksiDb(totalCount)
       setKoreksiList(
         items.map((it: unknown) =>
           mapMutasiKoreksiItem(it as Record<string, unknown>, loadedStudents)
@@ -488,7 +495,7 @@ export function KoreksiBendaharaPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold tracking-tight text-foreground tabular-nums'>
-                {koreksiList.length} Mutasi
+                {totalKoreksiDb !== null ? totalKoreksiDb : koreksiList.length} Mutasi
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
                 Tercatat rapi dan aman di buku besar
