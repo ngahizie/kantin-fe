@@ -21,7 +21,7 @@ export interface CartStoreState {
   ) => { success: boolean; reason?: string }
   removeItem: (menuId: number) => void
   updateQty: (menuId: number, qty: number) => void
-  incrementQty: (menuId: number) => void
+  incrementQty: (menuId: number, options?: { allowExceedStock?: boolean }) => void
   decrementQty: (menuId: number) => void
   markItemJualMelebihiCatatan: (menuId: number, marked?: boolean) => void
   clearCart: () => void
@@ -129,10 +129,12 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
           const finalQty = item.jualMelebihiCatatan
             ? Math.max(1, qty)
             : Math.min(Math.max(1, qty), maxStock)
+          const stillExceeds = maxStock <= 0 || finalQty > maxStock
           return {
             ...item,
             qty: finalQty,
             subtotal: Math.round(finalQty * item.menu.hargaJual),
+            jualMelebihiCatatan: item.jualMelebihiCatatan ? stillExceeds : false,
           }
         }
         return item
@@ -141,16 +143,32 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
     })
   },
 
-  incrementQty: (menuId: number) => {
+  incrementQty: (menuId: number, options?: { allowExceedStock?: boolean }) => {
     const currentItem = get().items.find((item) => item.menu.id === menuId)
     if (!currentItem) return
 
     const maxStock = currentItem.menu.stokBerjalan ?? 0
-    if (!currentItem.jualMelebihiCatatan && currentItem.qty >= maxStock) {
+    const nextQty = currentItem.qty + 1
+    if (nextQty > maxStock && !currentItem.jualMelebihiCatatan) {
+      if (!options?.allowExceedStock) {
+        return
+      }
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.menu.id === menuId
+            ? {
+                ...item,
+                qty: nextQty,
+                subtotal: Math.round(nextQty * item.menu.hargaJual),
+                jualMelebihiCatatan: true,
+              }
+            : item
+        ),
+      }))
       return
     }
 
-    get().updateQty(menuId, currentItem.qty + 1)
+    get().updateQty(menuId, nextQty)
   },
 
   decrementQty: (menuId: number) => {

@@ -370,9 +370,17 @@ export const KasirPosPage: React.FC = () => {
     [items]
   )
 
-  // Handler tambah menu ke keranjang
+  // Handler tambah menu ke keranjang (mendukung penambahan melewati catatan stok saat barang ada di gudang)
   const handleAddToCart = (menu: MenuItem, options?: AddCartItemOptions) => {
-    const res = addItem(menu, 1, options)
+    const availableStock = menu.stokBerjalan ?? 0
+    const currentQty = getItemQty(menu.id)
+    const shouldAllowExceed =
+      Boolean(options?.jualMelebihiCatatan) || currentQty >= availableStock
+    const res = addItem(
+      menu,
+      1,
+      shouldAllowExceed ? { jualMelebihiCatatan: true } : options
+    )
     if (!res.success) {
       toast.warning(res.reason || 'Tidak dapat menambahkan menu')
     }

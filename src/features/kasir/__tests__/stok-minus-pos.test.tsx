@@ -95,15 +95,21 @@ describe('UI Penjualan Stok Gudang / Minus (C.1)', () => {
     await expect.element(getByText('Lewat catatan')).toBeInTheDocument()
     await expect.element(getByText('Maksimal stok')).toBeInTheDocument()
 
-    const allowedPlus = getByTitle('Tambah jumlah')
-    const cappedPlus = getByTitle('Maksimal stok tercapai')
+    const allowedPlus = getByTitle('Tambah jumlah', { exact: true })
+    const exceedPlus = getByTitle('Tambah jumlah (melewati catatan stok / gudang)', { exact: true })
 
-    // Item bertanda (Risoles Mayo) boleh dinaikkan qty-nya; item biasa (Lemper Ayam) terkunci
+    // Item bertanda maupun item stok terbatas tetap dapat ditambah melewati stok
     await expect.element(allowedPlus).toBeEnabled()
-    await expect.element(cappedPlus).toBeDisabled()
+    await expect.element(exceedPlus).toBeEnabled()
 
     await userEvent.click(allowedPlus)
     expect(useCartStore.getState().getItemQty(301)).toBe(2)
+
+    await userEvent.click(exceedPlus)
+    expect(useCartStore.getState().getItemQty(303)).toBe(3)
+    expect(
+      useCartStore.getState().items.find((it) => it.menu.id === 303)?.jualMelebihiCatatan
+    ).toBe(true)
 
     await unmount()
   })
