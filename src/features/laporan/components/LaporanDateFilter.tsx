@@ -137,6 +137,20 @@ export function LaporanDateFilter({
       })
       return
     }
+
+    const startDate = new Date(rangeStartInput)
+    const endDate = new Date(rangeEndInput)
+    const diffDays = Math.ceil(
+      Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    const MAX_DAYS = 366
+    if (diffDays > MAX_DAYS) {
+      toast.error('Rentang tanggal terlalu panjang', {
+        description: `Maksimal rentang waktu laporan adalah ${MAX_DAYS} hari (1 tahun).`,
+      })
+      return
+    }
+
     setSelectedPreset('CUSTOM_RANGE')
     const label = `${formatDate(rangeStartInput)} – ${formatDate(rangeEndInput)}`
     setActiveLabel(label)
