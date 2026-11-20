@@ -24,7 +24,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { ExportButton } from '@/components/export-button'
-import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime, formatStokDisplay } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { stokApi } from './api/stok-api'
@@ -457,8 +457,14 @@ export function KartuStokPage() {
                             <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400 tabular-nums'>
                               {!isMasuk ? formatNumber(item.qty) : '-'}
                             </TableCell>
-                            <TableCell className='text-right font-mono font-bold text-foreground tabular-nums'>
-                              {formatNumber(item.stokSetelah)}
+                            <TableCell
+                              className={`text-right font-mono font-bold tabular-nums ${
+                                item.stokSetelah < 0
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : 'text-foreground'
+                              }`}
+                            >
+                              {formatStokDisplay(item.stokSetelah)}
                             </TableCell>
                             <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
                               {formatRupiah(item.hppSnapshot)}

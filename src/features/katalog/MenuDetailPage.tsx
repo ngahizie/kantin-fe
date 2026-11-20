@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatDateTime, formatNumber, formatRupiah } from '@/lib/formatters'
+import { formatDateTime, formatNumber, formatRupiah, formatStokDisplay } from '@/lib/formatters'
 import { stokApi } from '../stok/api/stok-api'
 import type { RiwayatStokItem } from '../stok/types'
 import { katalogApi } from './api/katalog-api'
@@ -432,8 +432,14 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                           <p className='text-xs uppercase tracking-wide text-muted-foreground'>
                             Stok berjalan
                           </p>
-                          <p className='text-sm font-semibold text-foreground tabular-nums'>
-                            {formatNumber(menu.stokBerjalan)}
+                          <p
+                            className={`text-sm font-semibold tabular-nums ${
+                              menu.stokBerjalan < 0
+                                ? 'text-rose-600 dark:text-rose-400 font-bold'
+                                : 'text-foreground'
+                            }`}
+                          >
+                            {formatStokDisplay(menu.stokBerjalan)}
                           </p>
                         </div>
                       </div>
@@ -536,8 +542,14 @@ function MenuDetailContent({ menuId, idMenu, idValid }: MenuDetailContentProps) 
                               <TableCell className='text-right font-mono font-semibold text-rose-600 dark:text-rose-400 tabular-nums'>
                                 {!isMasuk ? formatNumber(item.qty) : '-'}
                               </TableCell>
-                              <TableCell className='text-right font-mono font-bold text-foreground tabular-nums'>
-                                {formatNumber(item.stokSetelah)}
+                              <TableCell
+                                className={`text-right font-mono font-bold tabular-nums ${
+                                  item.stokSetelah < 0
+                                    ? 'text-rose-600 dark:text-rose-400'
+                                    : 'text-foreground'
+                                }`}
+                              >
+                                {formatStokDisplay(item.stokSetelah)}
                               </TableCell>
                               <TableCell className='text-xs font-medium text-foreground truncate max-w-[160px]'>
                                 <div className='flex items-center gap-1.5'>

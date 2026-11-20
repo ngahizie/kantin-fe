@@ -6,6 +6,7 @@ export type JenisMutasiStok =
   | 'BARANG_MASUK'
   | 'BARANG_MASUK_PEMBALIK'
   | 'PENJUALAN'
+  | 'PENJUALAN_MINUS'
   | 'PENJUALAN_VOID'
   | 'OPNAME_MASUK'
   | 'OPNAME_KELUAR'

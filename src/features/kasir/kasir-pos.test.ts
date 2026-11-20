@@ -1,5 +1,6 @@
 import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest'
 import apiClient from '@/lib/api-client'
+import { formatStokDisplay } from '@/lib/formatters'
 import { useCartStore } from '@/stores/useCartStore'
 import { kasirApi } from './api/kasir-api'
 import type { MenuItem } from '@/features/katalog/types'
@@ -281,6 +282,116 @@ describe('Fitur Cek Saldo Siswa', () => {
         rfidUid: '04A1B2C3D4',
       })
     )
+  })
+})
+
+describe('Penjualan Item Melebihi Catatan Stok (C.1)', () => {
+  beforeEach(() => {
+    useCartStore.getState().clearCart()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('menjaga perilaku lama tanpa konfirmasi/penanda dan mengizinkan stok 0 masuk keranjang setelah ditandai', () => {
+    const menuHabis = mockMenus.find((m) => m.id === 3)!
+    expect(menuHabis.stokBerjalan).toBe(0)
+
+    // Tanpa penanda: tetap ditolak
+    const withoutFlag = useCartStore.getState().addItem(menuHabis, 1)
+    expect(withoutFlag.success).toBe(false)
+    expect(useCartStore.getState().items).toHaveLength(0)
+
+    // Dengan penanda jualMelebihiCatatan: berhasil masuk keranjang
+    const withFlag = useCartStore
+      .getState()
+      .addItem(menuHabis, 1, { jualMelebihiCatatan: true })
+    expect(withFlag.success).toBe(true)
+    expect(useCartStore.getState().items).toHaveLength(1)
+    expect(useCartStore.getState().items[0].jualMelebihiCatatan).toBe(true)
+    expect(useCartStore.getState().items[0].qty).toBe(1)
+
+    // Menu nonaktif tetap ditolak walau diberi penanda
+    const menuNonaktif = mockMenus.find((m) => m.id === 99)!
+    const inactiveRes = useCartStore
+      .getState()
+      .addItem(menuNonaktif, 1, { jualMelebihiCatatan: true })
+    expect(inactiveRes.success).toBe(false)
+  })
+
+  it('qty hanya boleh melewati stok berjalan untuk item bertanda jualMelebihiCatatan', () => {
+    const menuNormal: MenuItem = {
+      id: 101,
+      kategoriId: 1,
+      nama: 'Normal Limited',
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 1,
+      stokBerjalan: 2,
+      aktif: true,
+    }
+    const menuMinus: MenuItem = {
+      id: 102,
+      kategoriId: 1,
+      nama: 'Gudang Extra',
+      hargaJual: 7000,
+      satuan: 'PCS',
+      stokMinimum: 1,
+      stokBerjalan: 0,
+      aktif: true,
+    }
+
+    useCartStore.getState().addItem(menuNormal, 2)
+    useCartStore.getState().incrementQty(101)
+    expect(useCartStore.getState().getItemQty(101)).toBe(2)
+
+    useCartStore
+      .getState()
+      .addItem(menuMinus, 1, { jualMelebihiCatatan: true })
+    useCartStore.getState().incrementQty(102)
+    useCartStore.getState().incrementQty(102)
+    expect(useCartStore.getState().getItemQty(102)).toBe(3)
+  })
+
+  it('kasirApi.prosesTap mengirim izinkanStokMinus dan alasanStokMinus hanya saat aktif', async () => {
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        data: {
+          id: 999,
+          total: 10000,
+          pembeli: { nama: 'Siswa Uji', kelas: '7B', nis: '1002', sisa_saldo: 40000 },
+        },
+      },
+    })
+
+    // Tanpa stok minus -> tidak mengirim izinkanStokMinus maupun alasanStokMinus
+    await kasirApi.prosesTap({
+      rfidUid: '04A1B2C3D4',
+      items: [{ menuId: 1, qty: 1 }],
+      idempotencyKey: 'idemp-normal',
+    })
+    const firstPayload = postSpy.mock.calls[0][1] as Record<string, unknown>
+    expect(firstPayload).not.toHaveProperty('izinkanStokMinus')
+    expect(firstPayload).not.toHaveProperty('alasanStokMinus')
+
+    // Dengan stok minus -> mengirim flag true dan alasan
+    await kasirApi.prosesTap({
+      rfidUid: '04A1B2C3D4',
+      items: [{ menuId: 3, qty: 2 }],
+      idempotencyKey: 'idemp-minus',
+      izinkanStokMinus: true,
+      alasanStokMinus: 'Barang ada di gudang',
+    })
+    const secondPayload = postSpy.mock.calls[1][1] as Record<string, unknown>
+    expect(secondPayload.izinkanStokMinus).toBe(true)
+    expect(secondPayload.alasanStokMinus).toBe('Barang ada di gudang')
+  })
+
+  it('formatStokDisplay menampilkan format "-N (perlu opname)" untuk stok negatif', () => {
+    expect(formatStokDisplay(-3)).toBe('-3 (perlu opname)')
+    expect(formatStokDisplay(0)).toBe('0')
+    expect(formatStokDisplay(15)).toBe('15')
   })
 })
 
