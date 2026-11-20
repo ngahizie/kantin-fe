@@ -60,6 +60,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     incrementQty,
     decrementQty,
     removeItem,
+    markItemJualMelebihiCatatan,
     clearCart,
     totalItems,
     totalHarga,
@@ -179,7 +180,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
         ) : (
           items.map((item) => {
             const maxStock = item.menu.stokBerjalan ?? 0
-            const isMaxReached = item.qty >= maxStock
+            const isMarkedMinus = Boolean(item.jualMelebihiCatatan)
+            const isMaxReached = !isMarkedMinus && item.qty >= maxStock
 
             return (
               <div
@@ -195,19 +197,37 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     >
                       {item.menu.nama}
                     </h5>
-                    <div className='mt-0.5 flex items-center gap-2'>
+                    <div className='mt-0.5 flex flex-wrap items-center gap-1.5'>
                       <span className='text-xs text-muted-foreground tabular-nums'>
                         {formatRupiah(item.menu.hargaJual)} /
                         {item.menu.satuan || 'porsi'}
                       </span>
-                      {isMaxReached && (
+                      {isMarkedMinus ? (
                         <Badge
                           variant='outline'
-                          className='rounded-full border border-amber-500/20 bg-amber-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-amber-700 dark:text-amber-300'
+                          className='rounded-full border border-rose-500/30 bg-rose-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-rose-700 dark:text-rose-300'
                         >
-                          Maksimal stok
+                          Lewat catatan
                         </Badge>
-                      )}
+                      ) : isMaxReached ? (
+                        <>
+                          <Badge
+                            variant='outline'
+                            className='rounded-full border border-amber-500/20 bg-amber-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-amber-700 dark:text-amber-300'
+                          >
+                            Maksimal stok
+                          </Badge>
+                          <button
+                            type='button'
+                            onClick={() =>
+                              markItemJualMelebihiCatatan(item.menu.id, true)
+                            }
+                            className='cursor-pointer text-[10px] font-semibold text-primary underline-offset-2 hover:underline'
+                          >
+                            + Gudang
+                          </button>
+                        </>
+                      ) : null}
                     </div>
                   </div>
 

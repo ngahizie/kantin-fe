@@ -10,7 +10,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore, type AddCartItemOptions } from '@/stores/useCartStore'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import { formatRupiah } from '@/lib/formatters'
@@ -69,6 +69,7 @@ import TransactionErrorModal, {
 } from './components/TransactionErrorModal'
 import SessionHistoryModal from './components/SessionHistoryModal'
 import CloseSessionModal from './components/CloseSessionModal'
+import StokMinusConfirmDialog from './components/StokMinusConfirmDialog'
 
 export const KasirPosPage: React.FC = () => {
   const [menus, setMenus] = useState<MenuItem[]>([])
@@ -110,6 +111,8 @@ export const KasirPosPage: React.FC = () => {
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [errorModalOpen, setErrorModalOpen] = useState(false)
   const [confirmManualOpen, setConfirmManualOpen] = useState(false)
+  const [stokMinusConfirmOpen, setStokMinusConfirmOpen] = useState(false)
+  const [confirmedAlasanStokMinus, setConfirmedAlasanStokMinus] = useState<string | null>(null)
   const [pendingScannedUid, setPendingScannedUid] = useState<string | null>(null)
   const [pendingCashAmount, setPendingCashAmount] = useState<number | null>(null)
   const [successData, setSuccessData] = useState<TapTransaksiData | null>(null)
@@ -250,6 +253,7 @@ export const KasirPosPage: React.FC = () => {
         studentModalOpen ||
         receiptModalOpen ||
         confirmManualOpen ||
+        stokMinusConfirmOpen ||
         closeSessionModalOpen ||
         historyModalOpen ||
         cekSaldoOpen
@@ -274,6 +278,7 @@ export const KasirPosPage: React.FC = () => {
     studentModalOpen,
     receiptModalOpen,
     confirmManualOpen,
+    stokMinusConfirmOpen,
     closeSessionModalOpen,
     historyModalOpen,
     cekSaldoOpen,
@@ -359,9 +364,15 @@ export const KasirPosPage: React.FC = () => {
     return map
   }, [menus])
 
+  // Daftar item bertanda jual melebihi catatan stok (C.1)
+  const minusItemsInCart = useMemo(
+    () => items.filter((it) => Boolean(it.jualMelebihiCatatan)),
+    [items]
+  )
+
   // Handler tambah menu ke keranjang
-  const handleAddToCart = (menu: MenuItem) => {
-    const res = addItem(menu)
+  const handleAddToCart = (menu: MenuItem, options?: AddCartItemOptions) => {
+    const res = addItem(menu, 1, options)
     if (!res.success) {
       toast.warning(res.reason || 'Tidak dapat menambahkan menu')
     }
@@ -375,7 +386,7 @@ export const KasirPosPage: React.FC = () => {
 
   // Eksekusi transaksi tap RFID ke backend
   const executeTapTransaction = useCallback(
-    async (scannedUid: string) => {
+    async (scannedUid: string, alasanStokMinusOverride?: string) => {
       const cleanUid = scannedUid.trim().toUpperCase()
       if (!cleanUid || isProcessing) return
 
@@ -386,6 +397,10 @@ export const KasirPosPage: React.FC = () => {
       }
 
       const idempotencyKey = generateIdempotencyKey()
+      const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
+      const alasanStokMinus = hasMarkedMinus
+        ? (alasanStokMinusOverride ?? confirmedAlasanStokMinus ?? undefined)
+        : undefined
       setIsProcessing(true)
 
       try {
@@ -398,6 +413,12 @@ export const KasirPosPage: React.FC = () => {
           })),
           idempotencyKey,
           titikKasirId: targetTitikKasirId,
+          ...(hasMarkedMinus
+            ? {
+                izinkanStokMinus: true,
+                ...(alasanStokMinus ? { alasanStokMinus } : {}),
+              }
+            : {}),
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
@@ -491,6 +512,7 @@ export const KasirPosPage: React.FC = () => {
         })
       } finally {
         setIsProcessing(false)
+        setConfirmedAlasanStokMinus(null)
       }
     },
     [
@@ -500,12 +522,13 @@ export const KasirPosPage: React.FC = () => {
       getActiveTitikKasir,
       pengaturan.namaKantin,
       sesi,
+      confirmedAlasanStokMinus,
       playSuccess,
       playError,
     ]
   )
 
-  // Handler proses tap RFID: konfirmasi manual (jika aktif) atau eksekusi langsung
+  // Handler proses tap RFID: cek konfirmasi stok minus, konfirmasi manual (jika aktif), atau eksekusi langsung
   const handleProcessTap = useCallback(
     async (scannedUid: string) => {
       const cleanUid = scannedUid.trim().toUpperCase()
@@ -531,6 +554,14 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
+      const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
+      if (hasMarkedMinus && !confirmedAlasanStokMinus) {
+        setPendingCashAmount(null)
+        setPendingScannedUid(cleanUid)
+        setStokMinusConfirmOpen(true)
+        return
+      }
+
       // Langkah konfirmasi manual sesuai pengaturan operasional kantin
       if (pengaturan.konfirmasiManual) {
         setPendingCashAmount(null)
@@ -539,13 +570,14 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      await executeTapTransaction(cleanUid)
+      await executeTapTransaction(cleanUid, confirmedAlasanStokMinus ?? undefined)
     },
     [
       isOnline,
       isSessionClosed,
       items,
       isProcessing,
+      confirmedAlasanStokMinus,
       pengaturan.konfirmasiManual,
       executeTapTransaction,
       playError,
@@ -554,7 +586,7 @@ export const KasirPosPage: React.FC = () => {
 
   // Eksekusi transaksi TUNAI (Kartu Tamu / tanpa kartu, tanpa potong saldo)
   const executeCashTransaction = useCallback(
-    async (uangDiterima: number) => {
+    async (uangDiterima: number, alasanStokMinusOverride?: string) => {
       if (isProcessing) return
 
       const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
@@ -565,6 +597,10 @@ export const KasirPosPage: React.FC = () => {
 
       const currentTotal = totalHarga()
       const idempotencyKey = generateIdempotencyKey()
+      const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
+      const alasanStokMinus = hasMarkedMinus
+        ? (alasanStokMinusOverride ?? confirmedAlasanStokMinus ?? undefined)
+        : undefined
       setIsProcessing(true)
 
       try {
@@ -577,6 +613,12 @@ export const KasirPosPage: React.FC = () => {
           })),
           idempotencyKey,
           titikKasirId: targetTitikKasirId,
+          ...(hasMarkedMinus
+            ? {
+                izinkanStokMinus: true,
+                ...(alasanStokMinus ? { alasanStokMinus } : {}),
+              }
+            : {}),
         })
 
         const snapshotItems: ReceiptLineItem[] = items.map((it) => ({
@@ -671,6 +713,7 @@ export const KasirPosPage: React.FC = () => {
         })
       } finally {
         setIsProcessing(false)
+        setConfirmedAlasanStokMinus(null)
       }
     },
     [
@@ -681,6 +724,7 @@ export const KasirPosPage: React.FC = () => {
       getActiveTitikKasir,
       pengaturan.namaKantin,
       sesi,
+      confirmedAlasanStokMinus,
       playSuccess,
       playError,
       clearCart,
@@ -716,7 +760,15 @@ export const KasirPosPage: React.FC = () => {
       const cashCheck = evaluateCashPayment(totalHarga(), uangDiterima)
       // Bila uang kurang, langsung kirim ke BE agar mendapat respons 409 "Uang tunai kurang Rp ..." (tanpa kosongkan keranjang)
       if (!cashCheck.isValid) {
-        await executeCashTransaction(uangDiterima)
+        await executeCashTransaction(uangDiterima, confirmedAlasanStokMinus ?? undefined)
+        return
+      }
+
+      const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
+      if (hasMarkedMinus && !confirmedAlasanStokMinus) {
+        setPendingScannedUid(null)
+        setPendingCashAmount(cashCheck.uangDiterima)
+        setStokMinusConfirmOpen(true)
         return
       }
 
@@ -727,14 +779,18 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      await executeCashTransaction(cashCheck.uangDiterima)
+      await executeCashTransaction(
+        cashCheck.uangDiterima,
+        confirmedAlasanStokMinus ?? undefined
+      )
     },
     [
       isOnline,
       isSessionClosed,
       isProcessing,
-      items.length,
+      items,
       totalHarga,
+      confirmedAlasanStokMinus,
       pengaturan.konfirmasiManual,
       executeCashTransaction,
       playError,
@@ -771,6 +827,7 @@ export const KasirPosPage: React.FC = () => {
       !receiptModalOpen &&
       !isProcessing &&
       !confirmManualOpen &&
+      !stokMinusConfirmOpen &&
       !historyModalOpen &&
       !closeSessionModalOpen &&
       !manualRfidOpen &&
@@ -1135,6 +1192,7 @@ export const KasirPosPage: React.FC = () => {
             <AlertDialogCancel
               onClick={() => {
                 setConfirmManualOpen(false)
+                setConfirmedAlasanStokMinus(null)
                 setPendingScannedUid(null)
                 setPendingCashAmount(null)
               }}
@@ -1143,16 +1201,17 @@ export const KasirPosPage: React.FC = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
+                const alasan = confirmedAlasanStokMinus ?? undefined
                 if (pendingCashAmount !== null) {
                   const cashAmount = pendingCashAmount
                   setConfirmManualOpen(false)
                   setPendingCashAmount(null)
-                  await executeCashTransaction(cashAmount)
+                  await executeCashTransaction(cashAmount, alasan)
                 } else if (pendingScannedUid) {
                   const uid = pendingScannedUid
                   setConfirmManualOpen(false)
                   setPendingScannedUid(null)
-                  await executeTapTransaction(uid)
+                  await executeTapTransaction(uid, alasan)
                 }
               }}
             >
@@ -1161,6 +1220,37 @@ export const KasirPosPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog Konfirmasi Penjualan Stok Gudang / Stok Minus (C.1) */}
+      <StokMinusConfirmDialog
+        open={stokMinusConfirmOpen}
+        onOpenChange={setStokMinusConfirmOpen}
+        minusItems={minusItemsInCart}
+        isProcessing={isProcessing}
+        onCancel={() => {
+          setStokMinusConfirmOpen(false)
+          setConfirmedAlasanStokMinus(null)
+          setPendingScannedUid(null)
+          setPendingCashAmount(null)
+        }}
+        onConfirm={async (alasan) => {
+          setStokMinusConfirmOpen(false)
+          if (pengaturan.konfirmasiManual) {
+            setConfirmedAlasanStokMinus(alasan)
+            setConfirmManualOpen(true)
+            return
+          }
+          if (pendingCashAmount !== null) {
+            const cashAmount = pendingCashAmount
+            setPendingCashAmount(null)
+            await executeCashTransaction(cashAmount, alasan)
+          } else if (pendingScannedUid) {
+            const uid = pendingScannedUid
+            setPendingScannedUid(null)
+            await executeTapTransaction(uid, alasan)
+          }
+        }}
+      />
 
       {/* Modal Error Transaksi Ditolak (Kekurangan Saldo & Validasi 6 Tahap) */}
       <TransactionErrorModal
