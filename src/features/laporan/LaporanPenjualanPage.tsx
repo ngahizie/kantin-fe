@@ -208,11 +208,15 @@ export function LaporanPenjualanPage() {
         kategoriNama: item.kategoriNama || 'Umum',
         qty: item.qty ?? 0,
         hargaSatuan: getItemHarga(item),
-        hpp: getItemUnitModal(item),
         total: getItemOmset(item),
-        modal: getItemModal(item),
-        laba: getItemLaba(item),
-        marginPersen: getItemMargin(item),
+        ...(!isAdmin
+          ? {
+              hpp: getItemUnitModal(item),
+              modal: getItemModal(item),
+              laba: getItemLaba(item),
+              marginPersen: getItemMargin(item),
+            }
+          : {}),
       }))
       const exportKategoris = kategoris.map((kat) => ({
         kategoriId: getKatId(kat),
@@ -220,9 +224,13 @@ export function LaporanPenjualanPage() {
         jumlahItem: kat.jumlahItem ?? '-',
         qty: kat.qty ?? 0,
         total: getKatOmset(kat),
-        modal: getKatModal(kat),
-        laba: getKatLaba(kat),
-        marginPersen: getKatMargin(kat),
+        ...(!isAdmin
+          ? {
+              modal: getKatModal(kat),
+              laba: getKatLaba(kat),
+              marginPersen: getKatMargin(kat),
+            }
+          : {}),
       }))
 
       exportMultiSheetExcel({
@@ -372,11 +380,15 @@ export function LaporanPenjualanPage() {
         kategoriNama: item.kategoriNama || 'Umum',
         qty: item.qty ?? 0,
         hargaSatuan: getItemHarga(item),
-        hpp: getItemUnitModal(item),
         total: getItemOmset(item),
-        modal: getItemModal(item),
-        laba: getItemLaba(item),
-        marginPersen: getItemMargin(item),
+        ...(!isAdmin
+          ? {
+              hpp: getItemUnitModal(item),
+              modal: getItemModal(item),
+              laba: getItemLaba(item),
+              marginPersen: getItemMargin(item),
+            }
+          : {}),
       }))
       const exportKategoris = kategoris.map((kat) => ({
         kategoriId: getKatId(kat),
@@ -384,9 +396,13 @@ export function LaporanPenjualanPage() {
         jumlahItem: kat.jumlahItem ?? '-',
         qty: kat.qty ?? 0,
         total: getKatOmset(kat),
-        modal: getKatModal(kat),
-        laba: getKatLaba(kat),
-        marginPersen: getKatMargin(kat),
+        ...(!isAdmin
+          ? {
+              modal: getKatModal(kat),
+              laba: getKatLaba(kat),
+              marginPersen: getKatMargin(kat),
+            }
+          : {}),
       }))
 
       exportMultiSectionPdf({
