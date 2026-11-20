@@ -23,7 +23,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToExcel, sanitizeFormulaCell } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import {
   LaporanDateFilter,
@@ -54,19 +54,42 @@ const getCategoryBadgeClass = (kategori: string) => {
   return 'border-border bg-muted text-muted-foreground'
 }
 
-// Helper pencegahan Excel/CSV Formula Injection (CWE-1236)
-export function sanitizeFormulaCell(text: string | null | undefined): string {
-  if (text === null || text === undefined) return '-'
-  const str = String(text)
-  if (!str.trim()) return '-'
-  if (/^[=+@\-\t\r]/.test(str)) {
-    return `'${str}`
+// Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
+const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
+const getItemOmset = (i: BarisPenjualanItem) =>
+  Math.max(0, Number(i.total ?? i.penjualanBersih) || 0)
+const getItemModal = (i: BarisPenjualanItem) =>
+  Math.max(0, Number(i.modal ?? i.totalHpp) || 0)
+const getItemLaba = (i: BarisPenjualanItem) => {
+  const rawLaba = i.laba ?? i.labaKotor
+  if (rawLaba !== undefined && rawLaba !== null && Number.isFinite(Number(rawLaba))) {
+    return Number(rawLaba)
   }
-  const trimmed = str.trim()
-  if (/^[=+@\-\t\r]/.test(trimmed)) {
-    return `'${trimmed}`
+  return getItemOmset(i) - getItemModal(i)
+}
+const getItemMargin = (i: BarisPenjualanItem) => {
+  const rawMargin = i.marginPersen ?? i.margin
+  if (rawMargin !== undefined && rawMargin !== null && Number.isFinite(Number(rawMargin))) {
+    return Number(rawMargin)
   }
-  return trimmed
+  const omset = getItemOmset(i)
+  return omset > 0 ? Number(((getItemLaba(i) / omset) * 100).toFixed(1)) : 0
+}
+const getItemHarga = (i: BarisPenjualanItem) => {
+  const rawHarga = i.hargaSatuan ?? i.hargaJual
+  if (rawHarga !== undefined && rawHarga !== null && Number.isFinite(Number(rawHarga))) {
+    return Math.max(0, Number(rawHarga))
+  }
+  const qty = Number(i.qty) || 0
+  return qty > 0 ? Math.max(0, Math.round(getItemOmset(i) / qty)) : 0
+}
+const getItemUnitModal = (i: BarisPenjualanItem) => {
+  const rawHpp = i.hpp
+  if (rawHpp !== undefined && rawHpp !== null && Number.isFinite(Number(rawHpp))) {
+    return Math.max(0, Number(rawHpp))
+  }
+  const qty = Number(i.qty) || 0
+  return qty > 0 ? Math.max(0, Math.round(getItemModal(i) / qty)) : 0
 }
 
 export function LaporanLabaKotorPage() {
@@ -112,44 +135,6 @@ export function LaporanLabaKotorPage() {
     }
   }, [dateFilterParams])
 
-  // Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
-  const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
-  const getItemOmset = (i: BarisPenjualanItem) =>
-    Math.max(0, Number(i.total ?? i.penjualanBersih) || 0)
-  const getItemModal = (i: BarisPenjualanItem) =>
-    Math.max(0, Number(i.modal ?? i.totalHpp) || 0)
-  const getItemLaba = (i: BarisPenjualanItem) => {
-    const rawLaba = i.laba ?? i.labaKotor
-    if (rawLaba !== undefined && rawLaba !== null && Number.isFinite(Number(rawLaba))) {
-      return Number(rawLaba)
-    }
-    return getItemOmset(i) - getItemModal(i)
-  }
-  const getItemMargin = (i: BarisPenjualanItem) => {
-    const rawMargin = i.marginPersen ?? i.margin
-    if (rawMargin !== undefined && rawMargin !== null && Number.isFinite(Number(rawMargin))) {
-      return Number(rawMargin)
-    }
-    const omset = getItemOmset(i)
-    return omset > 0 ? Number(((getItemLaba(i) / omset) * 100).toFixed(1)) : 0
-  }
-  const getItemHarga = (i: BarisPenjualanItem) => {
-    const rawHarga = i.hargaSatuan ?? i.hargaJual
-    if (rawHarga !== undefined && rawHarga !== null && Number.isFinite(Number(rawHarga))) {
-      return Math.max(0, Number(rawHarga))
-    }
-    const qty = Number(i.qty) || 0
-    return qty > 0 ? Math.max(0, Math.round(getItemOmset(i) / qty)) : 0
-  }
-  const getItemUnitModal = (i: BarisPenjualanItem) => {
-    const rawHpp = i.hpp
-    if (rawHpp !== undefined && rawHpp !== null && Number.isFinite(Number(rawHpp))) {
-      return Math.max(0, Number(rawHpp))
-    }
-    const qty = Number(i.qty) || 0
-    return qty > 0 ? Math.max(0, Math.round(getItemModal(i) / qty)) : 0
-  }
-
   const summaryTotalModal = Math.max(
     0,
     Number(
@@ -180,32 +165,22 @@ export function LaporanLabaKotorPage() {
     }
 
     if (marginFilter === 'HIGH') {
-      list = list.filter((i) => (i.marginPersen ?? i.margin ?? 0) >= 35)
+      list = list.filter((i) => getItemMargin(i) >= 35)
     } else if (marginFilter === 'MEDIUM') {
       list = list.filter((i) => {
-        const m = i.marginPersen ?? i.margin ?? 0
+        const m = getItemMargin(i)
         return m >= 20 && m < 35
       })
     } else if (marginFilter === 'LOW') {
-      list = list.filter((i) => (i.marginPersen ?? i.margin ?? 0) < 20)
+      list = list.filter((i) => getItemMargin(i) < 20)
     }
 
     if (sortBy === 'laba_desc') {
-      list.sort(
-        (a, b) =>
-          (b.laba ?? b.labaKotor ?? 0) - (a.laba ?? a.labaKotor ?? 0)
-      )
+      list.sort((a, b) => getItemLaba(b) - getItemLaba(a))
     } else if (sortBy === 'margin_desc') {
-      list.sort(
-        (a, b) =>
-          (b.marginPersen ?? b.margin ?? 0) - (a.marginPersen ?? a.margin ?? 0)
-      )
+      list.sort((a, b) => getItemMargin(b) - getItemMargin(a))
     } else if (sortBy === 'omset_desc') {
-      list.sort(
-        (a, b) =>
-          (b.total ?? b.penjualanBersih ?? 0) -
-          (a.total ?? a.penjualanBersih ?? 0)
-      )
+      list.sort((a, b) => getItemOmset(b) - getItemOmset(a))
     }
 
     return list
@@ -214,9 +189,7 @@ export function LaporanLabaKotorPage() {
   // Hitung menu kontributor laba terbesar
   const topProfitItem = useMemo(() => {
     if (items.length === 0) return null
-    return [...items].sort(
-      (a, b) => (b.laba ?? b.labaKotor ?? 0) - (a.laba ?? a.labaKotor ?? 0)
-    )[0]
+    return [...items].sort((a, b) => getItemLaba(b) - getItemLaba(a))[0]
   }, [items])
 
   const handleExportExcel = () => {

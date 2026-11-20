@@ -3,20 +3,24 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
-import {
-  LaporanLabaKotorPage,
-  sanitizeFormulaCell,
-} from '../LaporanLabaKotorPage'
+import { useAuthStore } from '@/stores/auth-store'
+import { Route } from '@/routes/_authenticated/laporan/laba-kotor/index'
+import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
+import { sanitizeFormulaCell } from '@/lib/excelExport'
 
 const mockExportExcel = vi.fn()
 const mockExportPdf = vi.fn()
 
-vi.mock('@/lib/excelExport', () => ({
-  exportTableToExcel: (options: unknown) => {
-    mockExportExcel(options)
-    return { filename: 'test.xlsx' }
-  },
-}))
+vi.mock('@/lib/excelExport', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/excelExport')>()
+  return {
+    ...actual,
+    exportTableToExcel: (options: unknown) => {
+      mockExportExcel(options)
+      return { filename: 'test.xlsx' }
+    },
+  }
+})
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: (options: unknown) => {
@@ -83,22 +87,42 @@ describe('Audit Keamanan & Fungsional Laporan Laba Kotor (/laporan/laba-kotor)',
     mockExportPdf.mockClear()
   })
 
-  describe('LABA-01: Penyelarasan Otorisasi Route Guard Role', () => {
-    it('mengizinkan peran admin, tu, pengelola, bendahara, dan kepsek', () => {
-      const allowedRoles = ['admin', 'tu', 'pengelola', 'bendahara', 'kepsek']
-
-      // Simulasikan logika hasRole pada route guard index.tsx
-      const testRoleCheck = (userRole: string) => {
-        return ['pengelola', 'bendahara', 'kepsek', 'admin', 'tu'].includes(userRole)
-      }
+  describe('LABA-01: Penegakan Otorisasi Route Guard Role (PRD §9.5)', () => {
+    it('mengizinkan peran pengelola, bendahara, dan kepsek pada route guard beforeLoad', () => {
+      const allowedRoles = ['pengelola', 'bendahara', 'kepsek'] as const
 
       for (const role of allowedRoles) {
-        expect(testRoleCheck(role)).toBe(true)
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (Route.options as any).beforeLoad()).not.toThrow()
       }
+    })
 
-      // Pastikan peran non-authorized tetap ditolak
-      expect(testRoleCheck('siswa')).toBe(false)
-      expect(testRoleCheck('orang_tua')).toBe(false)
+    it('menolak peran admin, tu, kasir, siswa, dan orang_tua pada route guard beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['admin', 'tu', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (Route.options as any).beforeLoad()).toThrow()
+      }
     })
   })
 
