@@ -38,6 +38,18 @@ export function formatNumber(
   return new Intl.NumberFormat('id-ID', options).format(val)
 }
 
+/**
+ * Format angka stok untuk tampilan katalog & inventaris (C.1):
+ * stok negatif menampilkan `-3 (perlu opname)` alih-alih angka biasa.
+ */
+export function formatStokDisplay(stok: number | null | undefined): string {
+  const num = stok ?? 0
+  if (num < 0) {
+    return `${formatNumber(num)} (perlu opname)`
+  }
+  return formatNumber(num)
+}
+
 function parseValidDate(date: string | Date | null | undefined): Date | null {
   if (!date) return null
   const d = typeof date === 'string' ? new Date(date) : date

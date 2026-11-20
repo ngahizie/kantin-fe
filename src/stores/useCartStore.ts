@@ -5,18 +5,25 @@ export interface CartItem {
   menu: MenuItem
   qty: number
   subtotal: number // Integer Rupiah
+  jualMelebihiCatatan?: boolean
+}
+
+export interface AddCartItemOptions {
+  jualMelebihiCatatan?: boolean
 }
 
 export interface CartStoreState {
   items: CartItem[]
   addItem: (
     menu: MenuItem,
-    qty?: number
+    qty?: number,
+    options?: AddCartItemOptions
   ) => { success: boolean; reason?: string }
   removeItem: (menuId: number) => void
   updateQty: (menuId: number, qty: number) => void
-  incrementQty: (menuId: number) => void
+  incrementQty: (menuId: number, options?: { allowExceedStock?: boolean }) => void
   decrementQty: (menuId: number) => void
+  markItemJualMelebihiCatatan: (menuId: number, marked?: boolean) => void
   clearCart: () => void
 
   kasirId: string | number | null
@@ -39,16 +46,19 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
   sesiKasirId: null,
   titikKasirId: null,
 
-  addItem: (menu: MenuItem, qty = 1) => {
-    // Validasi stok awal
+  addItem: (menu: MenuItem, qty = 1, options?: AddCartItemOptions) => {
+    // Validasi menu aktif dan stok awal (kecuali ditandai jualMelebihiCatatan / C.1)
     const availableStock = menu.stokBerjalan ?? 0
-    if (availableStock <= 0 || !menu.aktif) {
+    const allowOverride = Boolean(options?.jualMelebihiCatatan)
+
+    if (!menu.aktif || (availableStock <= 0 && !allowOverride)) {
       return {
         success: false,
         reason: 'Stok menu telah habis atau menu tidak aktif',
       }
     }
 
+    const safeQty = Math.max(1, qty)
     const currentItems = get().items
     const existingIndex = currentItems.findIndex(
       (item) => item.menu.id === menu.id
@@ -56,9 +66,10 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
 
     if (existingIndex > -1) {
       const existingItem = currentItems[existingIndex]
-      const newQty = existingItem.qty + qty
+      const isMarked = allowOverride || Boolean(existingItem.jualMelebihiCatatan)
+      const newQty = existingItem.qty + safeQty
 
-      if (newQty > availableStock) {
+      if (!isMarked && newQty > availableStock) {
         // Jika sudah mencapai batas stok maksimum
         if (existingItem.qty >= availableStock) {
           return {
@@ -82,15 +93,17 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
         ...existingItem,
         qty: newQty,
         subtotal: Math.round(newQty * menu.hargaJual),
+        ...(isMarked ? { jualMelebihiCatatan: true } : {}),
       }
       set({ items: updatedItems })
       return { success: true }
     } else {
-      const initialQty = Math.min(qty, availableStock)
+      const initialQty = allowOverride ? safeQty : Math.min(safeQty, availableStock)
       const newItem: CartItem = {
         menu,
         qty: initialQty,
         subtotal: Math.round(initialQty * menu.hargaJual),
+        ...(allowOverride ? { jualMelebihiCatatan: true } : {}),
       }
       set({ items: [...currentItems, newItem] })
       return { success: true }
@@ -113,11 +126,15 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
       const updated = state.items.map((item) => {
         if (item.menu.id === menuId) {
           const maxStock = item.menu.stokBerjalan ?? 0
-          const finalQty = Math.min(Math.max(1, qty), maxStock)
+          const finalQty = item.jualMelebihiCatatan
+            ? Math.max(1, qty)
+            : Math.min(Math.max(1, qty), maxStock)
+          const stillExceeds = maxStock <= 0 || finalQty > maxStock
           return {
             ...item,
             qty: finalQty,
             subtotal: Math.round(finalQty * item.menu.hargaJual),
+            jualMelebihiCatatan: item.jualMelebihiCatatan ? stillExceeds : false,
           }
         }
         return item
@@ -126,16 +143,32 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
     })
   },
 
-  incrementQty: (menuId: number) => {
+  incrementQty: (menuId: number, options?: { allowExceedStock?: boolean }) => {
     const currentItem = get().items.find((item) => item.menu.id === menuId)
     if (!currentItem) return
 
     const maxStock = currentItem.menu.stokBerjalan ?? 0
-    if (currentItem.qty >= maxStock) {
+    const nextQty = currentItem.qty + 1
+    if (nextQty > maxStock && !currentItem.jualMelebihiCatatan) {
+      if (!options?.allowExceedStock) {
+        return
+      }
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.menu.id === menuId
+            ? {
+                ...item,
+                qty: nextQty,
+                subtotal: Math.round(nextQty * item.menu.hargaJual),
+                jualMelebihiCatatan: true,
+              }
+            : item
+        ),
+      }))
       return
     }
 
-    get().updateQty(menuId, currentItem.qty + 1)
+    get().updateQty(menuId, nextQty)
   },
 
   decrementQty: (menuId: number) => {
@@ -147,6 +180,16 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
     } else {
       get().updateQty(menuId, currentItem.qty - 1)
     }
+  },
+
+  markItemJualMelebihiCatatan: (menuId: number, marked = true) => {
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.menu.id === menuId
+          ? { ...item, jualMelebihiCatatan: marked }
+          : item
+      ),
+    }))
   },
 
   clearCart: () => {

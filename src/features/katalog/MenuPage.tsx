@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { formatRupiah, formatNumber } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatStokDisplay } from '@/lib/formatters'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   getLatestKatalogChangeId,
@@ -794,7 +794,7 @@ export function MenuPage() {
                                   : 'text-foreground'
                               }`}
                             >
-                              {formatNumber(item.stokBerjalan)}
+                              {formatStokDisplay(item.stokBerjalan)}
                             </span>
                             {isHabis ? (
                               <Badge

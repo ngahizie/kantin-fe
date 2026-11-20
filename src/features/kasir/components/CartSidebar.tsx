@@ -179,7 +179,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
         ) : (
           items.map((item) => {
             const maxStock = item.menu.stokBerjalan ?? 0
-            const isMaxReached = item.qty >= maxStock
+            const isMarkedMinus = Boolean(item.jualMelebihiCatatan)
+            const isMaxReached = !isMarkedMinus && item.qty >= maxStock
 
             return (
               <div
@@ -195,19 +196,26 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     >
                       {item.menu.nama}
                     </h5>
-                    <div className='mt-0.5 flex items-center gap-2'>
+                    <div className='mt-0.5 flex flex-wrap items-center gap-1.5'>
                       <span className='text-xs text-muted-foreground tabular-nums'>
                         {formatRupiah(item.menu.hargaJual)} /
                         {item.menu.satuan || 'porsi'}
                       </span>
-                      {isMaxReached && (
+                      {isMarkedMinus ? (
+                        <Badge
+                          variant='outline'
+                          className='rounded-full border border-rose-500/30 bg-rose-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-rose-700 dark:text-rose-300'
+                        >
+                          Lewat catatan
+                        </Badge>
+                      ) : isMaxReached ? (
                         <Badge
                           variant='outline'
                           className='rounded-full border border-amber-500/20 bg-amber-500/15 px-2 py-0 text-[10px] font-semibold tracking-wide uppercase text-amber-700 dark:text-amber-300'
                         >
                           Maksimal stok
                         </Badge>
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
@@ -247,12 +255,13 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       type='button'
                       variant='ghost'
                       size='icon'
-                      disabled={isMaxReached}
-                      onClick={() => incrementQty(item.menu.id)}
-                      className='h-7 w-7 rounded-md text-foreground hover:bg-muted disabled:opacity-30'
+                      onClick={() =>
+                        incrementQty(item.menu.id, { allowExceedStock: true })
+                      }
+                      className='h-7 w-7 rounded-md text-foreground hover:bg-muted'
                       title={
                         isMaxReached
-                          ? 'Maksimal stok tercapai'
+                          ? 'Tambah jumlah (melewati catatan stok / gudang)'
                           : 'Tambah jumlah'
                       }
                     >

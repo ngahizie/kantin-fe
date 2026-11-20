@@ -992,6 +992,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         idempotency_key?: string
         idempotencyKey?: string
         titikKasirId?: number
+        izinkanStokMinus?: boolean
+        alasanStokMinus?: string
       }
       const metodeRaw = String(
         trxPayload.metodeBayar ?? trxPayload.metode_bayar ?? 'SALDO'
@@ -1053,8 +1055,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           }
         }
 
-        // Validasi 4: Stok cukup?
-        if (menuItem.stok < cartItem.qty) {
+        // Validasi 4: Stok cukup? (C.1: izinkan bila izinkanStokMinus=true)
+        if (menuItem.stok < cartItem.qty && trxPayload.izinkanStokMinus !== true) {
           return {
             status: 400,
             data: {

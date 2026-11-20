@@ -29,7 +29,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
+import { formatRupiah, formatNumber, formatDateTime, formatStokDisplay } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
@@ -117,7 +117,7 @@ export function InventarisPage() {
         const stok = item.stokBerjalan ?? item.stok ?? 0
         const min = item.stokMinimum ?? 0
         let status: 'AMAN' | 'MENIPIS' | 'HABIS' = 'AMAN'
-        if (stok === 0) status = 'HABIS'
+        if (stok <= 0) status = 'HABIS'
         else if (stok <= min) status = 'MENIPIS'
 
         if (selectedStatus !== 'ALL' && selectedStatus !== status) {
@@ -162,7 +162,7 @@ export function InventarisPage() {
       totalNilai += nilai
       totalUnit += stok
 
-      if (stok === 0) {
+      if (stok <= 0) {
         countHabis++
       } else if (stok <= min) {
         countMenipis++
@@ -230,7 +230,7 @@ export function InventarisPage() {
       const stok = item.stokBerjalan ?? item.stok ?? 0
       const min = item.stokMinimum ?? 0
       let status = 'AMAN'
-      if (stok === 0) status = 'HABIS'
+      if (stok <= 0) status = 'HABIS'
       else if (stok <= min) status = 'MENIPIS'
 
       const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
@@ -270,7 +270,7 @@ export function InventarisPage() {
         const stok = item.stokBerjalan ?? item.stok ?? 0
         const min = item.stokMinimum ?? 0
         let status = 'AMAN'
-        if (stok === 0) status = 'HABIS'
+        if (stok <= 0) status = 'HABIS'
         else if (stok <= min) status = 'MENIPIS'
 
         const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
@@ -583,7 +583,7 @@ export function InventarisPage() {
                       const totalNilai = item.nilaiPersediaan ?? stok * hpp
 
                       let status: 'AMAN' | 'MENIPIS' | 'HABIS' = 'AMAN'
-                      if (stok === 0) status = 'HABIS'
+                      if (stok <= 0) status = 'HABIS'
                       else if (stok <= min) status = 'MENIPIS'
 
                       const kategoriNama = item.kategoriId
@@ -644,10 +644,18 @@ export function InventarisPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className='text-right font-mono font-bold text-sm tabular-nums'>
-                            {formatNumber(stok)}{' '}
-                            <span className='text-xs font-normal text-muted-foreground'>
-                              unit
-                            </span>
+                            {stok < 0 ? (
+                              <span className='text-rose-600 dark:text-rose-400'>
+                                {formatStokDisplay(stok)}
+                              </span>
+                            ) : (
+                              <>
+                                {formatNumber(stok)}{' '}
+                                <span className='text-xs font-normal text-muted-foreground'>
+                                  unit
+                                </span>
+                              </>
+                            )}
                           </TableCell>
                           <TableCell className='text-right font-mono text-xs text-muted-foreground tabular-nums'>
                             {formatNumber(min)}

@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { MenuItem } from '@/features/katalog/types'
+import type { AddCartItemOptions } from '@/stores/useCartStore'
 import MenuItemCard from './MenuItemCard'
 
 export interface MenuGridProps {
   menus: MenuItem[]
   loading?: boolean
   getCartQty: (menuId: number) => number
-  onAddToCart: (menu: MenuItem) => void
+  onAddToCart: (menu: MenuItem, options?: AddCartItemOptions) => void
   onResetFilters?: () => void
   hasFilters?: boolean
 }
