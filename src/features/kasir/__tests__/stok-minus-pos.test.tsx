@@ -84,7 +84,7 @@ describe('UI Penjualan Stok Gudang / Minus (C.1)', () => {
     useCartStore.getState().addItem(menuHabisAktif, 1, { jualMelebihiCatatan: true })
     useCartStore.getState().addItem(menuTerbatas, 2)
 
-    const { getByText, getByTitle, unmount } = await render(
+    const { getByText, getByTitle, getByLabelText, unmount } = await render(
       <CartSidebar
         onCheckout={vi.fn()}
         onCashCheckout={vi.fn()}
@@ -110,6 +110,20 @@ describe('UI Penjualan Stok Gudang / Minus (C.1)', () => {
     expect(
       useCartStore.getState().items.find((it) => it.menu.id === 303)?.jualMelebihiCatatan
     ).toBe(true)
+
+    // Ketik jumlah langsung di input qty (misal 40) lalu turunkan ke 1
+    const qtyInput = getByLabelText('Jumlah Lemper Ayam')
+    await qtyInput.fill('40')
+    expect(useCartStore.getState().getItemQty(303)).toBe(40)
+    expect(
+      useCartStore.getState().items.find((it) => it.menu.id === 303)?.jualMelebihiCatatan
+    ).toBe(true)
+
+    await qtyInput.fill('1')
+    expect(useCartStore.getState().getItemQty(303)).toBe(1)
+    expect(
+      useCartStore.getState().items.find((it) => it.menu.id === 303)?.jualMelebihiCatatan
+    ).toBe(false)
 
     await unmount()
   })
