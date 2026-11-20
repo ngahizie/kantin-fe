@@ -114,6 +114,11 @@ function RefundOrangTuaFormContent({
     dbNamaOrtu || (siswa.nama_ortu && siswa.nama_ortu !== '-' ? siswa.nama_ortu : '') || ''
   )
   const [catatan, setCatatan] = useState(`Pengembalian sisa saldo kelulusan/nonaktif ${siswa.nama}`)
+  const [clientRefNo] = useState(() => {
+    const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    const randSuffix = Math.random().toString(36).slice(2, 8).toUpperCase()
+    return `REFUND-ORTU-${dateCode}-${randSuffix}`
+  })
   const [buktiUrl, setBuktiUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -204,16 +209,16 @@ function RefundOrangTuaFormContent({
     if (!isValidSubmit || isSubmitting) return
 
     setIsSubmitting(true)
-    const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const seq = Math.floor(1000 + Math.random() * 9000)
-    const refNo = `REFUND-ORTU-${dateCode}-${seq}`
+    const refNo = clientRefNo
+    const cleanCatatan = (
+      catatan.trim() ||
+      `Refund saldo ke orang tua: ${namaPenerima.trim()} (${metode})`
+    ).slice(0, 255)
 
     const payload = {
       siswaId: siswa.siswa_id,
       referensiId: refNo,
-      catatan:
-        catatan.trim() ||
-        `Refund saldo ke orang tua: ${namaPenerima.trim()} (${metode})`,
+      catatan: cleanCatatan,
     }
 
     try {
@@ -549,13 +554,25 @@ function RefundOrangTuaFormContent({
 
           {/* Catatan / Keterangan */}
           <div className='space-y-1.5'>
-            <Label htmlFor='catatan' className='text-xs'>
-              Catatan / Berita Acara Refund
-            </Label>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='catatan' className='text-xs'>
+                Catatan / Berita Acara Refund
+              </Label>
+              <span
+                className={`text-[10px] tabular-nums ${
+                  catatan.length >= 255
+                    ? 'font-semibold text-destructive'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {catatan.length}/255
+              </span>
+            </div>
             <Textarea
               id='catatan'
+              maxLength={255}
               value={catatan}
-              onChange={(e) => setCatatan(e.target.value)}
+              onChange={(e) => setCatatan(e.target.value.slice(0, 255))}
               placeholder='Contoh: Pengembalian sisa saldo kelulusan tahun ajaran 2025/2026'
               className='text-xs min-h-[60px]'
             />

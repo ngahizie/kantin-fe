@@ -71,6 +71,11 @@ function PindahSaldoFormContent({
   const [beritaAcara, setBeritaAcara] = useState(
     `Pemindahan sisa saldo kelulusan ${siswaAsal.nama} (${siswaAsal.nis}) ke saudara kandung aktif.`
   )
+  const [clientRefNo] = useState(() => {
+    const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    const randSuffix = Math.random().toString(36).slice(2, 8).toUpperCase()
+    return `TRF-SDR-${dateCode}-${randSuffix}`
+  })
   const [agreement, setAgreement] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -204,15 +209,17 @@ function PindahSaldoFormContent({
     if (!isValidSubmit || isSubmitting || !targetSibling) return
 
     setIsSubmitting(true)
-    const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const seq = Math.floor(1000 + Math.random() * 9000)
-    const refNo = `TRF-SDR-${dateCode}-${seq}`
+    const refNo = clientRefNo
+    const cleanCatatan = (
+      beritaAcara.trim() ||
+      `Pindah saldo ke saudara: ${targetSibling.nama}`
+    ).slice(0, 255)
 
     const payload = {
       siswaSumberId: siswaAsal.siswa_id,
       siswaTujuanId: targetSibling.siswa_id,
       referensiId: refNo,
-      catatan: beritaAcara.trim() || `Pindah saldo ke saudara: ${targetSibling.nama}`,
+      catatan: cleanCatatan,
     }
 
     try {
@@ -499,13 +506,25 @@ function PindahSaldoFormContent({
 
           {/* Input Berita Acara */}
           <div className='space-y-1.5'>
-            <Label htmlFor='beritaAcara' className='text-xs'>
-              Berita Acara / Keterangan Transfer <span className='text-destructive'>*</span>
-            </Label>
+            <div className='flex items-center justify-between'>
+              <Label htmlFor='beritaAcara' className='text-xs'>
+                Berita Acara / Keterangan Transfer <span className='text-destructive'>*</span>
+              </Label>
+              <span
+                className={`text-[10px] tabular-nums ${
+                  beritaAcara.length >= 255
+                    ? 'font-semibold text-destructive'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {beritaAcara.length}/255
+              </span>
+            </div>
             <Textarea
               id='beritaAcara'
+              maxLength={255}
               value={beritaAcara}
-              onChange={(e) => setBeritaAcara(e.target.value)}
+              onChange={(e) => setBeritaAcara(e.target.value.slice(0, 255))}
               placeholder='Contoh: Pemindahan sisa saldo kakak yang telah lulus ke adik kandung.'
               className='text-xs min-h-[60px]'
             />

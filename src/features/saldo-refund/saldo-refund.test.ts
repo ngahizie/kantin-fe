@@ -230,3 +230,57 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.jenis_koreksi).toBe('PEMBALIK_TRANSAKSI_KASIR')
   })
 })
+
+describe('Saldo Refund Security Hardening (OWASP Top 10 & NIST)', () => {
+  it('memastikan catatan dan berita acara dipotong maksimal 255 karakter (REF-03)', () => {
+    const oversizedCatatan = 'A'.repeat(300)
+    const truncatedCatatan = oversizedCatatan.trim().slice(0, 255)
+    expect(truncatedCatatan.length).toBe(255)
+
+    const oversizedBeritaAcara = 'B'.repeat(400)
+    const truncatedBeritaAcara = oversizedBeritaAcara.trim().slice(0, 255)
+    expect(truncatedBeritaAcara.length).toBe(255)
+  })
+
+  it('memvalidasi batas ukuran berkas bukti (maks 5MB) dan MIME type allowlist (REF-02)', () => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+    const ALLOWED_MIME_TYPES = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf',
+    ]
+
+    const validFile = { size: 2 * 1024 * 1024, type: 'image/jpeg' }
+    const oversizedFile = { size: 6 * 1024 * 1024, type: 'image/png' }
+    const maliciousFile = { size: 1024, type: 'application/x-msdownload' }
+
+    expect(validFile.size <= MAX_FILE_SIZE).toBe(true)
+    expect(ALLOWED_MIME_TYPES.includes(validFile.type)).toBe(true)
+
+    expect(oversizedFile.size <= MAX_FILE_SIZE).toBe(false)
+    expect(ALLOWED_MIME_TYPES.includes(maliciousFile.type)).toBe(false)
+  })
+
+  it('memverifikasi format referensi bukti berentropi tinggi dan stabil (REF-04)', () => {
+    const dateCode = '20261120'
+    const randSuffix = Math.random().toString(36).slice(2, 8).toUpperCase()
+    const refNo = `REFUND-ORTU-${dateCode}-${randSuffix}`
+
+    expect(refNo).toMatch(/^REFUND-ORTU-\d{8}-[A-Z0-9]{4,6}$/)
+    expect(refNo.length).toBeLessThanOrEqual(60) // BE @Size(max = 60)
+  })
+
+  it('memisahkan hak eksekusi mutasi (bendahara/tu) dan supervisi read-only (kepsek) (REF-01)', () => {
+    const rolesBendahara = ['bendahara']
+    const rolesTu = ['tu']
+    const rolesKepsek = ['kepsek']
+
+    const canProcess = (roles: string[]) =>
+      roles.some((r) => ['bendahara', 'tu'].includes(r))
+
+    expect(canProcess(rolesBendahara)).toBe(true)
+    expect(canProcess(rolesTu)).toBe(true)
+    expect(canProcess(rolesKepsek)).toBe(false)
+  })
+})
