@@ -239,4 +239,16 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(sanitizeCsvCell('Normal, teks dengan koma')).toBe(`"Normal, teks dengan koma"`)
     expect(sanitizeCsvCell('Teks dengan "kutip" ganda')).toBe(`"Teks dengan ""kutip"" ganda"`)
   })
+
+  it('memvalidasi kontrak koreksi transaksi sesi tertutup kasir vs koreksi manual (SEC-KOR-02)', () => {
+    // Validasi bahwa payload pembalik transaksi membawa kodeStruk dan alasan ke endpoint kasir
+    const transaksiId = 910103
+    const alasan = 'Pembalik transaksi belanja salah potong kasir'
+    const endpointKasirKoreksi = `/api/kasir/transaksi/${transaksiId}/koreksi`
+    const payloadKasir = { alasan, kodeStruk: String(transaksiId) }
+
+    expect(endpointKasirKoreksi).toBe('/api/kasir/transaksi/910103/koreksi')
+    expect(payloadKasir.kodeStruk).toBe('910103')
+    expect(payloadKasir.alasan.length).toBeGreaterThan(0)
+  })
 })

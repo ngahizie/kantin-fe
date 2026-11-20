@@ -158,73 +158,119 @@ function KoreksiMutasiFormContent({
 
     setIsSubmitting(true)
     try {
-      const payload = {
-        subjekTipe: 'SISWA' as const,
-        siswaId: Number(selectedSiswaId),
-        arah,
-        nominal: nominalNum,
-        alasan: alasan.trim(),
-        referensiId: referensiId.trim(),
-        jenisKoreksi,
-        transaksiTerkaitId: initialTransaction?.id,
+      let newKoreksi: MutasiKoreksiItem
+
+      if (initialTransaction) {
+        // Pembalik transaksi kasir sesi tertutup (PRD §6.3, §9.2, issue #212)
+        // Panggil endpoint resmi transaksi koreksi agar stok dipulihkan dan status transaksi VOID ditegakkan di backend
+        await apiClient.post(
+          `/api/kasir/transaksi/${initialTransaction.id}/koreksi`,
+          {
+            alasan: alasan.trim(),
+            kodeStruk: String(initialTransaction.id),
+          }
+        )
+
+        const fallbackId = `KOR-${referensiId.trim()}`
+        const fallbackItem: MutasiKoreksiItem = {
+          id: fallbackId,
+          referensi_id: referensiId.trim(),
+          referensiId: referensiId.trim(),
+          waktu: new Date().toISOString(),
+          siswa_id: Number(selectedSiswaId),
+          siswaId: Number(selectedSiswaId),
+          siswa_nama: siswaNama,
+          siswaNama,
+          siswa_info: siswaInfo,
+          siswaInfo,
+          jenis_koreksi: 'PEMBALIK_TRANSAKSI_KASIR',
+          jenisKoreksi: 'PEMBALIK_TRANSAKSI_KASIR',
+          arah: 'KREDIT',
+          nominal: nominalNum,
+          saldo_sebelum: saldoSaatIni,
+          saldoSebelum: saldoSaatIni,
+          saldo_setelah: saldoSetelah,
+          saldoSetelah,
+          alasan: alasan.trim(),
+          keterangan: alasan.trim(),
+          bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendahara_nama: bendaharaNama,
+          bendaharaNama,
+          transaksi_terkait_id: initialTransaction.id,
+          transaksiTerkaitId: initialTransaction.id,
+          sesi_kasir_id: initialTransaction.sesi_kasir_id,
+          sesiKasirId: initialTransaction.sesi_kasir_id,
+        }
+        newKoreksi = fallbackItem
+
+        toast.success(
+          `Transaksi ${initialTransaction.id} berhasil dibalik dan dikoreksi!`
+        )
+      } else {
+        const payload = {
+          subjekTipe: 'SISWA' as const,
+          siswaId: Number(selectedSiswaId),
+          arah,
+          nominal: nominalNum,
+          alasan: alasan.trim(),
+          referensiId: referensiId.trim(),
+          jenisKoreksi,
+        }
+
+        const res = await apiClient.post('/api/saldo/koreksi', payload)
+
+        const fallbackId = `KOR-${referensiId.trim()}`
+        const rawData =
+          (res.data?.data as Record<string, unknown>)?.mutasi ??
+          (res.data?.data && typeof res.data.data === 'object' && ('referensiId' in res.data.data || 'referensi_id' in res.data.data)
+            ? res.data.data
+            : null)
+
+        const fallbackItem: MutasiKoreksiItem = {
+          id: fallbackId,
+          referensi_id: referensiId.trim(),
+          referensiId: referensiId.trim(),
+          waktu: new Date().toISOString(),
+          siswa_id: Number(selectedSiswaId),
+          siswaId: Number(selectedSiswaId),
+          siswa_nama: siswaNama,
+          siswaNama,
+          siswa_info: siswaInfo,
+          siswaInfo,
+          jenis_koreksi: jenisKoreksi,
+          jenisKoreksi,
+          arah,
+          nominal: nominalNum,
+          saldo_sebelum: saldoSaatIni,
+          saldoSebelum: saldoSaatIni,
+          saldo_setelah: saldoSetelah,
+          saldoSetelah,
+          alasan: alasan.trim(),
+          keterangan: alasan.trim(),
+          bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
+          bendahara_nama: bendaharaNama,
+          bendaharaNama,
+        }
+
+        newKoreksi = rawData
+          ? mapMutasiKoreksiItem(
+              {
+                ...fallbackItem,
+                ...(rawData as Record<string, unknown>),
+                siswaNama: (rawData as Record<string, unknown>).siswaNama ?? siswaNama,
+                siswaInfo: (rawData as Record<string, unknown>).siswaInfo ?? siswaInfo,
+                bendaharaNama: (rawData as Record<string, unknown>).bendaharaNama ?? bendaharaNama,
+              },
+              students
+            )
+          : fallbackItem
+
+        toast.success(
+          `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
+        )
       }
-
-      const res = await apiClient.post('/api/saldo/koreksi', payload)
-
-      const fallbackId = `KOR-${referensiId.trim()}`
-      const rawData =
-        res.data?.data?.mutasi ??
-        (res.data?.data && typeof res.data.data === 'object' && ('referensiId' in res.data.data || 'referensi_id' in res.data.data)
-          ? res.data.data
-          : null)
-
-      const fallbackItem: MutasiKoreksiItem = {
-        id: fallbackId,
-        referensi_id: referensiId.trim(),
-        referensiId: referensiId.trim(),
-        waktu: new Date().toISOString(),
-        siswa_id: Number(selectedSiswaId),
-        siswaId: Number(selectedSiswaId),
-        siswa_nama: siswaNama,
-        siswaNama,
-        siswa_info: siswaInfo,
-        siswaInfo,
-        jenis_koreksi: jenisKoreksi,
-        jenisKoreksi,
-        arah,
-        nominal: nominalNum,
-        saldo_sebelum: saldoSaatIni,
-        saldoSebelum: saldoSaatIni,
-        saldo_setelah: saldoSetelah,
-        saldoSetelah,
-        alasan: alasan.trim(),
-        keterangan: alasan.trim(),
-        bendahara_id: auth.user?.userId ? Number(auth.user.userId) : 0,
-        bendaharaId: auth.user?.userId ? Number(auth.user.userId) : 0,
-        bendahara_nama: bendaharaNama,
-        bendaharaNama,
-        transaksi_terkait_id: initialTransaction?.id,
-        transaksiTerkaitId: initialTransaction?.id,
-        sesi_kasir_id: initialTransaction?.sesi_kasir_id,
-        sesiKasirId: initialTransaction?.sesi_kasir_id,
-      }
-
-      const newKoreksi: MutasiKoreksiItem = rawData
-        ? mapMutasiKoreksiItem(
-            {
-              ...fallbackItem,
-              ...(rawData as Record<string, unknown>),
-              siswaNama: (rawData as Record<string, unknown>).siswaNama ?? siswaNama,
-              siswaInfo: (rawData as Record<string, unknown>).siswaInfo ?? siswaInfo,
-              bendaharaNama: (rawData as Record<string, unknown>).bendaharaNama ?? bendaharaNama,
-            },
-            students
-          )
-        : fallbackItem
-
-      toast.success(
-        `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
-      )
 
       onSuccess?.(newKoreksi)
       onCancel()

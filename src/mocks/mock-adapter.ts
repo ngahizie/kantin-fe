@@ -1242,8 +1242,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       return successResponse
     }
 
-    // --- 4b. Kasir: Refund / Void Transaksi (BE #292 wajib alasan + kodeStruk) ---
-    const refundMatch = url.match(/\/kasir\/transaksi\/(\d+)\/(?:refund|void)/)
+    // --- 4b. Kasir: Refund / Void / Koreksi Transaksi (BE #292 & PRD §6.3, §9.2) ---
+    const refundMatch = url.match(/\/kasir\/transaksi\/(\d+)\/(?:refund|void|koreksi)/)
     if (refundMatch && method === 'post') {
       const trxId = Number(refundMatch[1])
       const refundPayload =
@@ -1257,7 +1257,73 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           data: {
             code: 400,
             status: 'BAD_REQUEST',
-            message: 'Alasan refund wajib diisi',
+            message: 'Alasan koreksi/refund wajib diisi',
+          },
+        }
+      }
+
+      // Check if this is a closed session transaction correction
+      const targetSesiTutup = transaksiSesiTutupList.find(
+        (t) => String(t.id) === String(trxId)
+      )
+      if (targetSesiTutup) {
+        if (targetSesiTutup.status === 'DIKOREKSI' || targetSesiTutup.status === 'VOID') {
+          return {
+            status: 400,
+            data: {
+              code: 400,
+              status: 'BAD_REQUEST',
+              message: 'Transaksi sudah di-refund atau dikoreksi sebelumnya',
+            },
+          }
+        }
+
+        targetSesiTutup.status = 'DIKOREKSI'
+        targetSesiTutup.koreksi_referensi_id = `BA-KOR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${trxId}`
+        targetSesiTutup.dapatDikoreksi = false
+        targetSesiTutup.dapat_dikoreksi = false
+        targetSesiTutup.alasanVoid = alasanFinal
+        targetSesiTutup.alasan_void = alasanFinal
+
+        const targetSiswa = siswaList.find((s) => s.siswa_id === targetSesiTutup.siswa_id)
+        const saldoAwal = targetSiswa ? targetSiswa.saldo : 0
+        if (targetSiswa) {
+          targetSiswa.saldo += targetSesiTutup.total
+        }
+
+        const newKoreksiItem: MutasiKoreksiMock = {
+          id: `KOR-${Date.now()}`,
+          referensi_id: targetSesiTutup.koreksi_referensi_id,
+          waktu: new Date().toISOString(),
+          siswa_id: targetSesiTutup.siswa_id,
+          siswa_nama: targetSesiTutup.siswa_nama,
+          siswa_info: targetSesiTutup.siswa_info,
+          jenis_koreksi: 'PEMBALIK_TRANSAKSI_KASIR',
+          arah: 'KREDIT',
+          nominal: targetSesiTutup.total,
+          saldo_sebelum: saldoAwal,
+          saldo_setelah: targetSiswa ? targetSiswa.saldo : targetSesiTutup.total,
+          alasan: alasanFinal,
+          bendahara_id: 1,
+          bendahara_nama: 'Bendahara',
+          transaksi_terkait_id: targetSesiTutup.id,
+          sesi_kasir_id: targetSesiTutup.sesi_kasir_id,
+        }
+        koreksiList.unshift(newKoreksiItem)
+
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Transaksi sesi tertutup berhasil dikoreksi',
+            data: {
+              id: trxId,
+              nomorStruk: String(trxId),
+              status: 'VOID',
+              voidAlasan: alasanFinal,
+              total: targetSesiTutup.total,
+            },
           },
         }
       }
