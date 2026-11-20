@@ -87,7 +87,6 @@ export function sanitizeFilename(filename: string): string {
 }
 
 /**
-/**
  * Mencegah Formula Injection (CSV/Excel Formula Injection CWE-1236)
  * Menambahkan prefix tanda petik tunggal (') jika string diawali oleh karakter kontrol formula
  */
@@ -117,7 +116,6 @@ export function sanitizeFormulaCell(text: string | null | undefined): string {
     return `'${trimmed}`
   }
   return trimmed
-}
 }
 
 /**

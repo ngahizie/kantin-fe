@@ -8,8 +8,10 @@ import { Route } from '@/routes/_authenticated/laporan/laba-kotor/index'
 import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
 import { sanitizeFormulaCell } from '@/lib/excelExport'
 
-const mockExportExcel = vi.fn()
-const mockExportPdf = vi.fn()
+const { mockExportExcel, mockExportPdf } = vi.hoisted(() => ({
+  mockExportExcel: vi.fn(),
+  mockExportPdf: vi.fn(),
+}))
 
 vi.mock('@/lib/excelExport', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/excelExport')>()
