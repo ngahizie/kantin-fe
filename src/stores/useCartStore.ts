@@ -20,7 +20,11 @@ export interface CartStoreState {
     options?: AddCartItemOptions
   ) => { success: boolean; reason?: string }
   removeItem: (menuId: number) => void
-  updateQty: (menuId: number, qty: number) => void
+  updateQty: (
+    menuId: number,
+    qty: number,
+    options?: { allowExceedStock?: boolean }
+  ) => void
   incrementQty: (menuId: number, options?: { allowExceedStock?: boolean }) => void
   decrementQty: (menuId: number) => void
   markItemJualMelebihiCatatan: (menuId: number, marked?: boolean) => void
@@ -116,8 +120,13 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
     }))
   },
 
-  updateQty: (menuId: number, qty: number) => {
-    if (qty <= 0) {
+  updateQty: (
+    menuId: number,
+    qty: number,
+    options?: { allowExceedStock?: boolean }
+  ) => {
+    const safeQty = Math.floor(qty)
+    if (!Number.isFinite(safeQty) || safeQty <= 0) {
       get().removeItem(menuId)
       return
     }
@@ -126,15 +135,17 @@ export const useCartStore = create<CartStoreState>((set, get) => ({
       const updated = state.items.map((item) => {
         if (item.menu.id === menuId) {
           const maxStock = item.menu.stokBerjalan ?? 0
-          const finalQty = item.jualMelebihiCatatan
-            ? Math.max(1, qty)
-            : Math.min(Math.max(1, qty), maxStock)
-          const stillExceeds = maxStock <= 0 || finalQty > maxStock
+          const allowExceed =
+            Boolean(options?.allowExceedStock) || Boolean(item.jualMelebihiCatatan)
+          const finalQty = allowExceed
+            ? Math.max(1, safeQty)
+            : Math.min(Math.max(1, safeQty), maxStock)
+          const exceedsStock = maxStock <= 0 || finalQty > maxStock
           return {
             ...item,
             qty: finalQty,
             subtotal: Math.round(finalQty * item.menu.hargaJual),
-            jualMelebihiCatatan: item.jualMelebihiCatatan ? stillExceeds : false,
+            jualMelebihiCatatan: allowExceed ? exceedsStock : false,
           }
         }
         return item

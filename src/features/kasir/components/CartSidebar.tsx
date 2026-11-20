@@ -32,6 +32,67 @@ import {
 } from '../cash-payment'
 import type { MetodeBayarKasir } from '../types'
 
+interface CartQtyInputProps {
+  qty: number
+  menuName: string
+  disabled?: boolean
+  onChangeQty: (nextQty: number) => void
+}
+
+function CartQtyInput({
+  qty,
+  menuName,
+  disabled = false,
+  onChangeQty,
+}: CartQtyInputProps) {
+  const [draft, setDraft] = useState<string | null>(null)
+
+  return (
+    <input
+      type='text'
+      inputMode='numeric'
+      maxLength={4}
+      disabled={disabled}
+      aria-label={`Jumlah ${menuName}`}
+      title='Ketik langsung jumlah pesanan'
+      value={draft ?? String(qty)}
+      onFocus={(e) => {
+        setDraft(String(qty))
+        e.currentTarget.select()
+      }}
+      onChange={(e) => {
+        const digits = e.target.value.replace(/\D/g, '')
+        setDraft(digits)
+        if (digits !== '') {
+          const parsed = parseInt(digits, 10)
+          if (parsed >= 1) {
+            onChangeQty(parsed)
+          }
+        }
+      }}
+      onBlur={() => {
+        if (draft !== null) {
+          const parsed = parseInt(draft, 10)
+          if (Number.isFinite(parsed) && parsed >= 1) {
+            onChangeQty(parsed)
+          }
+          setDraft(null)
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          e.currentTarget.blur()
+        } else if (e.key === 'Escape') {
+          setDraft(null)
+          e.currentTarget.blur()
+        }
+      }}
+      className='h-7 w-12 rounded-md bg-transparent text-center font-mono text-xs font-bold tabular-nums text-foreground outline-none transition-colors hover:bg-muted/50 focus:bg-muted/60 focus:ring-1 focus:ring-primary/50 disabled:opacity-50'
+    />
+  )
+}
+
 export interface CartSidebarProps {
   onCheckout?: () => void
   onCashCheckout?: (uangDiterima: number) => void
@@ -57,6 +118,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 }) => {
   const {
     items,
+    updateQty,
     incrementQty,
     decrementQty,
     removeItem,
@@ -247,9 +309,16 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       <Minus className='h-3.5 w-3.5' />
                     </Button>
 
-                    <span className='min-w-[2rem] text-center text-xs font-bold tabular-nums text-foreground'>
-                      {item.qty}
-                    </span>
+                    <CartQtyInput
+                      qty={item.qty}
+                      menuName={item.menu.nama}
+                      disabled={isProcessing}
+                      onChangeQty={(nextQty) =>
+                        updateQty(item.menu.id, nextQty, {
+                          allowExceedStock: true,
+                        })
+                      }
+                    />
 
                     <Button
                       type='button'
