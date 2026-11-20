@@ -80,8 +80,6 @@ describe('LaporanDateFilter', () => {
     const triggerBtn = screen.getByRole('button', { name: /Hari Ini/i })
     await userEvent.click(triggerBtn)
 
-    const inputs = screen.getByRole('textbox').elements()
-    // Atau cari input date:
     const applyRangeBtn = screen.getByRole('button', { name: 'Terapkan Rentang', exact: true })
     await expect.element(applyRangeBtn).toBeInTheDocument()
   })
