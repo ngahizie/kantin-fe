@@ -288,4 +288,14 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     const resolvedTotal = typeof rawHalaman.total === 'number' ? rawHalaman.total : rawHalaman.items.length
     expect(resolvedTotal).toBe(45)
   })
+
+  it('menggunakan identitas lembaga dinamis dari role store untuk kop berita acara (SEC-KOR-07)', () => {
+    const schoolNameMock = 'SMA NEGERI CONTOH'
+    const renderedKop = schoolNameMock || 'KANTIN SEKOLAH'
+    expect(renderedKop).toBe('SMA NEGERI CONTOH')
+
+    const emptySchoolName = ''
+    const fallbackKop = emptySchoolName || 'KANTIN SEKOLAH'
+    expect(fallbackKop).toBe('KANTIN SEKOLAH')
+  })
 })

@@ -90,7 +90,7 @@ export function KoreksiBendaharaPage() {
     useState<MutasiKoreksiItem | null>(null)
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
 
-  const { currentRole } = useRoleStore()
+  const { currentRole, schoolName, userName } = useRoleStore()
   const isKepsek = currentRole === 'kepsek'
   const canAccessSesiTutup = !isKepsek
 
@@ -1128,7 +1128,7 @@ export function KoreksiBendaharaPage() {
             >
               <div className='space-y-1 border-b border-border pb-3 text-center'>
                 <h3 className='text-sm font-bold tracking-wider text-foreground uppercase'>
-                  SMA NEGERI 1 SKOOLIA
+                  {schoolName || 'KANTIN SEKOLAH'}
                 </h3>
                 <p className='text-[11px] text-muted-foreground'>
                   BAGIAN KEUANGAN & BENDAHARA SEKOLAH
@@ -1226,7 +1226,7 @@ export function KoreksiBendaharaPage() {
                     Mengetahui Kepala Sekolah,
                   </p>
                   <p className='font-semibold underline'>
-                    Dr. Ir. H. Supriyanto, M.Pd.
+                    {isKepsek && userName ? userName : 'Kepala Sekolah'}
                   </p>
                 </div>
               </div>
