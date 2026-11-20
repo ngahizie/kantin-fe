@@ -554,8 +554,12 @@ export interface TransaksiSesiTutupMock {
     harga: number
     subtotal: number
   }>
-  status: 'SELESAI' | 'DIKOREKSI'
+  status: 'SELESAI' | 'DIKOREKSI' | 'VOID'
   koreksi_referensi_id?: string
+  dapatDikoreksi?: boolean
+  dapat_dikoreksi?: boolean
+  alasanVoid?: string
+  alasan_void?: string
 }
 
 export const MOCK_SETORAN_KAS: SetoranKasTUMock[] = [
