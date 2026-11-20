@@ -35,6 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import {
   mapMutasiKoreksiItem,
+  generateSecureReferensiId,
   type JenisKoreksi,
   type ArahMutasi,
   type MutasiKoreksiItem,
@@ -96,12 +97,9 @@ function KoreksiMutasiFormContent({
     return ''
   })
 
-  const [referensiId, setReferensiId] = useState<string>(() => {
-    const now = new Date()
-    const dateCode = now.toISOString().slice(0, 10).replace(/-/g, '')
-    const rand = Math.floor(1000 + Math.random() * 9000)
-    return `BA-KOR-${dateCode}-${rand}`
-  })
+  const [referensiId, setReferensiId] = useState<string>(() =>
+    generateSecureReferensiId('BA-KOR')
+  )
 
   const [isAgreed, setIsAgreed] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)

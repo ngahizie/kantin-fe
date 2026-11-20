@@ -4,6 +4,7 @@ import {
   pindahSaldoSchema,
   mapTransaksiKasirItemToSesiTutup,
   mapMutasiKoreksiItem,
+  generateSecureReferensiId,
 } from './types'
 
 describe('Refund Saldo Orang Tua Zod Validation Schema', () => {
@@ -250,5 +251,14 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(endpointKasirKoreksi).toBe('/api/kasir/transaksi/910103/koreksi')
     expect(payloadKasir.kodeStruk).toBe('910103')
     expect(payloadKasir.alasan.length).toBeGreaterThan(0)
+  })
+
+  it('menghasilkan nomor referensi berita acara berbasis CSPRNG anti-tabrakan (SEC-KOR-03)', () => {
+    const ref1 = generateSecureReferensiId('BA-KOR')
+    const ref2 = generateSecureReferensiId('BA-KOR')
+
+    expect(ref1).not.toBe(ref2)
+    expect(ref1).toMatch(/^BA-KOR-\d{8}-[A-F0-9]{8}$/)
+    expect(ref1.length).toBeLessThanOrEqual(56) // Sesuai batas aman idempotency_key DB
   })
 })
