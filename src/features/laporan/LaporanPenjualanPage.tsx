@@ -1,9 +1,11 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
+  AlertTriangle,
   Banknote,
   Layers,
   Loader2,
+  RotateCcw,
   ShoppingCart,
   Store,
   Tag,
@@ -12,6 +14,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -72,6 +75,8 @@ export function LaporanPenjualanPage() {
   const [kategoris, setKategoris] = useState<BarisPenjualanKategori[]>([])
   const [kasirs, setKasirs] = useState<BarisPenjualanKasir[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isKasirError, setIsKasirError] = useState(false)
+  const [isRetryingKasir, setIsRetryingKasir] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'item' | 'kategori' | 'kasir'>('item')
   const [searchQuery, setSearchQuery] = useState('')
@@ -90,12 +95,15 @@ export function LaporanPenjualanPage() {
     const init = async () => {
       try {
         setIsLoading(true)
+        setIsKasirError(false)
         const [resRingkasan, resItems, resKategoris] = await Promise.all([
           laporanApi.getPenjualan(dateFilterParams),
           laporanApi.getPenjualanPerItem(dateFilterParams),
           laporanApi.getPenjualanPerKategori(dateFilterParams),
         ])
+        let kasirFailed = false
         const resKasirs = await laporanApi.getPenjualanPerKasir(dateFilterParams).catch((err) => {
+          kasirFailed = true
           // eslint-disable-next-line no-console
           console.warn('Endpoint penjualan per kasir belum tersedia atau gagal:', err)
           return []
@@ -105,6 +113,7 @@ export function LaporanPenjualanPage() {
         setItems(resItems)
         setKategoris(resKategoris)
         setKasirs(resKasirs)
+        setIsKasirError(kasirFailed)
       } catch (err: unknown) {
         if (!isMounted) return
         const msg = err instanceof Error ? err.message : 'Gagal memuat data penjualan'
@@ -118,6 +127,21 @@ export function LaporanPenjualanPage() {
       isMounted = false
     }
   }, [dateFilterParams])
+
+  const handleRetryKasir = async () => {
+    try {
+      setIsRetryingKasir(true)
+      const res = await laporanApi.getPenjualanPerKasir(dateFilterParams)
+      setKasirs(res)
+      setIsKasirError(false)
+      toast.success('Data titik kasir berhasil dimuat ulang')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal memuat ulang data kasir'
+      toast.error('Gagal Memuat Kasir', { description: msg })
+    } finally {
+      setIsRetryingKasir(false)
+    }
+  }
 
   // Helper normalisasi nilai agar aman menghadapi data langsung BE #291 maupun mock
   const getItemId = (i: BarisPenjualanItem) => i.menuId ?? i.kunciId ?? 0
@@ -1036,6 +1060,34 @@ export function LaporanPenjualanPage() {
 
             {/* TAB CONTENT 3: PENJUALAN PER KASIR */}
             <TabsContent value="kasir" className="space-y-4">
+              {isKasirError && (
+                <div className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900 sm:flex-row sm:items-center sm:justify-between dark:border-amber-800/80 dark:bg-amber-950/40 dark:text-amber-200">
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <div>
+                      <p className="text-xs font-semibold">Data Penjualan Titik Kasir Belum Berhasil Dimuat</p>
+                      <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                        Sistem tidak dapat menghubungi server kasir. Angka transaksi yang ditampilkan mungkin tidak lengkap.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetryKasir}
+                    disabled={isRetryingKasir}
+                    className="h-8 shrink-0 gap-1.5 border-amber-300 bg-white text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/60 dark:text-amber-100 dark:hover:bg-amber-800/60"
+                  >
+                    {isRetryingKasir ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    )}
+                    <span>Muat Ulang Kasir</span>
+                  </Button>
+                </div>
+              )}
               <Card className="p-0 gap-0 overflow-hidden">
                 <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
@@ -1071,7 +1123,9 @@ export function LaporanPenjualanPage() {
                       ) : filteredKasirs.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                            Tidak ada titik kasir yang cocok.
+                            {isKasirError
+                              ? 'Gagal memuat rincian data kasir dari server. Silakan klik Muat Ulang Kasir.'
+                              : 'Tidak ada titik kasir yang cocok.'}
                           </TableCell>
                         </TableRow>
                       ) : (
