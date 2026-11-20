@@ -138,7 +138,9 @@ function KoreksiMutasiFormContent({
     nominalNum > 0 &&
     !isSaldoMinus &&
     alasan.trim().length >= 5 &&
+    alasan.trim().length <= 255 &&
     referensiId.trim().length > 0 &&
+    referensiId.trim().length <= 56 &&
     isAgreed
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,6 +150,12 @@ function KoreksiMutasiFormContent({
         toast.error(
           'Koreksi DEBIT ditolak: Saldo berjalan tidak boleh menjadi minus!'
         )
+      } else if (alasan.trim().length < 5) {
+        toast.error('Alasan penyesuaian saldo minimal 5 karakter!')
+      } else if (alasan.trim().length > 255) {
+        toast.error('Alasan penyesuaian saldo maksimal 255 karakter!')
+      } else if (referensiId.trim().length > 56) {
+        toast.error('Nomor Berita Acara maksimal 56 karakter!')
       } else if (!isAgreed) {
         toast.error('Harap centang persetujuan otorisasi audit Bendahara!')
       }
@@ -288,16 +296,28 @@ function KoreksiMutasiFormContent({
       {/* Nomor Berita Acara & Jenis Koreksi */}
       <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
         <div className='space-y-1.5'>
-          <Label htmlFor={referensiInputId} className='text-xs font-semibold'>
-            No. Berita Acara / Referensi Audit{' '}
-            <span className='text-destructive'>*</span>
-          </Label>
+          <div className='flex items-center justify-between'>
+            <Label htmlFor={referensiInputId} className='text-xs font-semibold'>
+              No. Berita Acara / Referensi Audit{' '}
+              <span className='text-destructive'>*</span>
+            </Label>
+            <span
+              className={`font-mono text-[10px] tabular-nums ${
+                referensiId.length > 50
+                  ? 'text-destructive font-semibold'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {referensiId.length}/56
+            </span>
+          </div>
           <Input
             id={referensiInputId}
             value={referensiId}
             onChange={(e) => setReferensiId(e.target.value)}
             placeholder='BA-KOR-YYYYMMDD-XXXX'
             className='font-mono text-xs'
+            maxLength={56}
             required
           />
         </div>
@@ -521,10 +541,21 @@ function KoreksiMutasiFormContent({
 
       {/* Alasan Audit Koreksi (Wajib) */}
       <div className='space-y-1.5'>
-        <Label htmlFor={alasanInputId} className='text-xs font-semibold'>
-          Alasan Penyesuaian Saldo{' '}
-          <span className='text-destructive'>* (Wajib Diisi Jelas)</span>
-        </Label>
+        <div className='flex items-center justify-between'>
+          <Label htmlFor={alasanInputId} className='text-xs font-semibold'>
+            Alasan Penyesuaian Saldo{' '}
+            <span className='text-destructive'>* (Wajib Diisi Jelas)</span>
+          </Label>
+          <span
+            className={`font-mono text-[10px] tabular-nums ${
+              alasan.length > 240
+                ? 'text-destructive font-semibold'
+                : 'text-muted-foreground'
+            }`}
+          >
+            {alasan.length}/255
+          </span>
+        </div>
         <Textarea
           id={alasanInputId}
           rows={2}
@@ -532,10 +563,11 @@ function KoreksiMutasiFormContent({
           onChange={(e) => setAlasan(e.target.value)}
           placeholder='Contoh: Pengembalian saldo karena terpotong dua kali saat kasir ramai'
           className='resize-none text-xs'
+          maxLength={255}
           required
         />
         <p className='text-[10px] text-muted-foreground'>
-          Keterangan penyesuaian akan tersimpan aman di buku besar sekolah.
+          Keterangan penyesuaian akan tersimpan aman di buku besar sekolah (maks. 255 karakter).
         </p>
       </div>
 

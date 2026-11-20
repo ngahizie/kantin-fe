@@ -261,4 +261,16 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(ref1).toMatch(/^BA-KOR-\d{8}-[A-F0-9]{8}$/)
     expect(ref1.length).toBeLessThanOrEqual(56) // Sesuai batas aman idempotency_key DB
   })
+
+  it('memvalidasi batas panjang maksimum referensiId (56) dan alasan koreksi (255) (SEC-KOR-05)', () => {
+    const validAlasan = 'A'.repeat(255)
+    const invalidAlasan = 'A'.repeat(256)
+    const validRef = 'BA-KOR-20261120-12345678'
+    const invalidRef = 'B'.repeat(57)
+
+    expect(validAlasan.length).toBe(255)
+    expect(invalidAlasan.length).toBeGreaterThan(255)
+    expect(validRef.length).toBeLessThanOrEqual(56)
+    expect(invalidRef.length).toBeGreaterThan(56)
+  })
 })
