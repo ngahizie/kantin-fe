@@ -38,6 +38,7 @@ import type { RefundSlipData } from './types'
 
 export function RefundSiswaKeluarPage() {
   const { auth } = useAuthStore()
+  const canProcessRefund = auth.hasRole(['bendahara', 'tu'])
   const [students, setStudents] = useState<SiswaNonaktifMock[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -315,9 +316,16 @@ export function RefundSiswaKeluarPage() {
       <Main className='space-y-6'>
         {/* Title Header */}
         <div>
-          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-            Pengembalian Saldo Siswa Lulus / Pindah
-          </h1>
+          <div className='flex items-center gap-3'>
+            <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+              Pengembalian Saldo Siswa Lulus / Pindah
+            </h1>
+            {!canProcessRefund && (
+              <Badge variant='secondary' className='text-xs'>
+                Mode Pengawasan (Hanya Baca)
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* KPI Cards Ringkasan */}
@@ -598,34 +606,43 @@ export function RefundSiswaKeluarPage() {
 
                               {/* Aksi */}
                               <TableCell className='text-right'>
-                                <div className='flex items-center justify-end gap-1.5'>
-                                  {/* Opsi A: Refund ke Ortu */}
-                                  <Button
-                                    size='sm'
-                                    onClick={() => {
-                                      setSelectedStudentRefund(siswa)
-                                      setIsRefundModalOpen(true)
-                                    }}
-                                    className='h-8 text-xs gap-1.5'
-                                  >
-                                    <Banknote className='h-3.5 w-3.5' />
-                                    <span>Kembalikan ke Ortu</span>
-                                  </Button>
+                                {canProcessRefund ? (
+                                  <div className='flex items-center justify-end gap-1.5'>
+                                    {/* Opsi A: Refund ke Ortu */}
+                                    <Button
+                                      size='sm'
+                                      onClick={() => {
+                                        setSelectedStudentRefund(siswa)
+                                        setIsRefundModalOpen(true)
+                                      }}
+                                      className='h-8 text-xs gap-1.5'
+                                    >
+                                      <Banknote className='h-3.5 w-3.5' />
+                                      <span>Kembalikan ke Ortu</span>
+                                    </Button>
 
-                                  {/* Opsi B: Pindah ke Saudara */}
-                                  <Button
-                                    size='sm'
+                                    {/* Opsi B: Pindah ke Saudara */}
+                                    <Button
+                                      size='sm'
+                                      variant='outline'
+                                      onClick={() => {
+                                        setSelectedStudentTransfer(siswa)
+                                        setIsTransferModalOpen(true)
+                                      }}
+                                      className='h-8 text-xs gap-1.5'
+                                    >
+                                      <ArrowLeftRight className='h-3.5 w-3.5' />
+                                      <span>Alihkan ke Saudara</span>
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Badge
                                     variant='outline'
-                                    onClick={() => {
-                                      setSelectedStudentTransfer(siswa)
-                                      setIsTransferModalOpen(true)
-                                    }}
-                                    className='h-8 text-xs gap-1.5'
+                                    className='rounded-full border-border bg-muted/40 text-[11px] font-medium text-muted-foreground'
                                   >
-                                    <ArrowLeftRight className='h-3.5 w-3.5' />
-                                    <span>Alihkan ke Saudara</span>
-                                  </Button>
-                                </div>
+                                    Supervisi (Hanya Baca)
+                                  </Badge>
+                                )}
                               </TableCell>
                             </TableRow>
                           )

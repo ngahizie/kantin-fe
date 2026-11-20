@@ -5,7 +5,7 @@ import { RefundSiswaKeluarPage } from '@/features/saldo-refund'
 export const Route = createFileRoute('/_authenticated/saldo/refund/')({
   beforeLoad: () => {
     const { hasRole } = useAuthStore.getState().auth
-    if (!hasRole(['bendahara', 'kepsek'])) {
+    if (!hasRole(['bendahara', 'tu', 'kepsek'])) {
       throw redirect({
         to: '/403',
       })
