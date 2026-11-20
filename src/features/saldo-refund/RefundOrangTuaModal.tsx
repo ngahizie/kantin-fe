@@ -119,9 +119,29 @@ function RefundOrangTuaFormContent({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [agreement, setAgreement] = useState(false)
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+  const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'application/pdf',
+  ]
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('Ukuran berkas bukti maksimal 5 MB!')
+      e.target.value = ''
+      return
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      toast.error('Format berkas harus berupa JPG, PNG, WebP, atau PDF!')
+      e.target.value = ''
+      return
+    }
 
     setIsUploading(true)
     try {
@@ -504,7 +524,7 @@ function RefundOrangTuaFormContent({
                 <span>{isUploading ? 'Mengunggah...' : 'Pilih Foto / Gambar Bukti'}</span>
                 <input
                   type='file'
-                  accept='image/*'
+                  accept='image/jpeg,image/png,image/webp,application/pdf'
                   className='hidden'
                   onChange={handleFileUpload}
                   disabled={isUploading}
