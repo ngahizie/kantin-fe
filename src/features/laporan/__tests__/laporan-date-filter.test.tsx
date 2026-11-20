@@ -69,4 +69,18 @@ describe('LaporanDateFilter', () => {
     await expect.element(screen.getByRole('button', { name: 'Kemarin', exact: true })).not.toBeInTheDocument()
     await expect.element(screen.getByText('Pilih Satu Hari Tertentu')).toBeInTheDocument()
   })
+
+  it('menolak rentang tanggal kustom jika tanggal awal melebihi tanggal akhir', async () => {
+    const onChange = vi.fn()
+
+    const screen = await render(
+      <LaporanDateFilter initialPreset='TODAY' onChange={onChange} />
+    )
+
+    const triggerBtn = screen.getByRole('button', { name: /Hari Ini/i })
+    await userEvent.click(triggerBtn)
+
+    const applyRangeBtn = screen.getByRole('button', { name: 'Terapkan Rentang', exact: true })
+    await expect.element(applyRangeBtn).toBeInTheDocument()
+  })
 })

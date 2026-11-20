@@ -294,4 +294,36 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
     await expect.element(screen.getByRole('columnheader', { name: 'Laba' })).not.toBeInTheDocument()
     await expect.element(screen.getByRole('columnheader', { name: 'Margin' })).not.toBeInTheDocument()
   })
+
+  it('menampilkan banner peringatan dan tombol muat ulang saat endpoint kasir gagal dimuat (SEC-04)', async () => {
+    useRoleStore.getState().setRole('bendahara')
+
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/laporan/penjualan') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_SUMMARY } }
+      }
+      if (url === '/api/laporan/penjualan/item') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_ITEMS } }
+      }
+      if (url === '/api/laporan/penjualan/kategori') {
+        return { data: { code: 200, status: 'SUCCESS', data: BE_CATEGORIES } }
+      }
+      if (url === '/api/laporan/penjualan/kasir') {
+        throw new Error('Network timeout: Endpoint kasir gagal')
+      }
+      if (url === '/api/katalog/kategori' || url === '/api/katalog/menu') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanPenjualanPage />)
+
+    // Pindah ke tab kasir
+    const tabKasirBtn = screen.getByRole('tab', { name: /Per Titik Kasir/i })
+    await userEvent.click(tabKasirBtn)
+
+    await expect.element(screen.getByText('Data Penjualan Titik Kasir Belum Berhasil Dimuat')).toBeInTheDocument()
+    await expect.element(screen.getByRole('button', { name: /Muat Ulang Kasir/i })).toBeInTheDocument()
+  })
 })

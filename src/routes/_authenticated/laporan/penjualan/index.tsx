@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth-store'
 export const Route = createFileRoute('/_authenticated/laporan/penjualan/')({
   beforeLoad: () => {
     const { hasRole } = useAuthStore.getState().auth
-    if (!hasRole(['pengelola', 'bendahara', 'kepsek', 'admin'])) {
+    if (!hasRole(['pengelola', 'bendahara', 'tu', 'kepsek', 'admin'])) {
       throw redirect({
         to: '/403',
       })

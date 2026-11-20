@@ -4,6 +4,7 @@ import {
   exportMultiSheetExcel,
   exportRawDataToExcel,
   stripKantinSkoolia,
+  sanitizeCellValue,
 } from './excelExport'
 import { formatRupiah } from './formatters'
 
@@ -271,5 +272,34 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
 
     const ws = result.workbook.getWorksheet('Laporan')
     expect(ws?.getCell('B1').value).toBe('LAPORAN PENJUALAN')
+  })
+
+  it('mencegah formula injection (CSV/Excel Injection CWE-1236) dengan prefix petik tunggal', async () => {
+    expect(sanitizeCellValue('=1+1')).toBe("'=1+1")
+    expect(sanitizeCellValue('+SUM(A1:A10)')).toBe("'+SUM(A1:A10)")
+    expect(sanitizeCellValue('-100')).toBe("'-100")
+    expect(sanitizeCellValue('@HYPERLINK("http://evil.com")')).toBe("'@HYPERLINK(\"http://evil.com\")")
+    expect(sanitizeCellValue('\tcmd')).toBe("'\tcmd")
+    expect(sanitizeCellValue('Nasi Goreng')).toBe('Nasi Goreng')
+    expect(sanitizeCellValue(15000)).toBe(15000)
+    expect(sanitizeCellValue(null)).toBe(null)
+
+    const result = await exportTableToExcel({
+      filename: 'test-formula-injection',
+      columns: [
+        { header: 'No', key: 'id' },
+        { header: 'Nama Menu', key: 'nama' },
+      ],
+      data: [
+        { id: 1, nama: '=CMD|\' /C calc\'!A0' },
+        { id: 2, nama: '+2+5' },
+        { id: 3, nama: 'Menu Normal' },
+      ],
+    })
+
+    const ws = result.workbook.getWorksheet('Laporan')
+    expect(ws?.getCell('C7').value).toBe("'=CMD|' /C calc'!A0")
+    expect(ws?.getCell('C8').value).toBe("'+2+5")
+    expect(ws?.getCell('C9').value).toBe('Menu Normal')
   })
 })

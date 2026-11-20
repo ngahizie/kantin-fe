@@ -87,6 +87,20 @@ export function sanitizeFilename(filename: string): string {
 }
 
 /**
+ * Mencegah Formula Injection (CSV/Excel Formula Injection CWE-1236)
+ * Menambahkan prefix tanda petik tunggal (') jika string diawali oleh karakter kontrol formula
+ */
+export function sanitizeCellValue(val: unknown): unknown {
+  if (typeof val === 'string') {
+    // Karakter pemicu formula pada spreadsheet: =, +, -, @, tab (\t), carriage return (\r)
+    if (/^[=+\-@\t\r]/.test(val)) {
+      return `'${val}`
+    }
+  }
+  return val
+}
+
+/**
  * Mendeteksi perataan kolom berdasarkan header / key jika tidak dispesifikasikan manual
  */
 function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'right' {
@@ -469,7 +483,7 @@ function populateWorksheet<T>(
         val = ''
       }
 
-      cell.value = val as any
+      cell.value = sanitizeCellValue(val) as any
       cell.font = { name: 'Calibri', size: 11, bold: false, color: { argb: 'FF000000' } }
 
       if (isZebra) {
