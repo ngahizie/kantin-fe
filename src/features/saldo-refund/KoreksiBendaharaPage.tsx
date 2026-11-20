@@ -49,6 +49,7 @@ import { Main } from '@/components/layout/main'
 import { ExportButton } from '@/components/export-button'
 import { formatDateTime, formatRupiah } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import { type KartuSiswaMock } from '@/types/kantin'
 import { KoreksiMutasiModal } from './KoreksiMutasiModal'
 import {
@@ -349,34 +350,29 @@ export function KoreksiBendaharaPage() {
     ]
 
     const rows = filteredKoreksi.map((k) => [
-      k.referensi_id,
-      k.waktu,
-      k.siswa_nama,
-      k.siswa_info,
-      k.jenis_koreksi,
-      k.arah,
-      k.nominal,
-      k.saldo_sebelum,
-      k.saldo_setelah,
-      `"${k.alasan.replace(/"/g, '""')}"`,
-      k.bendahara_nama,
-      k.transaksi_terkait_id || '-',
+      sanitizeCsvCell(k.referensi_id),
+      sanitizeCsvCell(k.waktu),
+      sanitizeCsvCell(k.siswa_nama),
+      sanitizeCsvCell(k.siswa_info),
+      sanitizeCsvCell(k.jenis_koreksi),
+      sanitizeCsvCell(k.arah),
+      sanitizeCsvCell(k.nominal),
+      sanitizeCsvCell(k.saldo_sebelum),
+      sanitizeCsvCell(k.saldo_setelah),
+      sanitizeCsvCell(k.alasan),
+      sanitizeCsvCell(k.bendahara_nama),
+      sanitizeCsvCell(k.transaksi_terkait_id || '-'),
     ])
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+    const csvContent = [
+      headers.map(sanitizeCsvCell).join(','),
+      ...rows.map((e) => e.join(',')),
+    ].join('\r\n')
 
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute(
-      'download',
-      `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`
+    downloadCsvBlob(
+      `Audit_Log_Koreksi_Bendahara_${new Date().toISOString().slice(0, 10)}.csv`,
+      csvContent
     )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
     toast.success('Log audit mutasi koreksi berhasil diekspor ke CSV')
   }
 

@@ -229,4 +229,14 @@ describe('Mapping Adapter Transaksi Sesi Tutup & Mutasi Koreksi BE (Issue #230)'
     expect(mapped.transaksi_terkait_id).toBe(910103)
     expect(mapped.jenis_koreksi).toBe('PEMBALIK_TRANSAKSI_KASIR')
   })
+
+  it('mengamankan sel CSV dari serangan Formula Injection (SEC-KOR-01)', async () => {
+    const { sanitizeCsvCell } = await import('@/lib/csv-sanitizer')
+    expect(sanitizeCsvCell('=1+1')).toBe(`"'=1+1"`)
+    expect(sanitizeCsvCell('@SUM(A1:A10)')).toBe(`"'@SUM(A1:A10)"`)
+    expect(sanitizeCsvCell('+cmd|')).toBe(`"'+cmd|"`)
+    expect(sanitizeCsvCell('-cmd|')).toBe(`"'-cmd|"`)
+    expect(sanitizeCsvCell('Normal, teks dengan koma')).toBe(`"Normal, teks dengan koma"`)
+    expect(sanitizeCsvCell('Teks dengan "kutip" ganda')).toBe(`"Teks dengan ""kutip"" ganda"`)
+  })
 })
