@@ -31,14 +31,14 @@ import { Route as AuthenticatedStokInventarisIndexRouteImport } from './routes/_
 import { Route as AuthenticatedSaldoRefundIndexRouteImport } from './routes/_authenticated/saldo/refund/index'
 import { Route as AuthenticatedSaldoKoreksiIndexRouteImport } from './routes/_authenticated/saldo/koreksi/index'
 import { Route as AuthenticatedPengaturanTitikKasirIndexRouteImport } from './routes/_authenticated/pengaturan/titik-kasir/index'
-import { Route as AuthenticatedLaporanSaldoMengendapIndexRouteImport } from './routes/_authenticated/laporan/saldo-mengendap/index'
+import { Route as AuthenticatedLaporanSaldoSiswaIndexRouteImport } from './routes/_authenticated/laporan/saldo-siswa/index'
 import { Route as AuthenticatedLaporanRiwayatSiswaIndexRouteImport } from './routes/_authenticated/laporan/riwayat-siswa/index'
 import { Route as AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport } from './routes/_authenticated/laporan/riwayat-keseluruhan/index'
-import { Route as AuthenticatedLaporanRekonsiliasiIndexRouteImport } from './routes/_authenticated/laporan/rekonsiliasi/index'
 import { Route as AuthenticatedLaporanPenjualanIndexRouteImport } from './routes/_authenticated/laporan/penjualan/index'
 import { Route as AuthenticatedLaporanPembatalanIndexRouteImport } from './routes/_authenticated/laporan/pembatalan/index'
-import { Route as AuthenticatedLaporanLabaKotorIndexRouteImport } from './routes/_authenticated/laporan/laba-kotor/index'
+import { Route as AuthenticatedLaporanKeuntunganIndexRouteImport } from './routes/_authenticated/laporan/keuntungan/index'
 import { Route as AuthenticatedLaporanKerugianStokIndexRouteImport } from './routes/_authenticated/laporan/kerugian-stok/index'
+import { Route as AuthenticatedLaporanCekSelisihIndexRouteImport } from './routes/_authenticated/laporan/cek-selisih/index'
 
 const KasirRouteRoute = KasirRouteRouteImport.update({
   id: '/kasir',
@@ -159,10 +159,10 @@ const AuthenticatedPengaturanTitikKasirIndexRoute =
     path: '/pengaturan/titik-kasir/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLaporanSaldoMengendapIndexRoute =
-  AuthenticatedLaporanSaldoMengendapIndexRouteImport.update({
-    id: '/laporan/saldo-mengendap/',
-    path: '/laporan/saldo-mengendap/',
+const AuthenticatedLaporanSaldoSiswaIndexRoute =
+  AuthenticatedLaporanSaldoSiswaIndexRouteImport.update({
+    id: '/laporan/saldo-siswa/',
+    path: '/laporan/saldo-siswa/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedLaporanRiwayatSiswaIndexRoute =
@@ -177,12 +177,6 @@ const AuthenticatedLaporanRiwayatKeseluruhanIndexRoute =
     path: '/laporan/riwayat-keseluruhan/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLaporanRekonsiliasiIndexRoute =
-  AuthenticatedLaporanRekonsiliasiIndexRouteImport.update({
-    id: '/laporan/rekonsiliasi/',
-    path: '/laporan/rekonsiliasi/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedLaporanPenjualanIndexRoute =
   AuthenticatedLaporanPenjualanIndexRouteImport.update({
     id: '/laporan/penjualan/',
@@ -195,16 +189,22 @@ const AuthenticatedLaporanPembatalanIndexRoute =
     path: '/laporan/pembatalan/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLaporanLabaKotorIndexRoute =
-  AuthenticatedLaporanLabaKotorIndexRouteImport.update({
-    id: '/laporan/laba-kotor/',
-    path: '/laporan/laba-kotor/',
+const AuthenticatedLaporanKeuntunganIndexRoute =
+  AuthenticatedLaporanKeuntunganIndexRouteImport.update({
+    id: '/laporan/keuntungan/',
+    path: '/laporan/keuntungan/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedLaporanKerugianStokIndexRoute =
   AuthenticatedLaporanKerugianStokIndexRouteImport.update({
     id: '/laporan/kerugian-stok/',
     path: '/laporan/kerugian-stok/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLaporanCekSelisihIndexRoute =
+  AuthenticatedLaporanCekSelisihIndexRouteImport.update({
+    id: '/laporan/cek-selisih/',
+    path: '/laporan/cek-selisih/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -223,14 +223,14 @@ export interface FileRoutesByFullPath {
   '/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu/': typeof AuthenticatedMenuIndexRoute
   '/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
+  '/laporan/cek-selisih/': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
-  '/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/laporan/keuntungan/': typeof AuthenticatedLaporanKeuntunganIndexRoute
   '/laporan/pembatalan/': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
-  '/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/laporan/riwayat-siswa/': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
-  '/laporan/saldo-mengendap/': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
+  '/laporan/saldo-siswa/': typeof AuthenticatedLaporanSaldoSiswaIndexRoute
   '/pengaturan/titik-kasir/': typeof AuthenticatedPengaturanTitikKasirIndexRoute
   '/saldo/koreksi/': typeof AuthenticatedSaldoKoreksiIndexRoute
   '/saldo/refund/': typeof AuthenticatedSaldoRefundIndexRoute
@@ -253,14 +253,14 @@ export interface FileRoutesByTo {
   '/kontrol-siswa': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/pengaturan': typeof AuthenticatedPengaturanIndexRoute
+  '/laporan/cek-selisih': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/laporan/kerugian-stok': typeof AuthenticatedLaporanKerugianStokIndexRoute
-  '/laporan/laba-kotor': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/laporan/keuntungan': typeof AuthenticatedLaporanKeuntunganIndexRoute
   '/laporan/pembatalan': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/laporan/penjualan': typeof AuthenticatedLaporanPenjualanIndexRoute
-  '/laporan/rekonsiliasi': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/laporan/riwayat-keseluruhan': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/laporan/riwayat-siswa': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
-  '/laporan/saldo-mengendap': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
+  '/laporan/saldo-siswa': typeof AuthenticatedLaporanSaldoSiswaIndexRoute
   '/pengaturan/titik-kasir': typeof AuthenticatedPengaturanTitikKasirIndexRoute
   '/saldo/koreksi': typeof AuthenticatedSaldoKoreksiIndexRoute
   '/saldo/refund': typeof AuthenticatedSaldoRefundIndexRoute
@@ -286,14 +286,14 @@ export interface FileRoutesById {
   '/_authenticated/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
+  '/_authenticated/laporan/cek-selisih/': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/_authenticated/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
-  '/_authenticated/laporan/laba-kotor/': typeof AuthenticatedLaporanLabaKotorIndexRoute
+  '/_authenticated/laporan/keuntungan/': typeof AuthenticatedLaporanKeuntunganIndexRoute
   '/_authenticated/laporan/pembatalan/': typeof AuthenticatedLaporanPembatalanIndexRoute
   '/_authenticated/laporan/penjualan/': typeof AuthenticatedLaporanPenjualanIndexRoute
-  '/_authenticated/laporan/rekonsiliasi/': typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   '/_authenticated/laporan/riwayat-keseluruhan/': typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   '/_authenticated/laporan/riwayat-siswa/': typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
-  '/_authenticated/laporan/saldo-mengendap/': typeof AuthenticatedLaporanSaldoMengendapIndexRoute
+  '/_authenticated/laporan/saldo-siswa/': typeof AuthenticatedLaporanSaldoSiswaIndexRoute
   '/_authenticated/pengaturan/titik-kasir/': typeof AuthenticatedPengaturanTitikKasirIndexRoute
   '/_authenticated/saldo/koreksi/': typeof AuthenticatedSaldoKoreksiIndexRoute
   '/_authenticated/saldo/refund/': typeof AuthenticatedSaldoRefundIndexRoute
@@ -319,14 +319,14 @@ export interface FileRouteTypes {
     | '/kontrol-siswa/'
     | '/menu/'
     | '/pengaturan/'
+    | '/laporan/cek-selisih/'
     | '/laporan/kerugian-stok/'
-    | '/laporan/laba-kotor/'
+    | '/laporan/keuntungan/'
     | '/laporan/pembatalan/'
     | '/laporan/penjualan/'
-    | '/laporan/rekonsiliasi/'
     | '/laporan/riwayat-keseluruhan/'
     | '/laporan/riwayat-siswa/'
-    | '/laporan/saldo-mengendap/'
+    | '/laporan/saldo-siswa/'
     | '/pengaturan/titik-kasir/'
     | '/saldo/koreksi/'
     | '/saldo/refund/'
@@ -349,14 +349,14 @@ export interface FileRouteTypes {
     | '/kontrol-siswa'
     | '/menu'
     | '/pengaturan'
+    | '/laporan/cek-selisih'
     | '/laporan/kerugian-stok'
-    | '/laporan/laba-kotor'
+    | '/laporan/keuntungan'
     | '/laporan/pembatalan'
     | '/laporan/penjualan'
-    | '/laporan/rekonsiliasi'
     | '/laporan/riwayat-keseluruhan'
     | '/laporan/riwayat-siswa'
-    | '/laporan/saldo-mengendap'
+    | '/laporan/saldo-siswa'
     | '/pengaturan/titik-kasir'
     | '/saldo/koreksi'
     | '/saldo/refund'
@@ -381,14 +381,14 @@ export interface FileRouteTypes {
     | '/_authenticated/kontrol-siswa/'
     | '/_authenticated/menu/'
     | '/_authenticated/pengaturan/'
+    | '/_authenticated/laporan/cek-selisih/'
     | '/_authenticated/laporan/kerugian-stok/'
-    | '/_authenticated/laporan/laba-kotor/'
+    | '/_authenticated/laporan/keuntungan/'
     | '/_authenticated/laporan/pembatalan/'
     | '/_authenticated/laporan/penjualan/'
-    | '/_authenticated/laporan/rekonsiliasi/'
     | '/_authenticated/laporan/riwayat-keseluruhan/'
     | '/_authenticated/laporan/riwayat-siswa/'
-    | '/_authenticated/laporan/saldo-mengendap/'
+    | '/_authenticated/laporan/saldo-siswa/'
     | '/_authenticated/pengaturan/titik-kasir/'
     | '/_authenticated/saldo/koreksi/'
     | '/_authenticated/saldo/refund/'
@@ -565,11 +565,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPengaturanTitikKasirIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/laporan/saldo-mengendap/': {
-      id: '/_authenticated/laporan/saldo-mengendap/'
-      path: '/laporan/saldo-mengendap'
-      fullPath: '/laporan/saldo-mengendap/'
-      preLoaderRoute: typeof AuthenticatedLaporanSaldoMengendapIndexRouteImport
+    '/_authenticated/laporan/saldo-siswa/': {
+      id: '/_authenticated/laporan/saldo-siswa/'
+      path: '/laporan/saldo-siswa'
+      fullPath: '/laporan/saldo-siswa/'
+      preLoaderRoute: typeof AuthenticatedLaporanSaldoSiswaIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/laporan/riwayat-siswa/': {
@@ -586,13 +586,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/laporan/rekonsiliasi/': {
-      id: '/_authenticated/laporan/rekonsiliasi/'
-      path: '/laporan/rekonsiliasi'
-      fullPath: '/laporan/rekonsiliasi/'
-      preLoaderRoute: typeof AuthenticatedLaporanRekonsiliasiIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/laporan/penjualan/': {
       id: '/_authenticated/laporan/penjualan/'
       path: '/laporan/penjualan'
@@ -607,11 +600,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanPembatalanIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/laporan/laba-kotor/': {
-      id: '/_authenticated/laporan/laba-kotor/'
-      path: '/laporan/laba-kotor'
-      fullPath: '/laporan/laba-kotor/'
-      preLoaderRoute: typeof AuthenticatedLaporanLabaKotorIndexRouteImport
+    '/_authenticated/laporan/keuntungan/': {
+      id: '/_authenticated/laporan/keuntungan/'
+      path: '/laporan/keuntungan'
+      fullPath: '/laporan/keuntungan/'
+      preLoaderRoute: typeof AuthenticatedLaporanKeuntunganIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/laporan/kerugian-stok/': {
@@ -619,6 +612,13 @@ declare module '@tanstack/react-router' {
       path: '/laporan/kerugian-stok'
       fullPath: '/laporan/kerugian-stok/'
       preLoaderRoute: typeof AuthenticatedLaporanKerugianStokIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/laporan/cek-selisih/': {
+      id: '/_authenticated/laporan/cek-selisih/'
+      path: '/laporan/cek-selisih'
+      fullPath: '/laporan/cek-selisih/'
+      preLoaderRoute: typeof AuthenticatedLaporanCekSelisihIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -631,14 +631,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKontrolSiswaIndexRoute: typeof AuthenticatedKontrolSiswaIndexRoute
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedPengaturanIndexRoute: typeof AuthenticatedPengaturanIndexRoute
+  AuthenticatedLaporanCekSelisihIndexRoute: typeof AuthenticatedLaporanCekSelisihIndexRoute
   AuthenticatedLaporanKerugianStokIndexRoute: typeof AuthenticatedLaporanKerugianStokIndexRoute
-  AuthenticatedLaporanLabaKotorIndexRoute: typeof AuthenticatedLaporanLabaKotorIndexRoute
+  AuthenticatedLaporanKeuntunganIndexRoute: typeof AuthenticatedLaporanKeuntunganIndexRoute
   AuthenticatedLaporanPembatalanIndexRoute: typeof AuthenticatedLaporanPembatalanIndexRoute
   AuthenticatedLaporanPenjualanIndexRoute: typeof AuthenticatedLaporanPenjualanIndexRoute
-  AuthenticatedLaporanRekonsiliasiIndexRoute: typeof AuthenticatedLaporanRekonsiliasiIndexRoute
   AuthenticatedLaporanRiwayatKeseluruhanIndexRoute: typeof AuthenticatedLaporanRiwayatKeseluruhanIndexRoute
   AuthenticatedLaporanRiwayatSiswaIndexRoute: typeof AuthenticatedLaporanRiwayatSiswaIndexRoute
-  AuthenticatedLaporanSaldoMengendapIndexRoute: typeof AuthenticatedLaporanSaldoMengendapIndexRoute
+  AuthenticatedLaporanSaldoSiswaIndexRoute: typeof AuthenticatedLaporanSaldoSiswaIndexRoute
   AuthenticatedPengaturanTitikKasirIndexRoute: typeof AuthenticatedPengaturanTitikKasirIndexRoute
   AuthenticatedSaldoKoreksiIndexRoute: typeof AuthenticatedSaldoKoreksiIndexRoute
   AuthenticatedSaldoRefundIndexRoute: typeof AuthenticatedSaldoRefundIndexRoute
@@ -655,22 +655,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKontrolSiswaIndexRoute: AuthenticatedKontrolSiswaIndexRoute,
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedPengaturanIndexRoute: AuthenticatedPengaturanIndexRoute,
+  AuthenticatedLaporanCekSelisihIndexRoute:
+    AuthenticatedLaporanCekSelisihIndexRoute,
   AuthenticatedLaporanKerugianStokIndexRoute:
     AuthenticatedLaporanKerugianStokIndexRoute,
-  AuthenticatedLaporanLabaKotorIndexRoute:
-    AuthenticatedLaporanLabaKotorIndexRoute,
+  AuthenticatedLaporanKeuntunganIndexRoute:
+    AuthenticatedLaporanKeuntunganIndexRoute,
   AuthenticatedLaporanPembatalanIndexRoute:
     AuthenticatedLaporanPembatalanIndexRoute,
   AuthenticatedLaporanPenjualanIndexRoute:
     AuthenticatedLaporanPenjualanIndexRoute,
-  AuthenticatedLaporanRekonsiliasiIndexRoute:
-    AuthenticatedLaporanRekonsiliasiIndexRoute,
   AuthenticatedLaporanRiwayatKeseluruhanIndexRoute:
     AuthenticatedLaporanRiwayatKeseluruhanIndexRoute,
   AuthenticatedLaporanRiwayatSiswaIndexRoute:
     AuthenticatedLaporanRiwayatSiswaIndexRoute,
-  AuthenticatedLaporanSaldoMengendapIndexRoute:
-    AuthenticatedLaporanSaldoMengendapIndexRoute,
+  AuthenticatedLaporanSaldoSiswaIndexRoute:
+    AuthenticatedLaporanSaldoSiswaIndexRoute,
   AuthenticatedPengaturanTitikKasirIndexRoute:
     AuthenticatedPengaturanTitikKasirIndexRoute,
   AuthenticatedSaldoKoreksiIndexRoute: AuthenticatedSaldoKoreksiIndexRoute,

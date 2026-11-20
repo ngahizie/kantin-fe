@@ -817,7 +817,7 @@ export function MenuFormModal({
                       </Label>
                       <Textarea
                         rows={2}
-                        placeholder='Contoh: Penyesuaian hasil audit fisik rutin mingguan'
+                        placeholder='Contoh: Penyesuaian hasil cek stok fisik rutin mingguan'
                         value={alasanOpname}
                         onChange={(e) => setAlasanOpname(e.target.value)}
                         disabled={isSubmitting}

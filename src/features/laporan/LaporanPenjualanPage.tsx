@@ -267,16 +267,16 @@ export function LaporanPenjualanPage() {
               ? {
                   'Tanggal Cetak': formatDateTime(new Date()),
                   'Periode Laporan': dateFilterLabel,
-                  'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+                  'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
                   'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
                 }
               : {
                   'Tanggal Cetak': formatDateTime(new Date()),
                   'Periode Laporan': dateFilterLabel,
-                  'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
-                  'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-                  'Laba Total': formatRupiah(summaryLaba),
-                  'Rata-rata Margin': `${summaryMargin}%`,
+                  'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
+                  'Total Harga Modal': formatRupiah(summaryTotalModal),
+                  'Total Keuntungan': formatRupiah(summaryLaba),
+                  'Rata-rata Persen Untung': `${summaryMargin}%`,
                 },
             columns: [
               { header: 'No', width: 6 },
@@ -284,14 +284,14 @@ export function LaporanPenjualanPage() {
               { header: 'Kategori', key: 'kategoriNama', width: 16 },
               { header: 'Qty Terjual', key: 'qty', width: 12 },
               { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
-              ...(!isAdmin ? [{ header: 'Modal Unit (Rp)', key: 'hpp', width: 14 }] : []),
+              ...(!isAdmin ? [{ header: 'Modal Satuan (Rp)', key: 'hpp', width: 14 }] : []),
               { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
               ...(!isAdmin
                 ? [
                     { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-                    { header: 'Laba (Rp)', key: 'laba', width: 18 },
+                    { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
                     {
-                      header: 'Margin (%)',
+                      header: 'Persen Untung (%)',
                       key: 'marginPersen',
                       formatter: (v: unknown) => `${Number(v ?? 0)}%`,
                       width: 12,
@@ -326,12 +326,12 @@ export function LaporanPenjualanPage() {
               { header: 'Jumlah Variasi Menu', key: 'jumlahItem', width: 18 },
               { header: 'Total Qty Terjual', key: 'qty', width: 16 },
               { header: 'Total Penjualan (Rp)', key: 'total', width: 20 },
-              ...(!isAdmin
+                  ...(!isAdmin
                 ? [
                     { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-                    { header: 'Laba (Rp)', key: 'laba', width: 18 },
+                    { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
                     {
-                      header: 'Margin (%)',
+                      header: 'Persen Untung (%)',
                       key: 'marginPersen',
                       formatter: (v: unknown) => `${Number(v ?? 0)}%`,
                       width: 12,
@@ -362,10 +362,10 @@ export function LaporanPenjualanPage() {
               { header: 'No', width: 6 },
               { header: 'Titik Kasir', key: 'namaTitikKasir', width: 25 },
               { header: 'Petugas Jaga', key: 'petugas', width: 20 },
-              { header: 'Jumlah Transaksi', key: 'jumlahTransaksi', width: 16 },
-              { header: 'Penjualan Bruto (Rp)', key: 'penjualanBruto', width: 20 },
+              { header: 'Jumlah Trx', key: 'jumlahTransaksi', width: 16 },
+              { header: 'Total Penjualan Sebelum Refund (Rp)', key: 'penjualanBruto', width: 22 },
               { header: 'Nilai Refund (Rp)', key: 'nilaiVoid', width: 16 },
-              { header: 'Penjualan Bersih (Rp)', key: 'penjualanBersih', width: 20 },
+              { header: 'Total Penjualan Akhir (Rp)', key: 'penjualanBersih', width: 22 },
             ],
             data: kasirs,
             summaryRow: {
@@ -431,24 +431,24 @@ export function LaporanPenjualanPage() {
 
       exportMultiSectionPdf({
         filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: isAdmin ? 'LAPORAN PENJUALAN' : 'LAPORAN PENJUALAN & LABA KOTOR',
+        title: isAdmin ? 'LAPORAN PENJUALAN' : 'LAPORAN PENJUALAN & KEUNTUNGAN',
         subtitle: isAdmin
-          ? 'Analisis Penjualan Menu, Kategori, dan Titik Kasir'
-          : 'Analisis Penjualan Menu, Kategori, dan Titik Kasir',
+          ? 'Rincian Penjualan Menu, Kategori, dan Titik Kasir'
+          : 'Rincian Penjualan Menu, Kategori, dan Titik Kasir',
         metadata: isAdmin
           ? {
               'Tanggal Cetak': formatDateTime(new Date()),
               'Periode Laporan': dateFilterLabel,
-              'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
+              'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
               'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
             }
           : {
               'Tanggal Cetak': formatDateTime(new Date()),
               'Periode Laporan': dateFilterLabel,
-              'Penjualan Bersih Total': formatRupiah(summaryPenjualanBersih),
-              'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-              'Laba Total': formatRupiah(summaryLaba),
-              'Rata-rata Margin Kotor': `${summaryMargin}%`,
+              'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
+              'Total Harga Modal': formatRupiah(summaryTotalModal),
+              'Total Keuntungan': formatRupiah(summaryLaba),
+              'Rata-rata Persen Untung': `${summaryMargin}%`,
             },
         sections: [
           {
@@ -466,7 +466,7 @@ export function LaporanPenjualanPage() {
               ...(!isAdmin
                 ? [
                     {
-                      header: 'Modal Unit',
+                      header: 'Modal Satuan',
                       key: 'hpp',
                       formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
                     },
@@ -485,12 +485,12 @@ export function LaporanPenjualanPage() {
                       formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
                     },
                     {
-                      header: 'Laba',
+                      header: 'Keuntungan',
                       key: 'laba',
                       formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
                     },
                     {
-                      header: 'Margin',
+                      header: 'Persen Untung',
                       key: 'marginPersen',
                       formatter: (v: unknown) => `${Number(v ?? 0)}%`,
                     },
@@ -535,12 +535,12 @@ export function LaporanPenjualanPage() {
                       formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
                     },
                     {
-                      header: 'Laba',
+                      header: 'Keuntungan',
                       key: 'laba',
                       formatter: (v: unknown) => formatRupiah(Number(v ?? 0)),
                     },
                     {
-                      header: 'Margin',
+                      header: 'Persen Untung',
                       key: 'marginPersen',
                       formatter: (v: unknown) => `${Number(v ?? 0)}%`,
                     },
@@ -571,7 +571,7 @@ export function LaporanPenjualanPage() {
               { header: 'Petugas Jaga', key: 'petugas' },
               { header: 'Jumlah Trx', key: 'jumlahTransaksi' },
               {
-                header: 'Penjualan Bruto',
+                header: 'Total Penjualan (Sebelum Refund)',
                 key: 'penjualanBruto',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
@@ -581,7 +581,7 @@ export function LaporanPenjualanPage() {
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
               {
-                header: 'Penjualan Bersih',
+                header: 'Total Penjualan Akhir',
                 key: 'penjualanBersih',
                 formatter: (v) => formatRupiah(Number(v ?? 0)),
               },
@@ -614,7 +614,7 @@ export function LaporanPenjualanPage() {
       <Header fixed>
         <HeaderBreadcrumb
           section='Laporan Keuangan'
-          title={isAdmin ? 'Laporan Penjualan' : 'Penjualan & Laba Kotor'}
+          title={isAdmin ? 'Laporan Penjualan' : 'Penjualan & Keuntungan'}
         />
         <HeaderActions />
       </Header>
@@ -624,7 +624,7 @@ export function LaporanPenjualanPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                {isAdmin ? 'Laporan Penjualan Kantin' : 'Laporan Penjualan & Laba Kotor'}
+                {isAdmin ? 'Laporan Penjualan Kantin' : 'Laporan Penjualan & Keuntungan'}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Periode: <strong className="text-foreground">{dateFilterLabel}</strong>
@@ -657,7 +657,7 @@ export function LaporanPenjualanPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Penjualan Bersih
+                  Total Penjualan Akhir
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
                   <Banknote className="h-4 w-4" />
@@ -668,7 +668,7 @@ export function LaporanPenjualanPage() {
                   {ringkasan ? formatRupiah(summaryPenjualanBersih) : '...'}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex justify-between gap-2 tabular-nums">
-                  <span>Bruto: {ringkasan ? formatRupiah(summaryPenjualanBruto) : '-'}</span>
+                  <span>Sebelum Batal/Refund: {ringkasan ? formatRupiah(summaryPenjualanBruto) : '-'}</span>
                   <span className="text-amber-600 dark:text-amber-400">Refund: {ringkasan ? formatRupiah(summaryNilaiRefund) : '-'}</span>
                 </div>
               </CardContent>
@@ -679,7 +679,7 @@ export function LaporanPenjualanPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Modal (HPP)
+                      Total Harga Modal
                     </CardTitle>
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <Wallet className="h-4 w-4" />
@@ -698,7 +698,7 @@ export function LaporanPenjualanPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Laba Kotor
+                      Keuntungan Penjualan
                     </CardTitle>
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                       <TrendingUp className="h-4 w-4" />
@@ -710,9 +710,9 @@ export function LaporanPenjualanPage() {
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       <Badge variant="outline" className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-mono text-xs font-medium text-blue-700 tabular-nums dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-                        Margin: {formatMargin(summaryMargin)}
+                        Persen Untung: {formatMargin(summaryMargin)}
                       </Badge>
-                      <span className="text-[11px] text-muted-foreground">dari omset bersih</span>
+                      <span className="text-[11px] text-muted-foreground">dari penjualan akhir</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -772,8 +772,8 @@ export function LaporanPenjualanPage() {
                         title: 'Urutkan',
                         options: [
                           { label: 'Terlaris', value: 'terlaris' },
-                          { label: 'Laba Terbesar', value: 'laba' },
-                          { label: 'Margin Tertinggi', value: 'margin' },
+                          { label: 'Keuntungan Terbesar', value: 'laba' },
+                          { label: 'Persen Untung Tertinggi', value: 'margin' },
                         ],
                         selectedValues: [sortBy],
                         onSelect: (vals) => setSortBy((vals[0] as 'terlaris' | 'laba' | 'margin') || 'terlaris'),
@@ -794,12 +794,12 @@ export function LaporanPenjualanPage() {
               <Card className="p-0 gap-0 overflow-hidden">
                 <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
-                    {isAdmin ? 'Penjualan per Item Menu' : 'Penjualan & Laba Kotor per Item Menu'}
+                    {isAdmin ? 'Penjualan per Item Menu' : 'Penjualan & Keuntungan per Item Menu'}
                   </CardTitle>
                   <CardDescription>
                     {isAdmin
-                      ? 'Peringkat menu berdasarkan volume terjual dan total penjualan.'
-                      : 'Peringkat menu berdasarkan volume terjual, modal (HPP), dan kontribusi laba.'}
+                      ? 'Peringkat menu berdasarkan jumlah terjual dan total penjualan.'
+                      : 'Peringkat menu berdasarkan jumlah terjual, harga modal, dan keuntungannya.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -812,14 +812,14 @@ export function LaporanPenjualanPage() {
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Satuan</TableHead>
                         {!isAdmin && (
-                          <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Unit</TableHead>
+                          <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Satuan</TableHead>
                         )}
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
                         {!isAdmin && (
                           <>
                             <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
-                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
-                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin</TableHead>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Keuntungan</TableHead>
+                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Persen Untung</TableHead>
                           </>
                         )}
                       </TableRow>
@@ -944,12 +944,12 @@ export function LaporanPenjualanPage() {
               <Card className="p-0 gap-0 overflow-hidden">
                 <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                   <CardTitle className="text-base font-bold">
-                    {isAdmin ? 'Penjualan per Kategori' : 'Penjualan & Laba Kotor per Kategori'}
+                    {isAdmin ? 'Penjualan per Kategori' : 'Penjualan & Keuntungan per Kategori'}
                   </CardTitle>
                   <CardDescription>
                     {isAdmin
-                      ? 'Perbandingan performa omset penjualan antar kelompok kategori makanan/minuman.'
-                      : 'Perbandingan performa omset dan margin laba antar kelompok kategori makanan/minuman.'}
+                      ? 'Perbandingan jumlah penjualan antar kelompok kategori makanan/minuman.'
+                      : 'Perbandingan total penjualan dan persen untung antar kelompok kategori makanan/minuman.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -964,8 +964,8 @@ export function LaporanPenjualanPage() {
                         {!isAdmin && (
                           <>
                             <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
-                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba</TableHead>
-                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin Rata-rata</TableHead>
+                            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Keuntungan</TableHead>
+                            <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rata-rata Persen Untung</TableHead>
                           </>
                         )}
                       </TableRow>
@@ -1094,7 +1094,7 @@ export function LaporanPenjualanPage() {
                     Penjualan per Titik Kasir & Petugas
                   </CardTitle>
                   <CardDescription>
-                    Rekap penerimaan transaksi, refund transaksi, dan omset bersih per titik kasir.
+                    Rekap transaksi masuk, pembatalan/refund, dan penjualan akhir per titik kasir.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -1105,9 +1105,9 @@ export function LaporanPenjualanPage() {
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titik Kasir</TableHead>
                         <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Petugas Jaga</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jumlah Transaksi</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penjualan Bruto</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan (Sebelum Refund)</TableHead>
                         <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Nilai Refund</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Penjualan Bersih</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Total Penjualan Akhir</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

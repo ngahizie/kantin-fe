@@ -123,8 +123,8 @@ export function LaporanLabaKotorPage() {
         setItems(resItems)
       } catch (err: unknown) {
         if (!isMounted) return
-        const msg = err instanceof Error ? err.message : 'Gagal memuat laba kotor'
-        toast.error('Gagal Memuat Laporan Laba Kotor', { description: msg })
+        const msg = err instanceof Error ? err.message : 'Gagal memuat laporan keuntungan'
+        toast.error('Gagal Memuat Laporan Keuntungan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -213,16 +213,16 @@ export function LaporanLabaKotorPage() {
       }))
 
       exportTableToExcel({
-        filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
-        sheetName: 'Laba Kotor',
-        title: 'LAPORAN ANALISIS LABA KOTOR',
+        filename: `Laporan_Keuntungan_Kantin_${new Date().toISOString().split('T')[0]}`,
+        sheetName: 'Keuntungan Penjualan',
+        title: 'LAPORAN KEUNTUNGAN PENJUALAN',
         metadata: {
           'Periode': dateFilterLabel,
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
-          'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-          'Total Laba': formatRupiah(summaryLaba),
-          'Rata-rata Margin Kotor': `${summaryMargin}%`,
+          'Total Penjualan Akhir': formatRupiah(ringkasan.penjualanBersih ?? 0),
+          'Total Harga Modal': formatRupiah(summaryTotalModal),
+          'Total Keuntungan': formatRupiah(summaryLaba),
+          'Rata-rata Persen Untung': `${summaryMargin}%`,
         },
         columns: [
           { header: 'No', width: 6 },
@@ -230,12 +230,12 @@ export function LaporanLabaKotorPage() {
           { header: 'Kategori', key: 'kategoriNama', width: 16 },
           { header: 'Qty Terjual', key: 'qty', width: 12 },
           { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
-          { header: 'Modal Unit (Rp)', key: 'hpp', width: 14 },
+          { header: 'Modal Satuan (Rp)', key: 'hpp', width: 14 },
           { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
           { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-          { header: 'Laba (Rp)', key: 'laba', width: 18 },
+          { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
           {
-            header: 'Margin (%)',
+            header: 'Persen Untung (%)',
             key: 'marginPersen',
             formatter: (v) => `${Number(v ?? 0)}%`,
             width: 12,
@@ -257,7 +257,7 @@ export function LaporanLabaKotorPage() {
       })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: 'Laporan Laba Kotor (.xlsx) berhasil diunduh.',
+        description: 'Laporan Keuntungan Penjualan (.xlsx) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
@@ -286,16 +286,16 @@ export function LaporanLabaKotorPage() {
       }))
 
       exportTableToPdf({
-        filename: `Laporan_Laba_Kotor_Kantin_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN ANALISIS LABA KOTOR',
-        subtitle: 'Analisis Margin Penjualan Menu dan Kontribusi Keuntungan',
+        filename: `Laporan_Keuntungan_Kantin_${new Date().toISOString().split('T')[0]}`,
+        title: 'LAPORAN KEUNTUNGAN PENJUALAN',
+        subtitle: 'Rincian Persen Untung Penjualan Menu dan Kontribusi Keuntungan',
         metadata: {
           'Periode': dateFilterLabel,
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Penjualan Bersih (Omset)': formatRupiah(ringkasan.penjualanBersih ?? 0),
-          'Total Modal (HPP)': formatRupiah(summaryTotalModal),
-          'Total Laba': formatRupiah(summaryLaba),
-          'Rata-rata Margin Kotor': `${summaryMargin}%`,
+          'Total Penjualan Akhir': formatRupiah(ringkasan.penjualanBersih ?? 0),
+          'Total Harga Modal': formatRupiah(summaryTotalModal),
+          'Total Keuntungan': formatRupiah(summaryLaba),
+          'Rata-rata Persen Untung': `${summaryMargin}%`,
         },
         columns: [
           { header: 'No' },
@@ -308,7 +308,7 @@ export function LaporanLabaKotorPage() {
             formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Modal Unit',
+            header: 'Modal Satuan',
             key: 'hpp',
             formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
@@ -323,12 +323,12 @@ export function LaporanLabaKotorPage() {
             formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Laba',
+            header: 'Keuntungan',
             key: 'laba',
             formatter: (v) => formatRupiah(Number(v ?? 0)),
           },
           {
-            header: 'Margin',
+            header: 'Persen Untung',
             key: 'marginPersen',
             formatter: (v) => `${Number(v ?? 0)}%`,
           },
@@ -349,7 +349,7 @@ export function LaporanLabaKotorPage() {
       })
 
       toast.success('Ekspor PDF Berhasil', {
-        description: 'Laporan Laba Kotor (.pdf) berhasil diunduh.',
+        description: 'Laporan Keuntungan Penjualan (.pdf) berhasil diunduh.',
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
@@ -360,7 +360,7 @@ export function LaporanLabaKotorPage() {
   return (
     <>
       <Header fixed>
-        <HeaderBreadcrumb section='Laporan Keuangan' title='Laba Kotor' />
+        <HeaderBreadcrumb section='Laporan Keuangan' title='Laporan Keuntungan' />
         <HeaderActions />
       </Header>
 
@@ -369,7 +369,7 @@ export function LaporanLabaKotorPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Laporan Laba Kotor
+                Laporan Keuntungan Penjualan
               </h1>
             </div>
 
@@ -395,7 +395,7 @@ export function LaporanLabaKotorPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Laba Kotor
+                  Total Keuntungan Penjualan
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
                   <TrendingUp className="h-4 w-4" />
@@ -406,7 +406,7 @@ export function LaporanLabaKotorPage() {
                   {ringkasan ? formatRupiah(summaryLaba) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Keuntungan murni setelah dipotong total modal
+                  Keuntungan murni setelah dikurangi total harga modal
                 </p>
               </CardContent>
             </Card>
@@ -414,7 +414,7 @@ export function LaporanLabaKotorPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Rata-rata Margin Kotor
+                  Rata-rata Persen Untung
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                   <Percent className="h-4 w-4" />
@@ -425,7 +425,7 @@ export function LaporanLabaKotorPage() {
                   {ringkasan ? `${summaryMargin}%` : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Rasio laba terhadap penjualan bersih
+                  Persentase untung dari total penjualan akhir
                 </p>
               </CardContent>
             </Card>
@@ -433,7 +433,7 @@ export function LaporanLabaKotorPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Modal (HPP)
+                  Total Harga Modal
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Wallet className="h-4 w-4" />
@@ -444,7 +444,7 @@ export function LaporanLabaKotorPage() {
                   {ringkasan ? formatRupiah(summaryTotalModal) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Total modal kulakan menu terjual
+                  Total modal belanja menu terjual
                 </p>
               </CardContent>
             </Card>
@@ -452,7 +452,7 @@ export function LaporanLabaKotorPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Menu Juara Laba
+                  Menu Paling Untung
                 </CardTitle>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
                   <Award className="h-4 w-4" />
@@ -463,7 +463,7 @@ export function LaporanLabaKotorPage() {
                   {topProfitItem ? topProfitItem.nama : '-'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 font-mono tabular-nums">
-                  {topProfitItem ? `Laba: ${formatRupiah(getItemLaba(topProfitItem))}` : '-'}
+                  {topProfitItem ? `Untung: ${formatRupiah(getItemLaba(topProfitItem))}` : '-'}
                 </p>
               </CardContent>
             </Card>
@@ -477,11 +477,11 @@ export function LaporanLabaKotorPage() {
               onSearchChange={setSearchQuery}
               filters={[
                 {
-                  title: 'Margin',
+                  title: 'Persen Untung',
                   options: [
-                    { label: 'Margin Tinggi (≥ 35%)', value: 'HIGH' },
-                    { label: 'Margin Sedang (20-34%)', value: 'MEDIUM' },
-                    { label: 'Margin Tipis (< 20%)', value: 'LOW' },
+                    { label: 'Untung Tinggi (≥ 35%)', value: 'HIGH' },
+                    { label: 'Untung Sedang (20-34%)', value: 'MEDIUM' },
+                    { label: 'Untung Tipis (< 20%)', value: 'LOW' },
                   ],
                   selectedValues: marginFilter !== 'ALL' ? [marginFilter] : [],
                   onSelect: (vals) => setMarginFilter((vals[0] as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'ALL'),
@@ -490,9 +490,9 @@ export function LaporanLabaKotorPage() {
                 {
                   title: 'Urutkan',
                   options: [
-                    { label: 'Laba Terbesar', value: 'laba_desc' },
-                    { label: 'Margin Tertinggi', value: 'margin_desc' },
-                    { label: 'Omset Tertinggi', value: 'omset_desc' },
+                    { label: 'Keuntungan Terbesar', value: 'laba_desc' },
+                    { label: 'Persen Untung Tertinggi', value: 'margin_desc' },
+                    { label: 'Penjualan Tertinggi', value: 'omset_desc' },
                   ],
                   selectedValues: sortBy !== 'laba_desc' ? [sortBy] : [],
                   onSelect: (vals) => setSortBy((vals[0] as 'laba_desc' | 'margin_desc' | 'omset_desc') || 'laba_desc'),
@@ -510,10 +510,10 @@ export function LaporanLabaKotorPage() {
             <Card className="p-0 gap-0 overflow-hidden">
               <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
                 <CardTitle className="text-base font-bold">
-                  Daftar Kontribusi Laba per Menu
+                  Daftar Keuntungan per Menu
                 </CardTitle>
                 <CardDescription>
-                  Evaluasi harga jual vs HPP setiap menu untuk penetapan harga dan subsidi kantin.
+                  Perbandingan harga jual dan harga modal setiap menu di kantin.
                 </CardDescription>
               </CardHeader>
 
@@ -526,11 +526,11 @@ export function LaporanLabaKotorPage() {
                       <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Satuan</TableHead>
-                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Unit</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modal Satuan</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal</TableHead>
-                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Laba</TableHead>
-                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin</TableHead>
+                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Keuntungan</TableHead>
+                      <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Persen Untung</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -539,7 +539,7 @@ export function LaporanLabaKotorPage() {
                         <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Memuat data laba kotor...</span>
+                            <span>Memuat data keuntungan penjualan...</span>
                           </div>
                         </TableCell>
                       </TableRow>

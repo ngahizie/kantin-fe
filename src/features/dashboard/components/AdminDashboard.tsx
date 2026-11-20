@@ -188,7 +188,7 @@ export const AdminDashboard: React.FC = () => {
           Dashboard Admin Sekolah
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Pantau operasional kantin, status perangkat titik kasir, pengawasan kartu siswa, dan audit pembatalan transaksi.
+          Pantau operasional kantin, status perangkat titik kasir, pengawasan kartu siswa, dan pemeriksaan pembatalan transaksi.
         </p>
       </div>
 
@@ -232,9 +232,9 @@ export const AdminDashboard: React.FC = () => {
           unit='Trx'
           icon={ShoppingCart}
           iconColorClass='border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300'
-          badgeText='Omset Terlayani'
+          badgeText='Penjualan Terlayani'
           badgeColorClass='text-blue-600 dark:text-blue-400 font-semibold'
-          subtext={`• Omset ${formatRupiah(todaySales)}`}
+          subtext={`• Penjualan ${formatRupiah(todaySales)}`}
         />
 
         <DashboardStatCard
@@ -431,7 +431,7 @@ export const AdminDashboard: React.FC = () => {
               Aktivitas Pembatalan Kasir (Refund) Terkini
             </CardTitle>
             <CardDescription className='text-xs mt-0.5'>
-              Audit transaksi kasir yang dibatalkan beserta alasan dan waktu pembatalan
+              Daftar transaksi kasir yang dibatalkan beserta alasan dan waktu pembatalan
             </CardDescription>
           </div>
           <Button asChild variant='ghost' size='sm' className='text-xs font-semibold text-primary'>

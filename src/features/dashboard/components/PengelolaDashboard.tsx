@@ -275,7 +275,7 @@ export const PengelolaDashboard: React.FC = () => {
           value={formatRupiah(todaySales)}
           icon={Banknote}
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
-          badgeText='Omset Bersih'
+          badgeText='Penjualan Akhir'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
           subtext='• Hari ini'
         />
@@ -338,7 +338,7 @@ export const PengelolaDashboard: React.FC = () => {
                   Tren Penjualan 7 Hari Terakhir
                 </CardTitle>
                 <CardDescription className='text-xs mt-0.5'>
-                  Grafik omset harian kasir kantin dalam Rupiah (Rp) per kategori
+                  Grafik penjualan harian kasir kantin dalam Rupiah (Rp) per kategori
                 </CardDescription>
               </div>
             </div>
@@ -432,7 +432,7 @@ export const PengelolaDashboard: React.FC = () => {
                               </div>
                             ))}
                             <div className='mt-2 pt-2 border-t border-border flex items-center justify-between gap-6 font-semibold text-foreground'>
-                              <span>Total Omset</span>
+                              <span>Total Penjualan</span>
                               <span className='font-bold tabular-nums text-foreground'>{formatRupiah(total)}</span>
                             </div>
                           </div>

@@ -222,8 +222,8 @@ export function InventarisPage() {
       'Stok Saat Ini',
       'Stok Minimum',
       'Status Stok',
-      'HPP Rata-rata (Rp)',
-      'Total Nilai Persediaan (Rp)',
+      'Modal Rata-rata (Rp)',
+      'Total Nilai Stok (Rp)',
     ]
 
     const rows = filteredAndSortedList.map((item) => {
@@ -292,11 +292,11 @@ export function InventarisPage() {
 
       exportTableToPdf({
         filename: `Laporan_Inventaris_Stok_${new Date().toISOString().split('T')[0]}`,
-        title: 'LAPORAN INVENTARIS & VALUASI PERSEDIAAN',
-        subtitle: 'Kantin Cashless SKOOLIA - Posisi dan Nilai Aset Stok',
+        title: 'LAPORAN INVENTARIS & NILAI STOK BARANG',
+        subtitle: 'Kantin Cashless SKOOLIA - Posisi dan Total Nilai Stok',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Total Nilai Persediaan': formatRupiah(kpiData.totalNilai),
+          'Total Nilai Stok': formatRupiah(kpiData.totalNilai),
           'Total Menu Terdaftar': `${kpiData.totalSku} Menu`,
           'Item Stok Menipis/Habis': `${kpiData.countMenipis + kpiData.countHabis} Item`,
         },
@@ -308,8 +308,8 @@ export function InventarisPage() {
           { header: 'Stok', key: 'stok' },
           { header: 'Min', key: 'min' },
           { header: 'Status', key: 'status' },
-          { header: 'HPP Satuan', key: 'hpp' },
-          { header: 'Total Nilai Persediaan', key: 'nilai' },
+          { header: 'Modal Satuan', key: 'hpp' },
+          { header: 'Total Nilai Stok', key: 'nilai' },
         ],
         data: rows,
       })
@@ -335,10 +335,10 @@ export function InventarisPage() {
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-              Laporan Inventaris & Valuasi Persediaan
+              Laporan Inventaris & Nilai Stok
             </h1>
             <p className='text-sm text-muted-foreground'>
-              Pantau jumlah stok berjalan, batas minimum, HPP rata-rata, dan total nilai aset persediaan.
+              Pantau jumlah stok saat ini, batas minimum, modal rata-rata, dan total nilai stok barang.
             </p>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
@@ -353,11 +353,11 @@ export function InventarisPage() {
 
         {/* KPI Summary Cards */}
         <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
-          {/* 1. Total Nilai Persediaan (Aset) */}
+          {/* 1. Total Nilai Stok */}
           <Card className='col-span-2 md:col-span-1'>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-2'>
               <CardTitle className='text-sm font-medium text-muted-foreground min-w-0 truncate'>
-                Total Nilai Aset
+                Total Nilai Stok
               </CardTitle>
               <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'>
                 <Wallet className='size-4' />
@@ -391,7 +391,7 @@ export function InventarisPage() {
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground tabular-nums'>
-                Akumulasi: {formatNumber(kpiData.totalUnit)} unit fisik
+                Total: {formatNumber(kpiData.totalUnit)} unit fisik
               </p>
             </CardContent>
           </Card>
@@ -460,7 +460,7 @@ export function InventarisPage() {
                 </span>
               </div>
               <p className='mt-1 text-xs text-muted-foreground'>
-                Persediaan 0 unit
+                Stok 0 unit
               </p>
             </CardContent>
           </Card>
@@ -489,7 +489,7 @@ export function InventarisPage() {
               isSingleSelect: true,
             },
             {
-              title: 'Status Persediaan',
+              title: 'Status Stok',
               options: [
                 { label: 'Hanya Stok Aman', value: 'AMAN' },
                 { label: 'Stok Menipis (Kritis)', value: 'MENIPIS' },
@@ -544,10 +544,10 @@ export function InventarisPage() {
                     </TableHead>
                     <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Batas Min</TableHead>
                     <TableHead className='text-right w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                      HPP Terakhir
+                      Modal Terakhir
                     </TableHead>
                     <TableHead className='text-right w-44 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                      Nilai Persediaan
+                      Total Nilai Stok
                     </TableHead>
                     <TableHead className='text-center w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aksi</TableHead>
                   </TableRow>
@@ -561,7 +561,7 @@ export function InventarisPage() {
                       >
                         <div className='flex flex-col items-center justify-center gap-2'>
                           <Loader2 className='size-6 animate-spin text-muted-foreground' />
-                          <span className='text-xs'>Memuat tabel inventaris persediaan...</span>
+                          <span className='text-xs'>Memuat tabel inventaris stok...</span>
                         </div>
                       </TableCell>
                     </TableRow>

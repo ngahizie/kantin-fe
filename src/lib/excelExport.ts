@@ -129,9 +129,11 @@ function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'ri
   if (
     str.includes('rp') ||
     str.includes('harga') ||
+    str.includes('modal') ||
     str.includes('total') ||
     str.includes('hpp') ||
     str.includes('laba') ||
+    str.includes('untung') ||
     str.includes('qty') ||
     str.includes('jumlah') ||
     str.includes('saldo') ||
@@ -190,6 +192,9 @@ export function shouldColumnBeSummed(key: string, header: string): boolean {
     str.includes('hpp') ||
     str.includes('modalunit') ||
     str.includes('modal unit') ||
+    str.includes('modal satuan') ||
+    str.includes('modal rata') ||
+    str.includes('modal terakhir') ||
     str.includes('persen') ||
     str.includes('margin') ||
     str.includes('limit') ||
@@ -225,6 +230,7 @@ export function shouldColumnBeSummed(key: string, header: string): boolean {
     str.includes('omzet') ||
     str.includes('omset') ||
     str.includes('laba') ||
+    str.includes('untung') ||
     str.includes('qty') ||
     str.includes('jumlah') ||
     str.includes('belanja') ||

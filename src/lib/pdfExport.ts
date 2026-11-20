@@ -72,9 +72,11 @@ function resolveColumnAlignment<T>(col: PdfColumn<T>): 'left' | 'center' | 'righ
   if (
     str.includes('rp') ||
     str.includes('harga') ||
+    str.includes('modal') ||
     str.includes('total') ||
     str.includes('hpp') ||
     str.includes('laba') ||
+    str.includes('untung') ||
     str.includes('qty') ||
     str.includes('jumlah') ||
     str.includes('saldo') ||

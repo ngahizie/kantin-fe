@@ -121,8 +121,8 @@ export function KartuStokPage() {
         'Jenis Mutasi',
         'Arah',
         'Qty',
-        'Saldo Akhir',
-        'HPP Satuan (Rp)',
+        'Sisa Stok',
+        'Modal Satuan (Rp)',
         'Harga Beli Satuan (Rp)',
         'Total Nilai (Rp)',
         'Aktor',
@@ -213,8 +213,8 @@ export function KartuStokPage() {
           { header: 'Jenis Mutasi', key: 'jenis' },
           { header: 'Arah', key: 'arah' },
           { header: 'Qty', key: 'qty' },
-          { header: 'Saldo Akhir', key: 'stokSetelah' },
-          { header: 'HPP Satuan', key: 'hpp' },
+          { header: 'Sisa Stok', key: 'stokSetelah' },
+          { header: 'Modal Satuan', key: 'hpp' },
           { header: 'Aktor', key: 'aktor' },
           { header: 'Alasan / Keterangan', key: 'alasan' },
         ],
@@ -282,7 +282,7 @@ export function KartuStokPage() {
               Mutasi Stok
             </h1>
             <p className='text-sm text-muted-foreground'>
-              Lacak histori pergerakan keluar-masuk, saldo berjalan, dan HPP seluruh menu.
+              Lacak riwayat keluar-masuk stok, sisa stok, dan harga modal seluruh menu.
             </p>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
@@ -353,7 +353,7 @@ export function KartuStokPage() {
               </div>
             </CardHeader>
             <CardContent className='pt-0 text-xs text-muted-foreground'>
-              Penjualan, rusak, audit
+              Penjualan, rusak, cek fisik stok
             </CardContent>
           </Card>
         </div>
@@ -362,10 +362,10 @@ export function KartuStokPage() {
         <div className='space-y-4'>
           <div>
             <h2 className='text-lg font-semibold tracking-tight'>
-              Tabel Mutasi Akuntansi
+              Tabel Catatan Keluar Masuk Stok
             </h2>
             <p className='text-xs text-muted-foreground'>
-              Daftar pergerakan keluar-masuk stok dan saldo berjalan seluruh menu
+              Daftar keluar-masuk stok dan sisa stok seluruh menu
             </p>
           </div>
 
@@ -379,7 +379,7 @@ export function KartuStokPage() {
                       <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Waktu</TableHead>
                       <TableHead className='w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>No. Referensi</TableHead>
                       <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Menu / Produk</TableHead>
-                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Mutasi</TableHead>
+                      <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Jenis Perubahan</TableHead>
                       <TableHead className='text-right w-24 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400'>
                         Masuk
                       </TableHead>
@@ -387,10 +387,10 @@ export function KartuStokPage() {
                         Keluar
                       </TableHead>
                       <TableHead className='text-right w-28 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                        Saldo Akhir
+                        Sisa Stok
                       </TableHead>
                       <TableHead className='text-right w-32 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                        HPP Satuan
+                        Modal Satuan
                       </TableHead>
                       <TableHead className='w-36 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Aktor</TableHead>
                       <TableHead className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>Alasan / Keterangan</TableHead>

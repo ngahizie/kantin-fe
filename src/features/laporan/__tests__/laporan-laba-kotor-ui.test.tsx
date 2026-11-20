@@ -4,7 +4,7 @@ import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
-import { Route } from '@/routes/_authenticated/laporan/laba-kotor/index'
+import { Route } from '@/routes/_authenticated/laporan/keuntungan/index'
 import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
 import { sanitizeFormulaCell } from '@/lib/excelExport'
 
@@ -82,7 +82,7 @@ const MOCK_ITEMS = [
   },
 ]
 
-describe('Audit Keamanan & Fungsional Laporan Laba Kotor (/laporan/laba-kotor)', () => {
+describe('Audit Keamanan & Fungsional Laporan Keuntungan (/laporan/keuntungan)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     mockExportExcel.mockClear()

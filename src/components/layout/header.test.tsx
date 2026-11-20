@@ -159,7 +159,7 @@ describe('Header & SidebarTrigger', () => {
           <Header fixed>
             <HeaderBreadcrumb
               section='Laporan Keuangan'
-              title='Penjualan & Laba Kotor Harian Bulanan'
+              title='Penjualan & Keuntungan Harian Bulanan'
             />
             <HeaderActions />
           </Header>

@@ -169,14 +169,14 @@ export const BendaharaDashboard: React.FC = () => {
           Dashboard Bendahara Sekolah
         </h1>
         <p className='text-sm text-muted-foreground'>
-          Pantau rekonsiliasi kas kantin, verifikasi setoran kas, total saldo mengendap, dan arus kas harian.
+          Pantau cek selisih uang kantin, verifikasi setoran kas, total saldo siswa, dan keluar masuk uang harian.
         </p>
       </div>
 
       {/* ===== 4 Kartu Metrik Utama ===== */}
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch'>
         <DashboardStatCard
-          title='Status Rekonsiliasi Kas'
+          title='Status Kecocokan Uang'
           value={
             rekonsiliasiStatus === 'loading'
               ? '—'
@@ -195,7 +195,7 @@ export const BendaharaDashboard: React.FC = () => {
           badgeText={
             rekonsiliasi
               ? isKasSeimbang
-                ? 'Seimbang'
+                ? 'Cocok'
                 : 'Ada Selisih'
               : rekonsiliasiStatus === 'loading'
                 ? 'Memuat...'
@@ -209,9 +209,9 @@ export const BendaharaDashboard: React.FC = () => {
           subtext={
             rekonsiliasi
               ? `• Selisih ${formatRupiah(selisihKas)}`
-              : '• Data rekonsiliasi tidak tersedia'
+              : '• Data pengecekan tidak tersedia'
           }
-          href='/laporan/rekonsiliasi'
+          href='/laporan/cek-selisih'
         />
 
         <DashboardStatCard
@@ -219,7 +219,7 @@ export const BendaharaDashboard: React.FC = () => {
           value={formatRupiah(todaySales)}
           icon={Banknote}
           iconColorClass='border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300'
-          badgeText='Omset Bersih'
+          badgeText='Penjualan Akhir'
           badgeColorClass='text-emerald-600 dark:text-emerald-400 font-semibold'
           subtext={`• ${todayTransactions} transaksi`}
           href='/laporan/penjualan'
@@ -237,28 +237,28 @@ export const BendaharaDashboard: React.FC = () => {
         />
 
         <DashboardStatCard
-          title='Total Saldo Mengendap'
+          title='Total Saldo Siswa (Titipan)'
           value={formatRupiah(saldoMengendap?.total ?? saldoMengendap?.saldoSiswa ?? saldoMengendapKas)}
           icon={Wallet}
           iconColorClass='border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/60 dark:bg-purple-950/40 dark:text-purple-300'
           badgeText='Titipan Dana'
           badgeColorClass='text-purple-600 dark:text-purple-400 font-semibold'
           subtext={`• ${saldoMengendap?.jumlahSiswa ?? 0} siswa`}
-          href='/laporan/saldo-mengendap'
+          href='/laporan/saldo-siswa'
         />
       </div>
 
-      {/* ===== Grid Konten Tengah: Grafik Arus Kas & Ringkasan Rekonsiliasi ===== */}
+      {/* ===== Grid Konten Tengah: Grafik Keluar Masuk Uang & Ringkasan Cek Selisih ===== */}
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-7'>
         {/* Kolom Kiri: Tren Arus Kas 7 Hari Terakhir */}
         <Card className='col-span-1 lg:col-span-4'>
           <CardHeader className='pb-3 space-y-2'>
             <div>
               <CardTitle className='text-base font-semibold'>
-                Arus Kas 7 Hari Terakhir
+                Keluar Masuk Uang 7 Hari Terakhir
               </CardTitle>
               <CardDescription className='text-xs mt-0.5'>
-                Perbandingan harian antara Omset Penjualan Kantin dan Penerimaan Saldo Siswa
+                Perbandingan harian antara Total Penjualan Kantin dan Penerimaan Saldo Siswa
               </CardDescription>
             </div>
             <div className='flex items-center gap-4 text-xs pt-2 border-t border-border'>
@@ -362,11 +362,11 @@ export const BendaharaDashboard: React.FC = () => {
                 <span>Ringkasan Cek Selisih</span>
               </CardTitle>
               <CardDescription className='text-xs mt-0.5'>
-                Audit kecocokan saldo fisik dengan ledger transaksi sistem
+                Cek kecocokan uang tunai dengan catatan transaksi sistem
               </CardDescription>
             </div>
             <Link
-              to='/laporan/rekonsiliasi'
+              to='/laporan/cek-selisih'
               className='text-xs font-semibold text-primary hover:underline shrink-0 pt-0.5'
             >
               Rincian
@@ -375,24 +375,24 @@ export const BendaharaDashboard: React.FC = () => {
           <CardContent className='flex-1 p-4 border-t border-border space-y-3'>
             <div className='rounded-lg border border-border bg-muted/30 p-3 space-y-2'>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Saldo Mengendap:</span>
+                <span className='text-muted-foreground'>Total Saldo Siswa (Titipan):</span>
                 <span className='font-bold tabular-nums text-foreground'>
                   {formatRupiah(saldoMengendapKas)}
                 </span>
               </div>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Status Audit:</span>
+                <span className='text-muted-foreground'>Status Pengecekan:</span>
                 <Badge
                   variant='outline'
                   className={`rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide ${getStatusBadgeClass(
-                    isKasSeimbang ? 'SEIMBANG' : 'ADA SELISIH'
+                    isKasSeimbang ? 'COCOK' : 'ADA SELISIH'
                   )}`}
                 >
-                  {isKasSeimbang ? 'SEIMBANG' : 'ADA SELISIH'}
+                  {isKasSeimbang ? 'COCOK' : 'ADA SELISIH'}
                 </Badge>
               </div>
               <div className='flex items-center justify-between text-xs'>
-                <span className='text-muted-foreground'>Nominal Selisih Kas:</span>
+                <span className='text-muted-foreground'>Nominal Selisih Uang:</span>
                 <span
                   className={`font-semibold tabular-nums ${
                     selisihKas === 0
@@ -408,11 +408,11 @@ export const BendaharaDashboard: React.FC = () => {
             <div className='text-xs text-muted-foreground leading-relaxed'>
               {isKasSeimbang ? (
                 <p>
-                  ✅ Kas sekolah dan titipan saldo siswa dalam kondisi <strong className='text-emerald-600 dark:text-emerald-400'>seimbang</strong> tanpa indikasi selisih buku.
+                  ✅ Uang sekolah dan titipan saldo siswa dalam kondisi <strong className='text-emerald-600 dark:text-emerald-400'>cocok</strong> tanpa selisih catatan.
                 </p>
               ) : (
                 <p>
-                  ⚠️ Terdeteksi selisih sebesar <strong className='text-rose-600 dark:text-rose-400'>{formatRupiah(selisihKas)}</strong>. Buka halaman Cek Selisih Uang untuk melakukan audit dan penyesuaian saldo.
+                  ⚠️ Terdeteksi selisih sebesar <strong className='text-rose-600 dark:text-rose-400'>{formatRupiah(selisihKas)}</strong>. Buka halaman Cek Selisih Uang untuk memeriksa dan menyesuaikan saldo.
                 </p>
               )}
             </div>
@@ -422,7 +422,7 @@ export const BendaharaDashboard: React.FC = () => {
                 <Link to='/saldo/koreksi'>Penyesuaian Saldo</Link>
               </Button>
               <Button asChild size='sm' className='w-full text-xs'>
-                <Link to='/laporan/rekonsiliasi'>Audit Kas</Link>
+                <Link to='/laporan/cek-selisih'>Cek Selisih Uang</Link>
               </Button>
             </div>
           </CardContent>

@@ -114,7 +114,7 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
 
     // Periksa salah satu baris memiliki nilai TETAP
     const pdfData = pdfArg.data as Array<{ pos?: string; arah?: string }>
-    const tetapRowPdf = pdfData.find((r) => r.pos === 'Penjualan Bersih Kantin')
+    const tetapRowPdf = pdfData.find((r) => r.pos === 'Total Penjualan Akhir Kantin')
     expect(tetapRowPdf?.arah).toBe('TETAP')
 
     // Klik tombol Ekspor -> Excel
@@ -129,7 +129,7 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     expect(excelHeaders).not.toContain('Arah Mutasi')
 
     const excelData = excelArg.data as Array<{ pos?: string; arah?: string }>
-    const tetapRowExcel = excelData.find((r) => r.pos === 'Saldo Mengendap Siswa')
+    const tetapRowExcel = excelData.find((r) => r.pos === 'Total Saldo Siswa (Titipan)')
     expect(tetapRowExcel?.arah).toBe('TETAP')
   })
 })

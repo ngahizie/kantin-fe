@@ -33,13 +33,13 @@ describe('filterNavGroupsByRole', () => {
       (s) => s.title
     )
     expect(subReportTitles).toContain('Cek Selisih Uang')
-    expect(subReportTitles).toContain('Penjualan & Laba Kotor')
+    expect(subReportTitles).toContain('Penjualan & Keuntungan')
     expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Riwayat Per Siswa')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
     expect(subReportTitles).toContain('Pembatalan Kasir')
-    expect(subReportTitles).not.toContain('Analisis Laba Kotor')
+    expect(subReportTitles).not.toContain('Laporan Keuntungan')
     expect(subReportTitles).not.toContain('Laporan Kerugian Stok')
   })
 
@@ -70,8 +70,8 @@ describe('filterNavGroupsByRole', () => {
       (s) => s.title
     )
 
-    expect(subReportTitles).toContain('Penjualan & Laba Kotor')
-    expect(subReportTitles).toContain('Analisis Laba Kotor')
+    expect(subReportTitles).toContain('Penjualan & Keuntungan')
+    expect(subReportTitles).toContain('Laporan Keuntungan')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).not.toContain('Cek Selisih Uang')
     expect(subReportTitles).not.toContain('Total Saldo Siswa')
@@ -115,7 +115,7 @@ describe('filterNavGroupsByRole', () => {
     expect(subReportTitles).toContain('Riwayat Transaksi')
     expect(subReportTitles).not.toContain('Riwayat Per Siswa')
     expect(subReportTitles).not.toContain('Detail Riwayat Siswa')
-    expect(subReportTitles).not.toContain('Penjualan & Laba Kotor')
+    expect(subReportTitles).not.toContain('Penjualan & Keuntungan')
   })
 
   it('allows bendahara financial oversight without POS, menu CRUD, parent controls, or system settings', () => {
@@ -170,8 +170,8 @@ describe('filterNavGroupsByRole', () => {
       (s) => s.title
     )
     expect(subReportTitles).toContain('Cek Selisih Uang')
-    expect(subReportTitles).toContain('Penjualan & Laba Kotor')
-    expect(subReportTitles).toContain('Analisis Laba Kotor')
+    expect(subReportTitles).toContain('Penjualan & Keuntungan')
+    expect(subReportTitles).toContain('Laporan Keuntungan')
     expect(subReportTitles).toContain('Total Saldo Siswa')
     expect(subReportTitles).toContain('Laporan Kerugian Stok')
     expect(subReportTitles).toContain('Riwayat Transaksi')

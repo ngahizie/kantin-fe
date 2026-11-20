@@ -150,7 +150,7 @@ function KoreksiMutasiFormContent({
     if (!isValidSubmit) {
       if (isSaldoMinus) {
         toast.error(
-          'Koreksi DEBIT ditolak: Saldo berjalan tidak boleh menjadi minus!'
+          'Pengurangan saldo ditolak: Saldo siswa tidak boleh menjadi minus!'
         )
       } else if (alasan.trim().length < 5) {
         toast.error('Alasan penyesuaian saldo minimal 5 karakter!')
@@ -159,7 +159,7 @@ function KoreksiMutasiFormContent({
       } else if (referensiId.trim().length > 56) {
         toast.error('Nomor Berita Acara maksimal 56 karakter!')
       } else if (!isAgreed) {
-        toast.error('Harap centang persetujuan otorisasi audit Bendahara!')
+        toast.error('Harap centang persetujuan otorisasi Bendahara!')
       }
       return
     }
@@ -277,7 +277,7 @@ function KoreksiMutasiFormContent({
           : fallbackItem
 
         toast.success(
-          `Mutasi Koreksi ${arah === 'DEBIT' ? `DEBIT (${formatRupiah(nominalNum)})` : `KREDIT (${formatRupiah(nominalNum)})`} berhasil dicatat!`
+          `Penyesuaian ${arah === 'DEBIT' ? `Pengurangan Saldo (-${formatRupiah(nominalNum)})` : `Penambahan Saldo (+${formatRupiah(nominalNum)})`} berhasil dicatat!`
         )
       }
 
@@ -302,7 +302,7 @@ function KoreksiMutasiFormContent({
         <div className='space-y-1.5'>
           <div className='flex items-center justify-between'>
             <Label htmlFor={referensiInputId} className='text-xs font-semibold'>
-              No. Berita Acara / Referensi Audit{' '}
+              No. Berita Acara / Nomor Rujukan{' '}
               <span className='text-destructive'>*</span>
             </Label>
             <span
@@ -606,7 +606,7 @@ function KoreksiMutasiFormContent({
           className='gap-1.5'
         >
           <FileCheck2 className='h-4 w-4' />
-          {isSubmitting ? 'Memproses Audit...' : 'Eksekusi Koreksi Saldo'}
+          {isSubmitting ? 'Memproses...' : 'Simpan Penyesuaian Saldo'}
         </Button>
       </DialogFooter>
     </form>
