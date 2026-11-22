@@ -5,6 +5,9 @@ import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { LaporanKerugianStokPage } from '../LaporanKerugianStokPage'
 import { useRoleStore } from '@/stores/useRoleStore'
+import { useAuthStore } from '@/stores/auth-store'
+import { Route } from '@/routes/_authenticated/laporan/kerugian-stok/index'
+import { sidebarData } from '@/components/layout/data/sidebar-data'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 
@@ -171,5 +174,55 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     expect(pdfCallArg.data).toHaveLength(1)
     expect(pdfCallArg.summaryRow?.qty).toBe('3 Unit')
     expect(pdfCallArg.summaryRow?.totalNilai).toContain('15.000')
+  })
+
+  describe('SEC-04: Penegakan Otorisasi Route Guard dan Navigasi Sidebar', () => {
+    it('mengizinkan peran pengelola, bendahara, tu, dan kepsek pada route guard beforeLoad', () => {
+      const allowedRoles = ['pengelola', 'bendahara', 'tu', 'kepsek'] as const
+
+      for (const role of allowedRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (Route.options as any).beforeLoad()).not.toThrow()
+      }
+    })
+
+    it('menolak peran selain yang diizinkan pada route guard beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['admin', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (Route.options as any).beforeLoad()).toThrow()
+      }
+    })
+
+    it('memastikan navigasi sidebar kerugian stok mengizinkan peran tu', () => {
+      const kerugianItem = sidebarData.navGroups
+        .flatMap((g) => g.items)
+        .flatMap((item) => (item.items ? item.items : [item]))
+        .find((item) => item.url === '/laporan/kerugian-stok')
+
+      expect(kerugianItem).toBeDefined()
+      expect(kerugianItem?.roles).toContain('tu')
+      expect(kerugianItem?.roles).toEqual(['pengelola', 'bendahara', 'tu', 'kepsek'])
+    })
   })
 })
