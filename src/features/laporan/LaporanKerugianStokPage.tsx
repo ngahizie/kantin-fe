@@ -1,8 +1,17 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
-import { ClipboardList, Loader2, PackageX, Trash2, TrendingDown } from 'lucide-react'
+import {
+  AlertTriangle,
+  ClipboardList,
+  Loader2,
+  PackageX,
+  RotateCcw,
+  Trash2,
+  TrendingDown,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -32,6 +41,9 @@ export function LaporanKerugianStokPage() {
   const [kerugianList, setKerugianList] = useState<BarisKerugianStok[]>([])
   const [ringkasan, setRingkasan] = useState<RingkasanKerugianStok | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [reloadTrigger, setReloadTrigger] = useState(0)
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -51,6 +63,8 @@ export function LaporanKerugianStokPage() {
     const init = async () => {
       try {
         setIsLoading(true)
+        setIsError(false)
+        setErrorMessage('')
         const [resList, resRingkasan] = await Promise.all([
           laporanApi.getKerugianStok(dateFilterParams),
           laporanApi.getRingkasanKerugianStok(dateFilterParams),
@@ -60,7 +74,9 @@ export function LaporanKerugianStokPage() {
         setRingkasan(resRingkasan)
       } catch (err: unknown) {
         if (!isMounted) return
+        setIsError(true)
         const msg = err instanceof Error ? err.message : 'Gagal memuat kerugian stok'
+        setErrorMessage(msg)
         toast.error('Gagal Memuat Laporan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
@@ -70,7 +86,11 @@ export function LaporanKerugianStokPage() {
     return () => {
       isMounted = false
     }
-  }, [dateFilterParams])
+  }, [dateFilterParams, reloadTrigger])
+
+  const handleRetry = () => {
+    setReloadTrigger((prev) => prev + 1)
+  }
 
   // Filter & Urutan
   const filteredList = useMemo(() => {
@@ -276,6 +296,31 @@ export function LaporanKerugianStokPage() {
             </div>
           </div>
 
+          {/* Error Alert Banner */}
+          {isError && (
+            <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">Gagal Memuat Data Kerugian Stok</p>
+                  <p className="text-[11px] opacity-90">
+                    {errorMessage || 'Terjadi kesalahan saat menghubungi server. Data yang ditampilkan mungkin tidak mutakhir.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="h-8 shrink-0 gap-1.5 border-destructive/40 bg-background text-xs font-medium text-destructive hover:bg-destructive/10"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Coba Lagi</span>
+              </Button>
+            </div>
+          )}
+
           {/* SUMMARY CARDS GRID */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -432,7 +477,9 @@ export function LaporanKerugianStokPage() {
                     ) : filteredList.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
-                          Tidak ditemukan data kerugian yang cocok.
+                          {isError
+                            ? 'Gagal memuat data kerugian stok dari server. Silakan klik Coba Lagi.'
+                            : 'Tidak ditemukan data kerugian yang cocok.'}
                         </TableCell>
                       </TableRow>
                     ) : (
