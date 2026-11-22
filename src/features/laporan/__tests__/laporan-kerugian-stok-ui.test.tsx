@@ -5,6 +5,16 @@ import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { LaporanKerugianStokPage } from '../LaporanKerugianStokPage'
 import { useRoleStore } from '@/stores/useRoleStore'
+import { exportTableToExcel } from '@/lib/excelExport'
+import { exportTableToPdf } from '@/lib/pdfExport'
+
+vi.mock('@/lib/excelExport', () => ({
+  exportTableToExcel: vi.fn(),
+}))
+
+vi.mock('@/lib/pdfExport', () => ({
+  exportTableToPdf: vi.fn(),
+}))
 
 vi.mock('@/components/layout/header', () => ({
   Header: ({ children }: { children: ReactNode }) => <header>{children}</header>,
@@ -114,5 +124,52 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     await userEvent.click(retryBtn)
 
     await expect.element(screen.getByText('Roti Bakar Cokelat')).toBeInTheDocument()
+  })
+
+  it('menghitung totalNilai summaryRow ekspor sesuai subset baris filteredList (SEC-02)', async () => {
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/laporan/kerugian-stok') {
+        return { data: { code: 200, status: 'SUCCESS', data: MOCK_KERUGIAN_LIST } }
+      }
+      if (url === '/api/laporan/kerugian-stok/ringkasan') {
+        // Anggap ringkasan global bernilai 999999 untuk menguji bahwa ekspor tidak memakai angka global ini untuk baris ringkasan tabel
+        return { data: { code: 200, status: 'SUCCESS', data: { ...MOCK_RINGKASAN, totalKerugian: 999999 } } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanKerugianStokPage />)
+
+    await expect.element(screen.getByText('Roti Bakar Cokelat')).toBeInTheDocument()
+
+    // Cari input pencarian untuk memfilter hanya 1 item
+    const searchInput = screen.getByPlaceholder(/Cari menu, alasan, BA\.\.\./i)
+    await userEvent.fill(searchInput, 'Roti Bakar')
+
+    // Klik tombol Ekspor -> Buka dropdown format
+    const exportBtn = screen.getByRole('button', { name: /^Ekspor$/i })
+    await userEvent.click(exportBtn)
+
+    // Pilih Spreadsheet Excel
+    const excelOption = screen.getByTestId('btn-export-excel-option')
+    await userEvent.click(excelOption)
+
+    expect(exportTableToExcel).toHaveBeenCalledTimes(1)
+    const excelCallArg = vi.mocked(exportTableToExcel).mock.calls[0][0]
+    expect(excelCallArg.data).toHaveLength(1)
+    expect(excelCallArg.summaryRow?.qty).toBe(3)
+    // Harus bernilai 15000 (total Roti Bakar saja), bukan 999999 atau 23000
+    expect(excelCallArg.summaryRow?.totalNilai).toBe(15000)
+
+    // Buka kembali dropdown format untuk PDF
+    await userEvent.click(exportBtn)
+    const pdfOption = screen.getByTestId('btn-export-pdf-option')
+    await userEvent.click(pdfOption)
+
+    expect(exportTableToPdf).toHaveBeenCalledTimes(1)
+    const pdfCallArg = vi.mocked(exportTableToPdf).mock.calls[0][0]
+    expect(pdfCallArg.data).toHaveLength(1)
+    expect(pdfCallArg.summaryRow?.qty).toBe('3 Unit')
+    expect(pdfCallArg.summaryRow?.totalNilai).toContain('15.000')
   })
 })
