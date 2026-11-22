@@ -99,6 +99,7 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     await expect.element(screen.getByText('Susu Kotak UHT')).toBeInTheDocument()
     await expect.element(screen.getByText('BA-RSK-001')).toBeInTheDocument()
     await expect.element(screen.getByText('BA-OPN-002')).toBeInTheDocument()
+    await expect.element(screen.getByText('Total (2 Item)')).toBeInTheDocument()
   })
 
   it('menampilkan banner peringatan dan tombol coba lagi saat server gagal merespons (SEC-01)', async () => {

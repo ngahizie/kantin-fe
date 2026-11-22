@@ -23,6 +23,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -533,6 +534,23 @@ export function LaporanKerugianStokPage() {
                       ))
                     )}
                   </TableBody>
+                  {!isLoading && filteredList.length > 0 && (
+                    <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={6} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                          Total ({filteredList.length} Item)
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold text-sm tabular-nums text-foreground">
+                          {formatNumber(filteredList.reduce((acc, k) => acc + (k.qty || 0), 0))}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
+                        <TableCell className="text-right font-mono font-bold text-sm text-destructive tabular-nums">
+                          {formatRupiah(filteredList.reduce((acc, k) => acc + (k.totalNilai || 0), 0))}
+                        </TableCell>
+                        <TableCell colSpan={2} />
+                      </TableRow>
+                    </TableFooter>
+                  )}
                 </Table>
               </CardContent>
             </Card>
