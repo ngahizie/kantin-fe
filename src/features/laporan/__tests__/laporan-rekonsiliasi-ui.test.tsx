@@ -254,8 +254,9 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ;(RekonsiliasiRoute.options as any).beforeLoad()
           expect.fail('Harus melempar redirect')
-        } catch (err: any) {
-          expect(err?.options?.to ?? err?.to).toBe('/403')
+        } catch (err: unknown) {
+          const redirectErr = err as { options?: { to?: string }; to?: string }
+          expect(redirectErr?.options?.to ?? redirectErr?.to).toBe('/403')
         }
       }
     })
@@ -277,8 +278,9 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ;(RekonsiliasiRoute.options as any).beforeLoad()
           expect.fail('Harus melempar redirect')
-        } catch (err: any) {
-          expect(err?.options?.to ?? err?.to).toBe('/laporan/cek-selisih')
+        } catch (err: unknown) {
+          const redirectErr = err as { options?: { to?: string }; to?: string }
+          expect(redirectErr?.options?.to ?? redirectErr?.to).toBe('/laporan/cek-selisih')
         }
       }
     })
