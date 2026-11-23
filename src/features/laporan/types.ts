@@ -207,7 +207,7 @@ export function resolveTitikDanPetugas(trx: {
   if (jenis === 'TOPUP_TUNAI') {
     return {
       titik: hasTitik ? trx.titikKasir! : 'Layanan TU',
-      petugas: hasPetugas ? trx.petugas! : 'Sri Wahyuni',
+      petugas: hasPetugas ? trx.petugas! : 'Petugas TU',
     }
   }
   if (jenis === 'TOPUP_ONLINE') {
@@ -219,7 +219,7 @@ export function resolveTitikDanPetugas(trx: {
   if (jenis === 'KOREKSI') {
     return {
       titik: hasTitik ? trx.titikKasir! : 'Ruang Bendahara',
-      petugas: hasPetugas ? trx.petugas! : 'Siti Rahma',
+      petugas: hasPetugas ? trx.petugas! : 'Bendahara',
     }
   }
   if (jenis === 'REFUND' || jenis === 'VOID') {
@@ -231,7 +231,7 @@ export function resolveTitikDanPetugas(trx: {
 
   return {
     titik: hasTitik ? trx.titikKasir! : 'Kasir Kantin Utama',
-    petugas: hasPetugas ? trx.petugas! : 'Ahmad Kasir',
+    petugas: hasPetugas ? trx.petugas! : 'Petugas Kasir',
   }
 }
 
