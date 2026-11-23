@@ -56,6 +56,7 @@ export function LaporanSaldoMengendapPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanSaldoMengendap | null>(null)
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
 
@@ -64,6 +65,7 @@ export function LaporanSaldoMengendapPage() {
     const init = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         // 1. Ringkasan selalu dipanggil (TU/Bendahara, Admin Sekolah, Kepala Sekolah)
         const ringkasanPromise = laporanApi.getSaldoMengendap()
 
@@ -89,6 +91,7 @@ export function LaporanSaldoMengendapPage() {
       } catch (err: unknown) {
         if (!isMounted) return
         const msg = err instanceof Error ? err.message : 'Gagal memuat total saldo siswa'
+        setLoadError(msg)
         toast.error('Gagal Memuat Laporan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
@@ -356,7 +359,7 @@ export function LaporanSaldoMengendapPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
-                  {ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
+                  {loadError ? '-' : ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total dana titipan orang tua yang belum dibelanjakan
@@ -375,7 +378,7 @@ export function LaporanSaldoMengendapPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
-                  {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
+                  {loadError ? '-' : ringkasan ? `${formatNumber(ringkasan.jumlahSiswa)} Siswa` : '0 Siswa'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total siswa yang memiliki saldo terkini
@@ -457,6 +460,15 @@ export function LaporanSaldoMengendapPage() {
                             <div className="flex items-center justify-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>Memuat data saldo siswa...</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : loadError ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="h-28 text-center text-destructive">
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <span className="font-semibold text-sm">Gagal memuat data saldo siswa dari server</span>
+                              <span className="text-xs text-muted-foreground">{loadError}</span>
                             </div>
                           </TableCell>
                         </TableRow>

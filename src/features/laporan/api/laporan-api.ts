@@ -467,26 +467,17 @@ export const laporanApi = {
    * Mengambil Ringkasan Saldo Mengendap (Dana Titipan Sekolah)
    */
   async getSaldoMengendap(): Promise<RingkasanSaldoMengendap> {
-    try {
-      const res = await apiClient.get<ApiResponse<RingkasanSaldoMengendap>>(
-        '/api/laporan/saldo-mengendap'
-      )
-      const data = res.data?.data
-      if (data) {
-        return {
-          saldoSiswa: data.saldoSiswa ?? data.total ?? 0,
-          total: data.saldoSiswa ?? data.total ?? 0,
-          jumlahSiswa: data.jumlahSiswa ?? 0,
-        }
-      }
-    } catch {
-      // Gunakan nilai nol jika gagal memuat ringkasan
+    const res = await apiClient.get<ApiResponse<RingkasanSaldoMengendap>>(
+      '/api/laporan/saldo-mengendap'
+    )
+    const data = res.data?.data
+    if (!data) {
+      throw new Error('Data ringkasan saldo mengendap tidak ditemukan')
     }
-
     return {
-      saldoSiswa: 0,
-      total: 0,
-      jumlahSiswa: 0,
+      saldoSiswa: data.saldoSiswa ?? data.total ?? 0,
+      total: data.saldoSiswa ?? data.total ?? 0,
+      jumlahSiswa: data.jumlahSiswa ?? 0,
     }
   },
 
@@ -494,18 +485,13 @@ export const laporanApi = {
    * Mengambil Rincian Saldo per Siswa
    */
   async getSiswaSaldoList(search?: string): Promise<SiswaSaldoDetail[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<SiswaSaldoDetail[]>>(
-        '/api/laporan/saldo-mengendap/siswa',
-        { params: { search, batas: 50 }, silent: true } as unknown as Record<string, unknown>
-      )
-      if (Array.isArray(res.data?.data)) {
-        return res.data.data
-      }
-    } catch {
-      // Tidak menggunakan data tiruan saat endpoint gagal
+    const res = await apiClient.get<ApiResponse<SiswaSaldoDetail[]>>(
+      '/api/laporan/saldo-mengendap/siswa',
+      { params: { search, batas: 50 } }
+    )
+    if (Array.isArray(res.data?.data)) {
+      return res.data.data
     }
-
     return []
   },
 

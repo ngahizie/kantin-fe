@@ -346,6 +346,20 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(siswa[0]).toHaveProperty('saldo')
     })
 
+    it('melempar galat ketika endpoint saldo mengendap gagal (mencegah silent masking galat menjadi Rp 0)', async () => {
+      vi.spyOn(apiClient, 'get').mockRejectedValueOnce(new Error('Koneksi database terputus (500)'))
+      await expect(
+        laporanApi.getSaldoMengendap()
+      ).rejects.toThrow('Koneksi database terputus (500)')
+    })
+
+    it('melempar galat ketika endpoint rincian saldo siswa gagal (mencegah silent failure)', async () => {
+      vi.spyOn(apiClient, 'get').mockRejectedValueOnce(new Error('Sesi kedaluwarsa (401)'))
+      await expect(
+        laporanApi.getSiswaSaldoList()
+      ).rejects.toThrow('Sesi kedaluwarsa (401)')
+    })
+
     it('mengambil riwayat belanja lengkap siswa beserta rincian item pesanan untuk komplain ortu', async () => {
       const { profil, riwayat } = await laporanApi.getRiwayatBelanjaSiswa(101)
 
