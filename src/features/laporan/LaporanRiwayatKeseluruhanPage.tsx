@@ -55,6 +55,7 @@ import {
 export function LaporanRiwayatKeseluruhanPage() {
   const [transaksiList, setTransaksiList] = useState<RiwayatTransaksiKeseluruhanItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // Filters
   const [searchFilter, setSearchFilter] = useState('')
@@ -78,12 +79,15 @@ export function LaporanRiwayatKeseluruhanPage() {
     const init = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         const list = await laporanApi.getRiwayatTransaksiKeseluruhan(dateFilterParams)
         if (!isMounted) return
         setTransaksiList(list)
-      } catch (_err: unknown) {
+      } catch (err: unknown) {
         if (!isMounted) return
-        toast.error('Gagal Memuat Riwayat Transaksi')
+        const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat transaksi dari server'
+        setLoadError(msg)
+        toast.error('Gagal Memuat Riwayat Transaksi', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -661,6 +665,15 @@ export function LaporanRiwayatKeseluruhanPage() {
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             <span>Memuat riwayat transaksi keseluruhan...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : loadError ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="h-28 text-center text-destructive">
+                          <div className="flex flex-col items-center justify-center gap-1">
+                            <span className="font-semibold text-sm">Gagal memuat data transaksi dari server</span>
+                            <span className="text-xs text-muted-foreground">{loadError}</span>
                           </div>
                         </TableCell>
                       </TableRow>
