@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getPageNumbers, escapeHtml } from './utils'
+import { getPageNumbers, escapeHtml, isSafeImageUrl } from './utils'
 
 describe('getPageNumbers', () => {
   it('returns all pages when total is at most 5', () => {
@@ -39,6 +39,31 @@ describe('escapeHtml', () => {
     expect(escapeHtml(null)).toBe('')
     expect(escapeHtml(undefined)).toBe('')
     expect(escapeHtml(12345)).toBe('12345')
+  })
+})
+
+describe('isSafeImageUrl', () => {
+  it('mengizinkan URL http, https, dan path relatif yang valid', () => {
+    expect(isSafeImageUrl('https://example.com/avatar.jpg')).toBe(true)
+    expect(isSafeImageUrl('http://localhost:8080/image.png')).toBe(true)
+    expect(isSafeImageUrl('/uploads/siswa/foto.jpg')).toBe(true)
+    expect(isSafeImageUrl('./avatar.png')).toBe(true)
+  })
+
+  it('mengizinkan data:image valid berbasis base64', () => {
+    expect(
+      isSafeImageUrl('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
+    ).toBe(true)
+  })
+
+  it('menolak skema berbahaya atau tidak valid', () => {
+    expect(isSafeImageUrl('javascript:alert(1)')).toBe(false)
+    expect(isSafeImageUrl('vbscript:msgbox(1)')).toBe(false)
+    expect(isSafeImageUrl('data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==')).toBe(false)
+    expect(isSafeImageUrl('//evil.com/phish.jpg')).toBe(false)
+    expect(isSafeImageUrl('')).toBe(false)
+    expect(isSafeImageUrl(null)).toBe(false)
+    expect(isSafeImageUrl(undefined)).toBe(false)
   })
 })
 

@@ -42,7 +42,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
-import { escapeHtml } from '@/lib/utils'
+import { escapeHtml, isSafeImageUrl } from '@/lib/utils'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -855,7 +855,7 @@ export function LaporanRiwayatSiswaPage() {
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16 shrink-0 rounded-xl border border-border bg-primary/10 text-primary">
-                      {profil.fotoUrl && (
+                      {profil.fotoUrl && isSafeImageUrl(profil.fotoUrl) && (
                         <AvatarImage
                           src={profil.fotoUrl}
                           alt={profil.nama}
