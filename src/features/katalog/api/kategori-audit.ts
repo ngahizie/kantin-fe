@@ -1,5 +1,3 @@
-import apiClient from '@/lib/api-client'
-
 export type KategoriAuditAction =
   | 'KATEGORI_CREATE'
   | 'KATEGORI_UPDATE'
@@ -33,15 +31,6 @@ export async function logKategoriAuditEvent(
   clientAuditBuffer.push(auditEntry)
   if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
     clientAuditBuffer.shift()
-  }
-
-  try {
-    // Kirim telemetri audit log ke backend secara asinkron (fail-safe)
-    await apiClient.post('/api/katalog/audit', auditEntry).catch(() => {
-      // Abaikan galat jaringan agar tidak memblokir antarmuka katalog
-    })
-  } catch {
-    // Tangani kemungkinan pengecualian jaringan
   }
 }
 

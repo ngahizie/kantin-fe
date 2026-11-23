@@ -157,11 +157,7 @@ describe('Security Hardening Kartu Stok (OWASP & NIST)', () => {
       expect(logs[0].timestamp).toBeDefined()
       expect(logs[1].action).toBe('STOK_EXPORT_PDF')
 
-      expect(postSpy).toHaveBeenCalledTimes(2)
-      expect(postSpy).toHaveBeenCalledWith('/api/stok/audit', expect.objectContaining({
-        action: 'STOK_EXPORT_CSV',
-        menuId: 5,
-      }))
+      expect(postSpy).not.toHaveBeenCalled()
     })
 
     it('membatasi ukuran antrean buffer audit klien maksimum 50 entri', async () => {

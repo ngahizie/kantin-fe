@@ -783,18 +783,4 @@ export const laporanApi = {
       }
     })
   },
-
-  /**
-   * Unduh berkas Excel langsung dari backend jika live API tersedia
-   */
-  async downloadEksporBackend(
-    jenis: string,
-    params?: LaporanFilterParams
-  ): Promise<Blob> {
-    const res = await apiClient.get('/api/laporan/ekspor', {
-      params: { jenis, ...params },
-      responseType: 'blob',
-    })
-    return res.data
-  },
 }

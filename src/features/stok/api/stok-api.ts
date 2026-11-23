@@ -127,41 +127,6 @@ export const stokApi = {
   },
 
   /**
-   * Ambil daftar menu dengan stok menipis (PRD §7.5)
-   */
-  async getStokMenipis(): Promise<StokResponse[]> {
-    const res =
-      await apiClient.get<ApiResponse<StokResponse[]>>('/api/stok/menipis')
-    return res.data.data || []
-  },
-
-  /**
-   * Rekonsiliasi hitung ulang dari ledger
-   */
-  async rekonsiliasi(menuId: number): Promise<number> {
-    const res = await apiClient.get<ApiResponse<number>>(
-      `/api/stok/${menuId}/rekonsiliasi`
-    )
-    return res.data.data
-  },
-
-  /**
-   * Upload foto nota/faktur pembelian ke storage
-   */
-  async uploadNota(file: File): Promise<{ path: string; url: string }> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('folder', 'nota')
-
-    const res = await apiClient.post<
-      ApiResponse<{ path: string; url: string }>
-    >('/api/storage/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return res.data.data
-  },
-
-  /**
    * Penyesuaian stok opname fisik per item (PRD §7.3)
    */
   async sesuaikanOpname(payload: OpnameRequest): Promise<HasilMutasiStok> {

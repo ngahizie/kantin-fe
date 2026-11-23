@@ -1,5 +1,3 @@
-import apiClient from '@/lib/api-client'
-
 export type StokAuditAction =
   | 'STOK_EXPORT_CSV'
   | 'STOK_EXPORT_PDF'
@@ -30,15 +28,6 @@ export async function logStokAuditEvent(
   clientAuditBuffer.push(auditEntry)
   if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
     clientAuditBuffer.shift()
-  }
-
-  try {
-    // Kirim telemetri audit log ke backend secara asinkron (fail-safe)
-    await apiClient.post('/api/stok/audit', auditEntry).catch(() => {
-      // Abaikan galat jaringan agar tidak memblokir antarmuka stok
-    })
-  } catch {
-    // Tangani kemungkinan pengecualian jaringan
   }
 }
 

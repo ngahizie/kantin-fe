@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { CheckIcon, ChevronDownIcon } from '@radix-ui/react-icons'
-import { type Column } from '@tanstack/react-table'
 import { ArrowUpDown, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -27,8 +26,7 @@ import {
   resolveFacetedFilterLabels,
 } from './faceted-filter-utils'
 
-type DataTableFacetedFilterProps<TData, TValue> = {
-  column?: Column<TData, TValue>
+type DataTableFacetedFilterProps = {
   title?: string
   icon?: React.ComponentType<{ className?: string }>
   options: FilterOption[]
@@ -154,7 +152,6 @@ type SingleSelectOptionRowProps = {
   value: string
   icon?: React.ComponentType<{ className?: string }>
   isSelected: boolean
-  facetCount?: number
   onSelect: () => void
 }
 
@@ -163,7 +160,6 @@ function SingleSelectOptionRow({
   value,
   icon: Icon,
   isSelected,
-  facetCount,
   onSelect,
 }: SingleSelectOptionRowProps) {
   return (
@@ -177,15 +173,9 @@ function SingleSelectOptionRow({
     >
       {Icon && <Icon className='text-muted-foreground size-3.5 shrink-0' />}
       <span className='truncate'>{label}</span>
-      {facetCount !== undefined && (
-        <span className='ms-auto ps-2 font-mono text-[11px] text-muted-foreground'>
-          {facetCount}
-        </span>
-      )}
       <CheckIcon
         className={cn(
-          facetCount !== undefined ? 'ms-2' : 'ms-auto',
-          'size-4 shrink-0 text-primary',
+          'ms-auto size-4 shrink-0 text-primary',
           isSelected ? 'opacity-100' : 'opacity-0'
         )}
       />
@@ -193,8 +183,7 @@ function SingleSelectOptionRow({
   )
 }
 
-export function DataTableFacetedFilter<TData, TValue>({
-  column,
+export function DataTableFacetedFilter({
   title,
   icon: customIcon,
   options,
@@ -205,11 +194,9 @@ export function DataTableFacetedFilter<TData, TValue>({
   searchPlaceholder,
   showSearch = true,
   triggerClassName,
-}: DataTableFacetedFilterProps<TData, TValue>) {
+}: DataTableFacetedFilterProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const facets = column?.getFacetedUniqueValues()
-  const columnFilterValue = column?.getFilterValue()
 
   const isSortTitle = React.useMemo(() => {
     const t = (title || '').toLowerCase()
@@ -222,8 +209,8 @@ export function DataTableFacetedFilter<TData, TValue>({
     customIcon || (isSortTitle ? ArrowUpDown : undefined)
 
   const selectedValues = React.useMemo(
-    () => normalizeSelectedValues(propSelectedValues, columnFilterValue),
-    [propSelectedValues, columnFilterValue]
+    () => normalizeSelectedValues(propSelectedValues, undefined),
+    [propSelectedValues]
   )
 
   const selectedOptions = React.useMemo(
@@ -243,11 +230,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   })
 
   const applyFilterValues = (filterValues: string[]) => {
-    if (propOnSelect) {
-      propOnSelect(filterValues)
-    } else {
-      column?.setFilterValue(filterValues.length ? filterValues : undefined)
-    }
+    propOnSelect?.(filterValues)
   }
 
   const handleSelect = (value: string) => {
@@ -334,7 +317,6 @@ export function DataTableFacetedFilter<TData, TValue>({
               )}
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
-                const facetCount = facets?.get(option.value)
                 if (isSingleSelect) {
                   return (
                     <SingleSelectOptionRow
@@ -343,7 +325,6 @@ export function DataTableFacetedFilter<TData, TValue>({
                       value={option.label}
                       icon={option.icon}
                       isSelected={isSelected}
-                      facetCount={facetCount}
                       onSelect={() => handleSelect(option.value)}
                     />
                   )
@@ -369,11 +350,6 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <option.icon className='text-muted-foreground mr-2 size-4' />
                     )}
                     <span>{option.label}</span>
-                    {facetCount !== undefined && (
-                      <span className='ml-auto flex size-4 items-center justify-center font-mono text-xs tabular-nums'>
-                        {facetCount}
-                      </span>
-                    )}
                   </CommandItem>
                 )
               })}

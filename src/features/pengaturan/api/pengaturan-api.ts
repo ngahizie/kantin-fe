@@ -130,13 +130,6 @@ export const pengaturanApi = {
     return list.map(mapTitikKasirFromBackend)
   },
 
-  async getTitikKasirDetail(id: number): Promise<TitikKasir> {
-    const res = await apiClient.get<ApiResponse<TitikKasirBackendDto>>(
-      `/api/pengaturan-kantin/titik-kasir/${id}`
-    )
-    return mapTitikKasirFromBackend(res.data.data)
-  },
-
   async createTitikKasir(data: TitikKasirFormValues): Promise<TitikKasir> {
     const payload = {
       nama: data.nama,
