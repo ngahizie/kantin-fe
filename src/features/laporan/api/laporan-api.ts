@@ -572,28 +572,24 @@ export const laporanApi = {
   async getRiwayatTransaksiKeseluruhan(
     params?: LaporanFilterParams
   ): Promise<RiwayatTransaksiKeseluruhanItem[]> {
-    try {
-      const res = await apiClient.get<ApiResponse<RiwayatTransaksiKeseluruhanItem[]>>(
-        '/api/laporan/transaksi-keseluruhan',
-        { params, silent: true } as unknown as Record<string, unknown>
-      )
-      if (Array.isArray(res.data?.data)) {
-        return res.data.data.map((r) => {
-          const { titik, petugas } = resolveTitikDanPetugas(r)
-          return {
-            ...r,
-            titikKasir: titik,
-            petugas,
-            siswaNama:
-              r.siswaNama ||
-              (r.siswaId ? `Siswa #${r.siswaId}` : 'Pelanggan Tunai'),
-            siswaNis: r.siswaNis || (r.siswaId ? `${r.siswaId}` : '-'),
-            siswaKelas: r.siswaKelas || '-',
-          }
-        })
-      }
-    } catch {
-      // Tidak menggunakan data tiruan (mock data) bila terjadi galat atau kosong
+    const res = await apiClient.get<ApiResponse<RiwayatTransaksiKeseluruhanItem[]>>(
+      '/api/laporan/transaksi-keseluruhan',
+      { params }
+    )
+    if (Array.isArray(res.data?.data)) {
+      return res.data.data.map((r) => {
+        const { titik, petugas } = resolveTitikDanPetugas(r)
+        return {
+          ...r,
+          titikKasir: titik,
+          petugas,
+          siswaNama:
+            r.siswaNama ||
+            (r.siswaId ? `Siswa #${r.siswaId}` : 'Pelanggan Tunai'),
+          siswaNis: r.siswaNis || (r.siswaId ? `${r.siswaId}` : '-'),
+          siswaKelas: r.siswaKelas || '-',
+        }
+      })
     }
 
     return []

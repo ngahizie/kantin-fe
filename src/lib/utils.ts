@@ -73,3 +73,18 @@ export function getDisplayNameInitials(displayName: string): string {
   const last = parts[parts.length - 1]?.[0] ?? ''
   return (first + last).toUpperCase()
 }
+
+/**
+ * Menetralkan karakter khusus HTML untuk mencegah Cross-Site Scripting (XSS)
+ * atau HTML Injection saat merender string dinamis ke dokumen HTML mentah (mis. print iframe/doc.write).
+ */
+export function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+

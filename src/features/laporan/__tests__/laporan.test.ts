@@ -373,6 +373,13 @@ describe('Modul Laporan Terpadu SKOOLIA Kantin', () => {
       expect(list[0].nominal).toBeGreaterThan(0)
     })
 
+    it('melempar galat ketika endpoint riwayat transaksi keseluruhan gagal (mencegah silent masking galat)', async () => {
+      vi.spyOn(apiClient, 'get').mockRejectedValueOnce(new Error('Akses Ditolak (403)'))
+      await expect(
+        laporanApi.getRiwayatTransaksiKeseluruhan()
+      ).rejects.toThrow('Akses Ditolak (403)')
+    })
+
     it('menangani secara aman siswa tanpa catatan saldo/transaksi di backend (404) menjadi profil fallback dan riwayat kosong', async () => {
       const { profil, riwayat } = await laporanApi.getRiwayatBelanjaSiswa(999999)
 
