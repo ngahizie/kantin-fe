@@ -48,7 +48,8 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     voidPenjualan: 100000,
     penjualanBersih: 2900000,
     koreksiMasuk: 50000,
-    koreksiKeluar: 0,
+    koreksiKeluar: 25000,
+    transfer: 75000,
     saldoSiswa: 4450000,
     saldoMengendap: 4450000,
     totalKreditSemua: 2550000,
@@ -164,5 +165,25 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     // Data berhasil dimuat kembali
     await expect.element(screen.getByText('Top-up Online Siswa')).toBeInTheDocument()
     await expect.element(errorBanner).not.toBeInTheDocument()
+  })
+
+  it('menyertakan pos Koreksi Saldo Keluar dan Transfer Saldo Antar Siswa secara lengkap (SEC-02)', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        code: 200,
+        status: 'SUCCESS',
+        data: mockRekonsiliasiData,
+      },
+    })
+
+    const screen = await render(<LaporanRekonsiliasiPage />)
+
+    // Memverifikasi pos baru tampil di UI
+    await expect.element(screen.getByText('Koreksi Saldo Keluar')).toBeInTheDocument()
+    await expect.element(screen.getByText('Transfer Saldo Antar Siswa')).toBeInTheDocument()
+
+    // Memverifikasi nominal dan arah
+    await expect.element(screen.getByText('Penyesuaian saldo kurang oleh bendahara dengan berita acara')).toBeInTheDocument()
+    await expect.element(screen.getByText('Pergeseran saldo antar kartu siswa (dampak net nol)')).toBeInTheDocument()
   })
 })

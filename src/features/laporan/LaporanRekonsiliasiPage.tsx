@@ -125,11 +125,18 @@ export function LaporanRekonsiliasiPage() {
         keterangan: 'Total uang titipan yang tersimpan di kartu seluruh siswa',
       },
       {
-        id: '7',
+        id: '6',
         pos: 'Koreksi Saldo Masuk',
         arah: 'MASUK',
         nominal: data.koreksiMasuk,
         keterangan: 'Penyesuaian saldo tambah oleh bendahara dengan berita acara',
+      },
+      {
+        id: '7',
+        pos: 'Koreksi Saldo Keluar',
+        arah: 'KELUAR',
+        nominal: data.koreksiKeluar,
+        keterangan: 'Penyesuaian saldo kurang oleh bendahara dengan berita acara',
       },
       {
         id: '8',
@@ -137,6 +144,13 @@ export function LaporanRekonsiliasiPage() {
         arah: 'MASUK',
         nominal: data.voidPenjualan,
         keterangan: 'Refund transaksi salah tap yang mengembalikan saldo',
+      },
+      {
+        id: '9',
+        pos: 'Transfer Saldo Antar Siswa',
+        arah: 'TETAP',
+        nominal: data.transfer,
+        keterangan: 'Pergeseran saldo antar kartu siswa (dampak net nol)',
       },
     ]
   }, [data])
