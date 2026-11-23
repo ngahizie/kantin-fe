@@ -84,7 +84,7 @@ export function LaporanRiwayatSiswaPage() {
         const currentStudent = siswaList.find((s) => s.siswaId === selectedSiswaId)
         if (currentStudent) {
           setSearchStudentQuery(
-            `${currentStudent.nis} - ${currentStudent.nama} (${currentStudent.kelas})`
+            `${currentStudent.nis || '-'} - ${currentStudent.nama || 'Siswa'} (${currentStudent.kelas || '-'})`
           )
         }
       }
@@ -114,7 +114,7 @@ export function LaporanRiwayatSiswaPage() {
           if (initialStudent) {
             setSelectedSiswaId(initialId)
             setSearchStudentQuery(
-              `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
+              `${initialStudent.nis || '-'} - ${initialStudent.nama || 'Siswa'} (${initialStudent.kelas || '-'})`
             )
           } else {
             setSelectedSiswaId(null)
@@ -153,22 +153,22 @@ export function LaporanRiwayatSiswaPage() {
     }
   }, [])
 
-  // Filter pencarian siswa di search box
+  // Filter pencarian siswa di search box (null-safe)
   const filteredStudents = useMemo(() => {
     if (!searchStudentQuery.trim()) return siswaList
     const q = searchStudentQuery.toLowerCase().trim()
     return siswaList.filter((s) => {
-      const matchNis = s.nis.toLowerCase().includes(q)
-      const matchNisn = s.nisn ? s.nisn.toLowerCase().includes(q) : false
-      const matchNama = s.nama.toLowerCase().includes(q)
-      const matchKelas = s.kelas.toLowerCase().includes(q)
+      const matchNis = (s.nis || '').toLowerCase().includes(q)
+      const matchNisn = (s.nisn || '').toLowerCase().includes(q)
+      const matchNama = (s.nama || '').toLowerCase().includes(q)
+      const matchKelas = (s.kelas || '').toLowerCase().includes(q)
       return matchNis || matchNisn || matchNama || matchKelas
     })
   }, [siswaList, searchStudentQuery])
 
   const handleSelectStudent = (s: SiswaSaldoDetail) => {
     setSelectedSiswaId(s.siswaId)
-    setSearchStudentQuery(`${s.nis} - ${s.nama} (${s.kelas})`)
+    setSearchStudentQuery(`${s.nis || '-'} - ${s.nama || 'Siswa'} (${s.kelas || '-'})`)
     setIsDropdownOpen(false)
     const url = new URL(window.location.href)
     url.searchParams.set('siswaId', String(s.siswaId))
