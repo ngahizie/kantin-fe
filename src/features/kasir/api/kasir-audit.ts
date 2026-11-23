@@ -1,5 +1,3 @@
-import apiClient from '@/lib/api-client'
-
 export type KasirAuditAction =
   | 'TRANSAKSI_GAGAL'
   | 'TUTUP_SESI_SELISIH'
@@ -32,15 +30,6 @@ export async function logKasirAuditEvent(
   clientAuditBuffer.push(auditEntry)
   if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
     clientAuditBuffer.shift()
-  }
-
-  try {
-    // Kirim telemetri audit log ke backend secara asinkron (fail-safe)
-    await apiClient.post('/api/kasir/audit', auditEntry).catch(() => {
-      // Abaikan galat jaringan agar tidak memblokir operasional kasir
-    })
-  } catch {
-    // Tangani kemungkinan pengecualian jaringan
   }
 }
 

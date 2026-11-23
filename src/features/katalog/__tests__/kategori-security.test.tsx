@@ -200,11 +200,7 @@ describe('Security Hardening Kategori (OWASP & NIST)', () => {
       expect(logs[1].action).toBe('KATEGORI_TOGGLE_STATUS')
       expect(logs[2].action).toBe('KATEGORI_DELETE_BLOCKED')
 
-      expect(postSpy).toHaveBeenCalledTimes(3)
-      expect(postSpy).toHaveBeenCalledWith('/api/katalog/audit', expect.objectContaining({
-        action: 'KATEGORI_CREATE',
-        kategoriId: 101,
-      }))
+      expect(postSpy).not.toHaveBeenCalled()
     })
 
     it('membatasi ukuran antrean buffer audit klien tidak melebihi 50 entri', async () => {

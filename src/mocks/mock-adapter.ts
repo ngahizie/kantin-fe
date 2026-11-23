@@ -2801,30 +2801,6 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
-    if (url.includes('/api/stok/menipis') && method === 'get') {
-      const menipisList = menuList
-        .filter((m) => m.stok <= m.stok_minimum)
-        .map((m) => ({
-          menuId: m.id,
-          stok: m.stok,
-          stokMinimum: m.stok_minimum,
-          hpp: m.hpp || Math.round(m.harga_jual * 0.7),
-          nilaiPersediaan: m.stok * (m.hpp || Math.round(m.harga_jual * 0.7)),
-          menipis: true,
-        }))
-
-      return {
-        status: 200,
-        data: {
-          code: 200,
-          responseCode: 200,
-          status: 'SUCCESS',
-          message: 'Daftar stok menipis',
-          data: menipisList,
-        },
-      }
-    }
-
     if (url.includes('/api/laporan/stok') && method === 'get') {
       const urlObj = new URL(url, 'http://localhost')
       const hanyaMenipis = urlObj.searchParams.get('hanyaMenipis') === 'true'
