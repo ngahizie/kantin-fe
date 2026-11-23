@@ -88,3 +88,31 @@ export function escapeHtml(str: unknown): string {
     .replace(/'/g, '&#39;')
 }
 
+/**
+ * Memastikan URL gambar hanya menggunakan skema yang aman (http, https, data:image/, atau path relatif).
+ * Mencegah penggunaan skema berbahaya seperti javascript:, vbscript:, atau file:.
+ */
+export function isSafeImageUrl(url: unknown): boolean {
+  if (typeof url !== 'string') return false
+  const trimmed = url.trim()
+  if (!trimmed) return false
+
+  // Path relatif aman (mis. /logo.png, ./avatar.jpg) - cegah protocol-relative bypass //
+  if (trimmed.startsWith('/') || trimmed.startsWith('./')) {
+    return !trimmed.startsWith('//')
+  }
+
+  // Format data URI aman khusus gambar
+  if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed)) {
+    return true
+  }
+
+  // Protokol web standar (http:, https:)
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+

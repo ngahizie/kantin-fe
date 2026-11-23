@@ -42,6 +42,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
+import { escapeHtml, isSafeImageUrl } from '@/lib/utils'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -83,7 +84,7 @@ export function LaporanRiwayatSiswaPage() {
         const currentStudent = siswaList.find((s) => s.siswaId === selectedSiswaId)
         if (currentStudent) {
           setSearchStudentQuery(
-            `${currentStudent.nis} - ${currentStudent.nama} (${currentStudent.kelas})`
+            `${currentStudent.nis || '-'} - ${currentStudent.nama || 'Siswa'} (${currentStudent.kelas || '-'})`
           )
         }
       }
@@ -105,15 +106,28 @@ export function LaporanRiwayatSiswaPage() {
 
         const searchParams = new URLSearchParams(window.location.search)
         const paramId = searchParams.get('siswaId')
-        const initialId = paramId ? Number(paramId) : null
+        const rawId = paramId ? Number(paramId) : null
+        const initialId = rawId !== null && Number.isInteger(rawId) && rawId > 0 ? rawId : null
 
         if (initialId) {
-          setSelectedSiswaId(initialId)
           const initialStudent = list.find((s) => s.siswaId === initialId)
           if (initialStudent) {
+            setSelectedSiswaId(initialId)
             setSearchStudentQuery(
-              `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
+              `${initialStudent.nis || '-'} - ${initialStudent.nama || 'Siswa'} (${initialStudent.kelas || '-'})`
             )
+          } else {
+            setSelectedSiswaId(null)
+            setSearchStudentQuery('')
+            setProfil(null)
+            setRiwayat([])
+            setIsLoading(false)
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+            toast.error('Siswa Tidak Ditemukan', {
+              description: 'Siswa dengan ID tersebut tidak terdaftar di sekolah ini.',
+            })
           }
         } else {
           setSelectedSiswaId(null)
@@ -121,6 +135,11 @@ export function LaporanRiwayatSiswaPage() {
           setProfil(null)
           setRiwayat([])
           setIsLoading(false)
+          if (paramId) {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+          }
         }
       } catch (_err: unknown) {
         if (!isMounted) return
@@ -134,22 +153,22 @@ export function LaporanRiwayatSiswaPage() {
     }
   }, [])
 
-  // Filter pencarian siswa di search box
+  // Filter pencarian siswa di search box (null-safe)
   const filteredStudents = useMemo(() => {
     if (!searchStudentQuery.trim()) return siswaList
     const q = searchStudentQuery.toLowerCase().trim()
     return siswaList.filter((s) => {
-      const matchNis = s.nis.toLowerCase().includes(q)
-      const matchNisn = s.nisn ? s.nisn.toLowerCase().includes(q) : false
-      const matchNama = s.nama.toLowerCase().includes(q)
-      const matchKelas = s.kelas.toLowerCase().includes(q)
+      const matchNis = (s.nis || '').toLowerCase().includes(q)
+      const matchNisn = (s.nisn || '').toLowerCase().includes(q)
+      const matchNama = (s.nama || '').toLowerCase().includes(q)
+      const matchKelas = (s.kelas || '').toLowerCase().includes(q)
       return matchNis || matchNisn || matchNama || matchKelas
     })
   }, [siswaList, searchStudentQuery])
 
   const handleSelectStudent = (s: SiswaSaldoDetail) => {
     setSelectedSiswaId(s.siswaId)
-    setSearchStudentQuery(`${s.nis} - ${s.nama} (${s.kelas})`)
+    setSearchStudentQuery(`${s.nis || '-'} - ${s.nama || 'Siswa'} (${s.kelas || '-'})`)
     setIsDropdownOpen(false)
     const url = new URL(window.location.href)
     url.searchParams.set('siswaId', String(s.siswaId))
@@ -198,19 +217,32 @@ export function LaporanRiwayatSiswaPage() {
 
         if (isNotFound) {
           const currentStudent = siswaList.find((s) => s.siswaId === id)
-          setProfil({
-            siswaId: id,
-            nis: currentStudent?.nis || '-',
-            nama: currentStudent?.nama || 'Siswa',
-            kelas: currentStudent?.kelas || '-',
-            saldo: currentStudent?.saldo || 0,
-            belanjaHariIni: currentStudent?.belanjaHariIni || 0,
-            limitHarian: currentStudent?.limitHarian || 0,
-            isBlocked: currentStudent?.isBlocked || false,
-            parentName: currentStudent?.parentName || '-',
-            parentPhone: currentStudent?.parentPhone || '-',
-          })
-          setRiwayat([])
+          if (currentStudent) {
+            setProfil({
+              siswaId: id,
+              nis: currentStudent.nis || '-',
+              nama: currentStudent.nama || 'Siswa',
+              kelas: currentStudent.kelas || '-',
+              saldo: currentStudent.saldo || 0,
+              belanjaHariIni: currentStudent.belanjaHariIni || 0,
+              limitHarian: currentStudent.limitHarian || 0,
+              isBlocked: currentStudent.isBlocked || false,
+              parentName: currentStudent.parentName || '-',
+              parentPhone: currentStudent.parentPhone || '-',
+            })
+            setRiwayat([])
+          } else {
+            setSelectedSiswaId(null)
+            setSearchStudentQuery('')
+            setProfil(null)
+            setRiwayat([])
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+            toast.error('Siswa Tidak Ditemukan', {
+              description: 'Siswa tidak ditemukan atau bukan milik sekolah ini.',
+            })
+          }
         } else {
           const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat siswa'
           toast.error('Gagal Memuat Riwayat', { description: msg })
@@ -444,18 +476,18 @@ export function LaporanRiwayatSiswaPage() {
     const itemsHtml = selectedTrxForReceipt.items && selectedTrxForReceipt.items.length > 0
       ? selectedTrxForReceipt.items.map((it) => `
           <tr>
-            <td style="font-weight: bold; width: 28px; padding: 3px 0; vertical-align: top;">${it.qty}x</td>
-            <td style="padding: 3px 0; vertical-align: top;">${it.nama}</td>
-            <td style="text-align: right; font-weight: bold; white-space: nowrap; padding: 3px 0; vertical-align: top;">${formatRupiah(it.subtotal)}</td>
+            <td style="font-weight: bold; width: 28px; padding: 3px 0; vertical-align: top;">${escapeHtml(it.qty)}x</td>
+            <td style="padding: 3px 0; vertical-align: top;">${escapeHtml(it.nama)}</td>
+            <td style="text-align: right; font-weight: bold; white-space: nowrap; padding: 3px 0; vertical-align: top;">${escapeHtml(formatRupiah(it.subtotal))}</td>
           </tr>
         `).join('')
-      : `<tr><td colspan="3" style="padding: 6px 0; color: #444; font-style: italic;">${selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}</td></tr>`
+      : `<tr><td colspan="3" style="padding: 6px 0; color: #444; font-style: italic;">${escapeHtml(selectedTrxForReceipt.keterangan || 'Transaksi Kantin')}</td></tr>`
 
     const receiptHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Struk Transaksi - ${selectedTrxForReceipt.referensiId}</title>
+  <title>Struk Transaksi - ${escapeHtml(selectedTrxForReceipt.referensiId)}</title>
   <style>
     @page {
       margin: 6mm auto;
@@ -588,37 +620,37 @@ export function LaporanRiwayatSiswaPage() {
   <div class="header">
     <img src="/logo.png" style="height: 28px; width: auto; margin-bottom: 4px;" alt="Logo Skoolia" />
     <div class="store-name">KANTIN SKOOLIA</div>
-    <div class="sub-title">${receiptTitle}</div>
+    <div class="sub-title">${escapeHtml(receiptTitle)}</div>
     <div>
       <div style="font-size: 8px; color: #666; margin-top: 4px;">NO. REFERENSI TRANSAKSI:</div>
-      <div class="ref-badge">${selectedTrxForReceipt.referensiId}</div>
+      <div class="ref-badge">${escapeHtml(selectedTrxForReceipt.referensiId)}</div>
     </div>
   </div>
 
   <div class="info-section">
     <div class="info-row">
       <span class="info-label">Waktu:</span>
-      <span class="info-value">${formatDateTime(selectedTrxForReceipt.waktu)}</span>
+      <span class="info-value">${escapeHtml(formatDateTime(selectedTrxForReceipt.waktu))}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Lokasi / Titik:</span>
-      <span class="info-value">${titik}</span>
+      <span class="info-value">${escapeHtml(titik)}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Petugas:</span>
-      <span class="info-value">${petugas}</span>
+      <span class="info-value">${escapeHtml(petugas)}</span>
     </div>
   </div>
 
   <div class="student-box">
     <div class="student-title">Identitas Siswa:</div>
     <div class="info-row" style="margin-bottom: 2px;">
-      <span style="font-weight: bold; font-size: 11px;">${profil.nama}</span>
-      <span style="font-size: 10px; color: #333;">NIS: ${profil.nis}</span>
+      <span style="font-weight: bold; font-size: 11px;">${escapeHtml(profil.nama)}</span>
+      <span style="font-size: 10px; color: #333;">NIS: ${escapeHtml(profil.nis)}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Kelas:</span>
-      <span style="font-weight: bold;">${profil.kelas}</span>
+      <span style="font-weight: bold;">${escapeHtml(profil.kelas)}</span>
     </div>
   </div>
 
@@ -631,12 +663,12 @@ export function LaporanRiwayatSiswaPage() {
 
   <div class="total-box">
     <div class="total-row">
-      <span>${totalLabel}</span>
-      <span>${totalSign} ${formatRupiah(selectedTrxForReceipt.nominal)}</span>
+      <span>${escapeHtml(totalLabel)}</span>
+      <span>${escapeHtml(totalSign)} ${escapeHtml(formatRupiah(selectedTrxForReceipt.nominal))}</span>
     </div>
     <div class="balance-row">
       <span>Sisa Saldo Kartu:</span>
-      <span style="font-weight: bold;">${formatRupiah(selectedTrxForReceipt.saldoSetelah)}</span>
+      <span style="font-weight: bold;">${escapeHtml(formatRupiah(selectedTrxForReceipt.saldoSetelah))}</span>
     </div>
   </div>
 
@@ -823,7 +855,7 @@ export function LaporanRiwayatSiswaPage() {
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16 shrink-0 rounded-xl border border-border bg-primary/10 text-primary">
-                      {profil.fotoUrl && (
+                      {profil.fotoUrl && isSafeImageUrl(profil.fotoUrl) && (
                         <AvatarImage
                           src={profil.fotoUrl}
                           alt={profil.nama}
