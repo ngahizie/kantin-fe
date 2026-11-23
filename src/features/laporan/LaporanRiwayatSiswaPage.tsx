@@ -106,15 +106,28 @@ export function LaporanRiwayatSiswaPage() {
 
         const searchParams = new URLSearchParams(window.location.search)
         const paramId = searchParams.get('siswaId')
-        const initialId = paramId ? Number(paramId) : null
+        const rawId = paramId ? Number(paramId) : null
+        const initialId = rawId !== null && Number.isInteger(rawId) && rawId > 0 ? rawId : null
 
         if (initialId) {
-          setSelectedSiswaId(initialId)
           const initialStudent = list.find((s) => s.siswaId === initialId)
           if (initialStudent) {
+            setSelectedSiswaId(initialId)
             setSearchStudentQuery(
               `${initialStudent.nis} - ${initialStudent.nama} (${initialStudent.kelas})`
             )
+          } else {
+            setSelectedSiswaId(null)
+            setSearchStudentQuery('')
+            setProfil(null)
+            setRiwayat([])
+            setIsLoading(false)
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+            toast.error('Siswa Tidak Ditemukan', {
+              description: 'Siswa dengan ID tersebut tidak terdaftar di sekolah ini.',
+            })
           }
         } else {
           setSelectedSiswaId(null)
@@ -122,6 +135,11 @@ export function LaporanRiwayatSiswaPage() {
           setProfil(null)
           setRiwayat([])
           setIsLoading(false)
+          if (paramId) {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+          }
         }
       } catch (_err: unknown) {
         if (!isMounted) return
@@ -199,19 +217,32 @@ export function LaporanRiwayatSiswaPage() {
 
         if (isNotFound) {
           const currentStudent = siswaList.find((s) => s.siswaId === id)
-          setProfil({
-            siswaId: id,
-            nis: currentStudent?.nis || '-',
-            nama: currentStudent?.nama || 'Siswa',
-            kelas: currentStudent?.kelas || '-',
-            saldo: currentStudent?.saldo || 0,
-            belanjaHariIni: currentStudent?.belanjaHariIni || 0,
-            limitHarian: currentStudent?.limitHarian || 0,
-            isBlocked: currentStudent?.isBlocked || false,
-            parentName: currentStudent?.parentName || '-',
-            parentPhone: currentStudent?.parentPhone || '-',
-          })
-          setRiwayat([])
+          if (currentStudent) {
+            setProfil({
+              siswaId: id,
+              nis: currentStudent.nis || '-',
+              nama: currentStudent.nama || 'Siswa',
+              kelas: currentStudent.kelas || '-',
+              saldo: currentStudent.saldo || 0,
+              belanjaHariIni: currentStudent.belanjaHariIni || 0,
+              limitHarian: currentStudent.limitHarian || 0,
+              isBlocked: currentStudent.isBlocked || false,
+              parentName: currentStudent.parentName || '-',
+              parentPhone: currentStudent.parentPhone || '-',
+            })
+            setRiwayat([])
+          } else {
+            setSelectedSiswaId(null)
+            setSearchStudentQuery('')
+            setProfil(null)
+            setRiwayat([])
+            const url = new URL(window.location.href)
+            url.searchParams.delete('siswaId')
+            window.history.replaceState({}, '', url.toString())
+            toast.error('Siswa Tidak Ditemukan', {
+              description: 'Siswa tidak ditemukan atau bukan milik sekolah ini.',
+            })
+          }
         } else {
           const msg = err instanceof Error ? err.message : 'Gagal memuat riwayat siswa'
           toast.error('Gagal Memuat Riwayat', { description: msg })
