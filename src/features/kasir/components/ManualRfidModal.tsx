@@ -42,32 +42,13 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
   )
 
   // Integrasi listener RFID scanner global saat modal sedang terbuka
+  // (hanya memicu tap otomatis pada burst input dari perangkat keras RFID, bukan ketikan manual)
   useRfidScanner({
     onScan: (scannedUid) => {
       handleExecute(scannedUid)
     },
     enabled: open,
   })
-
-  // Deteksi otomatis saat kartu di-scan (UID 8-16 digit desimal atau hex)
-  useEffect(() => {
-    const trimmed = uidInput.trim()
-    if (!trimmed) return
-
-    // Pola kartu RFID: 8-16 digit desimal (Mifare) atau 8-16 hex chars
-    const isCompletedUid =
-      /^\d{8,16}$/.test(trimmed) ||
-      /^[0-9a-fA-F]{8,16}$/.test(trimmed)
-
-    if (!isCompletedUid) return
-
-    // Eksekusi otomatis seketika (60ms) tanpa perlu klik tombol
-    const timer = setTimeout(() => {
-      handleExecute(trimmed)
-    }, 60)
-
-    return () => clearTimeout(timer)
-  }, [uidInput, handleExecute])
 
   // Auto focus & select input saat modal terbuka
   useEffect(() => {
