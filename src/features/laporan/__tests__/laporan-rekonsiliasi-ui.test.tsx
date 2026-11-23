@@ -6,6 +6,9 @@ import apiClient from '@/lib/api-client'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { LaporanRekonsiliasiPage } from '../LaporanRekonsiliasiPage'
+import { useAuthStore } from '@/stores/auth-store'
+import { Route as CekSelisihRoute } from '@/routes/_authenticated/laporan/cek-selisih/index'
+import { Route as RekonsiliasiRoute } from '@/routes/_authenticated/laporan/rekonsiliasi/index'
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: vi.fn(),
@@ -48,7 +51,8 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     voidPenjualan: 100000,
     penjualanBersih: 2900000,
     koreksiMasuk: 50000,
-    koreksiKeluar: 0,
+    koreksiKeluar: 25000,
+    transfer: 75000,
     saldoSiswa: 4450000,
     saldoMengendap: 4450000,
     totalKreditSemua: 2550000,
@@ -86,9 +90,13 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     // Nilai KREDIT dan DEBIT lama tidak boleh tampil di tabel rincian
     await expect.element(screen.getByText('KREDIT', { exact: true })).not.toBeInTheDocument()
     await expect.element(screen.getByText('DEBIT', { exact: true })).not.toBeInTheDocument()
+
+    // TableFooter subtotal dinamis harus tampil (SEC-03)
+    await expect.element(screen.getByText('Total (9 Pos):')).toBeInTheDocument()
+    await expect.element(screen.getByText('Status Rekonsiliasi: Cocok')).toBeInTheDocument()
   })
 
-  it('memastikan ekspor PDF dan Excel menyertakan kolom Arah tanpa kolom Kategori lama', async () => {
+  it('memastikan ekspor PDF dan Excel menyertakan kolom Arah dan summaryRow terisi (SEC-03)', async () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({
       data: {
         code: 200,
@@ -111,6 +119,8 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     const pdfHeaders = pdfArg.columns.map((c) => c.header)
     expect(pdfHeaders).toContain('Arah')
     expect(pdfHeaders).not.toContain('Kategori')
+    expect(pdfArg.summaryRow?.pos).toContain('Total')
+    expect(pdfArg.summaryRow?.arah).toBe('COCOK')
 
     // Periksa salah satu baris memiliki nilai TETAP
     const pdfData = pdfArg.data as Array<{ pos?: string; arah?: string }>
@@ -127,9 +137,152 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     expect(excelHeaders).toContain('Arah')
     expect(excelHeaders).not.toContain('Kategori')
     expect(excelHeaders).not.toContain('Arah Mutasi')
+    expect(excelArg.summaryRow?.pos).toContain('Total')
+    expect(excelArg.summaryRow?.arah).toBe('COCOK')
 
     const excelData = excelArg.data as Array<{ pos?: string; arah?: string }>
     const tetapRowExcel = excelData.find((r) => r.pos === 'Total Saldo Siswa (Titipan)')
     expect(tetapRowExcel?.arah).toBe('TETAP')
+  })
+
+  it('menampilkan banner peringatan dan tombol coba lagi saat server gagal merespons (SEC-01)', async () => {
+    let attempts = 0
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      attempts++
+      if (attempts === 1) {
+        throw new Error('500 Internal Server Error: Ledger service offline')
+      }
+      if (url.includes('/api/laporan/rekonsiliasi')) {
+        return { data: { code: 200, status: 'SUCCESS', data: mockRekonsiliasiData } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanRekonsiliasiPage />)
+
+    // Banner peringatan error harus muncul
+    const errorBanner = screen.getByTestId('banner-error-rekonsiliasi')
+    await expect.element(errorBanner).toBeInTheDocument()
+    await expect.element(screen.getByText('Gagal Memuat Data Rekonsiliasi', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText(/500 Internal Server Error/i)).toBeInTheDocument()
+
+    // Tombol coba lagi harus muncul
+    const retryBtn = screen.getByRole('button', { name: /Coba Lagi/i })
+    await expect.element(retryBtn).toBeInTheDocument()
+
+    // Klik coba lagi untuk memulihkan data
+    await userEvent.click(retryBtn)
+
+    // Data berhasil dimuat kembali
+    await expect.element(screen.getByText('Top-up Online Siswa')).toBeInTheDocument()
+    await expect.element(errorBanner).not.toBeInTheDocument()
+  })
+
+  it('menyertakan pos Koreksi Saldo Keluar dan Transfer Saldo Antar Siswa secara lengkap (SEC-02)', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        code: 200,
+        status: 'SUCCESS',
+        data: mockRekonsiliasiData,
+      },
+    })
+
+    const screen = await render(<LaporanRekonsiliasiPage />)
+
+    // Memverifikasi pos baru tampil di UI
+    await expect.element(screen.getByText('Koreksi Saldo Keluar')).toBeInTheDocument()
+    await expect.element(screen.getByText('Transfer Saldo Antar Siswa')).toBeInTheDocument()
+
+    // Memverifikasi nominal dan arah
+    await expect.element(screen.getByText('Penyesuaian saldo kurang oleh bendahara dengan berita acara')).toBeInTheDocument()
+    await expect.element(screen.getByText('Pergeseran saldo antar kartu siswa (dampak net nol)')).toBeInTheDocument()
+  })
+
+  describe('SEC-04: Penegakan Otorisasi Route Guard dan Route Alias Rekonsiliasi', () => {
+    it('mengizinkan peran bendahara, tu, admin, dan kepsek pada CekSelisihRoute beforeLoad', () => {
+      const allowedRoles = ['bendahara', 'tu', 'admin', 'kepsek'] as const
+
+      for (const role of allowedRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (CekSelisihRoute.options as any).beforeLoad()).not.toThrow()
+      }
+    })
+
+    it('menolak peran tidak berhak pada CekSelisihRoute beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['pengelola', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (CekSelisihRoute.options as any).beforeLoad()).toThrow()
+      }
+    })
+
+    it('menolak peran tidak berhak pada RekonsiliasiRoute beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['pengelola', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(RekonsiliasiRoute.options as any).beforeLoad()
+          expect.fail('Harus melempar redirect')
+        } catch (err: unknown) {
+          const redirectErr = err as { options?: { to?: string }; to?: string }
+          expect(redirectErr?.options?.to ?? redirectErr?.to).toBe('/403')
+        }
+      }
+    })
+
+    it('mengarahkan peran berhak pada RekonsiliasiRoute beforeLoad dengan redirect /laporan/cek-selisih', () => {
+      const allowedRoles = ['bendahara', 'tu', 'admin', 'kepsek'] as const
+
+      for (const role of allowedRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(RekonsiliasiRoute.options as any).beforeLoad()
+          expect.fail('Harus melempar redirect')
+        } catch (err: unknown) {
+          const redirectErr = err as { options?: { to?: string }; to?: string }
+          expect(redirectErr?.options?.to ?? redirectErr?.to).toBe('/laporan/cek-selisih')
+        }
+      }
+    })
   })
 })
