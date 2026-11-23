@@ -2,6 +2,8 @@ import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   Loader2,
   PackageX,
@@ -35,13 +37,70 @@ import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
-import { laporanApi } from './api/laporan-api'
+import { laporanApi, MAX_KERUGIAN_STOK_PAGE_SIZE } from './api/laporan-api'
 import type { BarisKerugianStok, RingkasanKerugianStok, LaporanFilterParams } from './types'
 
-export function LaporanKerugianStokPage() {
+const DEFAULT_PAGE_SIZE = 50
+
+export interface LaporanKerugianStokPageProps {
+  /** Ukuran halaman paginasi server (default 50, dibatasi maks 200 sesuai batas BE) */
+  pageSize?: number
+}
+
+function applyKerugianFilterAndSort(
+  source: BarisKerugianStok[],
+  searchQuery: string,
+  jenisFilter: 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK',
+  sortBy: 'nilai_desc' | 'qty_desc' | 'waktu_desc'
+): BarisKerugianStok[] {
+  let list = [...source]
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase()
+    list = list.filter(
+      (k) =>
+        (k.namaMenu || '').toLowerCase().includes(q) ||
+        (k.kategoriNama || '').toLowerCase().includes(q) ||
+        (k.alasan || '').toLowerCase().includes(q) ||
+        (k.beritaAcaraId || '').toLowerCase().includes(q) ||
+        (k.petugas || '').toLowerCase().includes(q)
+    )
+  }
+
+  if (jenisFilter !== 'ALL') {
+    list = list.filter((k) => k.jenis === jenisFilter)
+  }
+
+  if (sortBy === 'nilai_desc') {
+    list.sort((a, b) => b.totalNilai - a.totalNilai)
+  } else if (sortBy === 'qty_desc') {
+    list.sort((a, b) => b.qty - a.qty)
+  } else if (sortBy === 'waktu_desc') {
+    list.sort((a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime())
+  }
+
+  return list
+}
+
+export function LaporanKerugianStokPage({ pageSize = DEFAULT_PAGE_SIZE }: LaporanKerugianStokPageProps = {}) {
+  const safePageSize = Math.min(
+    MAX_KERUGIAN_STOK_PAGE_SIZE,
+    Math.max(1, Math.floor(pageSize))
+  )
+
   const [kerugianList, setKerugianList] = useState<BarisKerugianStok[]>([])
+  const [allPeriodItems, setAllPeriodItems] = useState<BarisKerugianStok[] | null>(null)
   const [ringkasan, setRingkasan] = useState<RingkasanKerugianStok | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [paginationMeta, setPaginationMeta] = useState({
+    total: 0,
+    showing: 0,
+    totalPages: 0,
+    currentPage: 0,
+  })
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingAllForFilter, setIsLoadingAllForFilter] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [isError, setIsError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadTrigger, setReloadTrigger] = useState(0)
@@ -59,6 +118,8 @@ export function LaporanKerugianStokPage() {
     () => getDefaultDateFilter().label
   )
 
+  const isClientFilterActive = Boolean(searchQuery.trim() || jenisFilter !== 'ALL')
+
   useEffect(() => {
     let isMounted = true
     const init = async () => {
@@ -66,12 +127,22 @@ export function LaporanKerugianStokPage() {
         setIsLoading(true)
         setIsError(false)
         setErrorMessage('')
-        const [resList, resRingkasan] = await Promise.all([
-          laporanApi.getKerugianStok(dateFilterParams),
+        const [resHalaman, resRingkasan] = await Promise.all([
+          laporanApi.getKerugianStokHalaman({
+            ...dateFilterParams,
+            halaman: Math.max(0, currentPage - 1),
+            ukuran: safePageSize,
+          }),
           laporanApi.getRingkasanKerugianStok(dateFilterParams),
         ])
         if (!isMounted) return
-        setKerugianList(resList)
+        setKerugianList(resHalaman.items)
+        setPaginationMeta({
+          total: resHalaman.total,
+          showing: resHalaman.showing,
+          totalPages: resHalaman.totalPages,
+          currentPage: resHalaman.currentPage,
+        })
         setRingkasan(resRingkasan)
       } catch (err: unknown) {
         if (!isMounted) return
@@ -87,51 +158,108 @@ export function LaporanKerugianStokPage() {
     return () => {
       isMounted = false
     }
-  }, [dateFilterParams, reloadTrigger])
+  }, [dateFilterParams, currentPage, safePageSize, reloadTrigger])
+
+  // Bila filter/pencarian diaktifkan pada dataset berhalaman (>1 halaman), muat semua halaman agar tidak terpotong
+  useEffect(() => {
+    if (!isClientFilterActive || paginationMeta.totalPages <= 1 || allPeriodItems !== null) {
+      return
+    }
+    let isMounted = true
+    const loadAll = async () => {
+      try {
+        setIsLoadingAllForFilter(true)
+        const allRows = await laporanApi.getSemuaKerugianStok(dateFilterParams)
+        if (!isMounted) return
+        setAllPeriodItems(allRows)
+      } catch {
+        // Fallback aman ke halaman aktif bila muat semua gagal
+      } finally {
+        if (isMounted) setIsLoadingAllForFilter(false)
+      }
+    }
+    void loadAll()
+    return () => {
+      isMounted = false
+    }
+  }, [isClientFilterActive, paginationMeta.totalPages, allPeriodItems, dateFilterParams])
 
   const handleRetry = () => {
+    setAllPeriodItems(null)
     setReloadTrigger((prev) => prev + 1)
   }
 
+  const activeSourceList =
+    isClientFilterActive && paginationMeta.totalPages > 1 && allPeriodItems !== null
+      ? allPeriodItems
+      : kerugianList
+
   // Filter & Urutan
-  const filteredList = useMemo(() => {
-    let list = [...kerugianList]
+  const filteredList = useMemo(
+    () => applyKerugianFilterAndSort(activeSourceList, searchQuery, jenisFilter, sortBy),
+    [activeSourceList, searchQuery, jenisFilter, sortBy]
+  )
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      list = list.filter(
-        (k) =>
-          (k.namaMenu || '').toLowerCase().includes(q) ||
-          (k.kategoriNama || '').toLowerCase().includes(q) ||
-          (k.alasan || '').toLowerCase().includes(q) ||
-          (k.beritaAcaraId || '').toLowerCase().includes(q) ||
-          (k.petugas || '').toLowerCase().includes(q)
-      )
+  const totalItems = isClientFilterActive
+    ? filteredList.length
+    : ringkasan?.jumlahKejadian || paginationMeta.total || filteredList.length
+
+  const totalDisplayPages = isClientFilterActive
+    ? Math.max(1, Math.ceil(filteredList.length / safePageSize))
+    : Math.max(1, paginationMeta.totalPages || (totalItems > 0 ? Math.ceil(totalItems / safePageSize) : 1))
+
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalDisplayPages)
+
+  const displayedList = useMemo(() => {
+    if (!isClientFilterActive) {
+      return filteredList
     }
+    const start = (safeCurrentPage - 1) * safePageSize
+    return filteredList.slice(start, start + safePageSize)
+  }, [filteredList, isClientFilterActive, safeCurrentPage, safePageSize])
 
-    if (jenisFilter !== 'ALL') {
-      list = list.filter((k) => k.jenis === jenisFilter)
+  const footerTotalQty =
+    !isClientFilterActive && ringkasan
+      ? ringkasan.totalQtyHilang
+      : filteredList.reduce((acc, k) => acc + (k.qty || 0), 0)
+
+  const footerTotalNilai =
+    !isClientFilterActive && ringkasan
+      ? ringkasan.totalKerugian
+      : filteredList.reduce((acc, k) => acc + (k.totalNilai || 0), 0)
+
+  const resolveExportPayload = async () => {
+    let sourceRows =
+      paginationMeta.totalPages > 1 && allPeriodItems !== null
+        ? allPeriodItems
+        : activeSourceList
+    if (paginationMeta.totalPages > 1 && allPeriodItems === null) {
+      sourceRows = await laporanApi.getSemuaKerugianStok(dateFilterParams)
+      setAllPeriodItems(sourceRows)
     }
-
-    if (sortBy === 'nilai_desc') {
-      list.sort((a, b) => b.totalNilai - a.totalNilai)
-    } else if (sortBy === 'qty_desc') {
-      list.sort((a, b) => b.qty - a.qty)
-    } else if (sortBy === 'waktu_desc') {
-      list.sort((a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime())
-    }
-
-    return list
-  }, [kerugianList, searchQuery, jenisFilter, sortBy])
+    const rows = applyKerugianFilterAndSort(sourceRows, searchQuery, jenisFilter, sortBy)
+    const totalQty =
+      !isClientFilterActive && ringkasan
+        ? ringkasan.totalQtyHilang
+        : rows.reduce((acc, k) => acc + (k.qty || 0), 0)
+    const totalNilai =
+      !isClientFilterActive && ringkasan
+        ? ringkasan.totalKerugian
+        : rows.reduce((acc, k) => acc + (k.totalNilai || 0), 0)
+    return { rows, totalQty, totalNilai }
+  }
 
   // Ekspor Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (kerugianList.length === 0) {
       toast.error('Data belum siap untuk diekspor')
       return
     }
 
     try {
+      setIsExporting(true)
+      const { rows, totalQty, totalNilai } = await resolveExportPayload()
+
       exportTableToExcel({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
         sheetName: 'Kerugian Stok',
@@ -162,7 +290,7 @@ export function LaporanKerugianStokPage() {
           { header: 'Alasan / Berita Acara', key: 'alasan', width: 35 },
           { header: 'Petugas Pencatat', key: 'petugas', width: 20 },
         ],
-        data: filteredList,
+        data: rows,
         summaryRow: {
           no: '',
           waktu: '',
@@ -170,9 +298,9 @@ export function LaporanKerugianStokPage() {
           namaMenu: '',
           kategoriNama: '',
           jenis: '',
-          qty: filteredList.reduce((acc, k) => acc + (k.qty || 0), 0),
+          qty: totalQty,
           hppSnapshot: '',
-          totalNilai: filteredList.reduce((acc, k) => acc + (k.totalNilai || 0), 0),
+          totalNilai,
           alasan: '',
           petugas: '',
         },
@@ -184,17 +312,22 @@ export function LaporanKerugianStokPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
       toast.error('Gagal Ekspor', { description: msg })
+    } finally {
+      setIsExporting(false)
     }
   }
 
   // Ekspor PDF
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (kerugianList.length === 0) {
       toast.error('Data belum siap untuk diekspor')
       return
     }
 
     try {
+      setIsExporting(true)
+      const { rows, totalQty, totalNilai } = await resolveExportPayload()
+
       exportTableToPdf({
         filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
         title: 'LAPORAN KERUGIAN STOK',
@@ -236,7 +369,7 @@ export function LaporanKerugianStokPage() {
           { header: 'Alasan / Berita Acara', key: 'alasan' },
           { header: 'Petugas Pencatat', key: 'petugas' },
         ],
-        data: filteredList,
+        data: rows,
         summaryRow: {
           no: '',
           waktu: '',
@@ -244,9 +377,9 @@ export function LaporanKerugianStokPage() {
           namaMenu: '',
           kategoriNama: '',
           jenis: '',
-          qty: `${filteredList.reduce((acc, k) => acc + (k.qty || 0), 0)} Unit`,
+          qty: `${totalQty} Unit`,
           hppSnapshot: '',
-          totalNilai: formatRupiah(filteredList.reduce((acc, k) => acc + (k.totalNilai || 0), 0)),
+          totalNilai: formatRupiah(totalNilai),
           alasan: '',
           petugas: '',
         },
@@ -258,6 +391,8 @@ export function LaporanKerugianStokPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas PDF'
       toast.error('Gagal Ekspor PDF', { description: msg })
+    } finally {
+      setIsExporting(false)
     }
   }
 
@@ -287,12 +422,14 @@ export function LaporanKerugianStokPage() {
                 onChange={(params, label) => {
                   setDateFilterParams(params)
                   setDateFilterLabel(label)
+                  setCurrentPage(1)
+                  setAllPeriodItems(null)
                 }}
               />
               <LaporanExportButton
                 onExportExcel={handleExportExcel}
                 onExportPdf={handleExportPdf}
-                disabled={isLoading || kerugianList.length === 0}
+                disabled={isLoading || isExporting || kerugianList.length === 0}
               />
             </div>
           </div>
@@ -406,7 +543,10 @@ export function LaporanKerugianStokPage() {
             <TableToolbar
               searchPlaceholder="Cari menu, alasan, BA..."
               searchValue={searchQuery}
-              onSearchChange={setSearchQuery}
+              onSearchChange={(val) => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
               filters={[
                 {
                   title: 'Jenis Kerugian',
@@ -415,7 +555,10 @@ export function LaporanKerugianStokPage() {
                     { label: 'Stok Berkurang (Cek Fisik)', value: 'OPNAME_KELUAR' },
                   ],
                   selectedValues: jenisFilter !== 'ALL' ? [jenisFilter] : [],
-                  onSelect: (vals) => setJenisFilter((vals[0] as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK') || 'ALL'),
+                  onSelect: (vals) => {
+                    setJenisFilter((vals[0] as 'ALL' | 'OPNAME_KELUAR' | 'BARANG_RUSAK') || 'ALL')
+                    setCurrentPage(1)
+                  },
                   isSingleSelect: true,
                 },
                 {
@@ -435,6 +578,7 @@ export function LaporanKerugianStokPage() {
                 setSearchQuery('')
                 setJenisFilter('ALL')
                 setSortBy('nilai_desc')
+                setCurrentPage(1)
               }}
             />
 
@@ -466,7 +610,7 @@ export function LaporanKerugianStokPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoading ? (
+                    {isLoading || isLoadingAllForFilter ? (
                       <TableRow>
                         <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
                           <div className="flex items-center justify-center gap-2">
@@ -475,7 +619,7 @@ export function LaporanKerugianStokPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ) : filteredList.length === 0 ? (
+                    ) : displayedList.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                           {isError
@@ -484,10 +628,10 @@ export function LaporanKerugianStokPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredList.map((item, idx) => (
+                      displayedList.map((item, idx) => (
                         <TableRow key={item.id} className="border-b border-border last:border-b-0">
                           <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
-                            {idx + 1}
+                            {(safeCurrentPage - 1) * safePageSize + idx + 1}
                           </TableCell>
                           <TableCell className="text-xs font-medium whitespace-nowrap tabular-nums">
                             {item.waktu ? formatDateTime(item.waktu) : '-'}
@@ -534,24 +678,71 @@ export function LaporanKerugianStokPage() {
                       ))
                     )}
                   </TableBody>
-                  {!isLoading && filteredList.length > 0 && (
+                  {!isLoading && !isLoadingAllForFilter && displayedList.length > 0 && (
                     <TableFooter className="bg-muted/50 font-bold border-t border-border">
                       <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={6} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
-                          Total ({filteredList.length} Item)
+                          Total ({formatNumber(totalItems)} Item)
                         </TableCell>
                         <TableCell className="text-right font-mono font-bold text-sm tabular-nums text-foreground">
-                          {formatNumber(filteredList.reduce((acc, k) => acc + (k.qty || 0), 0))}
+                          {formatNumber(footerTotalQty)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs text-muted-foreground">-</TableCell>
                         <TableCell className="text-right font-mono font-bold text-sm text-destructive tabular-nums">
-                          {formatRupiah(filteredList.reduce((acc, k) => acc + (k.totalNilai || 0), 0))}
+                          {formatRupiah(footerTotalNilai)}
                         </TableCell>
                         <TableCell colSpan={2} />
                       </TableRow>
                     </TableFooter>
                   )}
                 </Table>
+
+                {/* Kontrol Paginasi */}
+                {!isLoading && !isLoadingAllForFilter && totalItems > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-muted/20 px-4 py-3">
+                    <div className="text-xs font-medium text-muted-foreground tabular-nums">
+                      Menampilkan{' '}
+                      <span className="font-semibold text-foreground">
+                        {(safeCurrentPage - 1) * safePageSize + 1}–
+                        {Math.min(
+                          (safeCurrentPage - 1) * safePageSize + displayedList.length,
+                          totalItems
+                        )}
+                      </span>{' '}
+                      dari <span className="font-semibold text-foreground">{formatNumber(totalItems)}</span> kejadian
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                        Halaman <span className="font-semibold text-foreground">{safeCurrentPage}</span> dari{' '}
+                        <span className="font-semibold text-foreground">{totalDisplayPages}</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={safeCurrentPage <= 1 || isLoading}
+                          className="h-8 gap-1 text-xs"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                          Sebelumnya
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage((p) => Math.min(totalDisplayPages, p + 1))}
+                          disabled={safeCurrentPage >= totalDisplayPages || isLoading}
+                          className="h-8 gap-1 text-xs"
+                        >
+                          Selanjutnya
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

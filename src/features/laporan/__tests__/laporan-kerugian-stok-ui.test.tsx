@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
+import { laporanApi } from '../api/laporan-api'
 import { LaporanKerugianStokPage } from '../LaporanKerugianStokPage'
 import { useRoleStore } from '@/stores/useRoleStore'
 import { useAuthStore } from '@/stores/auth-store'
@@ -224,6 +225,220 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
       expect(kerugianItem).toBeDefined()
       expect(kerugianItem?.roles).not.toContain('tu')
       expect(kerugianItem?.roles).toEqual(['pengelola', 'bendahara', 'kepsek'])
+    })
+  })
+
+  describe('SEC-03 (#198): Paginasi Kerugian Stok, Batas Ukuran & Subtotal Periode Penuh', () => {
+    const PAGINATED_ROWS = [
+      {
+        id: 101,
+        waktu: '2026-11-23T12:00:00+07:00',
+        menuId: 1,
+        namaMenu: 'Item Alpha',
+        kategoriNama: 'Makanan',
+        jenis: 'BARANG_RUSAK' as const,
+        qty: 1,
+        hppSnapshot: 5000,
+        totalNilai: 5000,
+        alasan: 'Basi',
+        beritaAcaraId: 'BA-101',
+        petugas: 'Petugas A',
+      },
+      {
+        id: 102,
+        waktu: '2026-11-23T11:00:00+07:00',
+        menuId: 2,
+        namaMenu: 'Item Beta',
+        kategoriNama: 'Makanan',
+        jenis: 'OPNAME_KELUAR' as const,
+        qty: 2,
+        hppSnapshot: 5000,
+        totalNilai: 10000,
+        alasan: 'Selisih fisik',
+        beritaAcaraId: 'BA-102',
+        petugas: 'Petugas B',
+      },
+      {
+        id: 103,
+        waktu: '2026-11-23T10:00:00+07:00',
+        menuId: 3,
+        namaMenu: 'Item Gamma',
+        kategoriNama: 'Minuman',
+        jenis: 'BARANG_RUSAK' as const,
+        qty: 3,
+        hppSnapshot: 5000,
+        totalNilai: 15000,
+        alasan: 'Kemasan bocor',
+        beritaAcaraId: 'BA-103',
+        petugas: 'Petugas C',
+      },
+      {
+        id: 104,
+        waktu: '2026-11-23T09:00:00+07:00',
+        menuId: 4,
+        namaMenu: 'Item Delta',
+        kategoriNama: 'Snack',
+        jenis: 'OPNAME_KELUAR' as const,
+        qty: 4,
+        hppSnapshot: 5000,
+        totalNilai: 20000,
+        alasan: 'Selisih opname',
+        beritaAcaraId: 'BA-104',
+        petugas: 'Petugas D',
+      },
+      {
+        id: 105,
+        waktu: '2026-11-23T08:00:00+07:00',
+        menuId: 5,
+        namaMenu: 'Item Epsilon',
+        kategoriNama: 'Snack',
+        jenis: 'BARANG_RUSAK' as const,
+        qty: 5,
+        hppSnapshot: 5000,
+        totalNilai: 25000,
+        alasan: 'Kadaluarsa',
+        beritaAcaraId: 'BA-105',
+        petugas: 'Petugas E',
+      },
+    ]
+
+    const PAGINATED_RINGKASAN = {
+      totalKerugian: 75000,
+      totalQtyHilang: 15,
+      jumlahKejadian: 5,
+      kerugianOpname: 30000,
+      qtyOpname: 6,
+      kerugianBarangRusak: 45000,
+      qtyBarangRusak: 9,
+    }
+
+    beforeEach(() => {
+      vi.mocked(exportTableToExcel).mockClear()
+      vi.mocked(exportTableToPdf).mockClear()
+    })
+
+    it('mengirim parameter halaman/ukuran, menavigasi halaman, dan menjaga subtotal footer + ekspor sesuai periode penuh', async () => {
+      const requestedParams: Array<Record<string, unknown>> = []
+
+      vi.spyOn(apiClient, 'get').mockImplementation(async (url: string, config?: { params?: unknown }) => {
+        if (url === '/api/laporan/kerugian-stok') {
+          const params = (config?.params as Record<string, unknown> | undefined) ?? {}
+          requestedParams.push(params)
+          const halaman = Number(params.halaman ?? 0)
+          const ukuran = Number(params.ukuran ?? 200)
+          const start = halaman * ukuran
+          const slice = PAGINATED_ROWS.slice(start, start + ukuran)
+          const total = PAGINATED_ROWS.length
+          return {
+            data: {
+              code: 200,
+              status: 'SUCCESS',
+              data: slice,
+              total,
+              showing: slice.length,
+              totalPages: Math.ceil(total / ukuran),
+              currentPage: halaman,
+            },
+          }
+        }
+        if (url === '/api/laporan/kerugian-stok/ringkasan') {
+          return { data: { code: 200, status: 'SUCCESS', data: PAGINATED_RINGKASAN } }
+        }
+        throw new Error(`Unexpected GET ${url}`)
+      })
+
+      const screen = await render(<LaporanKerugianStokPage pageSize={2} />)
+
+      // Halaman 1: hanya 2 baris pertama, tapi footer tetap total periode penuh (5 item, 15 qty, Rp 75.000)
+      await expect.element(screen.getByText('Item Alpha')).toBeInTheDocument()
+      await expect.element(screen.getByText('Item Beta')).toBeInTheDocument()
+      await expect.element(screen.getByText('Item Gamma')).not.toBeInTheDocument()
+      await expect.element(screen.getByText('Menampilkan 1–2 dari 5 kejadian')).toBeInTheDocument()
+      await expect.element(screen.getByText('Halaman 1 dari 3')).toBeInTheDocument()
+      await expect.element(screen.getByText('Total (5 Item)')).toBeInTheDocument()
+      await expect.element(screen.getByRole('cell', { name: /Rp\s*75\.000/i })).toBeInTheDocument()
+
+      expect(requestedParams[0]).toMatchObject({ halaman: 0, ukuran: 2 })
+
+      // Navigasi ke halaman 2 dan halaman 3, lalu kembali ke halaman 2
+      const nextBtn = screen.getByRole('button', { name: /Selanjutnya/i })
+      const prevBtn = screen.getByRole('button', { name: /Sebelumnya/i })
+
+      await userEvent.click(nextBtn)
+      await expect.element(screen.getByText('Item Gamma')).toBeInTheDocument()
+      await expect.element(screen.getByText('Item Delta')).toBeInTheDocument()
+      await expect.element(screen.getByText('Menampilkan 3–4 dari 5 kejadian')).toBeInTheDocument()
+      await expect.element(screen.getByText('Halaman 2 dari 3')).toBeInTheDocument()
+
+      await userEvent.click(nextBtn)
+      await expect.element(screen.getByText('Item Epsilon')).toBeInTheDocument()
+      await expect.element(screen.getByText('Menampilkan 5–5 dari 5 kejadian')).toBeInTheDocument()
+      await expect.element(screen.getByText('Halaman 3 dari 3')).toBeInTheDocument()
+
+      await userEvent.click(prevBtn)
+      await expect.element(screen.getByText('Item Gamma')).toBeInTheDocument()
+      await expect.element(screen.getByText('Halaman 2 dari 3')).toBeInTheDocument()
+
+      // Ekspor Excel & PDF dari halaman 2 harus tetap membawa seluruh 5 baris dan ringkasan periode penuh
+      const exportBtn = screen.getByRole('button', { name: /^Ekspor$/i })
+      await userEvent.click(exportBtn)
+      await userEvent.click(screen.getByTestId('btn-export-excel-option'))
+
+      await vi.waitFor(() => {
+        expect(exportTableToExcel).toHaveBeenCalledTimes(1)
+      })
+      const excelCallArg = vi.mocked(exportTableToExcel).mock.calls[0][0]
+      expect(excelCallArg.data).toHaveLength(5)
+      expect(excelCallArg.summaryRow?.qty).toBe(15)
+      expect(excelCallArg.summaryRow?.totalNilai).toBe(75000)
+
+      await userEvent.click(exportBtn)
+      await userEvent.click(screen.getByTestId('btn-export-pdf-option'))
+
+      await vi.waitFor(() => {
+        expect(exportTableToPdf).toHaveBeenCalledTimes(1)
+      })
+      const pdfCallArg = vi.mocked(exportTableToPdf).mock.calls[0][0]
+      expect(pdfCallArg.data).toHaveLength(5)
+      expect(pdfCallArg.summaryRow?.qty).toBe('15 Unit')
+      expect(pdfCallArg.summaryRow?.totalNilai).toContain('75.000')
+
+      // Pastikan tidak pernah mengirim ukuran > 200
+      expect(requestedParams.every((p) => Number(p.ukuran) <= 200)).toBe(true)
+    })
+
+    it('menjepit ukuran halaman maksimal 200 dan halaman minimal 0 agar tidak ditolak backend', async () => {
+      const requestedParams: Array<Record<string, unknown>> = []
+
+      vi.spyOn(apiClient, 'get').mockImplementation(async (url: string, config?: { params?: unknown }) => {
+        if (url === '/api/laporan/kerugian-stok') {
+          const params = (config?.params as Record<string, unknown> | undefined) ?? {}
+          requestedParams.push(params)
+          return {
+            data: {
+              code: 200,
+              status: 'SUCCESS',
+              data: MOCK_KERUGIAN_LIST,
+              total: 2,
+              showing: 2,
+              totalPages: 1,
+              currentPage: 0,
+            },
+          }
+        }
+        if (url === '/api/laporan/kerugian-stok/ringkasan') {
+          return { data: { code: 200, status: 'SUCCESS', data: MOCK_RINGKASAN } }
+        }
+        throw new Error(`Unexpected GET ${url}`)
+      })
+
+      const screen = await render(<LaporanKerugianStokPage pageSize={500} />)
+      await expect.element(screen.getByText('Roti Bakar Cokelat')).toBeInTheDocument()
+
+      await laporanApi.getKerugianStokHalaman({ halaman: -4, ukuran: 999 })
+
+      expect(requestedParams[0]).toMatchObject({ halaman: 0, ukuran: 200 })
+      expect(requestedParams[1]).toMatchObject({ halaman: 0, ukuran: 200 })
     })
   })
 })
