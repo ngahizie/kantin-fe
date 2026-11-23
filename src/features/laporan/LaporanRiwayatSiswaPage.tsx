@@ -42,6 +42,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
+import { escapeHtml } from '@/lib/utils'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -444,18 +445,18 @@ export function LaporanRiwayatSiswaPage() {
     const itemsHtml = selectedTrxForReceipt.items && selectedTrxForReceipt.items.length > 0
       ? selectedTrxForReceipt.items.map((it) => `
           <tr>
-            <td style="font-weight: bold; width: 28px; padding: 3px 0; vertical-align: top;">${it.qty}x</td>
-            <td style="padding: 3px 0; vertical-align: top;">${it.nama}</td>
-            <td style="text-align: right; font-weight: bold; white-space: nowrap; padding: 3px 0; vertical-align: top;">${formatRupiah(it.subtotal)}</td>
+            <td style="font-weight: bold; width: 28px; padding: 3px 0; vertical-align: top;">${escapeHtml(it.qty)}x</td>
+            <td style="padding: 3px 0; vertical-align: top;">${escapeHtml(it.nama)}</td>
+            <td style="text-align: right; font-weight: bold; white-space: nowrap; padding: 3px 0; vertical-align: top;">${escapeHtml(formatRupiah(it.subtotal))}</td>
           </tr>
         `).join('')
-      : `<tr><td colspan="3" style="padding: 6px 0; color: #444; font-style: italic;">${selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}</td></tr>`
+      : `<tr><td colspan="3" style="padding: 6px 0; color: #444; font-style: italic;">${escapeHtml(selectedTrxForReceipt.keterangan || 'Transaksi Kantin')}</td></tr>`
 
     const receiptHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Struk Transaksi - ${selectedTrxForReceipt.referensiId}</title>
+  <title>Struk Transaksi - ${escapeHtml(selectedTrxForReceipt.referensiId)}</title>
   <style>
     @page {
       margin: 6mm auto;
@@ -588,37 +589,37 @@ export function LaporanRiwayatSiswaPage() {
   <div class="header">
     <img src="/logo.png" style="height: 28px; width: auto; margin-bottom: 4px;" alt="Logo Skoolia" />
     <div class="store-name">KANTIN SKOOLIA</div>
-    <div class="sub-title">${receiptTitle}</div>
+    <div class="sub-title">${escapeHtml(receiptTitle)}</div>
     <div>
       <div style="font-size: 8px; color: #666; margin-top: 4px;">NO. REFERENSI TRANSAKSI:</div>
-      <div class="ref-badge">${selectedTrxForReceipt.referensiId}</div>
+      <div class="ref-badge">${escapeHtml(selectedTrxForReceipt.referensiId)}</div>
     </div>
   </div>
 
   <div class="info-section">
     <div class="info-row">
       <span class="info-label">Waktu:</span>
-      <span class="info-value">${formatDateTime(selectedTrxForReceipt.waktu)}</span>
+      <span class="info-value">${escapeHtml(formatDateTime(selectedTrxForReceipt.waktu))}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Lokasi / Titik:</span>
-      <span class="info-value">${titik}</span>
+      <span class="info-value">${escapeHtml(titik)}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Petugas:</span>
-      <span class="info-value">${petugas}</span>
+      <span class="info-value">${escapeHtml(petugas)}</span>
     </div>
   </div>
 
   <div class="student-box">
     <div class="student-title">Identitas Siswa:</div>
     <div class="info-row" style="margin-bottom: 2px;">
-      <span style="font-weight: bold; font-size: 11px;">${profil.nama}</span>
-      <span style="font-size: 10px; color: #333;">NIS: ${profil.nis}</span>
+      <span style="font-weight: bold; font-size: 11px;">${escapeHtml(profil.nama)}</span>
+      <span style="font-size: 10px; color: #333;">NIS: ${escapeHtml(profil.nis)}</span>
     </div>
     <div class="info-row">
       <span class="info-label">Kelas:</span>
-      <span style="font-weight: bold;">${profil.kelas}</span>
+      <span style="font-weight: bold;">${escapeHtml(profil.kelas)}</span>
     </div>
   </div>
 
@@ -631,12 +632,12 @@ export function LaporanRiwayatSiswaPage() {
 
   <div class="total-box">
     <div class="total-row">
-      <span>${totalLabel}</span>
-      <span>${totalSign} ${formatRupiah(selectedTrxForReceipt.nominal)}</span>
+      <span>${escapeHtml(totalLabel)}</span>
+      <span>${escapeHtml(totalSign)} ${escapeHtml(formatRupiah(selectedTrxForReceipt.nominal))}</span>
     </div>
     <div class="balance-row">
       <span>Sisa Saldo Kartu:</span>
-      <span style="font-weight: bold;">${formatRupiah(selectedTrxForReceipt.saldoSetelah)}</span>
+      <span style="font-weight: bold;">${escapeHtml(formatRupiah(selectedTrxForReceipt.saldoSetelah))}</span>
     </div>
   </div>
 
