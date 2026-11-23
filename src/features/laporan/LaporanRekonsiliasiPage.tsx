@@ -1,8 +1,10 @@
 import { TableToolbar } from '@/components/data-table'
 import { useState, useEffect, useMemo } from 'react'
 import {
+  AlertTriangle,
   ArrowDownToLine,
   Loader2,
+  RotateCcw,
   Scale,
   ShieldAlert,
   Store,
@@ -10,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -38,6 +41,9 @@ import type { RingkasanRekonsiliasi, ArusPosRekonsiliasiItem, LaporanFilterParam
 export function LaporanRekonsiliasiPage() {
   const [data, setData] = useState<RingkasanRekonsiliasi | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [reloadTrigger, setReloadTrigger] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
 
   // Filter Tanggal / Rentang Waktu (Default: Hari Ini)
@@ -53,12 +59,16 @@ export function LaporanRekonsiliasiPage() {
     const loadData = async () => {
       try {
         setIsLoading(true)
+        setIsError(false)
+        setErrorMessage('')
         const res = await laporanApi.getRekonsiliasi(dateFilterParams)
         if (!isMounted) return
         setData(res)
       } catch (err: unknown) {
         if (!isMounted) return
+        setIsError(true)
         const msg = err instanceof Error ? err.message : 'Gagal memuat rekonsiliasi'
+        setErrorMessage(msg)
         toast.error('Gagal Memuat Laporan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
@@ -68,7 +78,11 @@ export function LaporanRekonsiliasiPage() {
     return () => {
       isMounted = false
     }
-  }, [dateFilterParams])
+  }, [dateFilterParams, reloadTrigger])
+
+  const handleRetry = () => {
+    setReloadTrigger((prev) => prev + 1)
+  }
 
   // Baris Rincian Pos Akuntansi
   const rincianPos: ArusPosRekonsiliasiItem[] = useMemo(() => {
@@ -320,10 +334,38 @@ export function LaporanRekonsiliasiPage() {
               <LaporanExportButton
                 onExportExcel={handleExportExcel}
                 onExportPdf={handleExportPdf}
-                disabled={isLoading || !data}
+                disabled={isLoading || !data || isError}
               />
             </div>
           </div>
+
+          {/* Error Alert Banner */}
+          {isError && (
+            <div
+              data-testid="banner-error-rekonsiliasi"
+              className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">Gagal Memuat Data Rekonsiliasi</p>
+                  <p className="text-[11px] opacity-90">
+                    {errorMessage || 'Terjadi kesalahan saat menghubungi server. Data yang ditampilkan mungkin tidak mutakhir.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="h-8 shrink-0 gap-1.5 border-destructive/40 bg-background text-xs font-medium text-destructive hover:bg-destructive/10"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Coba Lagi</span>
+              </Button>
+            </div>
+          )}
 
           {/* BANNER PERINGATAN MERAH MENCOLOK BILA SELISIH != 0 */}
           {data && !data.seimbang && (
@@ -577,7 +619,9 @@ export function LaporanRekonsiliasiPage() {
                     ) : filteredPos.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                          Tidak ditemukan pos yang sesuai dengan pencarian.
+                          {isError
+                            ? 'Gagal memuat data rekonsiliasi dari server. Silakan klik Coba Lagi.'
+                            : 'Tidak ditemukan pos yang sesuai dengan pencarian.'}
                         </TableCell>
                       </TableRow>
                     ) : (

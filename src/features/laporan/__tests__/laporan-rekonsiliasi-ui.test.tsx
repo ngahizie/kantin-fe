@@ -132,4 +132,37 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     const tetapRowExcel = excelData.find((r) => r.pos === 'Total Saldo Siswa (Titipan)')
     expect(tetapRowExcel?.arah).toBe('TETAP')
   })
+
+  it('menampilkan banner peringatan dan tombol coba lagi saat server gagal merespons (SEC-01)', async () => {
+    let attempts = 0
+    vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+      attempts++
+      if (attempts === 1) {
+        throw new Error('500 Internal Server Error: Ledger service offline')
+      }
+      if (url.includes('/api/laporan/rekonsiliasi')) {
+        return { data: { code: 200, status: 'SUCCESS', data: mockRekonsiliasiData } }
+      }
+      throw new Error(`Unexpected GET ${url}`)
+    })
+
+    const screen = await render(<LaporanRekonsiliasiPage />)
+
+    // Banner peringatan error harus muncul
+    const errorBanner = screen.getByTestId('banner-error-rekonsiliasi')
+    await expect.element(errorBanner).toBeInTheDocument()
+    await expect.element(screen.getByText('Gagal Memuat Data Rekonsiliasi', { exact: true })).toBeInTheDocument()
+    await expect.element(screen.getByText(/500 Internal Server Error/i)).toBeInTheDocument()
+
+    // Tombol coba lagi harus muncul
+    const retryBtn = screen.getByRole('button', { name: /Coba Lagi/i })
+    await expect.element(retryBtn).toBeInTheDocument()
+
+    // Klik coba lagi untuk memulihkan data
+    await userEvent.click(retryBtn)
+
+    // Data berhasil dimuat kembali
+    await expect.element(screen.getByText('Top-up Online Siswa')).toBeInTheDocument()
+    await expect.element(errorBanner).not.toBeInTheDocument()
+  })
 })
