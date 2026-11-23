@@ -41,6 +41,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, formatNumber } from '@/lib/formatters'
+import { escapeHtml } from '@/lib/utils'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
@@ -331,12 +332,22 @@ export function LaporanRiwayatKeseluruhanPage() {
 
     const totalSign = selectedTrxForReceipt.arah === 'KREDIT' ? '+' : '-'
 
+    const safeTitle = escapeHtml(receiptTitle)
+    const safeRefId = escapeHtml(selectedTrxForReceipt.referensiId)
+    const safeWaktu = escapeHtml(formatDateTime(selectedTrxForReceipt.waktu))
+    const safeSiswaNama = escapeHtml(selectedTrxForReceipt.siswaNama)
+    const safeSiswaKelas = escapeHtml(selectedTrxForReceipt.siswaKelas)
+    const safeTitik = escapeHtml(titik)
+    const safePetugas = escapeHtml(petugas)
+    const safeTotalLabel = escapeHtml(totalLabel)
+    const safeKeterangan = escapeHtml(selectedTrxForReceipt.keterangan || 'Transaksi Kantin')
+
     const receiptHtml = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Struk Transaksi - ${selectedTrxForReceipt.referensiId}</title>
+  <title>Struk Transaksi - ${safeRefId}</title>
   <style>
     @media print {
       body { margin: 0; padding: 0; background: #fff; }
@@ -372,26 +383,26 @@ export function LaporanRiwayatKeseluruhanPage() {
   <div class="header">
     <img src="/logo.png" style="height: 28px; width: auto; margin-bottom: 4px;" alt="Logo Skoolia" />
     <div class="store-name">KANTIN SKOOLIA</div>
-    <div class="sub-title">${receiptTitle}</div>
-    <div class="ref-badge">${selectedTrxForReceipt.referensiId}</div>
+    <div class="sub-title">${safeTitle}</div>
+    <div class="ref-badge">${safeRefId}</div>
   </div>
 
   <div class="info-section">
     <div class="info-row">
       <span>Waktu:</span>
-      <span>${formatDateTime(selectedTrxForReceipt.waktu)}</span>
+      <span>${safeWaktu}</span>
     </div>
     <div class="info-row">
       <span>Siswa:</span>
-      <span>${selectedTrxForReceipt.siswaNama} (${selectedTrxForReceipt.siswaKelas})</span>
+      <span>${safeSiswaNama} (${safeSiswaKelas})</span>
     </div>
     <div class="info-row">
       <span>Lokasi / Titik:</span>
-      <span>${titik}</span>
+      <span>${safeTitik}</span>
     </div>
     <div class="info-row">
       <span>Petugas:</span>
-      <span>${petugas}</span>
+      <span>${safePetugas}</span>
     </div>
   </div>
 
@@ -413,8 +424,8 @@ export function LaporanRiwayatKeseluruhanPage() {
           .map(
             (i) => `
           <tr>
-            <td>${i.nama}</td>
-            <td class="text-right">${i.qty}x</td>
+            <td>${escapeHtml(i.nama)}</td>
+            <td class="text-right">${escapeHtml(i.qty)}x</td>
             <td class="text-right">${formatRupiah(i.subtotal)}</td>
           </tr>
         `
@@ -425,7 +436,7 @@ export function LaporanRiwayatKeseluruhanPage() {
   `
       : `
     <div style="padding: 8px 0; text-align: center; font-style: italic;">
-      ${selectedTrxForReceipt.keterangan || 'Transaksi Kantin'}
+      ${safeKeterangan}
     </div>
   `
   }
@@ -433,7 +444,7 @@ export function LaporanRiwayatKeseluruhanPage() {
   <div class="double-divider"></div>
 
   <div class="total-row">
-    <span>${totalLabel}</span>
+    <span>${safeTotalLabel}</span>
     <span>${totalSign} ${formatRupiah(selectedTrxForReceipt.nominal)}</span>
   </div>
 

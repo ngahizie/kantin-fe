@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getPageNumbers } from './utils'
+import { getPageNumbers, escapeHtml } from './utils'
 
 describe('getPageNumbers', () => {
   it('returns all pages when total is at most 5', () => {
@@ -26,3 +26,19 @@ describe('getPageNumbers', () => {
     expect(getPageNumbers(11, 10)).toEqual([1, '...', 7, 8, 9, 10])
   })
 })
+
+describe('escapeHtml', () => {
+  it('mengonversi karakter khusus HTML menjadi HTML entities', () => {
+    expect(escapeHtml('<script>alert("xss")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+    )
+    expect(escapeHtml("Tom & Jerry's")).toBe('Tom &amp; Jerry&#39;s')
+  })
+
+  it('menangani nilai null, undefined, dan angka dengan aman', () => {
+    expect(escapeHtml(null)).toBe('')
+    expect(escapeHtml(undefined)).toBe('')
+    expect(escapeHtml(12345)).toBe('12345')
+  })
+})
+
