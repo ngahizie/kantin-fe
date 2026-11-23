@@ -92,8 +92,13 @@ export function sanitizeFilename(filename: string): string {
  */
 export function sanitizeCellValue(val: unknown): unknown {
   if (typeof val === 'string') {
-    // Karakter pemicu formula pada spreadsheet: =, +, -, @, tab (\t), carriage return (\r)
-    if (/^[=+\-@\t\r]/.test(val)) {
+    // Karakter pemicu formula pada spreadsheet: =, +, -, @, tab (\t), carriage return (\r), newline (\n)
+    // Periksa langsung, atau periksa setelah memangkas spasi awal (CWE-1236, SEC-BATAL-06)
+    if (/^[=+\-@\t\r\n]/.test(val)) {
+      return `'${val}`
+    }
+    const strippedSpaces = val.replace(/^[ ]+/, '')
+    if (strippedSpaces.length > 0 && /^[=+\-@\t\r\n]/.test(strippedSpaces)) {
       return `'${val}`
     }
   }

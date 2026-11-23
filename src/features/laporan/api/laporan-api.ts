@@ -639,9 +639,22 @@ export const laporanApi = {
     const rawList = Array.isArray(res.data?.data) ? res.data.data : []
     if (rawList.length === 0) return []
 
+    // SEC-BATAL-04: Bila backend sudah menyertakan identitas siswa & titik kasir (enrichment),
+    // hindari mass-lookup redundan ke /api/siswa (yang membatasi 50 siswa) & /api/pengaturan-kantin/titik-kasir.
+    const needsSiswaLookup = rawList.some(
+      (r) => !r.siswaNama && !r.siswa_nama && Number(r.siswaId ?? r.siswa_id ?? 0) > 0
+    )
+    const needsTitikLookup = rawList.some(
+      (r) => !r.titikKasirNama && !r.titik_kasir_nama && Number(r.titikKasirId ?? r.titik_kasir_id ?? 0) > 0
+    )
+
     const [siswaRes, titikRes] = await Promise.all([
-      apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/siswa', { params: { batas: 50 } }).catch(() => null),
-      apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/pengaturan-kantin/titik-kasir').catch(() => null),
+      needsSiswaLookup
+        ? apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/siswa', { params: { batas: 50 } }).catch(() => null)
+        : Promise.resolve(null),
+      needsTitikLookup
+        ? apiClient.get<ApiResponse<Record<string, unknown>[]>>('/api/pengaturan-kantin/titik-kasir').catch(() => null)
+        : Promise.resolve(null),
     ])
 
     const siswaMap = new Map<number, { nama: string; nis: string; kelas: string }>()
@@ -670,13 +683,18 @@ export const laporanApi = {
       const siswaId = Number(row.siswaId ?? row.siswa_id ?? 0)
       const titikKasirId = Number(row.titikKasirId ?? row.titik_kasir_id ?? 0)
       const siswaInfo = siswaMap.get(siswaId)
+      const backendSiswaNama = row.siswaNama || row.siswa_nama
+      const backendSiswaNis = row.siswaNis || row.siswa_nis
+      const backendSiswaKelas = row.siswaKelas || row.siswa_kelas
+      const backendTitikNama = row.titikKasirNama || row.titik_kasir_nama
+
       return {
         transaksiId: Number(row.transaksiId ?? row.id ?? 0),
         subjekTipe: String(row.subjekTipe || 'SISWA'),
         siswaId,
-        siswaNama: String(row.siswaNama || siswaInfo?.nama || `Siswa #${siswaId}`),
-        siswaNis: String(row.siswaNis || siswaInfo?.nis || '-'),
-        siswaKelas: String(row.siswaKelas || siswaInfo?.kelas || '-'),
+        siswaNama: String(backendSiswaNama || siswaInfo?.nama || `Siswa #${siswaId}`),
+        siswaNis: String(backendSiswaNis || siswaInfo?.nis || '-'),
+        siswaKelas: String(backendSiswaKelas || siswaInfo?.kelas || '-'),
         kartuUid: row.kartuUid ? String(row.kartuUid) : null,
         total: toFiniteNumber(row.total, 0),
         alasanVoid:
@@ -687,7 +705,7 @@ export const laporanApi = {
         voidOleh: row.voidOleh != null ? Number(row.voidOleh) : undefined,
         petugasId: row.petugasId != null ? Number(row.petugasId) : undefined,
         titikKasirId: titikKasirId > 0 ? titikKasirId : undefined,
-        titikKasirNama: String(row.titikKasirNama || (titikKasirId > 0 ? titikMap.get(titikKasirId) : '') || 'Kasir Kantin'),
+        titikKasirNama: String(backendTitikNama || (titikKasirId > 0 ? titikMap.get(titikKasirId) : '') || 'Kasir Kantin'),
         waktu: String(row.waktu || ''),
       }
     })
