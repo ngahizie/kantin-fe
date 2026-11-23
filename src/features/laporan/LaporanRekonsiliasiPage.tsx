@@ -24,6 +24,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -229,10 +230,10 @@ export function LaporanRekonsiliasiPage() {
         data: exportRows,
         summaryRow: {
           no: '',
-          pos: '',
-          arah: '',
-          nominal: '',
-          keterangan: '',
+          pos: `Total (${exportRows.length} Pos)`,
+          arah: data.seimbang ? 'COCOK' : 'SELISIH',
+          nominal: rincianPos.reduce((acc, r) => acc + (r.nominal || 0), 0),
+          keterangan: data.seimbang ? 'Selisih Rp 0' : `Selisih ${formatRupiah(data.selisih)}`,
         },
       })
 
@@ -301,10 +302,10 @@ export function LaporanRekonsiliasiPage() {
         data: exportRows,
         summaryRow: {
           no: '',
-          pos: '',
-          arah: '',
-          nominal: '',
-          keterangan: '',
+          pos: `Total (${exportRows.length} Pos)`,
+          arah: data.seimbang ? 'COCOK' : 'SELISIH',
+          nominal: rincianPos.reduce((acc, r) => acc + (r.nominal || 0), 0),
+          keterangan: data.seimbang ? 'Selisih Rp 0' : `Selisih ${formatRupiah(data.selisih)}`,
         },
       })
 
@@ -671,6 +672,21 @@ export function LaporanRekonsiliasiPage() {
                       ))
                     )}
                   </TableBody>
+                  {!isLoading && filteredPos.length > 0 && (
+                    <TableFooter className="bg-muted/50 font-bold border-t border-border">
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={3} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+                          Total ({filteredPos.length} Pos):
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-bold text-sm tabular-nums text-foreground">
+                          {formatRupiah(filteredPos.reduce((acc, p) => acc + (p.nominal || 0), 0))}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {data?.seimbang ? 'Status Rekonsiliasi: Cocok' : `Selisih: ${formatRupiah(data?.selisih || 0)}`}
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  )}
                 </Table>
               </CardContent>
             </Card>

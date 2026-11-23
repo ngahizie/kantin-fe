@@ -87,9 +87,13 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     // Nilai KREDIT dan DEBIT lama tidak boleh tampil di tabel rincian
     await expect.element(screen.getByText('KREDIT', { exact: true })).not.toBeInTheDocument()
     await expect.element(screen.getByText('DEBIT', { exact: true })).not.toBeInTheDocument()
+
+    // TableFooter subtotal dinamis harus tampil (SEC-03)
+    await expect.element(screen.getByText('Total (9 Pos):')).toBeInTheDocument()
+    await expect.element(screen.getByText('Status Rekonsiliasi: Cocok')).toBeInTheDocument()
   })
 
-  it('memastikan ekspor PDF dan Excel menyertakan kolom Arah tanpa kolom Kategori lama', async () => {
+  it('memastikan ekspor PDF dan Excel menyertakan kolom Arah dan summaryRow terisi (SEC-03)', async () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({
       data: {
         code: 200,
@@ -112,6 +116,8 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     const pdfHeaders = pdfArg.columns.map((c) => c.header)
     expect(pdfHeaders).toContain('Arah')
     expect(pdfHeaders).not.toContain('Kategori')
+    expect(pdfArg.summaryRow?.pos).toContain('Total')
+    expect(pdfArg.summaryRow?.arah).toBe('COCOK')
 
     // Periksa salah satu baris memiliki nilai TETAP
     const pdfData = pdfArg.data as Array<{ pos?: string; arah?: string }>
@@ -128,6 +134,8 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     expect(excelHeaders).toContain('Arah')
     expect(excelHeaders).not.toContain('Kategori')
     expect(excelHeaders).not.toContain('Arah Mutasi')
+    expect(excelArg.summaryRow?.pos).toContain('Total')
+    expect(excelArg.summaryRow?.arah).toBe('COCOK')
 
     const excelData = excelArg.data as Array<{ pos?: string; arah?: string }>
     const tetapRowExcel = excelData.find((r) => r.pos === 'Total Saldo Siswa (Titipan)')
