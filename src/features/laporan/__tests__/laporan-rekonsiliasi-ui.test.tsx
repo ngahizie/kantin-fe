@@ -6,6 +6,9 @@ import apiClient from '@/lib/api-client'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { LaporanRekonsiliasiPage } from '../LaporanRekonsiliasiPage'
+import { useAuthStore } from '@/stores/auth-store'
+import { Route as CekSelisihRoute } from '@/routes/_authenticated/laporan/cek-selisih/index'
+import { Route as RekonsiliasiRoute } from '@/routes/_authenticated/laporan/rekonsiliasi/index'
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: vi.fn(),
@@ -193,5 +196,91 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     // Memverifikasi nominal dan arah
     await expect.element(screen.getByText('Penyesuaian saldo kurang oleh bendahara dengan berita acara')).toBeInTheDocument()
     await expect.element(screen.getByText('Pergeseran saldo antar kartu siswa (dampak net nol)')).toBeInTheDocument()
+  })
+
+  describe('SEC-04: Penegakan Otorisasi Route Guard dan Route Alias Rekonsiliasi', () => {
+    it('mengizinkan peran bendahara, tu, admin, dan kepsek pada CekSelisihRoute beforeLoad', () => {
+      const allowedRoles = ['bendahara', 'tu', 'admin', 'kepsek'] as const
+
+      for (const role of allowedRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (CekSelisihRoute.options as any).beforeLoad()).not.toThrow()
+      }
+    })
+
+    it('menolak peran tidak berhak pada CekSelisihRoute beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['pengelola', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (CekSelisihRoute.options as any).beforeLoad()).toThrow()
+      }
+    })
+
+    it('menolak peran tidak berhak pada RekonsiliasiRoute beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['pengelola', 'kasir', 'siswa', 'orang_tua'] as const
+
+      for (const role of forbiddenRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 2,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          currentRole: role as any,
+        })
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(RekonsiliasiRoute.options as any).beforeLoad()
+          expect.fail('Harus melempar redirect')
+        } catch (err: any) {
+          expect(err?.options?.to ?? err?.to).toBe('/403')
+        }
+      }
+    })
+
+    it('mengarahkan peran berhak pada RekonsiliasiRoute beforeLoad dengan redirect /laporan/cek-selisih', () => {
+      const allowedRoles = ['bendahara', 'tu', 'admin', 'kepsek'] as const
+
+      for (const role of allowedRoles) {
+        useAuthStore.getState().auth.setUser({
+          userId: 1,
+          nama: 'User ' + role,
+          email: `${role}@kantin.id`,
+          sekolahId: 1,
+          sekolahNama: 'SMA 1',
+          roles: [role],
+          currentRole: role,
+        })
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(RekonsiliasiRoute.options as any).beforeLoad()
+          expect.fail('Harus melempar redirect')
+        } catch (err: any) {
+          expect(err?.options?.to ?? err?.to).toBe('/laporan/cek-selisih')
+        }
+      }
+    })
   })
 })
