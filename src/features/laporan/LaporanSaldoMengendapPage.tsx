@@ -145,16 +145,17 @@ export function LaporanSaldoMengendapPage() {
 
       // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
       if (canAccessSiswa) {
-        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+        const totalSaldo = filteredSiswa.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalBelanjaHariIni = filteredSiswa.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
 
         sheets.push({
           sheetName: 'Saldo Siswa',
           title: 'Laporan Total Saldo Siswa',
           metadata: {
             'Tanggal Cetak': formatDateTime(new Date()),
-            'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
-            'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
+            'Grand Total Saldo Titipan': formatRupiah(ringkasan.saldoSiswa),
+            'Total Siswa Terdaftar': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+            'Jumlah Baris Diekspor': `${filteredSiswa.length} Siswa`,
           },
           columns: [
             { header: 'No', width: 6 },
@@ -177,7 +178,7 @@ export function LaporanSaldoMengendapPage() {
               width: 14,
             },
           ],
-          data: siswaList,
+          data: filteredSiswa,
           summaryRow: {
             no: '',
             nis: '',
@@ -242,8 +243,8 @@ export function LaporanSaldoMengendapPage() {
 
       // Section: Saldo Siswa
       if (canAccessSiswa) {
-        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+        const totalSaldo = filteredSiswa.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalBelanjaHariIni = filteredSiswa.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
 
         sections.push({
           sectionTitle: 'Laporan Total Saldo Siswa',
@@ -274,7 +275,7 @@ export function LaporanSaldoMengendapPage() {
               formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
             },
           ],
-          data: siswaList,
+          data: filteredSiswa,
           summaryRow: {
             no: '',
             nis: '',
@@ -314,8 +315,9 @@ export function LaporanSaldoMengendapPage() {
         subtitle: 'Laporan Rincian Dana Titipan Saldo Kartu Siswa',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
-          'Jumlah Siswa': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+          'Grand Total Saldo Titipan': formatRupiah(ringkasan.saldoSiswa),
+          'Total Siswa Terdaftar': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+          'Jumlah Baris Diekspor': `${filteredSiswa.length} Siswa`,
         },
         sections,
       })
@@ -558,20 +560,20 @@ export function LaporanSaldoMengendapPage() {
                         ))
                       )}
                     </TableBody>
-                    {siswaList.length > 0 && (
+                    {filteredSiswa.length > 0 && (
                       <TableFooter className="bg-muted/50 font-bold border-t border-border">
                         <TableRow>
                           <TableCell colSpan={4} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
-                            Total Saldo Terdaftar:
+                            Subtotal Saldo (Baris Ditampilkan):
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
-                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.saldo || 0), 0))}
+                            {formatRupiah(filteredSiswa.reduce((acc, s) => acc + (s.saldo || 0), 0))}
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs text-muted-foreground">
                             -
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
-                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.belanjaHariIni || 0), 0))}
+                            {formatRupiah(filteredSiswa.reduce((acc, s) => acc + (s.belanjaHariIni || 0), 0))}
                           </TableCell>
                           <TableCell colSpan={3} />
                         </TableRow>
