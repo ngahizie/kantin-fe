@@ -42,6 +42,10 @@ export interface MockResponseData {
   status?: string
   message?: string
   data?: unknown
+  total?: number
+  showing?: number
+  totalPages?: number
+  currentPage?: number
   kekurangan?: number
 }
 
@@ -3258,6 +3262,23 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     }
 
     if (url.includes('/api/laporan/kerugian-stok') && method === 'get') {
+      const reqParams = (params || {}) as Record<string, unknown>
+      const halaman = Number(reqParams.halaman ?? 0)
+      const ukuran = Number(reqParams.ukuran ?? 200)
+
+      if (!Number.isInteger(halaman) || halaman < 0 || !Number.isInteger(ukuran) || ukuran < 1 || ukuran > 200) {
+        return {
+          status: 400,
+          data: {
+            code: 400,
+            responseCode: 400,
+            status: 'ERROR',
+            message: 'Parameter halaman/ukuran di luar rentang (halaman >= 0, ukuran 1..200)',
+            data: [],
+          },
+        }
+      }
+
       const listKerugian = kerugianStokList.map((k) => ({
         id: k.id,
         waktu: k.waktu,
@@ -3273,6 +3294,10 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
         petugas: k.petugas,
       }))
 
+      const start = halaman * ukuran
+      const pagedKerugian = listKerugian.slice(start, start + ukuran)
+      const totalPages = Math.ceil(listKerugian.length / ukuran)
+
       return {
         status: 200,
         data: {
@@ -3280,7 +3305,11 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           responseCode: 200,
           status: 'SUCCESS',
           message: 'Daftar kerugian stok berhasil dimuat',
-          data: listKerugian,
+          total: listKerugian.length,
+          showing: pagedKerugian.length,
+          totalPages,
+          currentPage: halaman,
+          data: pagedKerugian,
         },
       }
     }

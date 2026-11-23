@@ -11,6 +11,8 @@ export interface LaporanFilterParams {
   titikKasirId?: number
   search?: string
   batas?: number
+  halaman?: number
+  ukuran?: number
   simulasiSelisih?: boolean
 }
 
@@ -274,6 +276,14 @@ export interface BarisKerugianStok {
   alasan: string
   beritaAcaraId: string
   petugas: string
+}
+
+export interface KerugianStokHalamanResponse {
+  items: BarisKerugianStok[]
+  total: number
+  showing: number
+  totalPages: number
+  currentPage: number
 }
 
 export interface RingkasanKerugianStok {

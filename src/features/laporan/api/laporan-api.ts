@@ -12,6 +12,7 @@ import {
   type RiwayatBelanjaSiswaItem,
   type RiwayatTransaksiKeseluruhanItem,
   type BarisKerugianStok,
+  type KerugianStokHalamanResponse,
   type RingkasanKerugianStok,
   type BarisPembatalanKasir,
   resolveTitikDanPetugas,
@@ -22,7 +23,37 @@ interface ApiResponse<T> {
   responseCode?: number
   status?: string
   message?: string
+  total?: number
+  showing?: number
+  totalPages?: number
+  currentPage?: number
   data: T
+}
+
+export const MAX_KERUGIAN_STOK_PAGE_SIZE = 200
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBarisKerugianStok(item: any, idx: number): BarisKerugianStok {
+  const qty = Number(item.qty ?? item.totalQty ?? item.total_qty ?? 0)
+  const hppSnapshot = Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0)
+  return {
+    id: Number(item.id ?? idx + 1),
+    waktu: String(item.waktu || item.createdAt || new Date().toISOString()),
+    menuId: Number(item.menuId ?? item.menu_id ?? 0),
+    namaMenu: String(item.namaMenu || item.nama_menu || item.menuNama || 'Menu'),
+    kategoriNama: String(item.kategoriNama || item.kategori_nama || 'Umum'),
+    jenis: (item.jenis === 'BARANG_RUSAK' ? 'BARANG_RUSAK' : 'OPNAME_KELUAR') as
+      | 'OPNAME_KELUAR'
+      | 'BARANG_RUSAK',
+    qty,
+    hppSnapshot,
+    totalNilai: Number(item.totalNilai ?? item.total_nilai ?? qty * hppSnapshot),
+    alasan: String(item.alasan || '-'),
+    beritaAcaraId: String(
+      item.beritaAcaraId || item.berita_acara_id || item.referensiId || item.referensi_id || '-'
+    ),
+    petugas: String(item.petugas || item.aktorNama || item.aktor_nama || 'Petugas'),
+  }
 }
 
 interface RawRingkasanPenjualan {
@@ -569,37 +600,83 @@ export const laporanApi = {
   },
 
   /**
+   * Mengambil Laporan Kerugian Stok berhalaman (SEC-03 #391, max ukuran = 200)
+   */
+  async getKerugianStokHalaman(
+    params?: LaporanFilterParams
+  ): Promise<KerugianStokHalamanResponse> {
+    const safeHalaman = Math.max(0, Math.floor(params?.halaman ?? 0))
+    const safeUkuran = Math.min(
+      MAX_KERUGIAN_STOK_PAGE_SIZE,
+      Math.max(1, Math.floor(params?.ukuran ?? MAX_KERUGIAN_STOK_PAGE_SIZE))
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await apiClient.get<ApiResponse<any[]>>(
+      '/api/laporan/kerugian-stok',
+      {
+        params: {
+          ...params,
+          halaman: safeHalaman,
+          ukuran: safeUkuran,
+        },
+      }
+    )
+    const rawList = Array.isArray(res.data?.data) ? res.data.data : []
+    const items = rawList.map(mapBarisKerugianStok)
+    const total = typeof res.data?.total === 'number' ? res.data.total : items.length
+    const showing = typeof res.data?.showing === 'number' ? res.data.showing : items.length
+    const totalPages =
+      typeof res.data?.totalPages === 'number'
+        ? Math.max(0, res.data.totalPages)
+        : items.length > 0
+          ? 1
+          : 0
+    const currentPage =
+      typeof res.data?.currentPage === 'number'
+        ? Math.max(0, res.data.currentPage)
+        : safeHalaman
+
+    return { items, total, showing, totalPages, currentPage }
+  },
+
+  /**
+   * Mengambil seluruh halaman Laporan Kerugian Stok untuk kebutuhan ekspor / pencarian menyeluruh
+   */
+  async getSemuaKerugianStok(
+    params?: LaporanFilterParams
+  ): Promise<BarisKerugianStok[]> {
+    const ukuran = Math.min(
+      MAX_KERUGIAN_STOK_PAGE_SIZE,
+      Math.max(1, Math.floor(params?.ukuran ?? MAX_KERUGIAN_STOK_PAGE_SIZE))
+    )
+    const first = await this.getKerugianStokHalaman({
+      ...params,
+      halaman: 0,
+      ukuran,
+    })
+    const allItems = [...first.items]
+    const totalPages = Math.min(first.totalPages, 500)
+    for (let page = 1; page < totalPages; page++) {
+      const next = await this.getKerugianStokHalaman({
+        ...params,
+        halaman: page,
+        ukuran,
+      })
+      if (next.items.length === 0) break
+      allItems.push(...next.items)
+    }
+    return allItems
+  },
+
+  /**
    * Mengambil Laporan Kerugian Stok (Opname Keluar & Barang Rusak)
    */
   async getKerugianStok(
     params?: LaporanFilterParams
   ): Promise<BarisKerugianStok[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res = await apiClient.get<ApiResponse<any[]>>(
-      '/api/laporan/kerugian-stok',
-      { params }
-    )
-    const rawList = Array.isArray(res.data?.data) ? res.data.data : []
-    return rawList.map((item, idx) => ({
-      id: Number(item.id ?? idx + 1),
-      waktu: String(item.waktu || item.createdAt || new Date().toISOString()),
-      menuId: Number(item.menuId ?? item.menu_id ?? 0),
-      namaMenu: String(item.namaMenu || item.nama_menu || item.menuNama || 'Menu'),
-      kategoriNama: String(item.kategoriNama || item.kategori_nama || 'Umum'),
-      jenis: (item.jenis === 'BARANG_RUSAK' ? 'BARANG_RUSAK' : 'OPNAME_KELUAR') as 'OPNAME_KELUAR' | 'BARANG_RUSAK',
-      qty: Number(item.qty ?? item.totalQty ?? item.total_qty ?? 0),
-      hppSnapshot: Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0),
-      totalNilai: Number(
-        item.totalNilai ??
-          item.total_nilai ??
-          (Number(item.qty ?? item.totalQty ?? 0) * Number(item.hppSnapshot ?? item.hpp_snapshot ?? 0))
-      ),
-      alasan: String(item.alasan || '-'),
-      beritaAcaraId: String(
-        item.beritaAcaraId || item.berita_acara_id || item.referensiId || item.referensi_id || '-'
-      ),
-      petugas: String(item.petugas || item.aktorNama || item.aktor_nama || 'Petugas'),
-    }))
+    const res = await this.getKerugianStokHalaman(params)
+    return res.items
   },
 
   /**
