@@ -276,6 +276,8 @@ describe('excelExport utility (ExcelJS template resmi)', () => {
 
   it('mencegah formula injection (CSV/Excel Injection CWE-1236) dengan prefix petik tunggal', async () => {
     expect(sanitizeCellValue('=1+1')).toBe("'=1+1")
+    expect(sanitizeCellValue(' =1+1')).toBe("' =1+1")
+    expect(sanitizeCellValue('   @SUM(A1:A10)')).toBe("'   @SUM(A1:A10)")
     expect(sanitizeCellValue('+SUM(A1:A10)')).toBe("'+SUM(A1:A10)")
     expect(sanitizeCellValue('-100')).toBe("'-100")
     expect(sanitizeCellValue('@HYPERLINK("http://evil.com")')).toBe("'@HYPERLINK(\"http://evil.com\")")
