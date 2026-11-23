@@ -177,9 +177,9 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     expect(pdfCallArg.summaryRow?.totalNilai).toContain('15.000')
   })
 
-  describe('SEC-04: Penegakan Otorisasi Route Guard dan Navigasi Sidebar', () => {
-    it('mengizinkan peran pengelola, bendahara, tu, dan kepsek pada route guard beforeLoad', () => {
-      const allowedRoles = ['pengelola', 'bendahara', 'tu', 'kepsek'] as const
+  describe('SEC-04: Penegakan Otorisasi Route Guard dan Navigasi Sidebar (PRD §9.5)', () => {
+    it('mengizinkan peran pengelola, bendahara, dan kepsek pada route guard beforeLoad', () => {
+      const allowedRoles = ['pengelola', 'bendahara', 'kepsek'] as const
 
       for (const role of allowedRoles) {
         useAuthStore.getState().auth.setUser({
@@ -196,8 +196,8 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
       }
     })
 
-    it('menolak peran selain yang diizinkan pada route guard beforeLoad dengan redirect /403', () => {
-      const forbiddenRoles = ['admin', 'kasir', 'siswa', 'orang_tua'] as const
+    it('menolak peran admin, tu, kasir, siswa, dan orang_tua pada route guard beforeLoad dengan redirect /403', () => {
+      const forbiddenRoles = ['admin', 'tu', 'kasir', 'siswa', 'orang_tua'] as const
 
       for (const role of forbiddenRoles) {
         useAuthStore.getState().auth.setUser({
@@ -215,15 +215,15 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
       }
     })
 
-    it('memastikan navigasi sidebar kerugian stok mengizinkan peran tu', () => {
+    it('memastikan navigasi sidebar kerugian stok hanya untuk pengelola, bendahara, dan kepsek', () => {
       const kerugianItem = sidebarData.navGroups
         .flatMap((g) => g.items)
         .flatMap((item) => (item.items ? item.items : [item]))
         .find((item) => item.url === '/laporan/kerugian-stok')
 
       expect(kerugianItem).toBeDefined()
-      expect(kerugianItem?.roles).toContain('tu')
-      expect(kerugianItem?.roles).toEqual(['pengelola', 'bendahara', 'tu', 'kepsek'])
+      expect(kerugianItem?.roles).not.toContain('tu')
+      expect(kerugianItem?.roles).toEqual(['pengelola', 'bendahara', 'kepsek'])
     })
   })
 })

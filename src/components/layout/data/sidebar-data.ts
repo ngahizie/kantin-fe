@@ -167,7 +167,7 @@ export const sidebarData: SidebarData = {
             {
               title: 'Laporan Kerugian Stok',
               url: '/laporan/kerugian-stok',
-              roles: ['pengelola', 'bendahara', 'tu', 'kepsek'],
+              roles: ['pengelola', 'bendahara', 'kepsek'],
             },
           ],
         },
