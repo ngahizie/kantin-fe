@@ -58,7 +58,15 @@ export function LaporanSaldoMengendapPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim())
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   useEffect(() => {
     let isMounted = true
@@ -71,7 +79,7 @@ export function LaporanSaldoMengendapPage() {
 
         // 2. Rincian siswa: hanya dipanggil untuk TU/Bendahara dan Admin Sekolah
         const siswaPromise = canAccessSiswa
-          ? laporanApi.getSiswaSaldoList()
+          ? laporanApi.getSiswaSaldoList(debouncedSearch || undefined)
           : Promise.resolve([] as SiswaSaldoDetail[])
 
         const [resRingkasan, resSiswa] = await Promise.all([
@@ -101,7 +109,7 @@ export function LaporanSaldoMengendapPage() {
     return () => {
       isMounted = false
     }
-  }, [canAccessSiswa])
+  }, [canAccessSiswa, debouncedSearch])
 
   // Filter Siswa
   const filteredSiswa = useMemo(() => {
