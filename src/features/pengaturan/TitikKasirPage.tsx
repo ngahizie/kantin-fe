@@ -46,6 +46,7 @@ import { pengaturanApi } from './api/pengaturan-api'
 import { TitikKasirFormModal } from './TitikKasirFormModal'
 import {
   addDeletedTitikKasirId,
+  cleanupDeletedTitikKasirIds,
   getDeletedTitikKasirIds,
   removeDeletedTitikKasirId,
 } from './deleted-titik-kasir'
@@ -72,6 +73,8 @@ export const TitikKasirPage: React.FC = () => {
     try {
       setLoading(true)
       const data = await pengaturanApi.getTitikKasirList()
+      const activeIds = data.filter((item) => item.aktif).map((item) => item.id)
+      cleanupDeletedTitikKasirIds(activeIds)
       const deletedIds = getDeletedTitikKasirIds()
       const availableData = data.filter((item) => !deletedIds.includes(item.id))
       setTitikList(availableData)
@@ -88,6 +91,8 @@ export const TitikKasirPage: React.FC = () => {
     const init = async () => {
       try {
         const data = await pengaturanApi.getTitikKasirList()
+        const activeIds = data.filter((item) => item.aktif).map((item) => item.id)
+        cleanupDeletedTitikKasirIds(activeIds)
         const deletedIds = getDeletedTitikKasirIds()
         const availableData = data.filter((item) => !deletedIds.includes(item.id))
         if (isMounted) {
