@@ -39,6 +39,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { usePengaturanStore } from '@/stores/usePengaturanStore'
 import {
   pengaturanKantinSchema,
@@ -66,6 +76,7 @@ export const PengaturanKantinPage: React.FC = () => {
   } = usePengaturanStore()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
 
   const {
     register,
@@ -611,7 +622,10 @@ export const PengaturanKantinPage: React.FC = () => {
                   <UserCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
                   <span>
                     Aktor Pengubah:{' '}
-                    <strong>{pengaturan.updatedBy || 'Admin Sekolah'}</strong>
+                    <strong>
+                      {pengaturan.updatedBy ||
+                        (pengaturan.disimpan ? 'Tersimpan di Sistem' : 'Bawaan Sistem')}
+                    </strong>
                   </span>
                 </div>
 
@@ -620,7 +634,7 @@ export const PengaturanKantinPage: React.FC = () => {
                     type='button'
                     variant='outline'
                     size='sm'
-                    onClick={handleResetToDefault}
+                    onClick={() => setResetDialogOpen(true)}
                     disabled={isSubmitting || loadingPengaturan}
                     className='h-9 flex-1 sm:flex-initial text-xs gap-1.5'
                   >
@@ -650,6 +664,34 @@ export const PengaturanKantinPage: React.FC = () => {
               </CardFooter>
             </Card>
           </form>
+
+          {/* Dialog Konfirmasi Reset Pengaturan */}
+          <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+            <AlertDialogContent className='max-w-md'>
+              <AlertDialogHeader>
+                <AlertDialogTitle className='text-base font-bold'>
+                  Kembalikan ke Pengaturan Bawaan?
+                </AlertDialogTitle>
+                <AlertDialogDescription className='text-xs text-muted-foreground leading-relaxed'>
+                  Semua kolom konfigurasi operasional pada formulir ini akan diisi ulang
+                  dengan nilai bawaan standar sistem SKOOLIA. Perubahan belum tersimpan
+                  ke server sampai Anda menekan tombol "Simpan Pengaturan".
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    handleResetToDefault()
+                    setResetDialogOpen(false)
+                  }}
+                  className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                >
+                  Ya, Kembalikan Bawaan
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
       </Main>
     </>
   )

@@ -49,6 +49,7 @@ export const pengaturanKantinSchema = z
   .object({
     namaKantin: z
       .string()
+      .trim()
       .min(3, 'Nama kantin sekolah minimal 3 karakter')
       .max(100, 'Nama kantin sekolah maksimal 100 karakter'),
     jamTutupOtomatis: z
@@ -65,13 +66,16 @@ export const pengaturanKantinSchema = z
       .max(10, 'Durasi tampil foto maksimal 10 detik'),
     minTopup: z
       .number({ message: 'Nominal harus berupa angka' })
-      .min(1000, 'Batas minimum top-up minimal Rp 1.000'),
+      .min(1000, 'Batas minimum top-up minimal Rp 1.000')
+      .max(100000000, 'Batas minimum top-up maksimal Rp 100.000.000'),
     maksTopup: z
       .number({ message: 'Nominal harus berupa angka' })
-      .min(1000, 'Batas maksimum top-up minimal Rp 1.000'),
+      .min(1000, 'Batas maksimum top-up minimal Rp 1.000')
+      .max(100000000, 'Batas maksimum top-up maksimal Rp 100.000.000'),
     batasSaldoSiswa: z
       .number({ message: 'Nominal harus berupa angka' })
-      .min(10000, 'Batas saldo maksimum siswa minimal Rp 10.000'),
+      .min(10000, 'Batas saldo maksimum siswa minimal Rp 10.000')
+      .max(500000000, 'Batas saldo maksimum siswa maksimal Rp 500.000.000'),
     kebijakanSaldoMengendap: z.enum([
       'REFUND',
       'PINDAH_SAUDARA',
@@ -80,7 +84,8 @@ export const pengaturanKantinSchema = z
     ambangHari: z
       .number({ message: 'Ambang hari harus berupa angka' })
       .int('Ambang hari harus berupa angka bulat')
-      .min(0, 'Ambang hari tidak boleh negatif'),
+      .min(0, 'Ambang hari tidak boleh negatif')
+      .max(3650, 'Ambang hari maksimal 3650 hari (10 tahun)'),
   })
   .refine((data) => data.maksTopup >= data.minTopup, {
     message: 'Batas maksimum top-up tidak boleh lebih kecil dari batas minimum top-up',
@@ -96,10 +101,12 @@ export type PengaturanKantinFormValues = z.infer<typeof pengaturanKantinSchema>
 export const titikKasirFormSchema = z.object({
   nama: z
     .string()
+    .trim()
     .min(3, 'Nama titik kasir minimal 3 karakter')
     .max(100, 'Nama titik kasir maksimal 100 karakter'),
   kode: z
     .string()
+    .trim()
     .min(2, 'Kode perangkat minimal 2 karakter')
     .max(30, 'Kode perangkat maksimal 30 karakter')
     .regex(
