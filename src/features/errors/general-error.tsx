@@ -19,6 +19,14 @@ export function GeneralError({
 
   const isDev = import.meta.env.DEV
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      history.go(-1)
+    } else {
+      navigate({ to: '/' })
+    }
+  }
+
   const errorMessage = isDev
     ? error instanceof Error
       ? error.message
@@ -59,7 +67,7 @@ export function GeneralError({
                 Coba Lagi
               </Button>
             )}
-            <Button variant='outline' onClick={() => history.go(-1)}>
+            <Button variant='outline' onClick={handleBack}>
               Kembali
             </Button>
             <Button onClick={() => navigate({ to: '/' })}>

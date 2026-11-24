@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button'
 export function ForbiddenError() {
   const navigate = useNavigate()
   const { history } = useRouter()
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      history.go(-1)
+    } else {
+      navigate({ to: '/' })
+    }
+  }
+
   return (
     <div className='h-svh bg-background text-foreground'>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center'>
@@ -12,8 +21,8 @@ export function ForbiddenError() {
         <p className='text-center text-sm text-muted-foreground max-w-md'>
           Anda tidak memiliki izin yang diperlukan untuk mengakses halaman ini.
         </p>
-        <div className='mt-6 flex gap-3'>
-          <Button variant='outline' onClick={() => history.go(-1)}>
+        <div className='mt-6 flex flex-wrap justify-center gap-3'>
+          <Button variant='outline' onClick={handleBack}>
             Kembali
           </Button>
           <Button onClick={() => navigate({ to: '/' })}>Kembali ke Beranda</Button>
