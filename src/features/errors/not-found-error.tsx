@@ -1,7 +1,9 @@
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { useRobotsNoindex } from '@/hooks/useRobotsNoindex'
 
 export function NotFoundError() {
+  useRobotsNoindex()
   const navigate = useNavigate()
   const { history } = useRouter()
 

@@ -1,6 +1,7 @@
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useRobotsNoindex } from '@/hooks/useRobotsNoindex'
 
 type GeneralErrorProps = React.HTMLAttributes<HTMLDivElement> & {
   minimal?: boolean
@@ -14,6 +15,7 @@ export function GeneralError({
   error,
   reset,
 }: GeneralErrorProps) {
+  useRobotsNoindex()
   const navigate = useNavigate()
   const { history } = useRouter()
 
