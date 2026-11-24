@@ -46,7 +46,7 @@ export interface DaftarSiswaAdminParams {
 }
 
 const FOTO_URL_REGEX = /^(https?:\/\/|\/api\/storage\/file\?path=|sekolah-[0-9]+\/).*$/i
-const RFID_UID_REGEX = /^[A-Za-z0-9_-]{4,50}$/
+const RFID_UID_REGEX = /^[A-Za-z0-9][A-Za-z0-9.:_-]{2,62}[A-Za-z0-9]$/
 
 export const siswaFormSchema = z
   .object({
@@ -84,8 +84,9 @@ export const siswaFormSchema = z
     rfidUid: z
       .string()
       .trim()
+      .max(64, 'UID RFID maksimal 64 karakter')
       .refine((val) => !val || RFID_UID_REGEX.test(val), {
-        message: "UID RFID 4-50 karakter (huruf, angka, '-', '_')",
+        message: "UID RFID 4-64 karakter (huruf, angka, ':', '.', '-', '_')",
       })
       .optional()
       .or(z.literal('')),
@@ -135,8 +136,8 @@ export const pasangKartuSchema = z.object({
     .string()
     .trim()
     .min(4, 'UID RFID minimal 4 karakter')
-    .max(50, 'UID RFID maksimal 50 karakter')
-    .regex(RFID_UID_REGEX, "UID RFID hanya boleh huruf, angka, '-', atau '_'"),
+    .max(64, 'UID RFID maksimal 64 karakter')
+    .regex(RFID_UID_REGEX, "UID RFID hanya boleh huruf, angka, ':', '.', '-', atau '_'"),
   nomorKartu: z
     .string()
     .trim()
