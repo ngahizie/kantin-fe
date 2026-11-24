@@ -622,7 +622,10 @@ export const PengaturanKantinPage: React.FC = () => {
                   <UserCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
                   <span>
                     Aktor Pengubah:{' '}
-                    <strong>{pengaturan.updatedBy || 'Admin Sekolah'}</strong>
+                    <strong>
+                      {pengaturan.updatedBy ||
+                        (pengaturan.disimpan ? 'Tersimpan di Sistem' : 'Bawaan Sistem')}
+                    </strong>
                   </span>
                 </div>
 

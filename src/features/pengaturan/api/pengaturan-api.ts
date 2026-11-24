@@ -28,6 +28,7 @@ interface PengaturanBackendDto {
   disimpan?: boolean
   updatedAt?: string
   updatedBy?: string
+  diperbaruiOleh?: string | number
 }
 
 interface TitikKasirBackendDto {
@@ -66,7 +67,9 @@ function mapPengaturanFromBackend(dto: PengaturanBackendDto): PengaturanKantin {
     ambangHari: dto.ambangHari ?? 90,
     disimpan: dto.disimpan ?? true,
     updatedAt: dto.updatedAt,
-    updatedBy: dto.updatedBy,
+    updatedBy:
+      dto.updatedBy ||
+      (dto.diperbaruiOleh != null ? String(dto.diperbaruiOleh) : undefined),
   }
 }
 
