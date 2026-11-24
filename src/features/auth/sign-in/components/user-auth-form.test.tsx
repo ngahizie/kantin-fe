@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
-import { UserAuthForm, resolveUserRole } from './user-auth-form'
+import { UserAuthForm } from './user-auth-form'
+import { resolveUserRole } from '@/lib/role-utils'
 import { getRoleHomePath } from '@/stores/useRoleStore'
 
 const FORM_MESSAGES = {

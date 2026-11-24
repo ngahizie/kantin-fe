@@ -115,7 +115,7 @@ export interface BarangMasukFormValues {
 }
 
 // Zod schemas
-export const restockItemSchema = z.object({
+const restockItemSchema = z.object({
   menuId: z.number().min(1, 'Menu wajib dipilih'),
   qty: z.number().int('Qty harus bilangan bulat').min(1, 'Qty minimal 1 unit'),
   hargaBeliPerUnit: z

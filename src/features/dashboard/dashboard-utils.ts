@@ -1,5 +1,12 @@
 import React from 'react'
-import { formatWeekdayShort, formatMonthShort, formatDateIso } from '@/lib/formatters'
+import {
+  formatWeekdayShort,
+  formatMonthShort,
+  formatDateIso,
+  formatRupiah,
+} from '@/lib/formatters'
+
+export { formatRupiah }
 
 export interface DynamicCategory {
   id: number
@@ -38,14 +45,6 @@ export const CATEGORY_COLORS = [
   '#64748b', // slate
 ]
 
-export const formatRupiah = (val: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(val)
-}
-
 export const getLast7Days = () => {
   const result: { dateStr: string; label: string }[] = []
   const today = new Date()
@@ -72,7 +71,7 @@ export const getLast7Days = () => {
   return result
 }
 
-export const getRoundedTopBarPath = (
+const getRoundedTopBarPath = (
   x: number,
   y: number,
   width: number,
@@ -84,7 +83,7 @@ export const getRoundedTopBarPath = (
   return `M ${x},${y + height} L ${x},${y + r} Q ${x},${y} ${x + r},${y} L ${x + width - r},${y} Q ${x + width},${y} ${x + width},${y + r} L ${x + width},${y + height} Z`
 }
 
-export const isTopSegment = (
+const isTopSegment = (
   payload: Record<string, unknown> | undefined,
   currentKey: string,
   categories: DynamicCategory[]

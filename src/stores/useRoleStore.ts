@@ -1,6 +1,7 @@
 import { create } from 'zustand'
+import { ROLE_LABELS, type UserRole } from '@/lib/role-utils'
 
-export type UserRole = 'admin' | 'pengelola' | 'tu' | 'bendahara' | 'kasir' | 'kepsek'
+export type { UserRole }
 
 export interface RoleConfig {
   id: UserRole
@@ -12,37 +13,37 @@ export interface RoleConfig {
 export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   admin: {
     id: 'admin',
-    label: 'Admin Sekolah',
+    label: ROLE_LABELS.admin,
     description: 'Akses administrasi sistem, kontrol kartu siswa, dan pelaporan keuangan',
     badgeColor: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
   },
   kepsek: {
     id: 'kepsek',
-    label: 'Kepala Sekolah',
+    label: ROLE_LABELS.kepsek,
     description: 'Akses pemantauan dan laporan eksekutif kantin sekolah',
     badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
   },
   pengelola: {
     id: 'pengelola',
-    label: 'Pengelola Kantin',
+    label: ROLE_LABELS.pengelola,
     description: 'Manajemen katalog menu, restock, dan opname inventaris',
     badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800',
   },
   tu: {
     id: 'tu',
-    label: 'Petugas TU',
+    label: ROLE_LABELS.tu,
     description: 'Layanan isi saldo siswa & setoran kas TU harian',
     badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
   },
   bendahara: {
     id: 'bendahara',
-    label: 'Bendahara Sekolah',
+    label: ROLE_LABELS.bendahara,
     description: 'Cek selisih uang, mutasi koreksi, dan laporan keuangan',
     badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800',
   },
   kasir: {
     id: 'kasir',
-    label: 'Petugas Kasir POS',
+    label: ROLE_LABELS.kasir,
     description: 'Operasional layar kasir POS dan transaksi RFID harian',
     badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800',
   },

@@ -7,23 +7,6 @@ import { TuDashboard } from './components/TuDashboard'
 import { BendaharaDashboard } from './components/BendaharaDashboard'
 import { AdminDashboard } from './components/AdminDashboard'
 import { KepsekDashboard } from './components/KepsekDashboard'
-import {
-  getStatusBadgeClass,
-  formatRupiah,
-  getLast7Days,
-  type DynamicCategory,
-  type ChartDayItem,
-  type RecentTransactionDisplayItem,
-} from './dashboard-utils'
-
-export {
-  getStatusBadgeClass,
-  formatRupiah,
-  getLast7Days,
-  type DynamicCategory,
-  type ChartDayItem,
-  type RecentTransactionDisplayItem,
-}
 
 export function DashboardPage() {
   const { currentRole } = useRoleStore()

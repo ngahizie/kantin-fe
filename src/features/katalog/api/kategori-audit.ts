@@ -1,3 +1,5 @@
+import { createClientAuditLogger } from '@/lib/client-audit'
+
 export type KategoriAuditAction =
   | 'KATEGORI_CREATE'
   | 'KATEGORI_UPDATE'
@@ -13,8 +15,7 @@ export interface KategoriAuditEvent {
   timestamp: string
 }
 
-const clientAuditBuffer: KategoriAuditEvent[] = []
-const MAX_BUFFER_SIZE = 50
+const kategoriAuditLogger = createClientAuditLogger<KategoriAuditEvent>(50)
 
 /**
  * Mencatat audit event keamanan sisi klien untuk mutasi kategori, perubahan status aktif/nonaktif,
@@ -23,27 +24,19 @@ const MAX_BUFFER_SIZE = 50
 export async function logKategoriAuditEvent(
   event: Omit<KategoriAuditEvent, 'timestamp'>
 ): Promise<void> {
-  const auditEntry: KategoriAuditEvent = {
-    ...event,
-    timestamp: new Date().toISOString(),
-  }
-
-  clientAuditBuffer.push(auditEntry)
-  if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
-    clientAuditBuffer.shift()
-  }
+  kategoriAuditLogger.log(event)
 }
 
 /**
  * Ambil daftar audit log kategori di memori klien (untuk keperluan inspeksi & pengujian)
  */
 export function getKategoriAuditLogs(): KategoriAuditEvent[] {
-  return [...clientAuditBuffer]
+  return kategoriAuditLogger.getLogs()
 }
 
 /**
  * Bersihkan buffer audit log
  */
 export function clearKategoriAuditLogs(): void {
-  clientAuditBuffer.length = 0
+  kategoriAuditLogger.clear()
 }
