@@ -19,13 +19,18 @@ export function UnauthorisedError() {
         <h1 className='text-[7rem] leading-tight font-bold tabular-nums'>401</h1>
         <span className='font-semibold text-lg'>Akses Tidak Sah</span>
         <p className='text-center text-sm text-muted-foreground max-w-md'>
-          Silakan masuk dengan kredensial yang sesuai untuk mengakses halaman ini.
+          Sesi Anda mungkin telah kedaluwarsa atau belum memiliki otorisasi. Silakan masuk kembali dengan akun yang sesuai untuk melanjutkan.
         </p>
         <div className='mt-6 flex flex-wrap justify-center gap-3'>
           <Button variant='outline' onClick={handleBack}>
             Kembali
           </Button>
-          <Button onClick={() => navigate({ to: '/' })}>Kembali ke Beranda</Button>
+          <Button variant='secondary' onClick={() => navigate({ to: '/' })}>
+            Kembali ke Beranda
+          </Button>
+          <Button onClick={() => navigate({ to: '/sign-in' })}>
+            Masuk Kembali
+          </Button>
         </div>
       </div>
     </div>
