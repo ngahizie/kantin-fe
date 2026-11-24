@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   PowerOff,
   CheckCircle2,
+  RotateCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
@@ -57,6 +58,7 @@ export const TitikKasirPage: React.FC = () => {
 
   const [titikList, setTitikList] = useState<TitikKasir[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AKTIF' | 'NONAKTIF'>('ALL')
 
@@ -72,6 +74,7 @@ export const TitikKasirPage: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
+      setLoadError(null)
       const data = await pengaturanApi.getTitikKasirList()
       const activeIds = data.filter((item) => item.aktif).map((item) => item.id)
       cleanupDeletedTitikKasirIds(activeIds)
@@ -79,8 +82,11 @@ export const TitikKasirPage: React.FC = () => {
       const availableData = data.filter((item) => !deletedIds.includes(item.id))
       setTitikList(availableData)
       await fetchTitikKasir()
-    } catch {
-      toast.error('Gagal memuat daftar titik kasir')
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+      const msg = errorObj.response?.data?.message || 'Gagal memuat daftar titik kasir dari server'
+      setLoadError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -90,6 +96,8 @@ export const TitikKasirPage: React.FC = () => {
     let isMounted = true
     const init = async () => {
       try {
+        setLoading(true)
+        setLoadError(null)
         const data = await pengaturanApi.getTitikKasirList()
         const activeIds = data.filter((item) => item.aktif).map((item) => item.id)
         cleanupDeletedTitikKasirIds(activeIds)
@@ -100,9 +108,12 @@ export const TitikKasirPage: React.FC = () => {
           setLoading(false)
         }
         await fetchTitikKasir()
-      } catch {
+      } catch (err: unknown) {
         if (isMounted) {
-          toast.error('Gagal memuat daftar titik kasir')
+          const errorObj = err as { response?: { data?: { message?: string } } }
+          const msg = errorObj.response?.data?.message || 'Gagal memuat daftar titik kasir dari server'
+          setLoadError(msg)
+          toast.error(msg)
           setLoading(false)
         }
       }
@@ -178,8 +189,10 @@ export const TitikKasirPage: React.FC = () => {
         `Titik kasir "${item.nama}" ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}`
       )
       await loadData()
-    } catch {
-      toast.error('Gagal memperbarui status titik kasir')
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+      const msg = errorObj.response?.data?.message || 'Gagal memperbarui status titik kasir'
+      toast.error(msg)
     }
   }
 
@@ -195,8 +208,10 @@ export const TitikKasirPage: React.FC = () => {
       toast.success(`Titik kasir "${namaToDelete}" berhasil dihapus`)
       setDeletingItem(null)
       await fetchTitikKasir()
-    } catch {
-      toast.error('Gagal menghapus titik kasir')
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+      const msg = errorObj.response?.data?.message || 'Gagal menghapus titik kasir'
+      toast.error(msg)
     } finally {
       setIsDeleting(false)
     }
@@ -352,6 +367,28 @@ export const TitikKasirPage: React.FC = () => {
                         <div className='flex items-center justify-center gap-2'>
                           <Loader2 className='size-6 animate-spin text-muted-foreground' />
                           <span>Memuat data titik kasir...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : loadError ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className='h-36 text-center text-xs'
+                      >
+                        <div className='flex flex-col items-center justify-center gap-2 text-destructive'>
+                          <AlertTriangle className='h-6 w-6' />
+                          <span className='font-semibold'>{loadError}</span>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={loadData}
+                            className='h-8 text-xs gap-1.5 mt-1 text-foreground'
+                          >
+                            <RotateCw className='h-3.5 w-3.5' />
+                            <span>Coba Lagi</span>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
