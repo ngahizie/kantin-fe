@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { PengelolaDashboard } from '../components/PengelolaDashboard'
-import { TuDashboard } from '../components/TuDashboard'
-import { BendaharaDashboard } from '../components/BendaharaDashboard'
-import { AdminDashboard } from '../components/AdminDashboard'
-import { KepsekDashboard } from '../components/KepsekDashboard'
+import { PengelolaDashboard } from '../components/pengelola-dashboard'
+import { TuDashboard } from '../components/tu-dashboard'
+import { BendaharaDashboard } from '../components/bendahara-dashboard'
+import { AdminDashboard } from '../components/admin-dashboard'
+import { KepsekDashboard } from '../components/kepsek-dashboard'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to, ...props }: { children?: React.ReactNode; to?: string }) => (

@@ -3,7 +3,7 @@ import { render } from 'vitest-browser-react'
 import { Route } from '@/routes/_authenticated/kategori/index'
 import { useAuthStore } from '@/stores/auth-store'
 import { getKategoriDeleteBlockedReason } from '../menu-utils'
-import { KategoriFormModal } from '../KategoriFormModal'
+import { KategoriFormModal } from '../kategori-form-modal'
 import { katalogApi } from '../api/katalog-api'
 import { sanitizeKategoriErrorMessage } from '../kategori-error'
 import {

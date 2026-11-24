@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { kasirApi } from '../api/kasir-api'
-import { usePengaturanStore } from '@/stores/usePengaturanStore'
+import { usePengaturanStore } from '@/stores/use-pengaturan-store'
 
 describe('Security Hardening Kasir (OWASP & NIST)', () => {
   beforeEach(() => {

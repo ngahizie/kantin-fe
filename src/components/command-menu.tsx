@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { useSearch } from '@/context/search-provider'
-import { useRoleStore } from '@/stores/useRoleStore'
+import { useRoleStore } from '@/stores/use-role-store'
 import {
   CommandDialog,
   CommandEmpty,

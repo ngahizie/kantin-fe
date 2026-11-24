@@ -5,12 +5,12 @@ import type { MenuItem } from '@/features/katalog/types'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { DEFAULT_PENGATURAN_KANTIN } from '@/features/pengaturan/types'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore } from '@/stores/use-cart-store'
 import { kasirApi } from '../api/kasir-api'
-import MenuItemCard from '../components/MenuItemCard'
-import CartSidebar from '../components/CartSidebar'
-import StokMinusConfirmDialog from '../components/StokMinusConfirmDialog'
-import KasirPosPage from '../KasirPosPage'
+import MenuItemCard from '../components/menu-item-card'
+import CartSidebar from '../components/cart-sidebar'
+import StokMinusConfirmDialog from '../components/stok-minus-confirm-dialog'
+import KasirPosPage from '../kasir-pos-page'
 
 const menuHabisAktif: MenuItem = {
   id: 301,

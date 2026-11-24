@@ -1,3 +1,3 @@
 export * from './types'
-export * from './KontrolSiswaPage'
-export * from './LimitBlokirForm'
+export * from './kontrol-siswa-page'
+export * from './limit-blokir-form'

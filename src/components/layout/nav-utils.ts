@@ -1,5 +1,5 @@
 import { type NavGroup, type NavItem, type NavCollapsible, type NavLink } from './types'
-import { type UserRole } from '@/stores/useRoleStore'
+import { type UserRole } from '@/stores/use-role-store'
 
 /**
  * Memfilter grup navigasi dan sub-item navbar berdasarkan peran (role) aktif pengguna.

@@ -5,7 +5,7 @@ import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
 import { Route } from '@/routes/_authenticated/laporan/keuntungan/index'
-import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
+import { LaporanLabaKotorPage } from '../laporan-laba-kotor-page'
 import { sanitizeFormulaCell } from '@/lib/excelExport'
 
 const { mockExportExcel, mockExportPdf } = vi.hoisted(() => ({

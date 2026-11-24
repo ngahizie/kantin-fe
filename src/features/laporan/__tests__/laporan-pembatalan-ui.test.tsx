@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
-import { LaporanPembatalanPage } from '../LaporanPembatalanPage'
+import { LaporanPembatalanPage } from '../laporan-pembatalan-page'
 
 vi.mock('@/components/layout/header', () => ({
   Header: ({ children }: { children: ReactNode }) => <header>{children}</header>,

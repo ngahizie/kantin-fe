@@ -7,8 +7,8 @@ import type { KategoriItem, MenuItem } from '@/features/katalog/types'
 import { DEFAULT_PENGATURAN_KANTIN } from '@/features/pengaturan/types'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { kasirApi } from '../api/kasir-api'
-import { MenuGrid } from '../components/MenuGrid'
-import { KasirPosPage } from '../KasirPosPage'
+import { MenuGrid } from '../components/menu-grid'
+import { KasirPosPage } from '../kasir-pos-page'
 
 const TINY_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC'

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
-import { LaporanExportButton } from '../components/LaporanExportButton'
+import { LaporanExportButton } from '../components/laporan-export-button'
 
 describe('LaporanExportButton', () => {
   it('merender tombol tunggal Ekspor dan membuka popup pilihan format', async () => {

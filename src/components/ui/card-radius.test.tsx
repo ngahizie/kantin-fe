@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from './dialog'
-import { KategoriPage } from '@/features/katalog/KategoriPage'
+import { KategoriPage } from '@/features/katalog/kategori-page'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 
 vi.mock('@/components/layout/header', () => ({

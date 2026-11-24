@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { MenuDetailPage } from '../MenuDetailPage'
+import { MenuDetailPage } from '../menu-detail-page'
 import {
   sanitizeMenuErrorMessage,
   extractMenuErrorMessage,

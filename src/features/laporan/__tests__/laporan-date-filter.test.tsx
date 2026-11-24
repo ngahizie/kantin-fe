@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
-import { LaporanDateFilter } from '../components/LaporanDateFilter'
+import { LaporanDateFilter } from '../components/laporan-date-filter'
 
 describe('LaporanDateFilter', () => {
   it('menampilkan seluruh preset termasuk rentang multi-hari secara default', async () => {
