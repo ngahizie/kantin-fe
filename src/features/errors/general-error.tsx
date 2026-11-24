@@ -17,14 +17,17 @@ export function GeneralError({
   const navigate = useNavigate()
   const { history } = useRouter()
 
-  const errorMessage =
-    error instanceof Error
+  const isDev = import.meta.env.DEV
+
+  const errorMessage = isDev
+    ? error instanceof Error
       ? error.message
       : typeof error === 'string'
       ? error
       : null
+    : null
 
-  const errorStack = error instanceof Error ? error.stack : null
+  const errorStack = isDev && error instanceof Error ? error.stack : null
 
   return (
     <div className={cn('h-svh w-full bg-background text-foreground', className)}>
