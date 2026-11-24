@@ -19,6 +19,7 @@ import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as AuthenticatedSiswaIndexRouteImport } from './routes/_authenticated/siswa/index'
 import { Route as AuthenticatedPengaturanIndexRouteImport } from './routes/_authenticated/pengaturan/index'
 import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authenticated/menu/index'
 import { Route as AuthenticatedKontrolSiswaIndexRouteImport } from './routes/_authenticated/kontrol-siswa/index'
@@ -89,6 +90,11 @@ const authSignInRoute = authSignInRouteImport.update({
   id: '/(auth)/sign-in',
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSiswaIndexRoute = AuthenticatedSiswaIndexRouteImport.update({
+  id: '/siswa/',
+  path: '/siswa/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPengaturanIndexRoute =
   AuthenticatedPengaturanIndexRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu/': typeof AuthenticatedMenuIndexRoute
   '/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
+  '/siswa/': typeof AuthenticatedSiswaIndexRoute
   '/laporan/cek-selisih/': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/laporan/keuntungan/': typeof AuthenticatedLaporanKeuntunganIndexRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/kontrol-siswa': typeof AuthenticatedKontrolSiswaIndexRoute
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/pengaturan': typeof AuthenticatedPengaturanIndexRoute
+  '/siswa': typeof AuthenticatedSiswaIndexRoute
   '/laporan/cek-selisih': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/laporan/kerugian-stok': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/laporan/keuntungan': typeof AuthenticatedLaporanKeuntunganIndexRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/kontrol-siswa/': typeof AuthenticatedKontrolSiswaIndexRoute
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/pengaturan/': typeof AuthenticatedPengaturanIndexRoute
+  '/_authenticated/siswa/': typeof AuthenticatedSiswaIndexRoute
   '/_authenticated/laporan/cek-selisih/': typeof AuthenticatedLaporanCekSelisihIndexRoute
   '/_authenticated/laporan/kerugian-stok/': typeof AuthenticatedLaporanKerugianStokIndexRoute
   '/_authenticated/laporan/keuntungan/': typeof AuthenticatedLaporanKeuntunganIndexRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/kontrol-siswa/'
     | '/menu/'
     | '/pengaturan/'
+    | '/siswa/'
     | '/laporan/cek-selisih/'
     | '/laporan/kerugian-stok/'
     | '/laporan/keuntungan/'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/kontrol-siswa'
     | '/menu'
     | '/pengaturan'
+    | '/siswa'
     | '/laporan/cek-selisih'
     | '/laporan/kerugian-stok'
     | '/laporan/keuntungan'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kontrol-siswa/'
     | '/_authenticated/menu/'
     | '/_authenticated/pengaturan/'
+    | '/_authenticated/siswa/'
     | '/_authenticated/laporan/cek-selisih/'
     | '/_authenticated/laporan/kerugian-stok/'
     | '/_authenticated/laporan/keuntungan/'
@@ -493,6 +505,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-in'
       preLoaderRoute: typeof authSignInRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/siswa/': {
+      id: '/_authenticated/siswa/'
+      path: '/siswa'
+      fullPath: '/siswa/'
+      preLoaderRoute: typeof AuthenticatedSiswaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pengaturan/': {
       id: '/_authenticated/pengaturan/'
@@ -651,6 +670,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKontrolSiswaIndexRoute: typeof AuthenticatedKontrolSiswaIndexRoute
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedPengaturanIndexRoute: typeof AuthenticatedPengaturanIndexRoute
+  AuthenticatedSiswaIndexRoute: typeof AuthenticatedSiswaIndexRoute
   AuthenticatedLaporanCekSelisihIndexRoute: typeof AuthenticatedLaporanCekSelisihIndexRoute
   AuthenticatedLaporanKerugianStokIndexRoute: typeof AuthenticatedLaporanKerugianStokIndexRoute
   AuthenticatedLaporanKeuntunganIndexRoute: typeof AuthenticatedLaporanKeuntunganIndexRoute
@@ -676,6 +696,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKontrolSiswaIndexRoute: AuthenticatedKontrolSiswaIndexRoute,
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedPengaturanIndexRoute: AuthenticatedPengaturanIndexRoute,
+  AuthenticatedSiswaIndexRoute: AuthenticatedSiswaIndexRoute,
   AuthenticatedLaporanCekSelisihIndexRoute:
     AuthenticatedLaporanCekSelisihIndexRoute,
   AuthenticatedLaporanKerugianStokIndexRoute:
