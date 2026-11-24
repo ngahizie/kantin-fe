@@ -10,58 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
-import { ROLE_CONFIGS, useRoleStore, type UserRole } from '@/stores/useRoleStore'
+import { getRoleLabel } from '@/lib/role-utils'
+import { useRoleStore } from '@/stores/useRoleStore'
 import { useAuthStore } from '@/stores/auth-store'
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function getRoleLabel(
-  role?: string,
-  roles?: string[],
-  usernameOrEmail?: string
-): string {
-  const norm = (usernameOrEmail || '').toLowerCase()
-  if (
-    roles?.includes('ROLE_KEPSEK') ||
-    role === 'kepsek' ||
-    norm.includes('kepsek')
-  ) {
-    return 'Kepala Sekolah'
-  }
-  if (
-    roles?.includes('ROLE_BENDAHARA') ||
-    role === 'bendahara' ||
-    norm.includes('bendahara')
-  ) {
-    return 'Bendahara Sekolah'
-  }
-  if (
-    roles?.includes('ROLE_TU_SEKOLAH') ||
-    role === 'tu' ||
-    norm.includes('tu')
-  ) {
-    return 'Petugas TU'
-  }
-  if (
-    roles?.includes('ROLE_PETUGAS_KANTIN') ||
-    role === 'kasir' ||
-    norm.includes('kasir')
-  ) {
-    return 'Petugas Kasir POS'
-  }
-  if (
-    roles?.includes('ROLE_PENGELOLA_KANTIN') ||
-    role === 'pengelola' ||
-    norm.includes('pengelola')
-  ) {
-    return 'Pengelola Kantin'
-  }
-  if (roles?.includes('ROLE_ADMIN') || role === 'admin') {
-    return 'Admin Sekolah'
-  }
-  return role && ROLE_CONFIGS[role as UserRole]
-    ? ROLE_CONFIGS[role as UserRole].label
-    : 'Staf Kantin'
-}
 
 export function ProfileDropdown() {
   const [open, setOpen] = useDialogState()

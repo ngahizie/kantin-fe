@@ -43,6 +43,7 @@ import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-acti
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
 import { escapeHtml, isSafeImageUrl } from '@/lib/utils'
+import { printHtmlInHiddenIframe } from '@/lib/print-iframe'
 import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
@@ -679,36 +680,7 @@ export function LaporanRiwayatSiswaPage() {
 </body>
 </html>`
 
-    const existingFrame = document.getElementById('receipt-print-iframe')
-    if (existingFrame) {
-      existingFrame.remove()
-    }
-
-    const iframe = document.createElement('iframe')
-    iframe.id = 'receipt-print-iframe'
-    iframe.style.position = 'fixed'
-    iframe.style.right = '0'
-    iframe.style.bottom = '0'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = '0'
-    iframe.style.visibility = 'hidden'
-    document.body.appendChild(iframe)
-
-    const doc = iframe.contentWindow?.document
-    if (!doc) return
-
-    doc.open()
-    doc.write(receiptHtml)
-    doc.close()
-
-    setTimeout(() => {
-      iframe.contentWindow?.focus()
-      iframe.contentWindow?.print()
-      setTimeout(() => {
-        iframe.remove()
-      }, 3000)
-    }, 250)
+    printHtmlInHiddenIframe(receiptHtml)
   }
 
   return (

@@ -1,3 +1,5 @@
+import { createClientAuditLogger } from '@/lib/client-audit'
+
 export type KasirAuditAction =
   | 'TRANSAKSI_GAGAL'
   | 'TUTUP_SESI_SELISIH'
@@ -11,9 +13,7 @@ export interface KasirAuditEvent {
   timestamp: string
 }
 
-// In-memory buffer ringkas untuk audit trail sesi aktif kasir
-const clientAuditBuffer: KasirAuditEvent[] = []
-const MAX_BUFFER_SIZE = 50
+const kasirAuditLogger = createClientAuditLogger<KasirAuditEvent>(50)
 
 /**
  * Mencatat audit event keamanan sisi klien untuk insiden transaksi gagal,
@@ -22,27 +22,19 @@ const MAX_BUFFER_SIZE = 50
 export async function logKasirAuditEvent(
   event: Omit<KasirAuditEvent, 'timestamp'>
 ): Promise<void> {
-  const auditEntry: KasirAuditEvent = {
-    ...event,
-    timestamp: new Date().toISOString(),
-  }
-
-  clientAuditBuffer.push(auditEntry)
-  if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
-    clientAuditBuffer.shift()
-  }
+  kasirAuditLogger.log(event)
 }
 
 /**
  * Ambil daftar audit log kasir di memori klien (untuk keperluan inspeksi & pengujian)
  */
 export function getKasirAuditLogs(): KasirAuditEvent[] {
-  return [...clientAuditBuffer]
+  return kasirAuditLogger.getLogs()
 }
 
 /**
- * Bersihkan buffer audit log (misal saat pergantian sesi kasir)
+ * Bersihkan buffer audit log
  */
 export function clearKasirAuditLogs(): void {
-  clientAuditBuffer.length = 0
+  kasirAuditLogger.clear()
 }
