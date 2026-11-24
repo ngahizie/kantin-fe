@@ -3045,7 +3045,19 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     // LAPORAN SALDO MENGENDAP & KEWAJIBAN SEKOLAH (PRD §9.5)
     // ─────────────────────────────────────────────────────────────
     if (url.includes('/api/laporan/saldo-mengendap/siswa') && method === 'get') {
-      const listSiswa = siswaList.map((s) => ({
+      const parsedUrl = new URL(url, 'http://localhost')
+      const searchParam = parsedUrl.searchParams.get('search')?.toLowerCase()
+      let filtered = siswaList
+      if (searchParam) {
+        filtered = filtered.filter(
+          (s) =>
+            s.nama?.toLowerCase().includes(searchParam) ||
+            s.nis?.toLowerCase().includes(searchParam) ||
+            s.kelas?.toLowerCase().includes(searchParam) ||
+            (s.parent_name && s.parent_name.toLowerCase().includes(searchParam))
+        )
+      }
+      const listSiswa = filtered.map((s) => ({
         siswaId: s.siswa_id,
         nis: s.nis,
         nisn: (s as unknown as { nisn?: string }).nisn || s.nis,

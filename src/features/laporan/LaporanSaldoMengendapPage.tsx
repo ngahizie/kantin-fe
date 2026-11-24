@@ -56,20 +56,30 @@ export function LaporanSaldoMengendapPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanSaldoMengendap | null>(null)
   const [siswaList, setSiswaList] = useState<SiswaSaldoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'POSITIVE' | 'ZERO'>('ALL')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim())
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   useEffect(() => {
     let isMounted = true
     const init = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         // 1. Ringkasan selalu dipanggil (TU/Bendahara, Admin Sekolah, Kepala Sekolah)
         const ringkasanPromise = laporanApi.getSaldoMengendap()
 
         // 2. Rincian siswa: hanya dipanggil untuk TU/Bendahara dan Admin Sekolah
         const siswaPromise = canAccessSiswa
-          ? laporanApi.getSiswaSaldoList()
+          ? laporanApi.getSiswaSaldoList(debouncedSearch || undefined)
           : Promise.resolve([] as SiswaSaldoDetail[])
 
         const [resRingkasan, resSiswa] = await Promise.all([
@@ -89,6 +99,7 @@ export function LaporanSaldoMengendapPage() {
       } catch (err: unknown) {
         if (!isMounted) return
         const msg = err instanceof Error ? err.message : 'Gagal memuat total saldo siswa'
+        setLoadError(msg)
         toast.error('Gagal Memuat Laporan', { description: msg })
       } finally {
         if (isMounted) setIsLoading(false)
@@ -98,7 +109,7 @@ export function LaporanSaldoMengendapPage() {
     return () => {
       isMounted = false
     }
-  }, [canAccessSiswa])
+  }, [canAccessSiswa, debouncedSearch])
 
   // Filter Siswa
   const filteredSiswa = useMemo(() => {
@@ -134,16 +145,17 @@ export function LaporanSaldoMengendapPage() {
 
       // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
       if (canAccessSiswa) {
-        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+        const totalSaldo = filteredSiswa.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalBelanjaHariIni = filteredSiswa.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
 
         sheets.push({
           sheetName: 'Saldo Siswa',
           title: 'Laporan Total Saldo Siswa',
           metadata: {
             'Tanggal Cetak': formatDateTime(new Date()),
-            'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
-            'Jumlah Siswa Bersaldo': `${ringkasan.jumlahSiswa} Siswa`,
+            'Grand Total Saldo Titipan': formatRupiah(ringkasan.saldoSiswa),
+            'Total Siswa Terdaftar': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+            'Jumlah Baris Diekspor': `${filteredSiswa.length} Siswa`,
           },
           columns: [
             { header: 'No', width: 6 },
@@ -166,7 +178,7 @@ export function LaporanSaldoMengendapPage() {
               width: 14,
             },
           ],
-          data: siswaList,
+          data: filteredSiswa,
           summaryRow: {
             no: '',
             nis: '',
@@ -231,8 +243,8 @@ export function LaporanSaldoMengendapPage() {
 
       // Section: Saldo Siswa
       if (canAccessSiswa) {
-        const totalSaldo = siswaList.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalBelanjaHariIni = siswaList.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
+        const totalSaldo = filteredSiswa.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
+        const totalBelanjaHariIni = filteredSiswa.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
 
         sections.push({
           sectionTitle: 'Laporan Total Saldo Siswa',
@@ -263,7 +275,7 @@ export function LaporanSaldoMengendapPage() {
               formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
             },
           ],
-          data: siswaList,
+          data: filteredSiswa,
           summaryRow: {
             no: '',
             nis: '',
@@ -303,8 +315,9 @@ export function LaporanSaldoMengendapPage() {
         subtitle: 'Laporan Rincian Dana Titipan Saldo Kartu Siswa',
         metadata: {
           'Tanggal Cetak': formatDateTime(new Date()),
-          'Total Saldo Siswa': formatRupiah(ringkasan.saldoSiswa),
-          'Jumlah Siswa': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+          'Grand Total Saldo Titipan': formatRupiah(ringkasan.saldoSiswa),
+          'Total Siswa Terdaftar': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
+          'Jumlah Baris Diekspor': `${filteredSiswa.length} Siswa`,
         },
         sections,
       })
@@ -356,7 +369,7 @@ export function LaporanSaldoMengendapPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
-                  {ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
+                  {loadError ? '-' : ringkasan ? formatRupiah(ringkasan.saldoSiswa) : '...'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total dana titipan orang tua yang belum dibelanjakan
@@ -375,7 +388,7 @@ export function LaporanSaldoMengendapPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
-                  {ringkasan ? formatNumber(ringkasan.jumlahSiswa) : 0} Siswa
+                  {loadError ? '-' : ringkasan ? `${formatNumber(ringkasan.jumlahSiswa)} Siswa` : '0 Siswa'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total siswa yang memiliki saldo terkini
@@ -460,6 +473,15 @@ export function LaporanSaldoMengendapPage() {
                             </div>
                           </TableCell>
                         </TableRow>
+                      ) : loadError ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="h-28 text-center text-destructive">
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <span className="font-semibold text-sm">Gagal memuat data saldo siswa dari server</span>
+                              <span className="text-xs text-muted-foreground">{loadError}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       ) : filteredSiswa.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
@@ -538,20 +560,20 @@ export function LaporanSaldoMengendapPage() {
                         ))
                       )}
                     </TableBody>
-                    {siswaList.length > 0 && (
+                    {filteredSiswa.length > 0 && (
                       <TableFooter className="bg-muted/50 font-bold border-t border-border">
                         <TableRow>
                           <TableCell colSpan={4} className="text-right text-xs uppercase tracking-wider text-muted-foreground">
-                            Total Saldo Terdaftar:
+                            Subtotal Saldo (Baris Ditampilkan):
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
-                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.saldo || 0), 0))}
+                            {formatRupiah(filteredSiswa.reduce((acc, s) => acc + (s.saldo || 0), 0))}
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs text-muted-foreground">
                             -
                           </TableCell>
                           <TableCell className="text-right font-mono text-xs tabular-nums text-foreground">
-                            {formatRupiah(siswaList.reduce((acc, s) => acc + (s.belanjaHariIni || 0), 0))}
+                            {formatRupiah(filteredSiswa.reduce((acc, s) => acc + (s.belanjaHariIni || 0), 0))}
                           </TableCell>
                           <TableCell colSpan={3} />
                         </TableRow>
