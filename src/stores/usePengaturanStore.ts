@@ -5,7 +5,10 @@ import {
   type TitikKasir,
   type PengaturanKantinFormValues,
 } from '@/features/pengaturan/types'
-import { getDeletedTitikKasirIds } from '@/features/pengaturan/deleted-titik-kasir'
+import {
+  cleanupDeletedTitikKasirIds,
+  getDeletedTitikKasirIds,
+} from '@/features/pengaturan/deleted-titik-kasir'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { emitSyncSignal } from '@/lib/katalog-sync'
 
@@ -89,17 +92,17 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
       try {
         set({ loadingTitikKasir: true })
         const data = await pengaturanApi.getTitikKasirList(hanyaAktif)
+        const activeIds = data.filter((item) => item.aktif).map((item) => item.id)
+        cleanupDeletedTitikKasirIds(activeIds)
         const deletedIds = getDeletedTitikKasirIds()
         const validData = data.filter((t) => !deletedIds.includes(t.id))
         set({ titikKasirList: validData })
 
         const currentActiveId = get().activeTitikKasirId
         const exists = validData.some((t) => t.id === currentActiveId && t.aktif)
-        if (!exists && validData.length > 0) {
-          const firstActive = validData.find((t) => t.aktif) || validData[0]
-          get().setActiveTitikKasirId(firstActive.id)
-        } else if (validData.length === 0) {
-          get().setActiveTitikKasirId(null)
+        if (!exists) {
+          const firstActive = validData.find((t) => t.aktif)
+          get().setActiveTitikKasirId(firstActive ? firstActive.id : null)
         }
 
         return validData
@@ -123,11 +126,14 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
 
     getActiveTitikKasir: () => {
       const { titikKasirList, activeTitikKasirId } = get()
-      if (!activeTitikKasirId) return undefined
-      return (
-        titikKasirList.find((t) => t.id === activeTitikKasirId) ||
-        titikKasirList.find((t) => t.aktif)
-      )
+      if (!activeTitikKasirId) {
+        return titikKasirList.find((t) => t.aktif)
+      }
+      const matched = titikKasirList.find((t) => t.id === activeTitikKasirId)
+      if (matched && matched.aktif) {
+        return matched
+      }
+      return titikKasirList.find((t) => t.aktif)
     },
   }
 })
