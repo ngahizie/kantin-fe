@@ -182,4 +182,56 @@ describe('Zustand usePengaturanStore', () => {
     expect(usePengaturanStore.getState().pengaturan.durasiFotoDetik).toBe(3)
     expect(usePengaturanStore.getState().pengaturan.jamTutupOtomatis).toBe('23:59')
   })
+
+  it('getActiveTitikKasir tidak mengembalikan titik kasir yang nonaktif jika activeTitikKasirId nonaktif', () => {
+    const store = usePengaturanStore.getState()
+    usePengaturanStore.setState({
+      titikKasirList: [
+        {
+          id: 1,
+          sekolahId: 1,
+          nama: 'Kasir Nonaktif',
+          kode: 'KSR-01',
+          aktif: false,
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: 2,
+          sekolahId: 1,
+          nama: 'Kasir Aktif',
+          kode: 'KSR-02',
+          aktif: true,
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+      activeTitikKasirId: 1,
+    })
+
+    const active = store.getActiveTitikKasir()
+    expect(active?.id).toBe(2)
+    expect(active?.aktif).toBe(true)
+  })
+
+  it('getActiveTitikKasir mengembalikan undefined jika semua titik kasir nonaktif', () => {
+    const store = usePengaturanStore.getState()
+    usePengaturanStore.setState({
+      titikKasirList: [
+        {
+          id: 1,
+          sekolahId: 1,
+          nama: 'Kasir Nonaktif',
+          kode: 'KSR-01',
+          aktif: false,
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+      activeTitikKasirId: 1,
+    })
+
+    const active = store.getActiveTitikKasir()
+    expect(active).toBeUndefined()
+  })
 })

@@ -100,11 +100,9 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
 
         const currentActiveId = get().activeTitikKasirId
         const exists = validData.some((t) => t.id === currentActiveId && t.aktif)
-        if (!exists && validData.length > 0) {
-          const firstActive = validData.find((t) => t.aktif) || validData[0]
-          get().setActiveTitikKasirId(firstActive.id)
-        } else if (validData.length === 0) {
-          get().setActiveTitikKasirId(null)
+        if (!exists) {
+          const firstActive = validData.find((t) => t.aktif)
+          get().setActiveTitikKasirId(firstActive ? firstActive.id : null)
         }
 
         return validData
@@ -128,11 +126,14 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
 
     getActiveTitikKasir: () => {
       const { titikKasirList, activeTitikKasirId } = get()
-      if (!activeTitikKasirId) return undefined
-      return (
-        titikKasirList.find((t) => t.id === activeTitikKasirId) ||
-        titikKasirList.find((t) => t.aktif)
-      )
+      if (!activeTitikKasirId) {
+        return titikKasirList.find((t) => t.aktif)
+      }
+      const matched = titikKasirList.find((t) => t.id === activeTitikKasirId)
+      if (matched && matched.aktif) {
+        return matched
+      }
+      return titikKasirList.find((t) => t.aktif)
     },
   }
 })
