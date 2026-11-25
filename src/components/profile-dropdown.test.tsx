@@ -25,7 +25,7 @@ vi.mock('@/stores/auth-store', () => ({
   }),
 }))
 
-vi.mock('@/stores/useRoleStore', () => ({
+vi.mock('@/stores/use-role-store', () => ({
   useRoleStore: () => ({
     userName: '',
     userEmail: '',

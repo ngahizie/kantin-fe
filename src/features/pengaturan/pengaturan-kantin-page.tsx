@@ -1,0 +1,700 @@
+import React, { useState, useEffect } from 'react'
+import { useForm, Controller, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Store,
+  Clock,
+  ShieldCheck,
+  Camera,
+  Coins,
+  Save,
+  RotateCcw,
+  Calendar,
+  UserCheck,
+  Loader2,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { formatRupiah, formatDate } from '@/lib/formatters'
+import { Header } from '@/components/layout/header'
+import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
+import { Main } from '@/components/layout/main'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { usePengaturanStore } from '@/stores/use-pengaturan-store'
+import {
+  pengaturanKantinSchema,
+  type PengaturanKantinFormValues,
+} from './types'
+
+const DEFAULT_FORM_VALUES: PengaturanKantinFormValues = {
+  namaKantin: 'Kantin Sehat SKOOLIA',
+  jamTutupOtomatis: '23:59',
+  konfirmasiManual: false,
+  durasiFotoDetik: 3,
+  minTopup: 5000,
+  maksTopup: 500000,
+  batasSaldoSiswa: 1000000,
+  kebijakanSaldoMengendap: 'REFUND',
+  ambangHari: 90,
+}
+
+export const PengaturanKantinPage: React.FC = () => {
+  const {
+    pengaturan,
+    fetchPengaturan,
+    updatePengaturan,
+    loadingPengaturan,
+  } = usePengaturanStore()
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<PengaturanKantinFormValues>({
+    resolver: zodResolver(pengaturanKantinSchema),
+    defaultValues: DEFAULT_FORM_VALUES,
+  })
+
+  // Watch field values for dynamic previews using useWatch hook
+  const watchedKonfirmasi = useWatch({ control, name: 'konfirmasiManual', defaultValue: false })
+  const watchedMinTopup = useWatch({ control, name: 'minTopup', defaultValue: 5000 })
+  const watchedMaxTopup = useWatch({ control, name: 'maksTopup', defaultValue: 500000 })
+  const watchedMaxSaldoSiswa = useWatch({ control, name: 'batasSaldoSiswa', defaultValue: 1000000 })
+  const watchedAmbangHari = useWatch({ control, name: 'ambangHari', defaultValue: 90 })
+
+  // Muat data dari server saat mount
+  useEffect(() => {
+    let isMounted = true
+    const load = async () => {
+      try {
+        const data = await fetchPengaturan()
+        if (isMounted && data) {
+          const jamShort = (data.jamTutupOtomatis || '23:59').substring(0, 5)
+          reset({
+            namaKantin: data.namaKantin,
+            jamTutupOtomatis: jamShort,
+            konfirmasiManual: data.konfirmasiManual,
+            durasiFotoDetik: data.durasiFotoDetik,
+            minTopup: data.minTopup,
+            maksTopup: data.maksTopup,
+            batasSaldoSiswa: data.batasSaldoSiswa,
+            kebijakanSaldoMengendap: data.kebijakanSaldoMengendap,
+            ambangHari: data.ambangHari,
+          })
+        }
+      } catch {
+        toast.error('Gagal memuat pengaturan operasional')
+      }
+    }
+    load()
+    return () => {
+      isMounted = false
+    }
+  }, [fetchPengaturan, reset])
+
+  // Submit Handler
+  const onSubmit = async (values: PengaturanKantinFormValues) => {
+    try {
+      setIsSubmitting(true)
+      const updated = await updatePengaturan(values)
+      const jamShort = (updated.jamTutupOtomatis || '23:59').substring(0, 5)
+      reset({
+        namaKantin: updated.namaKantin,
+        jamTutupOtomatis: jamShort,
+        konfirmasiManual: updated.konfirmasiManual,
+        durasiFotoDetik: updated.durasiFotoDetik,
+        minTopup: updated.minTopup,
+        maksTopup: updated.maksTopup,
+        batasSaldoSiswa: updated.batasSaldoSiswa,
+        kebijakanSaldoMengendap: updated.kebijakanSaldoMengendap,
+        ambangHari: updated.ambangHari,
+      })
+      toast.success(
+        'Pengaturan operasional kantin berhasil disimpan dan tersinkronisasi ke klien kasir!'
+      )
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+      const msg =
+        errorObj.response?.data?.message ||
+        'Gagal menyimpan konfigurasi operasional ke server'
+      toast.error(msg)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Reset to default preset
+  const handleResetToDefault = () => {
+    reset(DEFAULT_FORM_VALUES)
+    toast.info('Formulir dikembalikan ke nilai bawaan standar SKOOLIA')
+  }
+
+  return (
+    <>
+      <Header fixed>
+        <HeaderBreadcrumb section='Pengaturan Kantin' title='Operasional Kantin' />
+        <HeaderActions />
+      </Header>
+
+      <Main className='space-y-6'>
+        {/* Header Title & Nav Tabs */}
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+                Konfigurasi Operasional Kantin
+              </h1>
+              <p className='text-sm text-muted-foreground'>
+                Atur identitas kantin, jam tutup otomatis, serta batas saldo dan top-up siswa.
+              </p>
+            </div>
+
+            {/* Quick Audit Info Badge */}
+            <div className='flex items-center gap-2'>
+              <Badge
+                variant='outline'
+                className='hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums'
+              >
+                <Calendar className='h-3.5 w-3.5' />
+                <span>
+                  Pembaruan:{' '}
+                  {pengaturan.updatedAt
+                    ? formatDate(pengaturan.updatedAt)
+                    : 'Bawaan'}
+                </span>
+              </Badge>
+            </div>
+          </div>
+
+          {/* Alert Sinkronisasi Real-Time */}
+          <Alert className='border-primary/25 bg-primary/5'>
+            <AlertTitle className='text-xs font-bold text-foreground'>
+              Sinkronisasi Otomatis ke Klien Kasir POS
+            </AlertTitle>
+            <AlertDescription className='text-xs text-muted-foreground'>
+              Semua perubahan jam tutup otomatis, durasi tampil foto, dan langkah
+              konfirmasi akan langsung berlaku pada sesi klien kasir dan tersinkronisasi ke server.
+            </AlertDescription>
+          </Alert>
+
+          {/* Form Pengaturan */}
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className='space-y-6'>
+            <div className='grid gap-6 md:grid-cols-2'>
+              {/* Card 1: Identitas & Jam Tutup Otomatis */}
+              <Card>
+                <CardHeader>
+                  <div className='flex items-center gap-2.5'>
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Store className='size-4' />
+                    </div>
+                    <div>
+                      <CardTitle className='text-base font-bold'>
+                        Profil & Waktu Operasional
+                      </CardTitle>
+                      <CardDescription className='text-xs'>
+                        Nama kantin sekolah dan jadwal tutup kasir otomatis.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className='space-y-4 pt-1'>
+                  {/* Nama Kantin Sekolah */}
+                  <div className='space-y-1.5'>
+                    <Label
+                      htmlFor='namaKantin'
+                      className='text-xs font-semibold'
+                    >
+                      Nama Kantin Sekolah{' '}
+                      <span className='text-destructive'>*</span>
+                    </Label>
+                    <div className='relative'>
+                      <Store className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                      <Input
+                        id='namaKantin'
+                        placeholder='Contoh: Kantin Sehat SKOOLIA'
+                        className='pl-9 text-sm'
+                        disabled={isSubmitting || loadingPengaturan}
+                        {...register('namaKantin')}
+                      />
+                    </div>
+                    {errors.namaKantin && (
+                      <p className='text-xs text-destructive'>
+                        {errors.namaKantin.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Nama ini ditampilkan pada struk cetak dan header layar
+                      kasir.
+                    </p>
+                  </div>
+
+                  {/* Jam Tutup Kasir Otomatis */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label
+                        htmlFor='jamTutupOtomatis'
+                        className='text-xs font-semibold'
+                      >
+                        Jam Tutup Kasir Otomatis{' '}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Badge
+                        variant='outline'
+                        className='rounded-full border px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums'
+                      >
+                        Bawaan: 23:59
+                      </Badge>
+                    </div>
+                    <div className='relative'>
+                      <Clock className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                      <Input
+                        id='jamTutupOtomatis'
+                        type='text'
+                        placeholder='23:59'
+                        className='pl-9 font-mono text-sm tabular-nums'
+                        disabled={isSubmitting || loadingPengaturan}
+                        {...register('jamTutupOtomatis')}
+                      />
+                    </div>
+                    {errors.jamTutupOtomatis && (
+                      <p className='text-xs text-destructive'>
+                        {errors.jamTutupOtomatis.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Format <code>HH:mm</code> (24 jam). Sistem menutup sesi
+                      secara otomatis pada jam yang ditentukan jika kasir belum
+                      tutup manual.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Interaksi Kasir POS (Foto & Konfirmasi Manual) */}
+              <Card>
+                <CardHeader>
+                  <div className='flex items-center gap-2.5'>
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Camera className='size-4' />
+                    </div>
+                    <div>
+                      <CardTitle className='text-base font-bold'>
+                        Interaksi Kasir POS & Foto
+                      </CardTitle>
+                      <CardDescription className='text-xs'>
+                        Verifikasi visual wajah siswa dan alur konfirmasi transaksi.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className='space-y-4 pt-1'>
+                  {/* Toggle Konfirmasi Manual */}
+                  <div className='flex flex-row items-center justify-between py-1'>
+                    <div className='space-y-0.5 pr-3'>
+                      <div className='flex items-center gap-2'>
+                        <Label
+                          htmlFor='konfirmasiManual'
+                          className='text-xs font-semibold cursor-pointer'
+                        >
+                          Langkah Konfirmasi Manual
+                        </Label>
+                        <Badge
+                          variant='outline'
+                          className={
+                            watchedKonfirmasi
+                              ? 'rounded-full border px-2.5 py-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900/60'
+                              : 'rounded-full border px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted/50 border-border'
+                          }
+                        >
+                          {watchedKonfirmasi ? 'Aktif' : 'Nonaktif (Bawaan)'}
+                        </Badge>
+                      </div>
+                      <p className='text-[11px] text-muted-foreground'>
+                        Petugas kasir wajib menekan "Konfirmasi" sebelum transaksi
+                        tercatat. Nonaktifkan untuk 1-tap checkout cepat.
+                      </p>
+                    </div>
+                    <Controller
+                      name='konfirmasiManual'
+                      control={control}
+                      render={({ field }) => (
+                        <Switch
+                          id='konfirmasiManual'
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isSubmitting || loadingPengaturan}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* Durasi Tampil Foto Siswa */}
+                  <div className='space-y-2 py-1'>
+                    <Label
+                      htmlFor='durasiFotoDetik'
+                      className='text-xs font-semibold'
+                    >
+                      Durasi Tampil Foto Siswa
+                    </Label>
+
+                    <div className='flex items-center gap-3'>
+                      <Input
+                        id='durasiFotoDetik'
+                        type='number'
+                        min={1}
+                        max={10}
+                        className='h-9 font-mono text-sm w-24 tabular-nums'
+                        disabled={isSubmitting || loadingPengaturan}
+                        {...register('durasiFotoDetik', {
+                          valueAsNumber: true,
+                        })}
+                      />
+                      <div className='flex-1 text-[11px] text-muted-foreground'>
+                        Lama foto siswa tampil di layar kasir untuk verifikasi
+                        visual wajah (default 3 detik, min. 1 s/d 10 detik).
+                      </div>
+                    </div>
+
+                    {errors.durasiFotoDetik && (
+                      <p className='text-xs text-destructive'>
+                        {errors.durasiFotoDetik.message}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Batas Plafon Top-Up Siswa */}
+              <Card>
+                <CardHeader>
+                  <div className='flex items-center gap-2.5'>
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <Coins className='size-4' />
+                    </div>
+                    <div>
+                      <CardTitle className='text-base font-bold'>
+                        Batas Transaksi Top-Up
+                      </CardTitle>
+                      <CardDescription className='text-xs'>
+                        Batas minimum dan maksimum pengisian saldo per transaksi di TU.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className='space-y-4 pt-1'>
+                  {/* Min Top-up */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label htmlFor='minTopup' className='text-xs font-semibold'>
+                        Batas Minimum Sekali Top-Up
+                      </Label>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
+                        {formatRupiah(watchedMinTopup || 0)}
+                      </span>
+                    </div>
+                    <Input
+                      id='minTopup'
+                      type='number'
+                      step={1000}
+                      min={1000}
+                      placeholder='5000'
+                      className='font-mono text-sm tabular-nums'
+                      disabled={isSubmitting || loadingPengaturan}
+                      {...register('minTopup', { valueAsNumber: true })}
+                    />
+                    {errors.minTopup && (
+                      <p className='text-xs text-destructive'>
+                        {errors.minTopup.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Nominal paling kecil yang diizinkan saat petugas TU memproses isi saldo.
+                    </p>
+                  </div>
+
+                  {/* Max Top-up */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label htmlFor='maksTopup' className='text-xs font-semibold'>
+                        Batas Maksimum Sekali Top-Up
+                      </Label>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
+                        {formatRupiah(watchedMaxTopup || 0)}
+                      </span>
+                    </div>
+                    <Input
+                      id='maksTopup'
+                      type='number'
+                      step={1000}
+                      min={1000}
+                      placeholder='500000'
+                      className='font-mono text-sm tabular-nums'
+                      disabled={isSubmitting || loadingPengaturan}
+                      {...register('maksTopup', { valueAsNumber: true })}
+                    />
+                    {errors.maksTopup && (
+                      <p className='text-xs text-destructive'>
+                        {errors.maksTopup.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Nominal tertinggi yang diizinkan untuk sekali transaksi top-up tunai.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 4: Batas Saldo Maksimum */}
+              <Card>
+                <CardHeader>
+                  <div className='flex items-center gap-2.5'>
+                    <div className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10 text-primary'>
+                      <ShieldCheck className='size-4' />
+                    </div>
+                    <div>
+                      <CardTitle className='text-base font-bold'>
+                        Batas Maksimal Saldo Tersimpan
+                      </CardTitle>
+                      <CardDescription className='text-xs'>
+                        Plafon saldo digital maksimal dan kebijakan saldo mengendap siswa.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className='space-y-4 pt-1'>
+                  {/* Max Saldo Siswa */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label
+                        htmlFor='batasSaldoSiswa'
+                        className='text-xs font-semibold'
+                      >
+                        Batas Saldo Maksimum Siswa
+                      </Label>
+                      <span className='font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums'>
+                        {formatRupiah(watchedMaxSaldoSiswa || 0)}
+                      </span>
+                    </div>
+                    <Input
+                      id='batasSaldoSiswa'
+                      type='number'
+                      step={10000}
+                      min={10000}
+                      placeholder='1000000'
+                      className='font-mono text-sm tabular-nums'
+                      disabled={isSubmitting || loadingPengaturan}
+                      {...register('batasSaldoSiswa', { valueAsNumber: true })}
+                    />
+                    {errors.batasSaldoSiswa && (
+                      <p className='text-xs text-destructive'>
+                        {errors.batasSaldoSiswa.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Maksimal total saldo di kartu RFID siswa.
+                    </p>
+                  </div>
+
+                  {/* Kebijakan Sisa Saldo Siswa */}
+                  <div className='space-y-1.5'>
+                    <Label
+                      htmlFor='kebijakanSaldoMengendap'
+                      className='text-xs font-semibold'
+                    >
+                      Kebijakan Sisa Saldo Siswa (Lulus/Keluar)
+                    </Label>
+                    <Controller
+                      control={control}
+                      name='kebijakanSaldoMengendap'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isSubmitting || loadingPengaturan}
+                        >
+                          <SelectTrigger
+                            id='kebijakanSaldoMengendap'
+                            className='text-sm'
+                          >
+                            <SelectValue placeholder='Pilih kebijakan sisa saldo siswa' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='REFUND'>
+                              Refund ke Orang Tua
+                            </SelectItem>
+                            <SelectItem value='PINDAH_SAUDARA'>
+                              Pindahkan ke Saudara Kandung
+                            </SelectItem>
+                            <SelectItem value='TETAP_MENGENDAP'>
+                              Disimpan Sekolah (Dana Titipan)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.kebijakanSaldoMengendap && (
+                      <p className='text-xs text-destructive'>
+                        {errors.kebijakanSaldoMengendap.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Tindakan default jika sisa saldo siswa nonaktif belum diambil setelah batas hari.
+                    </p>
+                  </div>
+
+                  {/* Batas Hari Sisa Saldo */}
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Label
+                        htmlFor='ambangHari'
+                        className='text-xs font-semibold'
+                      >
+                        Batas Hari Sisa Saldo Mengendap
+                      </Label>
+                      <span className='font-mono text-xs font-bold text-muted-foreground tabular-nums'>
+                        {Number.isFinite(watchedAmbangHari) ? watchedAmbangHari : 90} hari
+                      </span>
+                    </div>
+                    <Input
+                      id='ambangHari'
+                      type='number'
+                      step={1}
+                      min={0}
+                      placeholder='90'
+                      className='font-mono text-sm tabular-nums'
+                      disabled={isSubmitting || loadingPengaturan}
+                      {...register('ambangHari', { valueAsNumber: true })}
+                    />
+                    {errors.ambangHari && (
+                      <p className='text-xs text-destructive'>
+                        {errors.ambangHari.message}
+                      </p>
+                    )}
+                    <p className='text-[11px] text-muted-foreground'>
+                      Jumlah hari sejak siswa nonaktif sebelum status saldo masuk daftar tindak lanjut.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bottom Action Footer */}
+            <Card className='py-0'>
+              <CardFooter className='flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                  <UserCheck className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
+                  <span>
+                    Aktor Pengubah:{' '}
+                    <strong>
+                      {pengaturan.updatedBy ||
+                        (pengaturan.disimpan ? 'Tersimpan di Sistem' : 'Bawaan Sistem')}
+                    </strong>
+                  </span>
+                </div>
+
+                <div className='flex items-center gap-2.5 w-full sm:w-auto'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setResetDialogOpen(true)}
+                    disabled={isSubmitting || loadingPengaturan}
+                    className='h-9 flex-1 sm:flex-initial text-xs gap-1.5'
+                  >
+                    <RotateCcw className='h-3.5 w-3.5' />
+                    <span>Kembalikan Bawaan</span>
+                  </Button>
+
+                  <Button
+                    type='submit'
+                    size='sm'
+                    disabled={isSubmitting || loadingPengaturan || !isDirty}
+                    className='h-9 flex-1 sm:flex-initial text-xs gap-1.5 font-semibold'
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className='h-4 w-4 animate-spin' />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className='h-4 w-4' />
+                        <span>Simpan Pengaturan</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </form>
+
+          {/* Dialog Konfirmasi Reset Pengaturan */}
+          <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+            <AlertDialogContent className='max-w-md'>
+              <AlertDialogHeader>
+                <AlertDialogTitle className='text-base font-bold'>
+                  Kembalikan ke Pengaturan Bawaan?
+                </AlertDialogTitle>
+                <AlertDialogDescription className='text-xs text-muted-foreground leading-relaxed'>
+                  Semua kolom konfigurasi operasional pada formulir ini akan diisi ulang
+                  dengan nilai bawaan standar sistem SKOOLIA. Perubahan belum tersimpan
+                  ke server sampai Anda menekan tombol "Simpan Pengaturan".
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className='gap-2 sm:gap-2.5 pt-2'>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    handleResetToDefault()
+                    setResetDialogOpen(false)
+                  }}
+                  className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                >
+                  Ya, Kembalikan Bawaan
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+      </Main>
+    </>
+  )
+}
+
+export default PengaturanKantinPage

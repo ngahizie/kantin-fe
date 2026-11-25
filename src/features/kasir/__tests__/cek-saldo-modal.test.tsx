@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { CekSaldoModal } from '../components/CekSaldoModal'
+import { CekSaldoModal } from '../components/cek-saldo-modal'
 import { kasirApi } from '../api/kasir-api'
 
 let capturedOnScan: ((uid: string) => void) | null = null
 
-vi.mock('@/hooks/useRfidScanner', () => ({
+vi.mock('@/hooks/use-rfid-scanner', () => ({
   useRfidScanner: (options: { onScan: (uid: string) => void; enabled?: boolean }) => {
     if (options.enabled) {
       capturedOnScan = options.onScan

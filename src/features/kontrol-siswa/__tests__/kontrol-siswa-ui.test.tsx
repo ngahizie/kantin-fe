@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import type { KartuSiswaMock } from '@/types/kantin'
-import { LimitBlokirForm } from '../LimitBlokirForm'
+import { LimitBlokirForm } from '../limit-blokir-form'
 
 const SAMPLE_STUDENT: KartuSiswaMock = {
   uid: 'UID-101',

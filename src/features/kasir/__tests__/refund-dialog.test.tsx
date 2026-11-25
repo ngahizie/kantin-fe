@@ -5,10 +5,10 @@ import { userEvent } from 'vitest/browser'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { DEFAULT_PENGATURAN_KANTIN } from '@/features/pengaturan/types'
-import { beepAudioEngine } from '@/hooks/useBeepAudio'
-import { KasirPosPage } from '../KasirPosPage'
+import { beepAudioEngine } from '@/hooks/use-beep-audio'
+import { KasirPosPage } from '../kasir-pos-page'
 import { kasirApi } from '../api/kasir-api'
-import { RefundDialog } from '../components/RefundDialog'
+import { RefundDialog } from '../components/refund-dialog'
 import type { TransaksiSesiItem } from '../types'
 
 const sampleTransactions: TransaksiSesiItem[] = [

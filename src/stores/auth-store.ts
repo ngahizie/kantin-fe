@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
-import { useRoleStore, type UserRole } from '@/stores/useRoleStore'
-import { useCartStore } from '@/stores/useCartStore'
+import { useRoleStore, type UserRole } from '@/stores/use-role-store'
+import { useCartStore } from '@/stores/use-cart-store'
 
 const ACCESS_TOKEN_COOKIE = 'kantin_access_token'
 const ACCESS_TOKEN_STORAGE = 'kantin_token'

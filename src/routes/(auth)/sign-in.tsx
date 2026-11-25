@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { SignIn } from '@/features/auth/sign-in'
 import { useAuthStore } from '@/stores/auth-store'
-import { getRoleHomePath } from '@/stores/useRoleStore'
+import { getRoleHomePath } from '@/stores/use-role-store'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import apiClient from '@/lib/api-client'
-import { PengaturanKantinPage } from '../PengaturanKantinPage'
+import { PengaturanKantinPage } from '../pengaturan-kantin-page'
 
 vi.mock('@/components/layout/header', () => ({
   Header: ({ children }: { children: ReactNode }) => <header>{children}</header>,

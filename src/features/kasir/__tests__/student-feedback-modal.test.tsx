@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { StudentFeedbackModal } from '../components/StudentFeedbackModal'
+import { StudentFeedbackModal } from '../components/student-feedback-modal'
 import type { TapTransaksiData } from '../types'
 
 describe('StudentFeedbackModal', () => {

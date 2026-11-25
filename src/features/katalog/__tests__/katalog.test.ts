@@ -1,0 +1,681 @@
+import { describe, it, expect, beforeAll } from 'vitest'
+import { setupMockAdapter } from '@/mocks/mock-adapter'
+import { apiClient } from '@/lib/api-client'
+import { subscribeKatalogChanges } from '@/lib/katalog-sync'
+import { katalogApi } from '../api/katalog-api'
+import {
+  kategoriFormSchema,
+  menuFormSchema,
+  type KategoriItem,
+  type MenuItem,
+} from '../types'
+import {
+  getKategoriDeleteBlockedReason,
+  matchesMenuSearchQuery,
+  mergeKategoriMenuCounts,
+  shouldPauseMenuAutoRefresh,
+  sortCategoriesNewestFirst,
+  sortMenusNewestFirst,
+} from '../menu-utils'
+
+describe('Katalog Kategori Zod Validation Schema', () => {
+  it('berhasil memvalidasi nama kategori yang valid', () => {
+    const validData = {
+      nama: 'Makanan Ringan & Snack',
+      urutan: 1,
+      aktif: true,
+    }
+    const result = kategoriFormSchema.safeParse(validData)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.nama).toBe('Makanan Ringan & Snack')
+      expect(result.data.urutan).toBe(1)
+      expect(result.data.aktif).toBe(true)
+    }
+  })
+
+  it('gagal jika nama kategori kosong', () => {
+    const invalidData = {
+      nama: '   ',
+      urutan: 0,
+      aktif: true,
+    }
+    const result = kategoriFormSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain('Nama kategori wajib diisi')
+    }
+  })
+
+  it('gagal jika nama kategori melebihi 100 karakter', () => {
+    const invalidData = {
+      nama: 'A'.repeat(101),
+      urutan: 0,
+      aktif: true,
+    }
+    const result = kategoriFormSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain('Nama kategori maksimal 100 karakter')
+    }
+  })
+
+  it('gagal jika nama kategori mengandung tag HTML atau karakter kontrol (SEC-KAT-01)', () => {
+    const maliciousNames = [
+      '<script>alert(1)</script>',
+      'Snack <img src=x onerror=alert(1)>',
+      'Makanan<b>Berat</b>',
+      'Minuman\u0000Dingin',
+    ]
+
+    for (const nama of maliciousNames) {
+      const result = kategoriFormSchema.safeParse({
+        nama,
+        urutan: 1,
+        aktif: true,
+      })
+      expect(result.success).toBe(false)
+    }
+  })
+
+  it('mendukung status aktif pada form kategori untuk reaktivasi', () => {
+    const nonaktifData = {
+      nama: 'Kategori Lama',
+      urutan: 5,
+      aktif: false,
+    }
+    const parsedNonaktif = kategoriFormSchema.safeParse(nonaktifData)
+    expect(parsedNonaktif.success).toBe(true)
+    if (parsedNonaktif.success) {
+      expect(parsedNonaktif.data.aktif).toBe(false)
+    }
+
+    const reaktifData = {
+      nama: 'Kategori Lama',
+      urutan: 5,
+      aktif: true,
+    }
+    const parsedReaktif = kategoriFormSchema.safeParse(reaktifData)
+    expect(parsedReaktif.success).toBe(true)
+    if (parsedReaktif.success) {
+      expect(parsedReaktif.data.aktif).toBe(true)
+    }
+  })
+
+  it('berhasil memvalidasi data kategori tanpa mengisi urutan', () => {
+    const dataTanpaUrutan = {
+      nama: 'Kategori Baru',
+    }
+    const parsed = kategoriFormSchema.safeParse(dataTanpaUrutan)
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.nama).toBe('Kategori Baru')
+      expect(parsed.data.urutan).toBeUndefined()
+    }
+  })
+
+  it('mengurutkan kategori dengan kategori terbaru (ID terbesar) di posisi paling atas', () => {
+    const daftarKategori: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1 },
+      { id: 2, nama: 'Minuman', urutan: 2 },
+      { id: 5, nama: 'Kategori Baru', urutan: 0 },
+      { id: 3, nama: 'Camilan', urutan: 3 },
+    ]
+    const sorted = sortCategoriesNewestFirst(daftarKategori)
+    expect(sorted.map((k) => k.id)).toEqual([5, 3, 2, 1])
+    expect(sorted[0].nama).toBe('Kategori Baru')
+  })
+})
+
+describe('Katalog Menu Zod Validation Schema', () => {
+  it('berhasil memvalidasi payload menu dengan harga jual integer rupiah', () => {
+    const validData = {
+      nama: 'Nasi Kuning Komplit',
+      kategoriId: 1,
+      hargaJual: 15000,
+      satuan: 'PORSI',
+      stokMinimum: 5,
+      fotoUrl: 'https://images.unsplash.com/photo-1',
+      aktif: true,
+    }
+    const result = menuFormSchema.safeParse(validData)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.hargaJual).toBe(15000)
+      expect(Number.isInteger(result.data.hargaJual)).toBe(true)
+      expect(result.data.satuan).toBe('PORSI')
+    }
+  })
+
+  it('gagal jika harga jual bernilai float / bukan integer rupiah', () => {
+    const invalidData = {
+      nama: 'Nasi Kuning Komplit',
+      kategoriId: 1,
+      hargaJual: 15000.75, // float tidak diperbolehkan
+      satuan: 'PORSI',
+      stokMinimum: 5,
+    }
+    const result = menuFormSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain('Harga jual harus berupa bilangan bulat rupiah')
+    }
+  })
+
+  it('gagal jika harga jual bernilai negatif', () => {
+    const invalidData = {
+      nama: 'Nasi Kuning',
+      kategoriId: 1,
+      hargaJual: -5000,
+      satuan: 'PORSI',
+    }
+    const result = menuFormSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
+  })
+
+  it('gagal jika satuan tidak sesuai enum (PCS/PORSI/BOTOL)', () => {
+    const invalidData = {
+      nama: 'Jus Alpukat',
+      kategoriId: 2,
+      hargaJual: 8000,
+      satuan: 'LITER', // tidak ada di enum
+    }
+    const result = menuFormSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
+  })
+
+  it('berhasil memvalidasi payload menu minimal dengan stokMinimum 0 dan aktif true', () => {
+    const minimalData = {
+      nama: 'Air Putih',
+      kategoriId: 3,
+      hargaJual: 3000,
+      satuan: 'BOTOL',
+      stokMinimum: 0,
+      aktif: true,
+    }
+    const result = menuFormSchema.safeParse(minimalData)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.stokMinimum).toBe(0)
+      expect(result.data.aktif).toBe(true)
+      expect(result.data.fotoUrl).toBeUndefined()
+    }
+  })
+
+  it('mendukung status aktif boolean untuk reaktivasi menu yang nonaktif', () => {
+    const nonaktifMenu = {
+      nama: 'Menu Diarsipkan',
+      kategoriId: 1,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 2,
+      aktif: false,
+    }
+    const res1 = menuFormSchema.safeParse(nonaktifMenu)
+    expect(res1.success).toBe(true)
+    if (res1.success) {
+      expect(res1.data.aktif).toBe(false)
+    }
+
+    const reaktifMenu = {
+      ...nonaktifMenu,
+      aktif: true,
+    }
+    const res2 = menuFormSchema.safeParse(reaktifMenu)
+    expect(res2.success).toBe(true)
+    if (res2.success) {
+      expect(res2.data.aktif).toBe(true)
+    }
+  })
+
+  it('validasi fotoUrl menerima URL HTTP/HTTPS, path storage tenant, atau path internal', () => {
+    const baseMenu = {
+      nama: 'Bakso Sapi',
+      kategoriId: 1,
+      hargaJual: 12000,
+      satuan: 'PORSI' as const,
+      stokMinimum: 5,
+      aktif: true,
+    }
+
+    const testUrls = [
+      'https://cdn.sekolah.id/kantin/sekolah-1/menu/bakso.jpg',
+      'http://localhost:9000/sekolah-1/menu/bakso.jpg',
+      '/api/storage/file?path=sekolah-1%2Fmenu%2Fbakso.jpg',
+      'sekolah-1/menu/uuid-bakso.jpg',
+      '',
+    ]
+
+    for (const url of testUrls) {
+      const res = menuFormSchema.safeParse({ ...baseMenu, fotoUrl: url })
+      expect(res.success).toBe(true)
+    }
+  })
+
+  it('validasi fotoUrl menolak skema berbahaya (javascript:, data:, vbscript:, file:)', () => {
+    const baseMenu = {
+      nama: 'Es Teh Manis',
+      kategoriId: 2,
+      hargaJual: 3000,
+      satuan: 'BOTOL' as const,
+      stokMinimum: 10,
+      aktif: true,
+    }
+
+    const maliciousUrls = [
+      'javascript:alert(1)',
+      'data:text/html,<script>alert(1)</script>',
+      'vbscript:msgbox(1)',
+      'file:///etc/passwd',
+    ]
+
+    for (const url of maliciousUrls) {
+      const res = menuFormSchema.safeParse({ ...baseMenu, fotoUrl: url })
+      expect(res.success).toBe(false)
+      if (!res.success) {
+        expect(res.error.issues[0].message).toContain('Format URL foto tidak valid')
+      }
+    }
+  })
+})
+describe('Ekstraksi Pesan Error Respons Backend (Issue #110)', () => {
+  it('memprioritaskan response.data.message spesifik dari server dibanding pesan Axios generik', () => {
+    const errorWithResponse = {
+      response: {
+        data: {
+          message: 'Gagal mengunggah berkas ke penyimpanan. Periksa konfigurasi MinIO atau coba lagi.',
+        },
+      },
+      message: 'Request failed with status code 400',
+    }
+
+    const error = errorWithResponse as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe(
+      'Gagal mengunggah berkas ke penyimpanan. Periksa konfigurasi MinIO atau coba lagi.'
+    )
+  })
+
+  it('menggunakan fallback error.message jika respons server tidak memiliki pesan spesifik', () => {
+    const errorWithoutServerMsg = {
+      response: { data: {} },
+      message: 'Network Error',
+    }
+
+    const error = errorWithoutServerMsg as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe('Network Error')
+  })
+
+  it('menggunakan pesan default jika error kosong', () => {
+    const emptyError = {}
+
+    const error = emptyError as {
+      response?: { data?: { message?: string } }
+      message?: string
+    }
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Gagal mengunggah foto produk'
+
+    expect(message).toBe('Gagal mengunggah foto produk')
+  })
+})
+
+describe('sortMenusNewestFirst', () => {
+  const makeMenu = (id: number, nama: string): MenuItem => ({
+    id,
+    kategoriId: 1,
+    nama,
+    hargaJual: 10000,
+    satuan: 'PCS',
+    stokMinimum: 5,
+    stokBerjalan: 10,
+    aktif: true,
+  })
+
+  it('menempatkan menu baru dengan id lebih besar di posisi paling atas meski namanya berada di belakang secara alfabetis', () => {
+    const input = [
+      makeMenu(10, 'Ayam Goreng'),
+      makeMenu(25, 'Bakso Urat'),
+      makeMenu(1794362846000, 'Zebra Cake'),
+    ]
+
+    const sorted = sortMenusNewestFirst(input)
+    expect(sorted.map((item) => item.nama)).toEqual([
+      'Zebra Cake',
+      'Bakso Urat',
+      'Ayam Goreng',
+    ])
+  })
+
+  it('mengurutkan alfabetis bila id bernilai sama tanpa memutasi array asal', () => {
+    const input = [makeMenu(5, 'Teh Manis'), makeMenu(5, 'Air Mineral')]
+    const sorted = sortMenusNewestFirst(input)
+
+    expect(sorted.map((item) => item.nama)).toEqual(['Air Mineral', 'Teh Manis'])
+    expect(input.map((item) => item.nama)).toEqual(['Teh Manis', 'Air Mineral'])
+  })
+})
+
+describe('Katalog Menu API Toggle Status & Hapus Menu', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('dapat menonaktifkan dan mengaktifkan kembali menu via updateMenu serta menghapus menu dari daftar', async () => {
+    const created = await katalogApi.createMenu({
+      nama: 'Pastel Ayam Uji',
+      kategoriId: 1,
+      hargaJual: 4000,
+      satuan: 'PCS',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+
+    const deactivated = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: false,
+    })
+    expect(deactivated.aktif).toBe(false)
+
+    const reactivated = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(reactivated.aktif).toBe(true)
+
+    await katalogApi.deleteMenu(created.id)
+    const listAfterDelete = await katalogApi.getMenuList(undefined, false)
+    expect(listAfterDelete.some((m) => m.id === created.id)).toBe(false)
+  })
+})
+
+describe('Katalog Menu Auto-Refresh Guard & Formatting', () => {
+  it('hanya menyinkronkan ulang saat tidak ada dialog/modal/aksi aktif atau tab tersembunyi', () => {
+    const baseState = {
+      autoRefreshEnabled: true,
+      isModalOpen: false,
+      hasDeleteTarget: false,
+      isDeleting: false,
+      togglingId: null,
+      isDocumentHidden: false,
+    }
+
+    expect(shouldPauseMenuAutoRefresh(baseState)).toBe(false)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, autoRefreshEnabled: false })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isModalOpen: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, hasDeleteTarget: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isDeleting: true })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, togglingId: 12 })).toBe(true)
+    expect(shouldPauseMenuAutoRefresh({ ...baseState, isDocumentHidden: true })).toBe(true)
+  })
+
+  it('memancarkan sinyal sinkronisasi saat mutasi menu atau kategori berhasil', async () => {
+    const reasons: string[] = []
+    const unsubscribe = subscribeKatalogChanges((evt) => {
+      reasons.push(evt.reason)
+    })
+
+    try {
+      const created = await katalogApi.createMenu({
+        nama: 'Tahu Isi Event Sync',
+        kategoriId: 1,
+        hargaJual: 3500,
+        satuan: 'PCS',
+        stokMinimum: 3,
+        fotoUrl: '',
+        aktif: true,
+      })
+      await katalogApi.updateMenu(created.id, {
+        nama: created.nama,
+        kategoriId: created.kategoriId,
+        hargaJual: 4000,
+        satuan: created.satuan,
+        stokMinimum: created.stokMinimum,
+        fotoUrl: '',
+        aktif: false,
+      })
+      await katalogApi.deleteMenu(created.id)
+
+      expect(reasons).toEqual(['menu', 'menu', 'menu'])
+    } finally {
+      unsubscribe()
+    }
+  })
+})
+
+describe('Katalog Menu Kode Barcode — Validasi, Pencarian, & API', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('menerima kodeBarcode opsional pada schema form dan menolak bila > 64 karakter', () => {
+    const valid = menuFormSchema.safeParse({
+      nama: 'Teh Botol',
+      kodeBarcode: ' 8996001300112 ',
+      kategoriId: 1,
+      hargaJual: 4500,
+      satuan: 'BOTOL',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(valid.success).toBe(true)
+    if (valid.success) {
+      expect(valid.data.kodeBarcode).toBe('8996001300112')
+    }
+
+    const empty = menuFormSchema.safeParse({
+      nama: 'Nasi Goreng',
+      kodeBarcode: '',
+      kategoriId: 1,
+      hargaJual: 15000,
+      satuan: 'PORSI',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(empty.success).toBe(true)
+
+    const tooLong = menuFormSchema.safeParse({
+      nama: 'Teh Botol',
+      kodeBarcode: 'B'.repeat(65),
+      kategoriId: 1,
+      hargaJual: 4500,
+      satuan: 'BOTOL',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(tooLong.success).toBe(false)
+  })
+
+  it('mencocokkan pencarian berdasarkan nama menu maupun kode barcode', () => {
+    const item = { nama: 'Teh Botol Sosro', kodeBarcode: '8996001300112' }
+    expect(matchesMenuSearchQuery(item, 'teh botol')).toBe(true)
+    expect(matchesMenuSearchQuery(item, '8996001300112')).toBe(true)
+    expect(matchesMenuSearchQuery(item, '1300112')).toBe(true)
+    expect(matchesMenuSearchQuery({ nama: 'Gorengan', kodeBarcode: null }, '8996')).toBe(false)
+    expect(matchesMenuSearchQuery({ nama: 'Gorengan', kodeBarcode: null }, 'goreng')).toBe(true)
+  })
+
+  it('menyimpan, menolak duplikat, dan mengosongkan kodeBarcode lewat katalogApi', async () => {
+    const created = await katalogApi.createMenu({
+      nama: 'Susu Kotak Uji',
+      kodeBarcode: '8990001112223',
+      kategoriId: 1,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 5,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(created.kodeBarcode).toBe('8990001112223')
+
+    await expect(
+      katalogApi.createMenu({
+        nama: 'Susu Duplikat',
+        kodeBarcode: '8990001112223',
+        kategoriId: 1,
+        hargaJual: 5500,
+        satuan: 'PCS',
+        stokMinimum: 5,
+        fotoUrl: '',
+        aktif: true,
+      })
+    ).rejects.toThrow()
+
+    const cleared = await katalogApi.updateMenu(created.id, {
+      nama: created.nama,
+      kodeBarcode: '',
+      kategoriId: created.kategoriId,
+      hargaJual: created.hargaJual,
+      satuan: created.satuan,
+      stokMinimum: created.stokMinimum,
+      fotoUrl: '',
+      aktif: true,
+    })
+    expect(cleared.kodeBarcode).toBeNull()
+
+    await katalogApi.deleteMenu(created.id)
+  })
+})
+
+describe('mergeKategoriMenuCounts', () => {
+  it('menghitung jumlah menu terkait per kategori saat BE tidak mengirim jumlahItem', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true },
+      { id: 2, nama: 'Minuman', urutan: 2, isActive: true },
+      { id: 3, nama: 'Snack', urutan: 3, isActive: false },
+    ]
+    const menus = [
+      { kategoriId: 1 },
+      { kategoriId: 1 },
+      { kategoriId: 2 },
+      { kategoriId: null },
+    ]
+
+    const result = mergeKategoriMenuCounts(kategoris, menus)
+    expect(result.map((k) => ({ id: k.id, jumlahItem: k.jumlahItem }))).toEqual([
+      { id: 1, jumlahItem: 2 },
+      { id: 2, jumlahItem: 1 },
+      { id: 3, jumlahItem: 0 },
+    ])
+  })
+
+  it('mempertahankan data kategori apa adanya bila daftar menu gagal dimuat (null)', () => {
+    const kategoris: KategoriItem[] = [
+      { id: 1, nama: 'Makanan', urutan: 1, isActive: true, jumlahItem: 4 },
+    ]
+
+    expect(mergeKategoriMenuCounts(kategoris, null)).toEqual(kategoris)
+  })
+})
+
+describe('Validasi Hapus Kategori & API Hapus Kategori', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('memblokir penghapusan jika kategori masih memiliki menu terkait dan mengizinkan jika 0 menu', () => {
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Minuman', jumlahItem: 2 })
+    ).toContain('2 menu terkait')
+
+    expect(
+      getKategoriDeleteBlockedReason({ nama: 'Kosong', jumlahItem: 0 })
+    ).toBeNull()
+
+    expect(getKategoriDeleteBlockedReason(null)).toBeNull()
+  })
+
+  it('menghapus kategori tanpa menu terkait dan menolak jika masih ada menu terkait', async () => {
+    const createdKat = await katalogApi.createKategori({
+      nama: 'Kategori Uji Hapus',
+      urutan: 99,
+      aktif: true,
+    })
+
+    const createdMenu = await katalogApi.createMenu({
+      nama: 'Menu Uji Keterkaitan',
+      kategoriId: createdKat.id,
+      hargaJual: 5000,
+      satuan: 'PCS',
+      stokMinimum: 1,
+      fotoUrl: '',
+      aktif: false,
+    })
+
+    // Masih memiliki 1 menu terkait (meski nonaktif) -> harus ditolak
+    await expect(katalogApi.deleteKategori(createdKat.id)).rejects.toThrow()
+
+    // Setelah menu terkait dihapus -> kategori bisa dihapus dan hilang dari daftar
+    await katalogApi.deleteMenu(createdMenu.id)
+    await katalogApi.deleteKategori(createdKat.id)
+
+    const remaining = await katalogApi.getKategoriList(false)
+    expect(remaining.some((k) => k.id === createdKat.id)).toBe(false)
+  })
+})
+
+describe('Resolusi URL Foto Produk & Upload Foto', () => {
+  beforeAll(() => {
+    setupMockAdapter(apiClient)
+  })
+
+  it('katalogApi.getImageUrl mengembalikan URL apa adanya untuk protokol http, https, data, dan blob', () => {
+    expect(katalogApi.getImageUrl('')).toBe('')
+    expect(katalogApi.getImageUrl(null)).toBe('')
+    expect(katalogApi.getImageUrl(undefined)).toBe('')
+
+    expect(katalogApi.getImageUrl('https://example.com/foto.jpg')).toBe('https://example.com/foto.jpg')
+    expect(katalogApi.getImageUrl('http://localhost:9000/kantin/foto.png')).toBe('http://localhost:9000/kantin/foto.png')
+    expect(katalogApi.getImageUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
+    expect(katalogApi.getImageUrl('blob:http://localhost:5173/uuid-test')).toBe('blob:http://localhost:5173/uuid-test')
+  })
+
+  it('katalogApi.getImageUrl menghasilkan relative path /api/storage/file untuk path relatif storage', () => {
+    const path = 'sekolah-1/menu/foto-katsu.jpg'
+    const expected = `/api/storage/file?path=${encodeURIComponent(path)}`
+    expect(katalogApi.getImageUrl(path)).toBe(expected)
+  })
+
+  it('katalogApi.uploadFoto mengunggah berkas dan menghasilkan data path/url yang sesuai', async () => {
+    const file = new File(['fake content'], 'nasi-goreng-spesial.jpg', { type: 'image/jpeg' })
+    const res = await katalogApi.uploadFoto(file, 'menu')
+
+    expect(res).toBeDefined()
+    expect(res.namaAsli).toBe('nasi-goreng-spesial.jpg')
+    expect(res.path).toContain('nasi-goreng-spesial.jpg')
+    expect(res.url).toBeTruthy()
+    // Pastikan bukan lagi hardcoded foto mangkuk salad bila file dikirim
+    expect(res.url).not.toBe('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400')
+  })
+})

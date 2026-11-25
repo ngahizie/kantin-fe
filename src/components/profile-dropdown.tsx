@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import { getRoleLabel } from '@/lib/role-utils'
-import { useRoleStore } from '@/stores/useRoleStore'
+import { useRoleStore } from '@/stores/use-role-store'
 import { useAuthStore } from '@/stores/auth-store'
 
 export function ProfileDropdown() {

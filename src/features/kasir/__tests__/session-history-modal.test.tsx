@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
-import { beepAudioEngine } from '@/hooks/useBeepAudio'
+import { beepAudioEngine } from '@/hooks/use-beep-audio'
 import { kasirApi } from '../api/kasir-api'
-import { SessionHistoryModal } from '../components/SessionHistoryModal'
+import { SessionHistoryModal } from '../components/session-history-modal'
 import type { TransaksiSesiItem } from '../types'
 
 const sampleTransactions: TransaksiSesiItem[] = [

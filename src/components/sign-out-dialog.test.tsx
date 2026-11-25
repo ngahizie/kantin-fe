@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore } from '@/stores/use-cart-store'
 import { SignOutDialog } from './sign-out-dialog'
 
 const navigate = vi.fn()

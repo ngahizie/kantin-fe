@@ -6,7 +6,7 @@ import {
   KATALOG_SYNC_CHANNEL_NAME,
   KATALOG_SYNC_STORAGE_KEY,
 } from '@/lib/katalog-sync'
-import { MenuPage } from '../MenuPage'
+import { MenuPage } from '../menu-page'
 import { katalogApi } from '../api/katalog-api'
 import type { KategoriItem, MenuItem } from '../types'
 

@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 
 import { getCookie, removeCookie } from '@/lib/cookies'
 import { extractValidationMessage } from '@/lib/validation-error'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore } from '@/stores/use-cart-store'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'

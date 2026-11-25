@@ -13,8 +13,8 @@ import {
   getCloseSessionLock,
   saveCloseSessionLock,
 } from '../close-session-lock'
-import { CloseSessionModal } from '../components/CloseSessionModal'
-import { KasirPosPage } from '../KasirPosPage'
+import { CloseSessionModal } from '../components/close-session-modal'
+import { KasirPosPage } from '../kasir-pos-page'
 
 const sampleSesi: SesiKasirData = {
   id: 41,

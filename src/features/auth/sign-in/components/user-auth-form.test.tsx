@@ -3,7 +3,7 @@ import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
 import { UserAuthForm } from './user-auth-form'
 import { resolveUserRole } from '@/lib/role-utils'
-import { getRoleHomePath } from '@/stores/useRoleStore'
+import { getRoleHomePath } from '@/stores/use-role-store'
 
 const FORM_MESSAGES = {
   emailEmpty: 'Masukkan username staf.',

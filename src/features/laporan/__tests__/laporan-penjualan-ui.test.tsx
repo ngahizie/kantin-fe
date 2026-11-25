@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
-import { useRoleStore } from '@/stores/useRoleStore'
-import { LaporanLabaKotorPage } from '../LaporanLabaKotorPage'
-import { LaporanPenjualanPage } from '../LaporanPenjualanPage'
+import { useRoleStore } from '@/stores/use-role-store'
+import { LaporanLabaKotorPage } from '../laporan-laba-kotor-page'
+import { LaporanPenjualanPage } from '../laporan-penjualan-page'
 
 vi.mock('@/components/layout/header', () => ({
   Header: ({ children }: { children: ReactNode }) => <header>{children}</header>,

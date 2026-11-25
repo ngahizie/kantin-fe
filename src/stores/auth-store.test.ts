@@ -57,7 +57,7 @@ describe('useAuthStore', () => {
 
   it('updates the signed-in user via setUser and syncs with useRoleStore', async () => {
     const useAuthStore = await importAuthStore()
-    const { useRoleStore } = await import('./useRoleStore')
+    const { useRoleStore } = await import('./use-role-store')
 
     useAuthStore.getState().auth.setUser({ ...sampleUser })
 
@@ -70,7 +70,7 @@ describe('useAuthStore', () => {
 
   it('reset clears user and access token and drops persistence', async () => {
     const useAuthStore = await importAuthStore()
-    const { useRoleStore } = await import('./useRoleStore')
+    const { useRoleStore } = await import('./use-role-store')
     useAuthStore.getState().auth.setAccessToken('will-be-cleared')
     useAuthStore.getState().auth.setUser({ ...sampleUser })
 
@@ -90,7 +90,7 @@ describe('useAuthStore', () => {
 
   it('mengosongkan keranjang belanja kasir saat auth.reset dan auth.setUser dipanggil (issue #143)', async () => {
     const useAuthStore = await importAuthStore()
-    const { useCartStore } = await import('./useCartStore')
+    const { useCartStore } = await import('./use-cart-store')
 
     // Isi keranjang
     useCartStore.getState().addItem({

@@ -4,7 +4,7 @@ import {
   titikKasirFormSchema,
   DEFAULT_PENGATURAN_KANTIN,
 } from '../types'
-import { usePengaturanStore } from '@/stores/usePengaturanStore'
+import { usePengaturanStore } from '@/stores/use-pengaturan-store'
 
 describe('Pengaturan Operasional Kantin Schema', () => {
   const validData = {

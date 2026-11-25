@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { resolveUserRole } from '@/lib/role-utils'
-import { ROLE_CONFIGS, getRoleHomePath, type UserRole } from '@/stores/useRoleStore'
+import { ROLE_CONFIGS, getRoleHomePath, type UserRole } from '@/stores/use-role-store'
 
 const formSchema = z.object({
   email: z

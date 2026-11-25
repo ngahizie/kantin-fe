@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { Sidebar } from '@/components/shared/Sidebar'
+import { Sidebar } from '@/components/shared/sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
 
 type AuthenticatedLayoutProps = {
