@@ -213,5 +213,3 @@ export const StokMinusConfirmDialog: React.FC<StokMinusConfirmDialogProps> = ({
     </Dialog>
   )
 }
-
-export default StokMinusConfirmDialog

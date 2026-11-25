@@ -10,7 +10,7 @@ import {
   getDeletedTitikKasirIds,
 } from '@/features/pengaturan/deleted-titik-kasir'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
-import { emitSyncSignal } from '@/lib/katalog-sync'
+import { notifyKatalogChanged } from '@/lib/katalog-sync'
 
 const ACTIVE_TITIK_KASIR_STORAGE_KEY = 'skoolia_active_titik_kasir_id'
 
@@ -81,7 +81,7 @@ export const usePengaturanStore = create<PengaturanStoreState>((set, get) => {
       try {
         const updated = await pengaturanApi.updatePengaturan(data)
         set({ pengaturan: updated })
-        emitSyncSignal('kasir')
+        notifyKatalogChanged('kasir')
         return updated
       } finally {
         set({ loadingPengaturan: false })

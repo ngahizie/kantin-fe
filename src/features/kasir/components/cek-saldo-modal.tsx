@@ -265,5 +265,3 @@ export const CekSaldoModal: React.FC<CekSaldoModalProps> = ({
   )
 }
 
-export default CekSaldoModal
-

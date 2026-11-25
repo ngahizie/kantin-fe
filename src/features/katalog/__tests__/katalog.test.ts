@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 import { subscribeKatalogChanges } from '@/lib/katalog-sync'
 import { katalogApi } from '../api/katalog-api'
 import {

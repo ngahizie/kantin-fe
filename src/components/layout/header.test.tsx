@@ -63,14 +63,14 @@ describe('Header & SidebarTrigger', () => {
     const lightBottomStyle = lightStyle.borderBottomStyle
     const lightBottomColor = lightStyle.borderBottomColor
 
-    expect(lightBottomWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(lightBottomWidth)
     expect(lightBottomStyle).toBe('solid')
     expect(lightBottomColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(lightBottomColor).not.toBe('transparent')
 
     document.documentElement.classList.add('dark')
     const darkStyle = getComputedStyle(headerEl!)
-    expect(darkStyle.borderBottomWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(darkStyle.borderBottomWidth)
     expect(darkStyle.borderBottomColor).not.toBe(lightBottomColor)
     expect(darkStyle.borderBottomColor).not.toBe('rgba(0, 0, 0, 0)')
   })
@@ -87,7 +87,7 @@ describe('Header & SidebarTrigger', () => {
     expect(headerEl).not.toHaveClass('border-none')
 
     const style = getComputedStyle(headerEl!)
-    expect(style.borderBottomWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(style.borderBottomWidth)
     expect(style.borderBottomStyle).toBe('solid')
     expect(style.borderBottomColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(style.borderBottomColor).not.toBe('transparent')

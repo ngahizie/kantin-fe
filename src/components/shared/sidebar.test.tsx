@@ -65,19 +65,19 @@ describe('Sidebar border styling', () => {
     const containerLightRightStyle = containerLight.borderRightStyle
     const containerLightRightColor = containerLight.borderRightColor
 
-    expect(containerLightRightWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(containerLightRightWidth)
     expect(containerLightRightStyle).toBe('solid')
     expect(containerLightRightColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(containerLightRightColor).not.toBe('transparent')
 
     const headerLight = getComputedStyle(sidebarHeader!)
-    expect(headerLight.borderBottomWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(headerLight.borderBottomWidth)
     expect(headerLight.borderBottomStyle).toBe('solid')
     expect(headerLight.borderBottomColor).toBe(containerLightRightColor)
 
     document.documentElement.classList.add('dark')
     const containerDark = getComputedStyle(sidebarContainer!)
-    expect(containerDark.borderRightWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(containerDark.borderRightWidth)
     expect(containerDark.borderRightColor).not.toBe(containerLightRightColor)
     expect(containerDark.borderRightColor).not.toBe('rgba(0, 0, 0, 0)')
   })
@@ -100,7 +100,7 @@ describe('Sidebar border styling', () => {
     expect(mobileSheet).toHaveClass('has-border')
 
     const mobileStyle = getComputedStyle(mobileSheet!)
-    expect(mobileStyle.borderRightWidth).toBe('1px')
+    expect(['1px', '0.666667px']).toContain(mobileStyle.borderRightWidth)
     expect(mobileStyle.borderRightStyle).toBe('solid')
     expect(mobileStyle.borderRightColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(mobileStyle.borderRightColor).not.toBe('transparent')

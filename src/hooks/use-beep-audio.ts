@@ -142,5 +142,3 @@ export const beepAudioEngine = {
 export function useBeepAudio() {
   return useMemo(() => beepAudioEngine, [])
 }
-
-export default useBeepAudio

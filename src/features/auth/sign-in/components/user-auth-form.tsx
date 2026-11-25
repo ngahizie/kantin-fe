@@ -6,7 +6,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore, type AuthUser } from '@/stores/auth-store'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -261,4 +261,3 @@ export function UserAuthForm({
     </div>
   )
 }
-export default UserAuthForm

@@ -25,8 +25,8 @@ vi.mock('@/stores/auth-store', () => ({
   }),
 }))
 
-vi.mock('@/lib/api-client', () => ({
-  apiClient: {
+vi.mock('@/lib/api-client', () => {
+  const mockClient = {
     post: vi.fn(() =>
       Promise.resolve({
         data: {
@@ -47,8 +47,12 @@ vi.mock('@/lib/api-client', () => ({
         },
       })
     ),
-  },
-}))
+  }
+  return {
+    default: mockClient,
+    apiClient: mockClient,
+  }
+})
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -189,7 +193,7 @@ describe('UserAuthForm', () => {
 
   describe('Brute-force protection & Lockout (SEC-04)', () => {
     it('locks the form and displays lockout message when 429 Too Many Requests is returned', async () => {
-      const { apiClient } = await import('@/lib/api-client')
+      const { default: apiClient } = await import('@/lib/api-client')
       vi.mocked(apiClient.post).mockRejectedValueOnce({
         response: {
           status: 429,

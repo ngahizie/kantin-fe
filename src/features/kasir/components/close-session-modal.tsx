@@ -682,5 +682,3 @@ export const CloseSessionModal: React.FC<CloseSessionModalProps> = (props) => {
     <CloseSessionModalBody key={props.sesi?.id ?? 'no-sesi'} {...props} />
   )
 }
-
-export default CloseSessionModal

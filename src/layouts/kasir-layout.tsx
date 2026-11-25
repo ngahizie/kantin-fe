@@ -153,4 +153,3 @@ export function KasirLayout() {
   )
 }
 
-export default KasirLayout

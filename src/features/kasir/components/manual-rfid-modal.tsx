@@ -124,5 +124,3 @@ export const ManualRfidModal: React.FC<ManualRfidModalProps> = ({
     </Dialog>
   )
 }
-
-export default ManualRfidModal

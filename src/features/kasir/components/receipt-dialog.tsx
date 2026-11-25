@@ -428,5 +428,3 @@ export const ReceiptDialog: React.FC<ReceiptDialogProps> = ({
     </Dialog>
   )
 }
-
-export default ReceiptDialog

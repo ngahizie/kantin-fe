@@ -123,5 +123,3 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
     </Dialog>
   )
 }
-
-export default TransactionErrorModal

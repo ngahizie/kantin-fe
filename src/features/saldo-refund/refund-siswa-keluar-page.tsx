@@ -817,4 +817,3 @@ export function RefundSiswaKeluarPage() {
     </>
   )
 }
-export default RefundSiswaKeluarPage

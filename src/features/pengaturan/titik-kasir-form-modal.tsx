@@ -219,5 +219,3 @@ export const TitikKasirFormModal: React.FC<TitikKasirFormModalProps> = ({
     </Dialog>
   )
 }
-
-export default TitikKasirFormModal

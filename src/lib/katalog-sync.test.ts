@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 import {
   KATALOG_SYNC_CHANNEL_NAME,
   KATALOG_SYNC_STORAGE_KEY,

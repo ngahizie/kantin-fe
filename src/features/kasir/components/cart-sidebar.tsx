@@ -584,5 +584,3 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     </aside>
   )
 }
-
-export default CartSidebar

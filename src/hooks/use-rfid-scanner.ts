@@ -196,4 +196,3 @@ export function useRfidScanner({
   }
 }
 
-export default useRfidScanner

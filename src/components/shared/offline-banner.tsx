@@ -30,5 +30,3 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
     </div>
   )
 }
-
-export default OfflineBanner

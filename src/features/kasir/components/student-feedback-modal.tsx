@@ -221,5 +221,3 @@ export const StudentFeedbackModal: React.FC<StudentFeedbackModalProps> = ({
     </Dialog>
   )
 }
-
-export default StudentFeedbackModal

@@ -30,8 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
-import ReceiptDialog from './receipt-dialog'
-import RefundDialog from './refund-dialog'
+import { ReceiptDialog } from './receipt-dialog'
+import { RefundDialog } from './refund-dialog'
 import type { ReceiptData, TransaksiSesiItem } from '../api/kasir-api'
 
 const FILTER_STATUS_OPTIONS = [
@@ -514,5 +514,3 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
     </>
   )
 }
-
-export default SessionHistoryModal
