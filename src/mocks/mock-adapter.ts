@@ -68,6 +68,25 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     ...s,
     saldo: initialSaldoOverrides[s.siswa_id] ?? s.saldo,
   }))
+  const adminSiswaExtras = new Map<
+    number,
+    {
+      nisn?: string | null
+      aktif: boolean
+      nomorKartu?: string | null
+      hubunganOrangTua?: string | null
+    }
+  >(
+    siswaList.map((s) => [
+      s.siswa_id,
+      {
+        nisn: null,
+        aktif: true,
+        nomorKartu: s.uid ? `K-${s.nis}` : null,
+        hubunganOrangTua: s.parent_name ? 'WALI' : null,
+      },
+    ])
+  )
   const siswaNonaktifList: SiswaNonaktifMock[] = [...MOCK_SISWA_NONAKTIF]
   const setoranKasList: SetoranKasTUMock[] = JSON.parse(
     JSON.stringify(MOCK_SETORAN_KAS)
@@ -1557,6 +1576,266 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
+    // --- 5y. Admin Sekolah: Manajemen Siswa & Kartu RFID Sementara (/api/admin/siswa) ---
+    if (url.includes('/api/admin/siswa')) {
+      const toAdminSiswaDto = (s: KartuSiswaMock) => {
+        const overrides = getStoredSaldoOverrides()
+        const extra = adminSiswaExtras.get(s.siswa_id) ?? {
+          nisn: null,
+          aktif: true,
+          nomorKartu: null,
+          hubunganOrangTua: s.parent_name ? 'WALI' : null,
+        }
+        return {
+          siswaId: s.siswa_id,
+          nis: s.nis,
+          nisn: extra.nisn ?? null,
+          nama: s.nama,
+          kelas: s.kelas || null,
+          fotoUrl: s.foto_url || null,
+          aktif: extra.aktif,
+          saldo: overrides[s.siswa_id] ?? s.saldo,
+          rfidUid: s.uid || null,
+          nomorKartu: extra.nomorKartu ?? null,
+          namaOrangTua: s.parent_name || null,
+          teleponOrangTua: s.parent_phone || null,
+          hubunganOrangTua: extra.hubunganOrangTua ?? null,
+          updatedAt: s.updated_at ?? new Date().toISOString(),
+        }
+      }
+
+      const idMatch = url.match(/\/api\/admin\/siswa\/(\d+)/)
+      const targetId = idMatch ? Number(idMatch[1]) : null
+      const body = payload
+
+      if (method === 'get' && !targetId) {
+        const q = String(params?.q ?? '').trim().toLowerCase()
+        const aktifFilter = params?.aktif
+        const punyaKartuFilter = params?.punyaKartu
+        const list = siswaList
+          .map(toAdminSiswaDto)
+          .filter((row) => {
+            if (aktifFilter !== undefined && row.aktif !== Boolean(aktifFilter)) {
+              return false
+            }
+            if (punyaKartuFilter !== undefined && Boolean(row.rfidUid) !== Boolean(punyaKartuFilter)) {
+              return false
+            }
+            if (q) {
+              return (
+                row.nama.toLowerCase().includes(q) ||
+                row.nis.toLowerCase().includes(q) ||
+                Boolean(row.nisn?.toLowerCase().includes(q)) ||
+                Boolean(row.kelas?.toLowerCase().includes(q)) ||
+                Boolean(row.rfidUid?.toLowerCase().includes(q))
+              )
+            }
+            return true
+          })
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Berhasil mengambil data siswa admin',
+            data: list,
+          },
+        }
+      }
+
+      if (method === 'get' && targetId) {
+        const found = siswaList.find((s) => s.siswa_id === targetId)
+        if (!found) {
+          return {
+            status: 404,
+            data: { code: 404, status: 'ERROR', message: 'Siswa tidak ditemukan' },
+          }
+        }
+        return {
+          status: 200,
+          data: { code: 200, status: 'SUCCESS', data: toAdminSiswaDto(found) },
+        }
+      }
+
+      if (method === 'post' && !targetId) {
+        const nis = String(body.nis ?? '').trim()
+        const nama = String(body.nama ?? '').trim()
+        const uid = body.rfidUid ? String(body.rfidUid).trim().toUpperCase() : ''
+        if (!nis || !nama) {
+          return {
+            status: 400,
+            data: { code: 400, status: 'ERROR', message: 'NIS dan nama siswa wajib diisi' },
+          }
+        }
+        if (siswaList.some((s) => s.nis.toLowerCase() === nis.toLowerCase())) {
+          return {
+            status: 409,
+            data: { code: 409, status: 'ERROR', message: 'NIS sudah terdaftar pada sekolah ini' },
+          }
+        }
+        if (uid && siswaList.some((s) => s.uid.toUpperCase() === uid)) {
+          return {
+            status: 409,
+            data: { code: 409, status: 'ERROR', message: 'UID RFID sudah terdaftar pada siswa lain' },
+          }
+        }
+        const nextId =
+          siswaList.reduce((max, s) => Math.max(max, s.siswa_id), 100) + 1
+        const newStudent: KartuSiswaMock = {
+          uid,
+          siswa_id: nextId,
+          nis,
+          nama,
+          kelas: String(body.kelas ?? '').trim(),
+          foto_url: String(body.fotoUrl ?? '').trim(),
+          saldo: 0,
+          limit_harian: 0,
+          limit_harian_enabled: false,
+          belanja_hari_ini: 0,
+          is_blocked: false,
+          blocked_items: [],
+          blocked_categories: [],
+          parent_name: body.namaOrangTua ? String(body.namaOrangTua).trim() : undefined,
+          parent_phone: body.teleponOrangTua ? String(body.teleponOrangTua).trim() : undefined,
+          parent_app_registered: false,
+          updated_at: new Date().toISOString(),
+        }
+        siswaList.unshift(newStudent)
+        adminSiswaExtras.set(nextId, {
+          nisn: body.nisn ? String(body.nisn).trim() : null,
+          aktif: true,
+          nomorKartu: body.nomorKartu ? String(body.nomorKartu).trim() : null,
+          hubunganOrangTua: body.hubunganOrangTua ? String(body.hubunganOrangTua).trim() : null,
+        })
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Siswa baru berhasil ditambahkan',
+            data: toAdminSiswaDto(newStudent),
+          },
+        }
+      }
+
+      if (method === 'put' && targetId && url.endsWith('/kartu')) {
+        const student = siswaList.find((s) => s.siswa_id === targetId)
+        if (!student) {
+          return {
+            status: 404,
+            data: { code: 404, status: 'ERROR', message: 'Siswa tidak ditemukan' },
+          }
+        }
+        const extra = adminSiswaExtras.get(targetId) ?? { nisn: null, aktif: true }
+        if (body.nonaktifkanKartu) {
+          student.uid = ''
+          extra.nomorKartu = null
+        } else {
+          const uid = String(body.rfidUid ?? '').trim().toUpperCase()
+          if (!uid) {
+            return {
+              status: 400,
+              data: { code: 400, status: 'ERROR', message: 'UID RFID wajib diisi' },
+            }
+          }
+          if (siswaList.some((s) => s.siswa_id !== targetId && s.uid.toUpperCase() === uid)) {
+            return {
+              status: 409,
+              data: { code: 409, status: 'ERROR', message: 'UID RFID sudah terdaftar pada siswa lain' },
+            }
+          }
+          student.uid = uid
+          extra.nomorKartu = body.nomorKartu ? String(body.nomorKartu).trim() : null
+        }
+        student.updated_at = new Date().toISOString()
+        adminSiswaExtras.set(targetId, extra)
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Kartu RFID siswa berhasil diperbarui',
+            data: toAdminSiswaDto(student),
+          },
+        }
+      }
+
+      if (method === 'put' && targetId) {
+        const student = siswaList.find((s) => s.siswa_id === targetId)
+        if (!student) {
+          return {
+            status: 404,
+            data: { code: 404, status: 'ERROR', message: 'Siswa tidak ditemukan' },
+          }
+        }
+        const nis = String(body.nis ?? '').trim()
+        const nama = String(body.nama ?? '').trim()
+        const uid = body.rfidUid ? String(body.rfidUid).trim().toUpperCase() : ''
+        if (siswaList.some((s) => s.siswa_id !== targetId && s.nis.toLowerCase() === nis.toLowerCase())) {
+          return {
+            status: 409,
+            data: { code: 409, status: 'ERROR', message: 'NIS sudah digunakan oleh siswa lain' },
+          }
+        }
+        if (uid && siswaList.some((s) => s.siswa_id !== targetId && s.uid.toUpperCase() === uid)) {
+          return {
+            status: 409,
+            data: { code: 409, status: 'ERROR', message: 'UID RFID sudah terdaftar pada siswa lain' },
+          }
+        }
+        student.nis = nis
+        student.nama = nama
+        student.kelas = String(body.kelas ?? '').trim()
+        student.foto_url = String(body.fotoUrl ?? '').trim()
+        student.parent_name = body.namaOrangTua ? String(body.namaOrangTua).trim() : undefined
+        student.parent_phone = body.teleponOrangTua ? String(body.teleponOrangTua).trim() : undefined
+        if (uid) student.uid = uid
+        student.updated_at = new Date().toISOString()
+
+        const prevExtra = adminSiswaExtras.get(targetId) ?? { nisn: null, aktif: true }
+        adminSiswaExtras.set(targetId, {
+          ...prevExtra,
+          nisn: body.nisn ? String(body.nisn).trim() : null,
+          nomorKartu: body.nomorKartu ? String(body.nomorKartu).trim() : prevExtra.nomorKartu,
+          hubunganOrangTua: body.hubunganOrangTua ? String(body.hubunganOrangTua).trim() : null,
+        })
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: 'Data siswa berhasil diperbarui',
+            data: toAdminSiswaDto(student),
+          },
+        }
+      }
+
+      if (method === 'patch' && targetId && url.endsWith('/status')) {
+        const student = siswaList.find((s) => s.siswa_id === targetId)
+        if (!student) {
+          return {
+            status: 404,
+            data: { code: 404, status: 'ERROR', message: 'Siswa tidak ditemukan' },
+          }
+        }
+        const prevExtra = adminSiswaExtras.get(targetId) ?? { nisn: null, aktif: true }
+        adminSiswaExtras.set(targetId, {
+          ...prevExtra,
+          aktif: Boolean(body.aktif),
+        })
+        student.updated_at = new Date().toISOString()
+        return {
+          status: 200,
+          data: {
+            code: 200,
+            status: 'SUCCESS',
+            message: body.aktif ? 'Siswa diaktifkan' : 'Siswa dinonaktifkan',
+            data: toAdminSiswaDto(student),
+          },
+        }
+      }
+    }
+
     // --- 5z. TU / Siswa: Lookup RFID UID Siswa (GET /api/siswa/{siswaId}/rfid) ---
     if (url.match(/\/api\/siswa\/\d+\/rfid/) && method === 'get') {
       const match = url.match(/\/api\/siswa\/(\d+)\/rfid/)
@@ -1609,11 +1888,13 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           code: 200,
           status: 'SUCCESS',
           message: 'Berhasil mengambil daftar siswa',
-          data: siswaList.map((s) => {
-            const overrides = getStoredSaldoOverrides()
-            const freshSaldo = overrides[s.siswa_id] ?? s.saldo
-            return { ...s, saldo: freshSaldo, siswaId: s.siswa_id }
-          }),
+          data: siswaList
+            .filter((s) => (adminSiswaExtras.get(s.siswa_id)?.aktif ?? true))
+            .map((s) => {
+              const overrides = getStoredSaldoOverrides()
+              const freshSaldo = overrides[s.siswa_id] ?? s.saldo
+              return { ...s, saldo: freshSaldo, siswaId: s.siswa_id }
+            }),
         },
       }
     }

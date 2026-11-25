@@ -21,9 +21,12 @@ describe('filterNavGroupsByRole', () => {
     const ringkasanGroup = result.find((g) => g.title === 'Kasir & Ringkasan')
     expect(ringkasanGroup?.items.map((i) => i.title)).toEqual(['Dashboard Ringkasan'])
 
-    // Saldo & Pengawasan: Hanya Batasan Jajan Siswa (Koreksi dan Refund adalah milik Bendahara)
+    // Saldo & Pengawasan: Batasan Jajan Siswa & Data Siswa & Kartu sementara khusus admin (Koreksi dan Refund milik Bendahara)
     const saldoGroup = result.find((g) => g.title === 'Saldo & Pengawasan')
-    expect(saldoGroup?.items.map((i) => i.title)).toEqual(['Batasan Jajan Siswa'])
+    expect(saldoGroup?.items.map((i) => i.title)).toEqual([
+      'Batasan Jajan Siswa',
+      'Data Siswa & Kartu',
+    ])
 
     // Laporan & Pengaturan: Pengaturan Kantin dan laporan yang diizinkan (tanpa Kerugian Stok)
     const laporanGroup = result.find((g) => g.title === 'Laporan & Pengaturan')

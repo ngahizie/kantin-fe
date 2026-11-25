@@ -9,6 +9,7 @@ import {
   ReceiptText,
   ArrowLeftRight,
   ShieldCheck,
+  Users,
   FileSpreadsheet,
   Settings,
 } from 'lucide-react'
@@ -121,6 +122,12 @@ export const sidebarData: SidebarData = {
           title: 'Batasan Jajan Siswa',
           url: '/kontrol-siswa',
           icon: ShieldCheck,
+          roles: ['admin'],
+        },
+        {
+          title: 'Data Siswa & Kartu',
+          url: '/siswa',
+          icon: Users,
           roles: ['admin'],
         },
       ],
