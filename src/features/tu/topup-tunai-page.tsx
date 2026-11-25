@@ -30,7 +30,7 @@ import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import type { PengaturanKantin } from '@/features/pengaturan/types'
 import { PrintSlipModal, type TopupSlipData } from './print-slip-modal'
 import { StudentSearchCard } from './student-search-card'
-import { mapInfoSiswaToKartuSiswa } from './types'
+import { mapInfoSiswaToKartuSiswa, type HasilMutasiSaldo } from './types'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   applyStoredSaldoOverrides,
@@ -217,7 +217,7 @@ export function TopupTunaiPage() {
       const safePenyetor = sanitizePenyetorName(namaPenyetor)
       if (!safePenyetor || nominalNum < minTopup) return
 
-      const response = await apiClient.post('/api/saldo/topup', {
+      const response = await apiClient.post<{ data: HasilMutasiSaldo }>('/api/saldo/topup', {
         subjekTipe: 'SISWA',
         siswaId: currentStudent.siswa_id,
         nominal: nominalNum,

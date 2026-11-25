@@ -2403,14 +2403,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           status: 'SUCCESS',
           message: 'Barang masuk pembalik tercatat',
           data: {
-            mutasiId: newId,
-            menuId: targetMutasi.menuId,
-            stokSebelum,
-            stokSesudah,
-            hppSebelum: targetMutasi.hppSnapshot,
-            hppSesudah: targetMutasi.hppSnapshot,
-            jenis: 'BARANG_MASUK_PEMBALIK',
-            waktu: now.toISOString(),
+            mutasi: mutasiPembalik,
+            stokSetelah: stokSesudah,
+            hppSetelah: targetMutasi.hppSnapshot ?? 0,
           },
         },
       }
@@ -2473,14 +2468,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           status: 'SUCCESS',
           message: 'Barang masuk tercatat',
           data: {
-            mutasiId: newId,
-            menuId,
-            stokSebelum,
-            stokSesudah,
-            hppSebelum: Math.round(targetMenu.harga_jual * 0.7),
-            hppSesudah: hargaBeli,
-            jenis: 'BARANG_MASUK',
-            waktu: now.toISOString(),
+            mutasi: itemMasuk,
+            stokSetelah: stokSesudah,
+            hppSetelah: hargaBeli,
           },
         },
       }
@@ -2668,8 +2658,9 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           ? Math.max(...riwayatStokList.map((r) => r.id)) + 1
           : 1
 
+      let itemMutasi: MockRiwayatItem | null = null
       if (selisih !== 0) {
-        const itemMutasi: MockRiwayatItem = {
+        itemMutasi = {
           id: newId,
           menuId,
           menuNama: targetMenu ? targetMenu.nama : `Menu #${menuId}`,
@@ -2739,18 +2730,11 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
           status: 'SUCCESS',
           message: 'Penyesuaian stok tercatat',
           data: {
-            mutasiId: newId,
-            menuId,
-            stokSebelum,
-            stokSesudah: qtyFisik,
-            hppSebelum: targetMenu
+            mutasi: selisih !== 0 ? itemMutasi : null,
+            stokSetelah: qtyFisik,
+            hppSetelah: targetMenu
               ? targetMenu.hpp || Math.round(targetMenu.harga_jual * 0.7)
               : 0,
-            hppSesudah: targetMenu
-              ? targetMenu.hpp || Math.round(targetMenu.harga_jual * 0.7)
-              : 0,
-            jenis,
-            waktu: now.toISOString(),
           },
         },
       }

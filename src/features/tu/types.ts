@@ -1,9 +1,12 @@
 import type { KartuSiswaMock } from '@/types/kantin'
+import type { HasilMutasiSaldo } from '@/features/saldo-refund/types'
 import { formatDateIso } from '@/lib/formatters'
 import {
   getStoredTopupTransactions,
   type StatusSetoranKas,
 } from './saldo-storage'
+
+export type { HasilMutasiSaldo }
 
 export interface TransaksiTopupDetail {
   id: string | number

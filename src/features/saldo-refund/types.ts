@@ -156,6 +156,14 @@ export interface MutasiKoreksiItem {
   sesiKasirId?: number
 }
 
+export interface HasilMutasiSaldo {
+  mutasi?: MutasiKoreksiItem | null
+  saldoSebelum: number
+  saldoSetelah: number
+  waktu: string
+  idempotentReplay?: boolean
+}
+
 export interface KoreksiSaldoPayload {
   subjekTipe: 'SISWA'
   siswaId: number
