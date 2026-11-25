@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import { SearchProvider } from '@/context/search-provider'
-import { useRoleStore } from '@/stores/useRoleStore'
+import { useRoleStore } from '@/stores/use-role-store'
 
 const COMMAND_MENU_PLACEHOLDER = 'Ketik perintah atau cari...'
 

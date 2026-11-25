@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { DashboardPage, getStatusBadgeClass } from '../DashboardPage'
+import { DashboardPage } from '../dashboard-page'
+import { getStatusBadgeClass } from '../dashboard-utils'
 import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
@@ -13,7 +14,7 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }))
 
-vi.mock('@/stores/useRoleStore', () => ({
+vi.mock('@/stores/use-role-store', () => ({
   useRoleStore: () => ({
     currentRole: mockRole,
     schoolName: 'SMP Test',

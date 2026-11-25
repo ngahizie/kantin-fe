@@ -3,7 +3,7 @@ export const KANTIN_SALDO_STORAGE_KEY = 'kantin_siswa_saldo_overrides'
 /**
  * Membaca ID sekolah pengguna yang sedang aktif dari storage autentikasi FE.
  */
-export function getCurrentSekolahId(): number | null {
+function getCurrentSekolahId(): number | null {
   if (typeof window === 'undefined' || !window.localStorage) {
     return null
   }
@@ -25,7 +25,7 @@ export function getCurrentSekolahId(): number | null {
 /**
  * Menghasilkan kunci storage lokal yang terisolasi per sekolah atau global sebagai fallback.
  */
-export function getTenantSaldoStorageKey(sekolahId?: number | null): string {
+function getTenantSaldoStorageKey(sekolahId?: number | null): string {
   const sId = sekolahId ?? getCurrentSekolahId()
   if (sId) {
     return `${KANTIN_SALDO_STORAGE_KEY}_${sId}`
@@ -282,7 +282,7 @@ export function saveTopupTransaction(
   }
 }
 
-export const KANTIN_SETORAN_CONFIRMATIONS_KEY = 'kantin_setoran_confirmations'
+const KANTIN_SETORAN_CONFIRMATIONS_KEY = 'kantin_setoran_confirmations'
 
 export type StatusSetoranKas =
   | 'MENUNGGU'

@@ -6,8 +6,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Header } from './header'
 import { HeaderActions, HeaderBreadcrumb } from './header-actions'
 import { Main } from './main'
-import { PengaturanKantinPage } from '@/features/pengaturan/PengaturanKantinPage'
-import { TitikKasirPage } from '@/features/pengaturan/TitikKasirPage'
+import { PengaturanKantinPage } from '@/features/pengaturan/pengaturan-kantin-page'
+import { TitikKasirPage } from '@/features/pengaturan/titik-kasir-page'
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => vi.fn(),
@@ -34,7 +34,7 @@ const mockUpdatePengaturan = vi.fn().mockResolvedValue(undefined)
 const mockSetActiveTitikKasirId = vi.fn()
 const mockFetchTitikKasir = vi.fn().mockResolvedValue([])
 
-vi.mock('@/stores/usePengaturanStore', () => ({
+vi.mock('@/stores/use-pengaturan-store', () => ({
   usePengaturanStore: () => ({
     pengaturan: {
       namaKantin: 'Kantin Sehat SKOOLIA',

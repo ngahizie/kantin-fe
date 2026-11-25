@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { KartuStokPage } from '../KartuStokPage'
+import { KartuStokPage } from '../kartu-stok-page'
 import { stokApi } from '../api/stok-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'

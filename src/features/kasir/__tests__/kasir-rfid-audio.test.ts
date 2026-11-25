@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { beepAudioEngine } from '@/hooks/useBeepAudio'
+import { beepAudioEngine } from '@/hooks/use-beep-audio'
 import {
   generateIdempotencyKey,
   kasirApi,

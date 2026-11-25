@@ -67,14 +67,9 @@ export interface InventarisItem {
 }
 
 export interface HasilMutasiStok {
-  mutasiId: number
-  menuId: number
-  stokSebelum: number
-  stokSesudah: number
-  hppSebelum: number
-  hppSesudah: number
-  jenis: JenisMutasiStok
-  waktu: string
+  mutasi?: RiwayatStokItem | null
+  stokSetelah: number
+  hppSetelah: number
 }
 
 export interface BarangMasukSingleRequest {
@@ -115,7 +110,7 @@ export interface BarangMasukFormValues {
 }
 
 // Zod schemas
-export const restockItemSchema = z.object({
+const restockItemSchema = z.object({
   menuId: z.number().min(1, 'Menu wajib dipilih'),
   qty: z.number().int('Qty harus bilangan bulat').min(1, 'Qty minimal 1 unit'),
   hargaBeliPerUnit: z

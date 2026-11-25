@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import '@/styles/index.css'
-import { getRoleLabel, ProfileDropdown } from './profile-dropdown'
+import { getRoleLabel } from '@/lib/role-utils'
+import { ProfileDropdown } from './profile-dropdown'
 
 const mockAuthUser = {
   userId: '1',
@@ -24,7 +25,7 @@ vi.mock('@/stores/auth-store', () => ({
   }),
 }))
 
-vi.mock('@/stores/useRoleStore', () => ({
+vi.mock('@/stores/use-role-store', () => ({
   useRoleStore: () => ({
     userName: '',
     userEmail: '',

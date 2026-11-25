@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Route } from '@/routes/_authenticated/tu/topup/index'
 import { useAuthStore } from '@/stores/auth-store'
-import { TopupTunaiPage } from '../TopupTunaiPage'
+import { TopupTunaiPage } from '../topup-tunai-page'
 import {
   generateTopupReferenceId,
   parseSafeTopupNominal,

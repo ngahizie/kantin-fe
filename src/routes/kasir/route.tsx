@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { KasirLayout } from '@/layouts/KasirLayout'
+import { KasirLayout } from '@/layouts/kasir-layout'
 import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/kasir')({

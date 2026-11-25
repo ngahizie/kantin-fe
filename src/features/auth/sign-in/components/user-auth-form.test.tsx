@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, type RenderResult } from 'vitest-browser-react'
 import { type Locator, userEvent } from 'vitest/browser'
-import { UserAuthForm, resolveUserRole } from './user-auth-form'
-import { getRoleHomePath } from '@/stores/useRoleStore'
+import { UserAuthForm } from './user-auth-form'
+import { resolveUserRole } from '@/lib/role-utils'
+import { getRoleHomePath } from '@/stores/use-role-store'
 
 const FORM_MESSAGES = {
   emailEmpty: 'Masukkan username staf.',

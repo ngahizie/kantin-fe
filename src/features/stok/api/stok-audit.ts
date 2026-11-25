@@ -1,3 +1,5 @@
+import { createClientAuditLogger } from '@/lib/client-audit'
+
 export type StokAuditAction =
   | 'STOK_EXPORT_CSV'
   | 'STOK_EXPORT_PDF'
@@ -10,8 +12,7 @@ export interface StokAuditEvent {
   timestamp: string
 }
 
-const clientAuditBuffer: StokAuditEvent[] = []
-const MAX_BUFFER_SIZE = 50
+const stokAuditLogger = createClientAuditLogger<StokAuditEvent>(50)
 
 /**
  * Mencatat audit event keamanan sisi klien untuk akses dan ekspor data stok / mutasi finansial
@@ -20,27 +21,19 @@ const MAX_BUFFER_SIZE = 50
 export async function logStokAuditEvent(
   event: Omit<StokAuditEvent, 'timestamp'>
 ): Promise<void> {
-  const auditEntry: StokAuditEvent = {
-    ...event,
-    timestamp: new Date().toISOString(),
-  }
-
-  clientAuditBuffer.push(auditEntry)
-  if (clientAuditBuffer.length > MAX_BUFFER_SIZE) {
-    clientAuditBuffer.shift()
-  }
+  stokAuditLogger.log(event)
 }
 
 /**
  * Ambil daftar audit log stok di memori klien (untuk keperluan inspeksi & pengujian)
  */
 export function getStokAuditLogs(): StokAuditEvent[] {
-  return [...clientAuditBuffer]
+  return stokAuditLogger.getLogs()
 }
 
 /**
  * Bersihkan buffer audit log
  */
 export function clearStokAuditLogs(): void {
-  clientAuditBuffer.length = 0
+  stokAuditLogger.clear()
 }

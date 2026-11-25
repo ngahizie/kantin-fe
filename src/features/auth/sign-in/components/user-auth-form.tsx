@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
-import { ROLE_CONFIGS, getRoleHomePath, type UserRole } from '@/stores/useRoleStore'
+import { resolveUserRole } from '@/lib/role-utils'
+import { ROLE_CONFIGS, getRoleHomePath, type UserRole } from '@/stores/use-role-store'
 
 const formSchema = z.object({
   email: z
@@ -50,23 +51,6 @@ interface LoginResponseData {
       nama: string
     }
   }
-}
-
-const VALID_ROLES: UserRole[] = ['kasir', 'pengelola', 'tu', 'bendahara', 'kepsek', 'admin']
-
-export function resolveUserRole(roles?: string[], currentRole?: string): UserRole {
-  if (currentRole && VALID_ROLES.includes(currentRole as UserRole)) {
-    return currentRole as UserRole
-  }
-  if (roles && roles.length > 0) {
-    if (roles.includes('ROLE_ADMIN')) return 'admin'
-    if (roles.includes('ROLE_PENGELOLA_KANTIN')) return 'pengelola'
-    if (roles.includes('ROLE_PETUGAS_KANTIN')) return 'kasir'
-    if (roles.includes('ROLE_TU_SEKOLAH')) return 'tu'
-    if (roles.includes('ROLE_BENDAHARA')) return 'bendahara'
-    if (roles.includes('ROLE_KEPSEK')) return 'kepsek'
-  }
-  throw new Error('Akun Anda tidak memiliki peran operasional yang valid.')
 }
 
 export function UserAuthForm({

@@ -81,7 +81,7 @@ export interface ExportExcelResult {
 /**
  * Membersihkan nama file dari karakter ilegal
  */
-export function sanitizeFilename(filename: string): string {
+function sanitizeFilename(filename: string): string {
   const clean = filename.replace(/[\\/:*?"<>|]/g, '_').trim()
   return clean.toLowerCase().endsWith('.xlsx') ? clean : `${clean}.xlsx`
 }
@@ -178,7 +178,7 @@ function resolveColumnAlignment<T>(col: ExcelColumn<T>): 'left' | 'center' | 'ri
 /**
  * Menentukan apakah suatu kolom layak/bagus dijumlahkan pada baris footer (total)
  */
-export function shouldColumnBeSummed(key: string, header: string): boolean {
+function shouldColumnBeSummed(key: string, header: string): boolean {
   const str = `${key} ${header}`.toLowerCase().trim()
 
   // Kolom nomor urut, ID, kode, harga satuan, limit, persentase, tanggal dsb. tidak dijumlahkan

@@ -47,8 +47,8 @@ kantin-fe/
 │   ├── config/             # Konfigurasi tema dan navigasi
 │   ├── context/            # Penyedia konteks React (tema, layout)
 │   ├── features/           # Modul fitur (kasir, dashboard, katalog, stok, laporan, dll.)
-│   ├── hooks/              # Custom hooks (RFID scanner, audio beep, online status)
-│   ├── layouts/            # Shell tata letak aplikasi (KasirLayout)
+│   ├── hooks/              # Custom hooks (rfid scanner, audio beep, online status)
+│   ├── layouts/            # Shell tata letak aplikasi (kasir-layout)
 │   ├── lib/                # Klien API Axios terpusat, format data, ekspor Excel
 │   ├── mocks/              # Mock data dan adapter untuk pengujian lokal mandiri
 │   ├── routes/             # Definisi rute berbasis berkas TanStack Router
@@ -68,6 +68,27 @@ kantin-fe/
 ├── tsconfig.json           # Konfigurasi induk TypeScript
 └── vite.config.ts          # Konfigurasi bundler Vite dan Vitest
 ```
+
+---
+
+## Konvensi Penamaan dan Struktur
+
+Aturan ini menjaga konsistensi antar folder. Semua berkas baru wajib mengikutinya.
+
+| Hal | Aturan | Contoh |
+|---|---|---|
+| Folder | `kebab-case` | `kontrol-siswa/`, `saldo-refund/` |
+| Berkas | `kebab-case` | `kasir-pos-page.tsx`, `use-rfid-scanner.ts`, `menu-utils.ts` |
+| Komponen React | nama ekspor `PascalCase`, walaupun berkasnya `kebab-case` | `kasir-pos-page.tsx` → `export function KasirPosPage()` |
+| Halaman fitur | di akar folder fitur, akhiran `-page.tsx` | `features/stok/inventaris-page.tsx` |
+| Komponen pendukung fitur | `features/<domain>/components/` bila dipakai lebih dari satu halaman | `features/kasir/components/cart-sidebar.tsx` |
+| API per fitur | `features/<domain>/api/<domain>-api.ts` | `features/katalog/api/katalog-api.ts` |
+| Tipe, util, error fitur | `types.ts`, `<domain>-utils.ts`, `<domain>-error.ts` di akar fitur | `features/tu/topup-utils.ts` |
+| Tes fitur | `features/<domain>/__tests__/*.test.ts(x)` | `features/laporan/__tests__/laporan.test.ts` |
+| Tes modul tunggal | berdampingan dengan berkas yang diuji | `hooks/use-rfid-scanner.test.tsx` |
+| Route | `src/routes/` hanya deklarasi rute TanStack; logika UI di `features/` | `routes/kasir/index.tsx` |
+
+Pengecualian: `src/components/ui/**` mengikuti struktur `shadcn/ui` (berkas `kebab-case`, ekspor `PascalCase`). Jangan menambah folder atau nama berkas `PascalCase`/`camelCase` di luar aturan di atas.
 
 ---
 

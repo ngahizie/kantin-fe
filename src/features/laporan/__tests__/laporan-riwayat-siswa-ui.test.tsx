@@ -4,7 +4,7 @@ import { render } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
-import { LaporanRiwayatSiswaPage } from '../LaporanRiwayatSiswaPage'
+import { LaporanRiwayatSiswaPage } from '../laporan-riwayat-siswa-page'
 
 vi.mock('sonner', () => ({
   toast: {

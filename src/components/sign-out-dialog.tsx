@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore } from '@/stores/use-cart-store'
 import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
