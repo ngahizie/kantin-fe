@@ -67,14 +67,9 @@ export interface InventarisItem {
 }
 
 export interface HasilMutasiStok {
-  mutasiId: number
-  menuId: number
-  stokSebelum: number
-  stokSesudah: number
-  hppSebelum: number
-  hppSesudah: number
-  jenis: JenisMutasiStok
-  waktu: string
+  mutasi?: RiwayatStokItem | null
+  stokSetelah: number
+  hppSetelah: number
 }
 
 export interface BarangMasukSingleRequest {
