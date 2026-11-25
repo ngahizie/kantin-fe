@@ -1,6 +1,7 @@
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useRobotsNoindex } from '@/hooks/useRobotsNoindex'
 
 type GeneralErrorProps = React.HTMLAttributes<HTMLDivElement> & {
   minimal?: boolean
@@ -14,17 +15,29 @@ export function GeneralError({
   error,
   reset,
 }: GeneralErrorProps) {
+  useRobotsNoindex()
   const navigate = useNavigate()
   const { history } = useRouter()
 
-  const errorMessage =
-    error instanceof Error
+  const isDev = import.meta.env.DEV
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      history.go(-1)
+    } else {
+      navigate({ to: '/' })
+    }
+  }
+
+  const errorMessage = isDev
+    ? error instanceof Error
       ? error.message
       : typeof error === 'string'
       ? error
       : null
+    : null
 
-  const errorStack = error instanceof Error ? error.stack : null
+  const errorStack = isDev && error instanceof Error ? error.stack : null
 
   return (
     <div className={cn('h-svh w-full bg-background text-foreground', className)}>
@@ -56,7 +69,7 @@ export function GeneralError({
                 Coba Lagi
               </Button>
             )}
-            <Button variant='outline' onClick={() => history.go(-1)}>
+            <Button variant='outline' onClick={handleBack}>
               Kembali
             </Button>
             <Button onClick={() => navigate({ to: '/' })}>

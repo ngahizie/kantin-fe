@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button'
+import { useRobotsNoindex } from '@/hooks/useRobotsNoindex'
 
 export function MaintenanceError() {
+  useRobotsNoindex()
   return (
     <div className='h-svh bg-background text-foreground'>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center'>
