@@ -541,5 +541,3 @@ export const TitikKasirPage: React.FC = () => {
     </>
   )
 }
-
-export default TitikKasirPage

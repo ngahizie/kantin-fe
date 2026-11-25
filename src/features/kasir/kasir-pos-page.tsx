@@ -58,18 +58,19 @@ import type {
   MetodeBayarKasir,
 } from './types'
 import { evaluateCashPayment } from './cash-payment'
-import CartSidebar from './components/cart-sidebar'
-import ManualRfidModal from './components/manual-rfid-modal'
-import CekSaldoModal from './components/cek-saldo-modal'
-import MenuGrid from './components/menu-grid'
-import StudentFeedbackModal from './components/student-feedback-modal'
-import ReceiptDialog from './components/receipt-dialog'
-import TransactionErrorModal, {
+import { CartSidebar } from './components/cart-sidebar'
+import { ManualRfidModal } from './components/manual-rfid-modal'
+import { CekSaldoModal } from './components/cek-saldo-modal'
+import { MenuGrid } from './components/menu-grid'
+import { StudentFeedbackModal } from './components/student-feedback-modal'
+import { ReceiptDialog } from './components/receipt-dialog'
+import {
+  TransactionErrorModal,
   type TransactionErrorInfo,
 } from './components/transaction-error-modal'
-import SessionHistoryModal from './components/session-history-modal'
-import CloseSessionModal from './components/close-session-modal'
-import StokMinusConfirmDialog from './components/stok-minus-confirm-dialog'
+import { SessionHistoryModal } from './components/session-history-modal'
+import { CloseSessionModal } from './components/close-session-modal'
+import { StokMinusConfirmDialog } from './components/stok-minus-confirm-dialog'
 
 export const KasirPosPage: React.FC = () => {
   const [menus, setMenus] = useState<MenuItem[]>([])
@@ -1294,5 +1295,3 @@ export const KasirPosPage: React.FC = () => {
     </div>
   )
 }
-
-export default KasirPosPage

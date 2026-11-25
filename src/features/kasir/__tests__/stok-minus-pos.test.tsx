@@ -7,10 +7,10 @@ import { DEFAULT_PENGATURAN_KANTIN } from '@/features/pengaturan/types'
 import { pengaturanApi } from '@/features/pengaturan/api/pengaturan-api'
 import { useCartStore } from '@/stores/use-cart-store'
 import { kasirApi } from '../api/kasir-api'
-import MenuItemCard from '../components/menu-item-card'
-import CartSidebar from '../components/cart-sidebar'
-import StokMinusConfirmDialog from '../components/stok-minus-confirm-dialog'
-import KasirPosPage from '../kasir-pos-page'
+import { MenuItemCard } from '../components/menu-item-card'
+import { CartSidebar } from '../components/cart-sidebar'
+import { StokMinusConfirmDialog } from '../components/stok-minus-confirm-dialog'
+import { KasirPosPage } from '../kasir-pos-page'
 
 const menuHabisAktif: MenuItem = {
   id: 301,

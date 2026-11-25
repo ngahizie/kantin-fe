@@ -112,5 +112,3 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
     </Card>
   )
 }
-
-export default MenuItemCard

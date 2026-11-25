@@ -696,5 +696,3 @@ export const PengaturanKantinPage: React.FC = () => {
     </>
   )
 }
-
-export default PengaturanKantinPage

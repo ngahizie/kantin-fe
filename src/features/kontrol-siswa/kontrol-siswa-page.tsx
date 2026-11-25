@@ -609,4 +609,3 @@ export function KontrolSiswaPage() {
     </>
   )
 }
-export default KontrolSiswaPage

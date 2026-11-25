@@ -24,7 +24,7 @@ import { useCartStore } from '@/stores/use-cart-store'
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
-export const apiClient: AxiosInstance = axios.create({
+const apiClient: AxiosInstance = axios.create({
   baseURL,
   timeout: 10000,
   headers: {

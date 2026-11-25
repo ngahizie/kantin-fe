@@ -20,4 +20,3 @@ export function BackofficeHeader({ className, fixed = true }: BackofficeHeaderPr
   )
 }
 
-export default BackofficeHeader

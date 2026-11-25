@@ -399,5 +399,3 @@ export function LaporanPembatalanPage() {
     </>
   )
 }
-
-export default LaporanPembatalanPage

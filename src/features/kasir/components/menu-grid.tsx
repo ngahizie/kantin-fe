@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { MenuItem } from '@/features/katalog/types'
 import type { AddCartItemOptions } from '@/stores/use-cart-store'
-import MenuItemCard from './menu-item-card'
+import { MenuItemCard } from './menu-item-card'
 
 export interface MenuGridProps {
   menus: MenuItem[]
@@ -87,5 +87,3 @@ export const MenuGrid: React.FC<MenuGridProps> = ({
     </div>
   )
 }
-
-export default MenuGrid

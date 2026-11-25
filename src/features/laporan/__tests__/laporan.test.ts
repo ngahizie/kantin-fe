@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { setupMockAdapter } from '@/mocks/mock-adapter'
-import { apiClient } from '@/lib/api-client'
+import apiClient from '@/lib/api-client'
 import { laporanApi } from '../api/laporan-api'
 import { stokApi } from '@/features/stok/api/stok-api'
 import {
