@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { toast } from 'sonner'
-import { useRfidScanner } from '@/hooks/useRfidScanner'
+import { useRfidScanner } from '@/hooks/use-rfid-scanner'
 import { getErrorMessage } from '@/lib/validation-error'
 import { siswaAdminApi } from './api/siswa-admin-api'
 import {

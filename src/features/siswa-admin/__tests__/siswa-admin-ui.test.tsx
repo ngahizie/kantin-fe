@@ -5,12 +5,12 @@ import { Route } from '@/routes/_authenticated/siswa/index'
 import { sidebarData } from '@/components/layout/data/sidebar-data'
 import { useAuthStore } from '@/stores/auth-store'
 import { siswaAdminApi } from '../api/siswa-admin-api'
-import { SiswaAdminPage } from '../SiswaAdminPage'
+import { SiswaAdminPage } from '../siswa-admin-page'
 import type { SiswaManajemenItem } from '../types'
 
 let capturedScanHandler: ((uid: string) => void) | null = null
 
-vi.mock('@/hooks/useRfidScanner', () => ({
+vi.mock('@/hooks/use-rfid-scanner', () => ({
   useRfidScanner: (options: { onScan: (uid: string) => void; enabled?: boolean }) => {
     if (options.enabled) {
       capturedScanHandler = options.onScan

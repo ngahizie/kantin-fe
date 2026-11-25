@@ -41,8 +41,8 @@ import { formatRupiah } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/validation-error'
 import { toast } from 'sonner'
 import { siswaAdminApi } from './api/siswa-admin-api'
-import { PasangKartuModal } from './PasangKartuModal'
-import { SiswaFormModal } from './SiswaFormModal'
+import { PasangKartuModal } from './pasang-kartu-modal'
+import { SiswaFormModal } from './siswa-form-modal'
 import type { SiswaManajemenItem } from './types'
 
 function getInitials(nama?: string): string {
