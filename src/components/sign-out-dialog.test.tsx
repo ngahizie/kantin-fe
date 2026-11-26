@@ -6,10 +6,11 @@ import { SignOutDialog } from './sign-out-dialog'
 
 const navigate = vi.fn()
 const reset = vi.fn()
+const signOut = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({
-    auth: { reset },
+    auth: { reset, signOut },
   }),
 }))
 
@@ -26,7 +27,7 @@ describe('SignOutDialog', () => {
     vi.clearAllMocks()
   })
 
-  it('calls useCartStore.clearCart, auth.reset and navigates directly to sign-in', async () => {
+  it('calls useCartStore.clearCart, auth.signOut and navigates directly to sign-in', async () => {
     const clearCartSpy = vi.spyOn(useCartStore.getState(), 'clearCart')
     const { getByRole } = await render(
       <SignOutDialog open onOpenChange={vi.fn()} />
@@ -35,7 +36,7 @@ describe('SignOutDialog', () => {
     await userEvent.click(getByRole('button', { name: /^(Keluar|Sign out)$/i }))
 
     expect(clearCartSpy).toHaveBeenCalledOnce()
-    expect(reset).toHaveBeenCalledOnce()
+    expect(signOut).toHaveBeenCalledOnce()
     expect(navigate).toHaveBeenCalledWith({
       to: '/sign-in',
       replace: true,
@@ -43,14 +44,14 @@ describe('SignOutDialog', () => {
     clearCartSpy.mockRestore()
   })
 
-  it('does not call reset or navigate when Cancel is clicked', async () => {
+  it('does not call signOut or navigate when Cancel is clicked', async () => {
     const { getByRole } = await render(
       <SignOutDialog open onOpenChange={vi.fn()} />
     )
 
     await userEvent.click(getByRole('button', { name: /^(Batal|Cancel)$/i }))
 
-    expect(reset).not.toHaveBeenCalled()
+    expect(signOut).not.toHaveBeenCalled()
     expect(navigate).not.toHaveBeenCalled()
   })
 })
