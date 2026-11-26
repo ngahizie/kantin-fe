@@ -1,5 +1,6 @@
 import { clearCookies } from '@/test-utils/cookies'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import apiClient from '@/lib/api-client'
 import type { AuthUser } from './auth-store'
 
 async function importAuthStore() {
@@ -23,6 +24,7 @@ describe('useAuthStore', () => {
     clearCookies()
     vi.resetModules()
     localStorage.clear()
+    sessionStorage.clear()
   })
 
   it('starts with an empty access token when nothing is persisted', async () => {
@@ -147,5 +149,116 @@ describe('useAuthStore', () => {
 
     useAuthStore.getState().auth.setAccessToken(validJwt)
     expect(useAuthStore.getState().auth.isAuthenticated()).toBe(true)
+  })
+
+  it('signOut memanggil POST /api/auth/cabut dan membersihkan semua token lokal (#219)', async () => {
+    const useAuthStore = await importAuthStore()
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+      status: 200,
+      data: { code: 200, message: 'Token dicabut' },
+    })
+
+    useAuthStore.getState().auth.setAccessToken('active-token-123')
+    useAuthStore.getState().auth.setUser({ ...sampleUser })
+    sessionStorage.setItem('kantin_token', 'active-token-123')
+
+    await useAuthStore.getState().auth.signOut()
+
+    expect(postSpy).toHaveBeenCalledWith(
+      '/api/auth/cabut',
+      null,
+      expect.objectContaining({ silent: true })
+    )
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
+    expect(useAuthStore.getState().auth.user).toBeNull()
+    expect(localStorage.getItem('kantin_token')).toBeNull()
+    expect(sessionStorage.getItem('kantin_token')).toBeNull()
+
+    postSpy.mockRestore()
+  })
+
+  it('signOut tetap membersihkan token lokal jika server offline atau request cabut gagal (#219)', async () => {
+    const useAuthStore = await importAuthStore()
+    const postSpy = vi.spyOn(apiClient, 'post').mockRejectedValueOnce(new Error('Network Error'))
+
+    useAuthStore.getState().auth.setAccessToken('active-token-123')
+    useAuthStore.getState().auth.setUser({ ...sampleUser })
+    sessionStorage.setItem('kantin_token', 'active-token-123')
+
+    await useAuthStore.getState().auth.signOut()
+
+    expect(postSpy).toHaveBeenCalled()
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
+    expect(useAuthStore.getState().auth.user).toBeNull()
+    expect(localStorage.getItem('kantin_token')).toBeNull()
+    expect(sessionStorage.getItem('kantin_token')).toBeNull()
+
+    postSpy.mockRestore()
+  })
+
+  it('verifySession mengembalikan true saat token masih sah di server (200 OK) (#219)', async () => {
+    const useAuthStore = await importAuthStore()
+    const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+      status: 200,
+      data: {
+        code: 200,
+        data: { userId: '1', peran: 'ADMIN_SEKOLAH' },
+      },
+    })
+
+    const expFuture = Math.floor(Date.now() / 1000) + 3600
+    const validJwt = `header.${btoa(JSON.stringify({ exp: expFuture }))}.sig`
+    useAuthStore.getState().auth.setAccessToken(validJwt)
+
+    const isValid = await useAuthStore.getState().auth.verifySession()
+
+    expect(getSpy).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({ silent: true })
+    )
+    expect(isValid).toBe(true)
+
+    getSpy.mockRestore()
+  })
+
+  it('verifySession mengembalikan false dan mereset auth saat token dicabut di server (401) (#219)', async () => {
+    const useAuthStore = await importAuthStore()
+    const error401 = {
+      response: { status: 401, data: { message: 'Token telah dicabut' } },
+    }
+    const getSpy = vi.spyOn(apiClient, 'get').mockRejectedValueOnce(error401)
+
+    const expFuture = Math.floor(Date.now() / 1000) + 3600
+    const validJwt = `header.${btoa(JSON.stringify({ exp: expFuture }))}.sig`
+    useAuthStore.getState().auth.setAccessToken(validJwt)
+    useAuthStore.getState().auth.setUser({ ...sampleUser })
+
+    const isValid = await useAuthStore.getState().auth.verifySession()
+
+    expect(getSpy).toHaveBeenCalledWith(
+      '/api/auth/me',
+      expect.objectContaining({ silent: true })
+    )
+    expect(isValid).toBe(false)
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
+    expect(useAuthStore.getState().auth.user).toBeNull()
+
+    getSpy.mockRestore()
+  })
+
+  it('verifySession tetap mengizinkan sesi jika server offline (network error) tetapi token lokal masih valid (#219)', async () => {
+    const useAuthStore = await importAuthStore()
+    const networkError = new Error('Network Error') // tidak ada response
+    const getSpy = vi.spyOn(apiClient, 'get').mockRejectedValueOnce(networkError)
+
+    const expFuture = Math.floor(Date.now() / 1000) + 3600
+    const validJwt = `header.${btoa(JSON.stringify({ exp: expFuture }))}.sig`
+    useAuthStore.getState().auth.setAccessToken(validJwt)
+
+    const isValid = await useAuthStore.getState().auth.verifySession()
+
+    expect(isValid).toBe(true)
+
+    getSpy.mockRestore()
   })
 })

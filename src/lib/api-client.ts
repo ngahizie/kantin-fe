@@ -118,8 +118,13 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('kantin_user')
       sessionStorage.removeItem('kantin_token')
       removeCookie('kantin_access_token')
-      // Jika bukan di halaman login, redirect
-      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/sign-in')) {
+      // Jika bukan di halaman login dan request tidak silent, redirect
+      if (
+        !isSilent &&
+        typeof window !== 'undefined' &&
+        !window.location.pathname.includes('/login') &&
+        !window.location.pathname.includes('/sign-in')
+      ) {
         toast.error('Sesi Anda telah berakhir, silakan login kembali')
         window.location.href = '/sign-in'
       }

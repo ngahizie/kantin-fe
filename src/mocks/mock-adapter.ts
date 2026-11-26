@@ -49,6 +49,8 @@ export interface MockResponseData {
   kekurangan?: number
 }
 
+const revokedTokens = new Set<string>()
+
 interface TransaksiCartItem {
   menu_id: number
   qty: number
@@ -481,7 +483,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const method = (config.method || 'get').toLowerCase()
 
       // Cek apakah request harus di-handle oleh mock
-      const mockResponse = handleMockRequest(url, method, config.data, config.params)
+      const mockResponse = handleMockRequest(url, method, config.data, config.params, config.headers)
       if (mockResponse) {
         // Buat custom adapter yang langsung resolve response mock
         config.adapter = async () => {
@@ -526,7 +528,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     url: string,
     method: string,
     dataRaw: unknown,
-    params?: Record<string, unknown>
+    params?: Record<string, unknown>,
+    headers?: Record<string, unknown>
   ): { status: number; data: MockResponseData } | null {
     let payload: Record<string, unknown> = {}
     if (typeof dataRaw === 'string') {
@@ -604,6 +607,56 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
                 nama: 'PAUD SKOOLIA',
               },
             },
+          },
+        },
+      }
+    }
+
+    // --- 1.1 Auth Cabut Token (Revoke Session) ---
+    if ((url.includes('/api/auth/cabut') || url.includes('/auth/cabut')) && method === 'post') {
+      const authHeader = String(headers?.Authorization || headers?.authorization || '')
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+      if (token) {
+        revokedTokens.add(token)
+      }
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Token dicabut',
+        },
+      }
+    }
+
+    // --- 1.2 Auth Me (Verify Session) ---
+    if ((url.includes('/api/auth/me') || url.includes('/auth/me')) && method === 'get') {
+      const authHeader = String(headers?.Authorization || headers?.authorization || '')
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+      if (!token || revokedTokens.has(token)) {
+        return {
+          status: 401,
+          data: {
+            code: 401,
+            status: 'UNAUTHORIZED',
+            message: 'Token telah dicabut atau sesi tidak valid',
+          },
+        }
+      }
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Operasi berhasil',
+          data: {
+            userId: '1',
+            nama: 'Admin Kantin',
+            sekolahId: 10,
+            peran: 'ADMIN_SEKOLAH',
+            sumber: 'SKOOLIA',
+            siswaId: null,
+            punyaSekolah: true,
           },
         },
       }

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { useRoleStore, type UserRole } from '@/stores/use-role-store'
 import { useCartStore } from '@/stores/use-cart-store'
+import apiClient from '@/lib/api-client'
 
 const ACCESS_TOKEN_COOKIE = 'kantin_access_token'
 const ACCESS_TOKEN_STORAGE = 'kantin_token'
@@ -27,6 +28,8 @@ interface AuthState {
     setAccessToken: (accessToken: string) => void
     resetAccessToken: () => void
     reset: () => void
+    signOut: () => Promise<void>
+    verifySession: () => Promise<boolean>
     isAuthenticated: () => boolean
     hasRole: (allowedRoles: UserRole[]) => boolean
   }
@@ -110,7 +113,12 @@ export const useAuthStore = create<AuthState>()((set, get) => {
         removeCookie(ACCESS_TOKEN_COOKIE)
         localStorage.removeItem(ACCESS_TOKEN_STORAGE)
         localStorage.removeItem(AUTH_USER_STORAGE)
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem(ACCESS_TOKEN_STORAGE)
+          sessionStorage.removeItem(AUTH_USER_STORAGE)
+        }
         useRoleStore.getState().setRole('admin')
+        useRoleStore.getState().setSchoolName('')
         useRoleStore.getState().setUserName('')
         useRoleStore.getState().setUserEmail('')
         // Kosongkan keranjang saat pengguna keluar / reset auth (issue #143)
@@ -119,6 +127,62 @@ export const useAuthStore = create<AuthState>()((set, get) => {
           ...state,
           auth: { ...state.auth, user: null, accessToken: '' },
         }))
+      },
+
+      signOut: async () => {
+        const token = get().auth.accessToken || parseStoredToken()
+        if (token) {
+          try {
+            await apiClient.post(
+              '/api/auth/cabut',
+              null,
+              {
+                timeout: 4000,
+                silent: true,
+                skipToast: true,
+              }
+            )
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('[Auth] Gagal mencabut token di server (kemungkinan offline/network error):', error)
+          }
+        }
+        get().auth.reset()
+      },
+
+      verifySession: async () => {
+        const token = get().auth.accessToken || parseStoredToken()
+        if (!token || !get().auth.isAuthenticated()) {
+          get().auth.reset()
+          return false
+        }
+
+        try {
+          const res = await apiClient.get('/api/auth/me', {
+            timeout: 5000,
+            silent: true,
+            skipToast: true,
+          })
+
+          if (res.status === 200) {
+            return true
+          }
+          return false
+        } catch (error: unknown) {
+          const axiosErr = error as { response?: { status?: number } }
+          if (axiosErr?.response?.status === 401) {
+            get().auth.reset()
+            return false
+          }
+          // Jika gagal karena offline/koneksi terputus dan tidak ada response dari server,
+          // biarkan pengguna tetap masuk jika token lokal masih sah (mendukung mode kasir offline)
+          if (!axiosErr?.response) {
+            // eslint-disable-next-line no-console
+            console.warn('[Auth] Gagal memverifikasi sesi ke server (jaringan/offline), gunakan status lokal:', error)
+            return get().auth.isAuthenticated()
+          }
+          return false
+        }
       },
 
       isAuthenticated: () => {
