@@ -49,16 +49,6 @@ describe('Kasir Sesi, Void Transaksi, & Tutup Kasir (Issue #5)', () => {
         })
       }
     )
-
-    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
-      async (
-        transaksiId: number,
-        alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
-        kodeStruk = ''
-      ) => {
-        await kasirApi.refundTransaksi(transaksiId, alasan, kodeStruk)
-      }
-    )
   })
 
   describe('1. Riwayat Sesi & Rekapitulasi Kasir Harian', () => {

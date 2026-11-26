@@ -20,7 +20,7 @@ const DEFAULT_PENGATURAN: PengaturanKantin = {
   updatedBy: 'Sistem Bawaan',
 }
 
-export interface PengaturanStoreState {
+interface PengaturanStoreState {
   pengaturan: PengaturanKantin
   titikKasirList: TitikKasir[]
   activeTitikKasirId: number | null

@@ -1,7 +1,4 @@
 import { z } from 'zod'
-import type { KartuSiswaMock, MenuItemMock, KategoriMock } from '@/types/kantin'
-
-export type { KartuSiswaMock, MenuItemMock, KategoriMock }
 
 export const MAX_ALASAN_BLOKIR_LENGTH = 500
 export const MIN_LIMIT_HARIAN = 5000
@@ -40,25 +37,3 @@ export const kontrolSiswaFormSchema = z.object({
     path: ['limitHarian'],
   }
 )
-
-export type KontrolSiswaFormValues = z.infer<typeof kontrolSiswaFormSchema>
-
-export interface StudentControlDTO {
-  siswa_id: number
-  nis: string
-  nama: string
-  kelas: string
-  foto_url: string
-  saldo: number
-  limit_harian: number
-  limit_harian_enabled?: boolean
-  belanja_hari_ini: number
-  is_blocked: boolean
-  blocked_items?: number[]
-  blocked_categories?: number[]
-  parent_name?: string
-  parent_phone?: string
-  parent_app_registered?: boolean
-  catatan_kontrol?: string
-  updated_at?: string
-}

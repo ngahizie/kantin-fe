@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from 'react'
 
-export type Collapsible = 'icon' | 'offcanvas' | 'none'
+type Collapsible = 'icon' | 'offcanvas' | 'none'
 type Variant = 'sidebar'
 
 // Default values: variant sidebar, layout default (expanded)

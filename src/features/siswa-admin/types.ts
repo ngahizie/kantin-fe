@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-export type HubunganWali = 'AYAH' | 'IBU' | 'WALI'
-
 export interface SiswaManajemenItem {
   siswaId: number
   nis: string

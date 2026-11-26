@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 
-export interface UseRfidScannerOptions {
+interface UseRfidScannerOptions {
   onScan: (uid: string) => void
   enabled?: boolean
   minChars?: number

@@ -17,18 +17,7 @@ import {
   type BarisPembatalanKasir,
   resolveTitikDanPetugas,
 } from '../types'
-
-interface ApiResponse<T> {
-  code?: number
-  responseCode?: number
-  status?: string
-  message?: string
-  total?: number
-  showing?: number
-  totalPages?: number
-  currentPage?: number
-  data: T
-}
+import type { ApiResponse } from '@/lib/api-types'
 
 export const MAX_KERUGIAN_STOK_PAGE_SIZE = 200
 

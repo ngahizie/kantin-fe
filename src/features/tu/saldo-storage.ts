@@ -145,7 +145,7 @@ export function clearStoredSaldoOverrides(sekolahId?: number | null): void {
 
 export const KANTIN_TOPUP_TRANSACTIONS_KEY = 'kantin_topup_transactions'
 
-export interface StoredTopupTransaction {
+interface StoredTopupTransaction {
   id: string | number
   waktu: string
   siswa_nama: string
@@ -290,7 +290,7 @@ export type StatusSetoranKas =
   | 'DIKONFIRMASI'
   | 'TERKONFIRMASI'
 
-export interface StoredSetoranConfirmation {
+interface StoredSetoranConfirmation {
   id: string
   tanggal: string
   petugas_id: number

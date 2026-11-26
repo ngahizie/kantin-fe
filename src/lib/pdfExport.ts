@@ -10,8 +10,9 @@
 
 import { jsPDF } from 'jspdf'
 import autoTable, { type UserOptions } from 'jspdf-autotable'
-import { useAuthStore } from '@/stores/auth-store'
-import { SCHOOL_LOGO_BASE64, getSchoolLogoBase64 } from '@/assets/schoolLogoBase64'
+import { getSchoolProfile, stripKantinSkoolia, SCHOOL_LOGO_BASE64 } from './export-helpers'
+
+export { stripKantinSkoolia } from './export-helpers'
 
 export interface PdfColumn<T = any> {
   header: string
@@ -27,7 +28,7 @@ export interface PdfTableSection<T = any> {
   summaryRow?: Record<string, string | number | null | undefined>
 }
 
-export interface ExportTablePdfOptions<T = any> {
+interface ExportTablePdfOptions<T = any> {
   filename: string
   title?: string
   subtitle?: string
@@ -41,7 +42,7 @@ export interface ExportTablePdfOptions<T = any> {
   orientation?: 'portrait' | 'landscape'
 }
 
-export interface MultiSectionPdfExportOptions {
+interface MultiSectionPdfExportOptions {
   filename: string
   title?: string
   subtitle?: string
@@ -105,42 +106,6 @@ function resolveColumnAlignment<T>(col: PdfColumn<T>): 'left' | 'center' | 'righ
   }
 
   return 'left'
-}
-
-/**
- * Mengambil data sekolah aktif dari auth store
- */
-function getSchoolProfile(): { name: string; address: string; logoBase64: string } {
-  try {
-    const user = useAuthStore.getState().auth.user
-    const sekolahId = user?.sekolahId
-    const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
-    const address =
-      sekolahId === 10 || /10/.test(name)
-        ? 'Jl. Diponegoro No. 10, Lingkungan Pendidikan SKOOLIA'
-        : 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
-    const logoBase64 = getSchoolLogoBase64(sekolahId, name)
-    return { name, address, logoBase64 }
-  } catch {
-    return {
-      name: 'SMP NEGERI 1 SKOOLIA',
-      address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
-      logoBase64: SCHOOL_LOGO_BASE64,
-    }
-  }
-}
-
-/**
- * Menghapus embel-embel "Kantin Skoolia" dari judul, subjudul, atau catatan
- */
-export function stripKantinSkoolia(text?: string | null): string {
-  if (!text) return ''
-  return text
-    .replace(/\s*[-–—:]?\s*kantin\s+skoolia\b/gi, '')
-    .replace(/\bkantin\s+skoolia\s*[-–—:]?\s*/gi, '')
-    .replace(/^[-–—:\s]+|[-–—:\s]+$/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
 }
 
 /**

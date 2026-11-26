@@ -62,16 +62,6 @@ describe('Kasir Tap Transaksi & Validasi 6 Tahap (API Layer)', () => {
         })
       }
     )
-
-    vi.spyOn(kasirApi, 'voidTransaksi').mockImplementation(
-      async (
-        transaksiId: number,
-        alasan = 'Wajah pembeli tidak cocok dengan foto kartu',
-        kodeStruk = ''
-      ) => {
-        await kasirApi.refundTransaksi(transaksiId, alasan, kodeStruk)
-      }
-    )
   })
 
   it('Validasi 1: menolak transaksi bila kartu RFID tidak dikenal (404)', async () => {

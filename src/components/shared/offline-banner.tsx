@@ -1,7 +1,7 @@
 import React from 'react'
 import { WifiOff, AlertTriangle } from 'lucide-react'
 
-export interface OfflineBannerProps {
+interface OfflineBannerProps {
   className?: string
   message?: string
 }

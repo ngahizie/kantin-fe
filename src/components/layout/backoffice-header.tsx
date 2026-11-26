@@ -1,7 +1,7 @@
 import { Header } from '@/components/layout/header'
 import { HeaderActions } from '@/components/layout/header-actions'
 
-export interface BackofficeHeaderProps {
+interface BackofficeHeaderProps {
   className?: string
   fixed?: boolean
 }

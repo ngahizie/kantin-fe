@@ -1,11 +1,4 @@
 import { z } from 'zod'
-import type {
-  KartuSiswaMock,
-  SiswaNonaktifMock,
-  SiblingMock,
-} from '@/types/kantin'
-
-export type { KartuSiswaMock, SiswaNonaktifMock, SiblingMock }
 
 // --- Types untuk Refund Siswa Keluar / Lulus (PRD §9.3 & §9.5) ---
 export const refundOrangTuaSchema = z.object({
@@ -64,8 +57,6 @@ export const refundOrangTuaSchema = z.object({
   }
 )
 
-export type RefundOrangTuaFormValues = z.infer<typeof refundOrangTuaSchema>
-
 export const pindahSaldoSchema = z.object({
   siswaAsalId: z.number().int().positive('ID siswa asal tidak valid'),
   siswaTujuanId: z.number().int().positive('Pilih saudara kandung yang aktif'),
@@ -82,8 +73,6 @@ export const pindahSaldoSchema = z.object({
     path: ['siswaTujuanId'],
   }
 )
-
-export type PindahSaldoFormValues = z.infer<typeof pindahSaldoSchema>
 
 export interface RefundSlipData {
   type: 'REFUND_ORTU' | 'TRANSFER_SAUDARA'
@@ -164,17 +153,6 @@ export interface HasilMutasiSaldo {
   idempotentReplay?: boolean
 }
 
-export interface KoreksiSaldoPayload {
-  subjekTipe: 'SISWA'
-  siswaId: number
-  arah: ArahMutasi
-  nominal: number
-  alasan: string
-  referensiId: string
-  jenisKoreksi?: JenisKoreksi
-  transaksiTerkaitId?: string | number
-}
-
 export interface TransaksiSesiTutupItem {
   id: string
   waktu: string
@@ -201,31 +179,6 @@ export interface TransaksiSesiTutupItem {
   alasanVoid?: string | null
   void_at?: string | null
   voidAt?: string | null
-}
-
-export interface HalamanResponse<T> {
-  items: T[]
-  total: number
-  halaman: number
-  ukuran: number
-  totalHalaman: number
-}
-
-export interface TransaksiKasirItemResponse {
-  id: number
-  waktu: string
-  sesiKasirId: number
-  titikKasirId?: number | null
-  titikKasirNama?: string | null
-  petugasId?: number | null
-  siswaId?: number | null
-  siswaNama?: string | null
-  kartuUid?: string | null
-  total: number
-  status: 'SUKSES' | 'VOID'
-  alasanVoid?: string | null
-  voidAt?: string | null
-  dapatDikoreksi: boolean
 }
 
 export function generateSecureReferensiId(prefix = 'BA-KOR'): string {

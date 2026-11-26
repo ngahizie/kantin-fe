@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export interface DashboardStatCardProps {
+interface DashboardStatCardProps {
   title: string
   value: React.ReactNode
   icon: React.ComponentType<{ className?: string }>

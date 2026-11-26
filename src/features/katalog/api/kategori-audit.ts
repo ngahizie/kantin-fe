@@ -1,13 +1,13 @@
 import { createClientAuditLogger } from '@/lib/client-audit'
 
-export type KategoriAuditAction =
+type KategoriAuditAction =
   | 'KATEGORI_CREATE'
   | 'KATEGORI_UPDATE'
   | 'KATEGORI_TOGGLE_STATUS'
   | 'KATEGORI_DELETE'
   | 'KATEGORI_DELETE_BLOCKED'
 
-export interface KategoriAuditEvent {
+interface KategoriAuditEvent {
   action: KategoriAuditAction
   kategoriId?: number | null
   kategoriNama?: string

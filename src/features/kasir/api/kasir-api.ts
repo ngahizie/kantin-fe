@@ -1,5 +1,6 @@
 import apiClient from '@/lib/api-client'
 import { notifyKatalogChanged } from '@/lib/katalog-sync'
+import type { ApiResponse } from '@/lib/api-types'
 import type {
   TapTransaksiRequest,
   TapTransaksiData,
@@ -13,13 +14,6 @@ import type {
 } from '../types'
 
 export * from '../types'
-
-interface ApiResponse<T> {
-  responseCode?: number
-  code?: number
-  message?: string
-  data: T
-}
 
 /**
  * Generate idempotency key unik (UUIDv4) untuk mencegah transaksi ganda (PRD §11.3)
@@ -187,25 +181,14 @@ export const kasirApi = {
     alasan: string,
     kodeStruk: string
   ): Promise<void> {
+    if (!kodeStruk || !kodeStruk.trim()) {
+      throw new Error('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
+    }
     await apiClient.post(`/api/kasir/transaksi/${transaksiId}/refund`, {
       alasan: alasan.trim(),
       kodeStruk: kodeStruk.trim(),
     })
     notifyKatalogChanged('kasir')
-  },
-
-  /**
-   * @deprecated Gunakan refundTransaksi; endpoint /refund mewajibkan alasan dan kodeStruk (BE #292)
-   */
-  async voidTransaksi(
-    transaksiId: number,
-    alasan: string,
-    kodeStruk: string
-  ): Promise<void> {
-    if (!kodeStruk || !kodeStruk.trim()) {
-      throw new Error('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
-    }
-    await this.refundTransaksi(transaksiId, alasan, kodeStruk)
   },
 
   /**

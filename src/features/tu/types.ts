@@ -37,13 +37,6 @@ export interface SetoranKasItem {
   rincian_transaksi: TransaksiTopupDetail[]
 }
 
-export interface KonfirmasiSetoranPayload {
-  id: string
-  uang_fisik: number
-  catatan?: string
-  bendahara_nama?: string
-}
-
 export interface RawRekapTu {
   id?: string | number | null
   tanggal?: string | null

@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import type { TapTransaksiData, TapBuyerInfo } from '../types'
 
-export interface StudentFeedbackModalProps {
+interface StudentFeedbackModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   data: TapTransaksiData | null

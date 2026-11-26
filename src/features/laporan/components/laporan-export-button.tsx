@@ -1,6 +1,6 @@
 import { ExportButton, type ExportButtonProps } from '@/components/export-button'
 
-export interface LaporanExportButtonProps
+interface LaporanExportButtonProps
   extends Omit<ExportButtonProps, 'onExportCsv'> {
   onExportExcel: () => void | Promise<void>
   onExportPdf: () => void | Promise<void>

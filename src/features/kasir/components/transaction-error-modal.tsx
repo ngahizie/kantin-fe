@@ -25,7 +25,7 @@ export interface TransactionErrorInfo {
   uid?: string
 }
 
-export interface TransactionErrorModalProps {
+interface TransactionErrorModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   errorInfo: TransactionErrorInfo | null

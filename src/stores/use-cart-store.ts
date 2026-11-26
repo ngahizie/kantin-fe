@@ -12,7 +12,7 @@ export interface AddCartItemOptions {
   jualMelebihiCatatan?: boolean
 }
 
-export interface CartStoreState {
+interface CartStoreState {
   items: CartItem[]
   addItem: (
     menu: MenuItem,

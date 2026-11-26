@@ -3,7 +3,7 @@ import { ROLE_LABELS, type UserRole } from '@/lib/role-utils'
 
 export type { UserRole }
 
-export interface RoleConfig {
+interface RoleConfig {
   id: UserRole
   label: string
   description: string

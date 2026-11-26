@@ -16,7 +16,7 @@ import { kasirApi, type InfoSaldoData } from '../api/kasir-api'
 import { sanitizeKasirErrorMessage } from '../kasir-error'
 import { useRfidScanner } from '@/hooks/use-rfid-scanner'
 
-export interface CekSaldoModalProps {
+interface CekSaldoModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }

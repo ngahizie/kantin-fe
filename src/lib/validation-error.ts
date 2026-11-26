@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 
-export interface BackendValidationResponse {
+interface BackendValidationResponse {
   code?: number
   message?: string
   timestamp?: string
@@ -8,7 +8,7 @@ export interface BackendValidationResponse {
   errors?: Record<string, string> | Array<{ field?: string; defaultMessage?: string }>
 }
 
-export interface ParsedValidationError {
+interface ParsedValidationError {
   message: string
   fieldErrors: Record<string, string>
 }

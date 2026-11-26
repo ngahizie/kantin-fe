@@ -32,7 +32,7 @@ import {
 } from '../api/kasir-api'
 import { logKasirAuditEvent } from '../api/kasir-audit'
 
-export interface RefundDialogProps {
+interface RefundDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   transaction: TransaksiSesiItem | null

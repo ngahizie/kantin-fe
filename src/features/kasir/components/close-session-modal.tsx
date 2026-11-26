@@ -43,7 +43,7 @@ import {
 } from '../close-session-lock'
 import { logKasirAuditEvent } from '../api/kasir-audit'
 
-export interface CloseSessionModalProps {
+interface CloseSessionModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   sesi: SesiKasirData | null

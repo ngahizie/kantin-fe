@@ -15,9 +15,7 @@ import {
   getPresetLabel,
 } from './date-filter-utils'
 
-export type { DateFilterPreset } from './date-filter-utils'
-
-export interface LaporanDateFilterProps {
+interface LaporanDateFilterProps {
   initialPreset?: DateFilterPreset
   onChange: (params: LaporanFilterParams, label: string) => void
   className?: string

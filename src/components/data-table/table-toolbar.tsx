@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableFacetedFilter } from './faceted-filter'
 
-export type TableToolbarFilterOption = {
+type TableToolbarFilterOption = {
   label: string
   value: string
   icon?: React.ComponentType<{ className?: string }>
 }
 
-export type TableToolbarFilter = {
+type TableToolbarFilter = {
   title: string
   icon?: React.ComponentType<{ className?: string }>
   options: TableToolbarFilterOption[]
@@ -25,7 +25,7 @@ export type TableToolbarFilter = {
   triggerClassName?: string
 }
 
-export type TableToolbarProps = {
+type TableToolbarProps = {
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void

@@ -1,11 +1,11 @@
 import { createClientAuditLogger } from '@/lib/client-audit'
 
-export type KasirAuditAction =
+type KasirAuditAction =
   | 'TRANSAKSI_GAGAL'
   | 'TUTUP_SESI_SELISIH'
   | 'VOID_TRANSAKSI'
 
-export interface KasirAuditEvent {
+interface KasirAuditEvent {
   action: KasirAuditAction
   titikKasirId?: number | null
   sesiId?: number | null
