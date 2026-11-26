@@ -41,6 +41,105 @@ export function generateIdempotencyKey(): string {
   throw new Error('Web Crypto API tidak tersedia untuk pembangkitan idempotency key')
 }
 
+function mapTapResponse(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  raw: any,
+  fallbackMetodeBayar: MetodeBayarKasir = 'SALDO',
+  fallbackBuyerName?: string
+): TapTransaksiData {
+  if (!raw) return raw as unknown as TapTransaksiData
+
+  const resMetodeRaw = String(
+    raw.metodeBayar ?? raw.metode_bayar ?? fallbackMetodeBayar
+  ).toUpperCase()
+  const resMetodeBayar: MetodeBayarKasir =
+    resMetodeRaw === 'TUNAI' ? 'TUNAI' : 'SALDO'
+
+  const resTotal = Number(raw.total || 0)
+  const rawUangDiterima = raw.uangDiterima ?? raw.uang_diterima
+  const resUangDiterima =
+    rawUangDiterima !== undefined && rawUangDiterima !== null
+      ? Number(rawUangDiterima)
+      : null
+
+  // Pakai nilai kembalian langsung dari respons BE (jangan hitung lokal, Issue #170 / C.2e)
+  const rawKembalian = raw.kembalian
+  const resKembalian =
+    rawKembalian !== undefined && rawKembalian !== null
+      ? Number(rawKembalian)
+      : null
+
+  const rawSaldoSisa =
+    raw.pembeli?.sisa_saldo ??
+    raw.pembeli?.saldoSisa ??
+    raw.saldoSisa ??
+    raw.sisa_saldo
+  const resSaldoSisa =
+    resMetodeBayar === 'TUNAI' ||
+    rawSaldoSisa === undefined ||
+    rawSaldoSisa === null
+      ? null
+      : Number(rawSaldoSisa)
+
+  const defaultBuyerName =
+    fallbackBuyerName ||
+    (resMetodeBayar === 'TUNAI' ? 'Tamu (tunai)' : 'Pembeli')
+
+  const pembeli: TapBuyerInfo = {
+    nama: raw.pembeli?.nama || raw.nama || defaultBuyerName,
+    kelas: raw.pembeli?.kelas || raw.kelas || null,
+    nis: raw.pembeli?.nis || raw.nis || null,
+    foto_url:
+      raw.pembeli?.foto_url ||
+      raw.pembeli?.fotoUrl ||
+      raw.fotoUrl ||
+      raw.foto_url ||
+      null,
+    fotoUrl:
+      raw.pembeli?.fotoUrl ||
+      raw.pembeli?.foto_url ||
+      raw.fotoUrl ||
+      raw.foto_url ||
+      null,
+    sisa_saldo: resSaldoSisa,
+    saldoSisa: resSaldoSisa,
+  }
+
+  const rawPendingId = raw.pendingId ?? raw.pending_id
+  const pendingId =
+    rawPendingId !== undefined && rawPendingId !== null
+      ? Number(rawPendingId)
+      : null
+
+  const menungguKonfirmasi = Boolean(
+    raw.menungguKonfirmasi ?? raw.menunggu_konfirmasi
+  )
+
+  return {
+    transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
+    transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
+    nomorStruk:
+      raw.nomorStruk ||
+      raw.nomor_struk ||
+      raw.kodeStruk ||
+      raw.kode_struk ||
+      raw.nomorReferensi ||
+      null,
+    titikKasir: raw.titikKasir || raw.titik_kasir || null,
+    namaItem: Array.isArray(raw.namaItem)
+      ? raw.namaItem.map(String)
+      : undefined,
+    total: resTotal,
+    metodeBayar: resMetodeBayar,
+    uangDiterima: resUangDiterima,
+    kembalian: resKembalian,
+    waktu: raw.waktu || new Date().toISOString(),
+    pembeli,
+    menungguKonfirmasi,
+    pendingId,
+  }
+}
+
 export const kasirApi = {
   /**
    * Eksekusi transaksi kasir: Saldo (tap kartu RFID, PRD §6.2) atau Tunai tanpa kartu (Issue #165)
@@ -93,90 +192,48 @@ export const kasirApi = {
       '/api/kasir/tap',
       payload
     )
-    notifyKatalogChanged('kasir')
-    const raw = res.data?.data
-    if (!raw) return raw as unknown as TapTransaksiData
-
-    const resMetodeRaw = String(
-      raw.metodeBayar ?? raw.metode_bayar ?? metodeBayar
-    ).toUpperCase()
-    const resMetodeBayar: MetodeBayarKasir =
-      resMetodeRaw === 'TUNAI' ? 'TUNAI' : 'SALDO'
-
-    const resTotal = Number(raw.total || 0)
-    const rawUangDiterima = raw.uangDiterima ?? raw.uang_diterima
-    const resUangDiterima =
-      rawUangDiterima !== undefined && rawUangDiterima !== null
-        ? Number(rawUangDiterima)
-        : null
-
-    // Pakai nilai kembalian langsung dari respons BE (jangan hitung lokal, Issue #170 / C.2e)
-    const rawKembalian = raw.kembalian
-    const resKembalian =
-      rawKembalian !== undefined && rawKembalian !== null
-        ? Number(rawKembalian)
-        : null
-
-    const rawSaldoSisa =
-      raw.pembeli?.sisa_saldo ??
-      raw.pembeli?.saldoSisa ??
-      raw.saldoSisa ??
-      raw.sisa_saldo
-    const resSaldoSisa =
-      resMetodeBayar === 'TUNAI' ||
-      rawSaldoSisa === undefined ||
-      rawSaldoSisa === null
-        ? null
-        : Number(rawSaldoSisa)
-
     const defaultBuyerName =
-      resMetodeBayar === 'TUNAI'
+      metodeBayar === 'TUNAI'
         ? data.namaPembeli?.trim() || 'Tamu (tunai)'
         : 'Pembeli'
-
-    const pembeli: TapBuyerInfo = {
-      nama: raw.pembeli?.nama || raw.nama || defaultBuyerName,
-      kelas: raw.pembeli?.kelas || raw.kelas || null,
-      nis: raw.pembeli?.nis || raw.nis || null,
-      foto_url:
-        raw.pembeli?.foto_url ||
-        raw.pembeli?.fotoUrl ||
-        raw.fotoUrl ||
-        raw.foto_url ||
-        null,
-      fotoUrl:
-        raw.pembeli?.fotoUrl ||
-        raw.pembeli?.foto_url ||
-        raw.fotoUrl ||
-        raw.foto_url ||
-        null,
-      sisa_saldo: resSaldoSisa,
-      saldoSisa: resSaldoSisa,
+    const mapped = mapTapResponse(res.data?.data, metodeBayar, defaultBuyerName)
+    if (!mapped.menungguKonfirmasi) {
+      notifyKatalogChanged('kasir')
     }
+    return mapped
+  },
 
-    // Identitas pembeli murni dari respons BE (issue #294).
+  /**
+   * Konfirmasi tap yang menunggu persetujuan petugas (PRD §6.1, Issue #220).
+   * Di sini barulah saldo siswa & stok menu dipotong oleh backend.
+   */
+  async konfirmasiTap(pendingId: number): Promise<TapTransaksiData> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await apiClient.post<ApiResponse<any>>(
+      `/api/kasir/tap/${pendingId}/konfirmasi`
+    )
+    notifyKatalogChanged('kasir')
+    return mapTapResponse(res.data?.data, 'SALDO', 'Pembeli')
+  },
 
-    return {
-      transaksi_id: Number(raw.transaksi_id || raw.transaksiId || 0),
-      transaksiId: Number(raw.transaksiId || raw.transaksi_id || 0),
-      nomorStruk:
-        raw.nomorStruk ||
-        raw.nomor_struk ||
-        raw.kodeStruk ||
-        raw.kode_struk ||
-        raw.nomorReferensi ||
-        null,
-      titikKasir: raw.titikKasir || raw.titik_kasir || null,
-      namaItem: Array.isArray(raw.namaItem)
-        ? raw.namaItem.map(String)
-        : undefined,
-      total: resTotal,
-      metodeBayar: resMetodeBayar,
-      uangDiterima: resUangDiterima,
-      kembalian: resKembalian,
-      waktu: raw.waktu || new Date().toISOString(),
-      pembeli,
-    }
+  /**
+   * Batalkan tap yang menunggu konfirmasi (PRD §6.1, Issue #220).
+   * Tidak ada transaksi yang dicatat dan saldo/stok tetap utuh.
+   */
+  async batalTap(pendingId: number): Promise<void> {
+    await apiClient.post(`/api/kasir/tap/${pendingId}/batal`)
+  },
+
+  /**
+   * Ambil daftar tap yang masih menunggu konfirmasi petugas (PRD §6.1, Issue #220).
+   */
+  async getTapMenunggu(): Promise<TapTransaksiData[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await apiClient.get<ApiResponse<any[]>>(
+      '/api/kasir/tap/menunggu'
+    )
+    const list = res.data?.data || []
+    return list.map((item) => mapTapResponse(item, 'SALDO', 'Pembeli'))
   },
 
   /**

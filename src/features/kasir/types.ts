@@ -127,6 +127,8 @@ export interface TapTransaksiData {
   kembalian?: number | null
   waktu: string
   pembeli: TapBuyerInfo
+  menungguKonfirmasi?: boolean
+  pendingId?: number | null
 }
 
 export interface ReceiptLineItem {

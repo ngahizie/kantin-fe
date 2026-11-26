@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   History,
   Lock,
+  Clock,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore, type AddCartItemOptions } from '@/stores/use-cart-store'
@@ -71,6 +72,7 @@ import {
 import { SessionHistoryModal } from './components/session-history-modal'
 import { CloseSessionModal } from './components/close-session-modal'
 import { StokMinusConfirmDialog } from './components/stok-minus-confirm-dialog'
+import { PendingTapDialog } from './components/pending-tap-dialog'
 
 export const KasirPosPage: React.FC = () => {
   const [menus, setMenus] = useState<MenuItem[]>([])
@@ -121,6 +123,17 @@ export const KasirPosPage: React.FC = () => {
   const [errorInfo, setErrorInfo] = useState<TransactionErrorInfo | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const tapCompletedRef = useRef(false)
+
+  // Pending Tap Confirmation (Mode Konfirmasi Manual BE, Issue #220)
+  const [pendingTaps, setPendingTaps] = useState<TapTransaksiData[]>([])
+  const [pendingTapDialogOpen, setPendingTapDialogOpen] = useState(false)
+  const [isPendingActionProcessing, setIsPendingActionProcessing] = useState(false)
+  const [pendingTapError, setPendingTapError] = useState<string | null>(null)
+  const [pendingCartSnapshots, setPendingCartSnapshots] = useState<
+    Record<number, ReceiptLineItem[]>
+  >({})
+  const pendingActionLockRef = useRef(false)
+  const hasAutoOpenedPendingRef = useRef(false)
 
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -216,6 +229,79 @@ export const KasirPosPage: React.FC = () => {
     }
   }, [fetchPengaturan, fetchTitikKasir])
 
+  // Muat daftar tap yang masih menunggu konfirmasi petugas (Issue #220)
+  const loadPendingTaps = useCallback(async (autoOpenIfPresent = false) => {
+    try {
+      const list = await kasirApi.getTapMenunggu()
+      setPendingTaps(list)
+      if (
+        autoOpenIfPresent &&
+        list.length > 0 &&
+        !hasAutoOpenedPendingRef.current
+      ) {
+        hasAutoOpenedPendingRef.current = true
+        setPendingTapError(null)
+        setPendingTapDialogOpen(true)
+      }
+    } catch {
+      // Abaikan bila endpoint belum siap / offline
+    }
+  }, [])
+
+  // Bangun payload struk dari hasil tap/konfirmasi yang sudah final
+  const buildReceiptData = useCallback(
+    (
+      result: TapTransaksiData,
+      snapshotItems: ReceiptLineItem[],
+      fallbackMetode: MetodeBayarKasir = 'SALDO'
+    ): ReceiptData => {
+      const buyer = result.pembeli
+      const rawResult = result as TapTransaksiData & {
+        nama?: string
+        kelas?: string | null
+        nis?: string | null
+        fotoUrl?: string | null
+        saldoSisa?: number | null
+        nomorReferensi?: string | null
+      }
+      const activeTitik = getActiveTitikKasir()
+      const metode = result.metodeBayar ?? fallbackMetode
+
+      return {
+        transaksiId: Number(result.transaksiId || result.transaksi_id || 0),
+        nomorStruk: result.nomorStruk || rawResult.nomorReferensi || null,
+        waktu: result.waktu || new Date().toISOString(),
+        namaKantin: pengaturan.namaKantin || 'Kantin Sehat SKOOLIA',
+        titikKasir:
+          result.titikKasir ||
+          activeTitik?.nama ||
+          sesi?.titikKasirNama ||
+          null,
+        pembeliNama: buyer?.nama || rawResult.nama || 'Pembeli',
+        pembeliKelas: buyer?.kelas ?? rawResult.kelas ?? null,
+        pembeliNis: buyer?.nis ?? rawResult.nis ?? null,
+        pembeliFotoUrl:
+          buyer?.fotoUrl || buyer?.foto_url || rawResult.fotoUrl || null,
+        metodeBayar: metode,
+        uangDiterima: result.uangDiterima ?? null,
+        kembalian: result.kembalian ?? null,
+        items: snapshotItems,
+        namaItemFallback: result.namaItem,
+        total: Number(result.total ?? 0),
+        saldoSisa:
+          metode === 'TUNAI'
+            ? null
+            : Number(
+                buyer?.sisa_saldo ??
+                  buyer?.saldoSisa ??
+                  rawResult.saldoSisa ??
+                  0
+              ),
+      }
+    },
+    [getActiveTitikKasir, pengaturan.namaKantin, sesi?.titikKasirNama]
+  )
+
   useEffect(() => {
     let isMounted = true
     const init = async () => {
@@ -231,7 +317,7 @@ export const KasirPosPage: React.FC = () => {
           setKategoris(sortCategoriesNewestFirst(kategoriData))
           setLoading(false)
         }
-        await loadSesiData()
+        await Promise.all([loadSesiData(), loadPendingTaps(true)])
       } catch {
         if (isMounted) {
           toast.error('Gagal memuat katalog menu atau pengaturan POS')
@@ -244,13 +330,15 @@ export const KasirPosPage: React.FC = () => {
     return () => {
       isMounted = false
     }
-  }, [fetchPengaturan, fetchTitikKasir, loadSesiData])
+  }, [fetchPengaturan, fetchTitikKasir, loadSesiData, loadPendingTaps])
 
   // Auto-refresh katalog menu & pengaturan operasional setiap 10 detik di latar belakang
   useEffect(() => {
     const timer = setInterval(async () => {
       if (
         isProcessing ||
+        isPendingActionProcessing ||
+        pendingTapDialogOpen ||
         studentModalOpen ||
         receiptModalOpen ||
         confirmManualOpen ||
@@ -276,6 +364,8 @@ export const KasirPosPage: React.FC = () => {
     return () => clearInterval(timer)
   }, [
     isProcessing,
+    isPendingActionProcessing,
+    pendingTapDialogOpen,
     studentModalOpen,
     receiptModalOpen,
     confirmManualOpen,
@@ -437,42 +527,24 @@ export const KasirPosPage: React.FC = () => {
           hargaSatuan: it.menu.hargaJual,
           subtotal: it.subtotal,
         }))
-        const buyer = result.pembeli
-        const rawResult = result as TapTransaksiData & {
-          nama?: string
-          kelas?: string | null
-          nis?: string | null
-          fotoUrl?: string | null
-          saldoSisa?: number
-          nomorReferensi?: string | null
-        }
-        const activeTitik = getActiveTitikKasir()
 
-        const nextReceipt: ReceiptData = {
-          transaksiId: Number(result.transaksiId || result.transaksi_id || 0),
-          nomorStruk: result.nomorStruk || rawResult.nomorReferensi || null,
-          waktu: result.waktu || new Date().toISOString(),
-          namaKantin: pengaturan.namaKantin || 'Kantin Sehat SKOOLIA',
-          titikKasir:
-            result.titikKasir ||
-            activeTitik?.nama ||
-            sesi?.titikKasirNama ||
-            null,
-          pembeliNama: buyer?.nama || rawResult.nama || 'Pembeli',
-          pembeliKelas: buyer?.kelas ?? rawResult.kelas ?? null,
-          pembeliNis: buyer?.nis ?? rawResult.nis ?? null,
-          pembeliFotoUrl:
-            buyer?.fotoUrl || buyer?.foto_url || rawResult.fotoUrl || null,
-          metodeBayar: result.metodeBayar ?? 'SALDO',
-          uangDiterima: result.uangDiterima ?? null,
-          kembalian: result.kembalian ?? null,
-          items: snapshotItems,
-          namaItemFallback: result.namaItem,
-          total: Number(result.total ?? 0),
-          saldoSisa: Number(
-            buyer?.sisa_saldo ?? buyer?.saldoSisa ?? rawResult.saldoSisa ?? 0
-          ),
+        // Mode Konfirmasi Manual (Issue #220): backend menyimpan tap sebagai pending & belum memotong saldo/stok
+        if (result.menungguKonfirmasi && result.pendingId) {
+          const pId = result.pendingId
+          setPendingCartSnapshots((prev) => ({ ...prev, [pId]: snapshotItems }))
+          setPendingTaps((prev) => {
+            const filtered = prev.filter((item) => item.pendingId !== pId)
+            return [result, ...filtered]
+          })
+          setPendingTapError(null)
+          setManualRfidOpen(false)
+          setMobileCartOpen(false)
+          setPendingTapDialogOpen(true)
+          toast.info('Tap menunggu konfirmasi petugas. Saldo dan stok belum dipotong.')
+          return
         }
+
+        const nextReceipt = buildReceiptData(result, snapshotItems, 'SALDO')
 
         // Transaksi Sukses
         playSuccess()
@@ -528,16 +600,178 @@ export const KasirPosPage: React.FC = () => {
       items,
       isProcessing,
       activeTitikKasirId,
-      getActiveTitikKasir,
-      pengaturan.namaKantin,
       sesi,
       confirmedAlasanStokMinus,
+      buildReceiptData,
       playSuccess,
       playError,
     ]
   )
 
-  // Handler proses tap RFID: cek konfirmasi stok minus, konfirmasi manual (jika aktif), atau eksekusi langsung
+  // Handler konfirmasi tap pending (Mode Konfirmasi Manual, Issue #220)
+  const handleConfirmPendingTap = useCallback(
+    async (pendingId: number) => {
+      if (pendingActionLockRef.current || isPendingActionProcessing) return
+      pendingActionLockRef.current = true
+      setIsPendingActionProcessing(true)
+      setPendingTapError(null)
+
+      try {
+        const confirmed = await kasirApi.konfirmasiTap(pendingId)
+        const snapshotItems =
+          pendingCartSnapshots[pendingId] ??
+          items.map((it) => ({
+            menuId: it.menu.id,
+            namaMenu: it.menu.nama,
+            qty: it.qty,
+            hargaSatuan: it.menu.hargaJual,
+            subtotal: it.subtotal,
+          }))
+
+        setPendingTaps((prev) => prev.filter((item) => item.pendingId !== pendingId))
+        setPendingCartSnapshots((prev) => {
+          const next = { ...prev }
+          delete next[pendingId]
+          return next
+        })
+        setPendingTapDialogOpen(false)
+
+        const nextReceipt = buildReceiptData(confirmed, snapshotItems, 'SALDO')
+        playSuccess()
+        tapCompletedRef.current = false
+        setReceiptModalOpen(false)
+        setReceiptData(nextReceipt)
+        setSuccessData(confirmed)
+        setStudentModalOpen(true)
+        toast.success('Transaksi berhasil dikonfirmasi')
+      } catch (err: unknown) {
+        playError()
+        const axiosErr = err as {
+          response?: {
+            status?: number
+            data?: { message?: string }
+          }
+        }
+        const status = axiosErr.response?.status
+        const rawMsg =
+          axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
+          'Gagal mengonfirmasi transaksi'
+        const lowerMsg = rawMsg.toLowerCase()
+        const isStaleOrCancelled =
+          status === 404 ||
+          lowerMsg.includes('tidak ditemukan') ||
+          lowerMsg.includes('sudah dibatalkan') ||
+          lowerMsg.includes('kedaluwarsa')
+
+        const friendlyMsg = isStaleOrCancelled
+          ? 'Permintaan konfirmasi sudah dibatalkan, kedaluwarsa, atau tidak ditemukan.'
+          : sanitizeKasirErrorMessage(rawMsg, 'Gagal mengonfirmasi transaksi')
+
+        if (isStaleOrCancelled) {
+          setPendingTaps((prev) => prev.filter((item) => item.pendingId !== pendingId))
+          setPendingCartSnapshots((prev) => {
+            const next = { ...prev }
+            delete next[pendingId]
+            return next
+          })
+          setPendingTapDialogOpen(false)
+          toast.error(friendlyMsg)
+          void loadPendingTaps(false)
+        } else {
+          setPendingTapError(friendlyMsg)
+          toast.error(friendlyMsg)
+        }
+      } finally {
+        pendingActionLockRef.current = false
+        setIsPendingActionProcessing(false)
+      }
+    },
+    [
+      isPendingActionProcessing,
+      pendingCartSnapshots,
+      items,
+      buildReceiptData,
+      playSuccess,
+      playError,
+      loadPendingTaps,
+    ]
+  )
+
+  // Handler batalkan tap pending (Mode Konfirmasi Manual, Issue #220)
+  const handleCancelPendingTap = useCallback(
+    async (pendingId: number) => {
+      if (pendingActionLockRef.current || isPendingActionProcessing) return
+      pendingActionLockRef.current = true
+      setIsPendingActionProcessing(true)
+      setPendingTapError(null)
+
+      try {
+        await kasirApi.batalTap(pendingId)
+        setPendingTaps((prev) => {
+          const remaining = prev.filter((item) => item.pendingId !== pendingId)
+          if (remaining.length === 0) {
+            setPendingTapDialogOpen(false)
+          }
+          return remaining
+        })
+        setPendingCartSnapshots((prev) => {
+          const next = { ...prev }
+          delete next[pendingId]
+          return next
+        })
+        toast.info('Permintaan konfirmasi dibatalkan. Saldo siswa tetap utuh.')
+      } catch (err: unknown) {
+        playError()
+        const axiosErr = err as {
+          response?: {
+            status?: number
+            data?: { message?: string }
+          }
+        }
+        const status = axiosErr.response?.status
+        const rawMsg =
+          axiosErr.response?.data?.message ||
+          (err instanceof Error ? err.message : '') ||
+          'Gagal membatalkan permintaan konfirmasi'
+        const lowerMsg = rawMsg.toLowerCase()
+        const isStale =
+          status === 404 ||
+          status === 409 ||
+          lowerMsg.includes('tidak ditemukan') ||
+          lowerMsg.includes('sudah dikonfirmasi') ||
+          lowerMsg.includes('sudah dibatalkan')
+
+        const friendlyMsg = isStale
+          ? 'Permintaan konfirmasi sudah diproses, dibatalkan, atau kedaluwarsa.'
+          : sanitizeKasirErrorMessage(
+              rawMsg,
+              'Gagal membatalkan permintaan konfirmasi'
+            )
+
+        if (isStale) {
+          setPendingTaps((prev) => prev.filter((item) => item.pendingId !== pendingId))
+          setPendingCartSnapshots((prev) => {
+            const next = { ...prev }
+            delete next[pendingId]
+            return next
+          })
+          setPendingTapDialogOpen(false)
+          toast.error(friendlyMsg)
+          void loadPendingTaps(false)
+        } else {
+          setPendingTapError(friendlyMsg)
+          toast.error(friendlyMsg)
+        }
+      } finally {
+        pendingActionLockRef.current = false
+        setIsPendingActionProcessing(false)
+      }
+    },
+    [isPendingActionProcessing, playError, loadPendingTaps]
+  )
+
+  // Handler proses tap RFID: cek konfirmasi stok minus, lalu kirim ke backend (konfirmasi manual ditangani via pendingId BE)
   const handleProcessTap = useCallback(
     async (scannedUid: string) => {
       const cleanUid = scannedUid.trim().toUpperCase()
@@ -571,14 +805,6 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      // Langkah konfirmasi manual sesuai pengaturan operasional kantin
-      if (pengaturan.konfirmasiManual) {
-        setPendingCashAmount(null)
-        setPendingScannedUid(cleanUid)
-        setConfirmManualOpen(true)
-        return
-      }
-
       await executeTapTransaction(cleanUid, confirmedAlasanStokMinus ?? undefined)
     },
     [
@@ -587,7 +813,6 @@ export const KasirPosPage: React.FC = () => {
       items,
       isProcessing,
       confirmedAlasanStokMinus,
-      pengaturan.konfirmasiManual,
       executeTapTransaction,
       playError,
     ]
@@ -834,6 +1059,8 @@ export const KasirPosPage: React.FC = () => {
       !isSessionClosed &&
       !studentModalOpen &&
       !receiptModalOpen &&
+      !pendingTapDialogOpen &&
+      !isPendingActionProcessing &&
       !isProcessing &&
       !confirmManualOpen &&
       !stokMinusConfirmOpen &&
@@ -920,6 +1147,29 @@ export const KasirPosPage: React.FC = () => {
                   </Button>
                 )}
               </div>
+
+              {/* Tombol Pending Konfirmasi Manual (Issue #220) */}
+              {pendingTaps.length > 0 && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => {
+                    setPendingTapError(null)
+                    setPendingTapDialogOpen(true)
+                  }}
+                  className='h-9 gap-1.5 border-amber-500/40 bg-amber-500/10 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-500/20 dark:text-amber-300'
+                  title='Lihat tap kartu yang menunggu konfirmasi'
+                >
+                  <Clock className='h-4 w-4' />
+                  <span className='hidden sm:inline'>Menunggu</span>
+                  <Badge
+                    variant='secondary'
+                    className='ml-0.5 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-900 dark:text-amber-200'
+                  >
+                    {pendingTaps.length}
+                  </Badge>
+                </Button>
+              )}
 
               {/* Tombol Cek Saldo */}
               <Button
@@ -1244,12 +1494,12 @@ export const KasirPosPage: React.FC = () => {
         }}
         onConfirm={async (alasan) => {
           setStokMinusConfirmOpen(false)
-          if (pengaturan.konfirmasiManual) {
-            setConfirmedAlasanStokMinus(alasan)
-            setConfirmManualOpen(true)
-            return
-          }
           if (pendingCashAmount !== null) {
+            if (pengaturan.konfirmasiManual) {
+              setConfirmedAlasanStokMinus(alasan)
+              setConfirmManualOpen(true)
+              return
+            }
             const cashAmount = pendingCashAmount
             setPendingCashAmount(null)
             await executeCashTransaction(cashAmount, alasan)
@@ -1259,6 +1509,17 @@ export const KasirPosPage: React.FC = () => {
             await executeTapTransaction(uid, alasan)
           }
         }}
+      />
+
+      {/* Dialog Menunggu Konfirmasi Petugas (Mode Konfirmasi Manual BE, Issue #220) */}
+      <PendingTapDialog
+        open={pendingTapDialogOpen}
+        onOpenChange={setPendingTapDialogOpen}
+        pendingTaps={pendingTaps}
+        onConfirm={handleConfirmPendingTap}
+        onCancel={handleCancelPendingTap}
+        isSubmitting={isPendingActionProcessing}
+        errorMessage={pendingTapError}
       />
 
       {/* Modal Error Transaksi Ditolak (Kekurangan Saldo & Validasi 6 Tahap) */}
