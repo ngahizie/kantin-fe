@@ -34,8 +34,8 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi, MAX_KERUGIAN_STOK_PAGE_SIZE } from './api/laporan-api'
 import type { BarisKerugianStok, RingkasanKerugianStok, LaporanFilterParams } from './types'
@@ -249,7 +249,7 @@ export function LaporanKerugianStokPage({ pageSize = DEFAULT_PAGE_SIZE }: Lapora
     return { rows, totalQty, totalNilai }
   }
 
-  // Ekspor Excel
+  // Ekspor Excel resmi via backend (tercatat audit & konsisten RBAC)
   const handleExportExcel = async () => {
     if (kerugianList.length === 0) {
       toast.error('Data belum siap untuk diekspor')
@@ -258,60 +258,18 @@ export function LaporanKerugianStokPage({ pageSize = DEFAULT_PAGE_SIZE }: Lapora
 
     try {
       setIsExporting(true)
-      const { rows, totalQty, totalNilai } = await resolveExportPayload()
-
-      exportTableToExcel({
-        filename: `Laporan_Kerugian_Stok_${new Date().toISOString().split('T')[0]}`,
-        sheetName: 'Kerugian Stok',
-        title: 'LAPORAN KERUGIAN STOK',
-        metadata: {
-          'Tanggal Cetak': formatDateTime(new Date()),
-          'Periode': dateFilterLabel,
-          'Total Nilai Kerugian': formatRupiah(ringkasan?.totalKerugian || 0),
-          'Total Qty Hilang/Rusak': `${ringkasan?.totalQtyHilang || 0} Unit`,
-          'Kerugian Opname Keluar': formatRupiah(ringkasan?.kerugianOpname || 0),
-          'Kerugian Barang Rusak': formatRupiah(ringkasan?.kerugianBarangRusak || 0),
-        },
-        columns: [
-          { header: 'No', width: 6 },
-          { header: 'Waktu Kejadian', key: 'waktu', formatter: (v) => formatDateTime(v as string | Date), width: 20 },
-          { header: 'No. Berita Acara', key: 'beritaAcaraId', width: 22 },
-          { header: 'Nama Menu / Item', key: 'namaMenu', width: 26 },
-          { header: 'Kategori', key: 'kategoriNama', width: 16 },
-          {
-            header: 'Jenis Kerugian',
-            key: 'jenis',
-            formatter: (v) => (v === 'OPNAME_KELUAR' ? 'Stok Berkurang (Cek Fisik)' : 'Barang Rusak / Basi'),
-            width: 20,
-          },
-          { header: 'Qty Hilang', key: 'qty', width: 12 },
-          { header: 'Modal Satuan (Rp)', key: 'hppSnapshot', width: 16 },
-          { header: 'Total Kerugian (Rp)', key: 'totalNilai', width: 18 },
-          { header: 'Alasan / Berita Acara', key: 'alasan', width: 35 },
-          { header: 'Petugas Pencatat', key: 'petugas', width: 20 },
-        ],
-        data: rows,
-        summaryRow: {
-          no: '',
-          waktu: '',
-          beritaAcaraId: '',
-          namaMenu: '',
-          kategoriNama: '',
-          jenis: '',
-          qty: totalQty,
-          hppSnapshot: '',
-          totalNilai,
-          alasan: '',
-          petugas: '',
-        },
+      await laporanApi.eksporExcel({
+        jenis: 'KERUGIAN_STOK',
+        ...dateFilterParams,
       })
 
       toast.success('Ekspor Excel Berhasil', {
         description: 'Laporan Kerugian Stok (.xlsx) berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor', { description: msg })
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     } finally {
       setIsExporting(false)
     }

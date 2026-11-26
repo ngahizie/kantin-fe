@@ -139,6 +139,9 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
       if (url === '/api/laporan/penjualan/kasir') {
         return { data: { code: 200, status: 'SUCCESS', data: BE_KASIRS } }
       }
+      if (url === '/api/laporan/penjualan/titik' || url === '/api/laporan/penjualan/petugas') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
       if (url === '/api/katalog/kategori') {
         return {
           data: {
@@ -178,8 +181,8 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
     await userEvent.click(screen.getByRole('tab', { name: /Per Kategori/i }))
     await expect.element(screen.getByText('2 menu')).toBeInTheDocument()
 
-    // Tab Per Titik Kasir (petugas null tidak crash saat pencarian)
-    await userEvent.click(screen.getByRole('tab', { name: /Per Titik Kasir/i }))
+    // Tab Per Kasir (petugas null tidak crash saat pencarian)
+    await userEvent.click(screen.getByRole('tab', { name: 'Per Kasir' }))
     await expect.element(screen.getByText('Kasir Utama')).toBeInTheDocument()
 
     const searchInput = screen.getByPlaceholder('Cari data laporan...')
@@ -278,6 +281,9 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
       if (url === '/api/laporan/penjualan/kasir') {
         return { data: { code: 200, status: 'SUCCESS', data: BE_KASIRS } }
       }
+      if (url === '/api/laporan/penjualan/titik' || url === '/api/laporan/penjualan/petugas') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
       if (url === '/api/katalog/kategori' || url === '/api/katalog/menu') {
         return { data: { code: 200, status: 'SUCCESS', data: [] } }
       }
@@ -311,6 +317,9 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
       if (url === '/api/laporan/penjualan/kasir') {
         throw new Error('Network timeout: Endpoint kasir gagal')
       }
+      if (url === '/api/laporan/penjualan/titik' || url === '/api/laporan/penjualan/petugas') {
+        return { data: { code: 200, status: 'SUCCESS', data: [] } }
+      }
       if (url === '/api/katalog/kategori' || url === '/api/katalog/menu') {
         return { data: { code: 200, status: 'SUCCESS', data: [] } }
       }
@@ -320,7 +329,7 @@ describe('Laporan Penjualan & Laba Kotor UI vs Kontrak BE #291', () => {
     const screen = await render(<LaporanPenjualanPage />)
 
     // Pindah ke tab kasir
-    const tabKasirBtn = screen.getByRole('tab', { name: /Per Titik Kasir/i })
+    const tabKasirBtn = screen.getByRole('tab', { name: 'Per Kasir' })
     await userEvent.click(tabKasirBtn)
 
     await expect.element(screen.getByText('Data Penjualan Titik Kasir Belum Berhasil Dimuat')).toBeInTheDocument()

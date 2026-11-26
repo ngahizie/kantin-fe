@@ -17,8 +17,8 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type { BarisPembatalanKasir, LaporanFilterParams } from './types'
@@ -80,57 +80,23 @@ export function LaporanPembatalanPage() {
     [filteredRows]
   )
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (filteredRows.length === 0) {
       toast.error('Tidak ada data pembatalan untuk diekspor')
       return
     }
 
-    exportTableToExcel({
-      filename: `Laporan_Pembatalan_Kasir_${new Date().toISOString().split('T')[0]}`,
-      sheetName: 'Pembatalan Kasir',
-      title: 'LAPORAN PEMBATALAN TRANSAKSI KASIR',
-      metadata: {
-        'Tanggal Cetak': formatDateTime(new Date()),
-        Periode: dateFilterLabel,
-        'Total Pembatalan': `${formatNumber(totalTransaksiBatal)} transaksi`,
-        'Total Nominal Dikembalikan': formatRupiah(totalNominalBatal),
-      },
-      columns: [
-        { header: 'No.', key: 'no', width: 6 },
-        { header: 'ID Trx', key: 'transaksiId', width: 12 },
-        { header: 'Waktu Transaksi', key: 'waktu', width: 22 },
-        { header: 'Waktu Batal', key: 'voidAt', width: 22 },
-        { header: 'Nama Siswa', key: 'siswaNama', width: 24 },
-        { header: 'Kelas', key: 'siswaKelas', width: 10 },
-        { header: 'Titik Kasir', key: 'titikKasirNama', width: 20 },
-        { header: 'Alasan Pembatalan', key: 'alasanVoid', width: 32 },
-        { header: 'Nominal (Rp)', key: 'total', width: 16 },
-      ],
-      data: filteredRows.map((r, idx) => ({
-        no: idx + 1,
-        transaksiId: `#${r.transaksiId}`,
-        waktu: r.waktu ? formatDateTime(r.waktu) : '-',
-        voidAt: r.voidAt ? formatDateTime(r.voidAt) : '-',
-        siswaNama: r.siswaNama || `Siswa #${r.siswaId}`,
-        siswaKelas: r.siswaKelas || '-',
-        titikKasirNama: r.titikKasirNama || '-',
-        alasanVoid: r.alasanVoid || '-',
-        total: Number(r.total) || 0,
-      })),
-      summaryRow: {
-        no: '',
-        transaksiId: 'TOTAL',
-        waktu: '',
-        voidAt: '',
-        siswaNama: `${formatNumber(totalTransaksiBatal)} Transaksi`,
-        siswaKelas: '',
-        titikKasirNama: '',
-        alasanVoid: '',
-        total: totalNominalBatal,
-      },
-    })
-    toast.success('Laporan Pembatalan Kasir berhasil diekspor ke Excel')
+    try {
+      await laporanApi.eksporExcel({
+        jenis: 'PEMBATALAN',
+        ...dateFilterParams,
+      })
+      toast.success('Laporan Pembatalan Kasir berhasil diekspor ke Excel')
+    } catch (err: unknown) {
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
+    }
   }
 
   const handleExportPdf = () => {

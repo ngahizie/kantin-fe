@@ -4,7 +4,7 @@ import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
 import apiClient from '@/lib/api-client'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { exportTableToExcel } from '@/lib/excelExport'
+import { laporanApi } from '../api/laporan-api'
 import { LaporanRekonsiliasiPage } from '../laporan-rekonsiliasi-page'
 import { useAuthStore } from '@/stores/auth-store'
 import { Route as CekSelisihRoute } from '@/routes/_authenticated/laporan/cek-selisih/index'
@@ -12,10 +12,6 @@ import { Route as RekonsiliasiRoute } from '@/routes/_authenticated/laporan/reko
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: vi.fn(),
-}))
-
-vi.mock('@/lib/excelExport', () => ({
-  exportTableToExcel: vi.fn(),
 }))
 
 vi.mock('@/components/layout/header', () => ({
@@ -127,22 +123,17 @@ describe('LaporanRekonsiliasiPage UI - Penyesuaian Kolom Arah & Nilai Tetap', ()
     const tetapRowPdf = pdfData.find((r) => r.pos === 'Total Penjualan Akhir Kantin')
     expect(tetapRowPdf?.arah).toBe('TETAP')
 
-    // Klik tombol Ekspor -> Excel
+    // Klik tombol Ekspor -> Excel (via GET /api/laporan/ekspor?jenis=REKONSILIASI)
+    const eksporSpy = vi
+      .spyOn(laporanApi, 'eksporExcel')
+      .mockResolvedValue('Laporan_REKONSILIASI.xlsx')
     await userEvent.click(screen.getByRole('button', { name: /Ekspor/i }))
     await userEvent.click(screen.getByTestId('btn-export-excel-option'))
 
-    expect(exportTableToExcel).toHaveBeenCalledTimes(1)
-    const excelArg = vi.mocked(exportTableToExcel).mock.calls[0][0]
-    const excelHeaders = excelArg.columns.map((c) => c.header)
-    expect(excelHeaders).toContain('Arah')
-    expect(excelHeaders).not.toContain('Kategori')
-    expect(excelHeaders).not.toContain('Arah Mutasi')
-    expect(excelArg.summaryRow?.pos).toContain('Total')
-    expect(excelArg.summaryRow?.arah).toBe('COCOK')
-
-    const excelData = excelArg.data as Array<{ pos?: string; arah?: string }>
-    const tetapRowExcel = excelData.find((r) => r.pos === 'Total Saldo Siswa (Titipan)')
-    expect(tetapRowExcel?.arah).toBe('TETAP')
+    expect(eksporSpy).toHaveBeenCalledTimes(1)
+    expect(eksporSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ jenis: 'REKONSILIASI' })
+    )
   })
 
   it('menampilkan banner peringatan dan tombol coba lagi saat server gagal merespons (SEC-01)', async () => {

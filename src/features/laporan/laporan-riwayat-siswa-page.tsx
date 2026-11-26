@@ -44,11 +44,12 @@ import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, getInitials } from '@/lib/formatters'
 import { escapeHtml, isSafeImageUrl } from '@/lib/utils'
 import { printHtmlInHiddenIframe } from '@/lib/print-iframe'
-import { exportTableToExcel } from '@/lib/excelExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import {
+  type LaporanPerSiswa,
   type ProfilSiswaRiwayat,
   type RiwayatBelanjaSiswaItem,
   type SiswaSaldoDetail,
@@ -64,6 +65,7 @@ export function LaporanRiwayatSiswaPage() {
 
   const [profil, setProfil] = useState<ProfilSiswaRiwayat | null>(null)
   const [riwayat, setRiwayat] = useState<RiwayatBelanjaSiswaItem[]>([])
+  const [laporanPerSiswa, setLaporanPerSiswa] = useState<LaporanPerSiswa | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // Filters
@@ -181,6 +183,7 @@ export function LaporanRiwayatSiswaPage() {
     setSearchStudentQuery('')
     setProfil(null)
     setRiwayat([])
+    setLaporanPerSiswa(null)
     setIsDropdownOpen(false)
     const url = new URL(window.location.href)
     url.searchParams.delete('siswaId')
@@ -193,8 +196,12 @@ export function LaporanRiwayatSiswaPage() {
     const fetchRiwayat = async (id: number) => {
       setIsLoading(true)
       try {
-        const res = await laporanApi.getRiwayatBelanjaSiswa(id)
+        const [res, perSiswaRes] = await Promise.all([
+          laporanApi.getRiwayatBelanjaSiswa(id),
+          laporanApi.getPerSiswa(id).catch(() => null),
+        ])
         if (!isMounted) return
+        setLaporanPerSiswa(perSiswaRes)
         const currentStudent = siswaList.find((s) => s.siswaId === id)
         const profilData: ProfilSiswaRiwayat = {
           ...res.profil,
@@ -277,8 +284,8 @@ export function LaporanRiwayatSiswaPage() {
     })
   }, [riwayat, jenisFilter, searchFilter])
 
-  // Ekspor Excel Rekening Koran Siswa
-  const handleExportExcel = () => {
+  // Ekspor Excel resmi via backend (GET /api/laporan/ekspor?jenis=PER_SISWA)
+  const handleExportExcel = async () => {
     if (!profil) {
       toast.error('Data profil siswa belum siap')
       return
@@ -290,76 +297,18 @@ export function LaporanRiwayatSiswaPage() {
     }
 
     try {
-      const exportRows = filteredRiwayat.map((trx) => {
-        const itemStr =
-          trx.items && trx.items.length > 0
-            ? trx.items.map((i) => `${i.qty}x ${i.nama}`).join(', ')
-            : '-'
-
-        return {
-          waktu: formatDateTime(trx.waktu),
-          referensiId: trx.referensiId,
-          jenis: trx.jenis === 'VOID' ? 'REFUND' : trx.jenis,
-          titikKasir: trx.titikKasir,
-          petugas: trx.petugas,
-          daftarItem: itemStr,
-          keterangan: trx.keterangan,
-          nominal: trx.arah === 'DEBIT' ? -trx.nominal : trx.nominal,
-          saldoSetelah: trx.saldoSetelah,
-        }
-      })
-
-      const totalNominal = filteredRiwayat.reduce(
-        (acc, trx) => acc + (trx.arah === 'DEBIT' ? -trx.nominal : trx.nominal),
-        0
-      )
-
-      exportTableToExcel({
-        filename: `Rekening_Koran_${profil.nis}_${profil.nama.replace(/\s+/g, '_')}`,
-        sheetName: 'Riwayat Transaksi',
-        title: `REKENING KORAN & HISTORI TRANSAKSI SISWA - ${profil.nama.toUpperCase()}`,
-        metadata: {
-          'NIS': profil.nis,
-          'Kelas': profil.kelas,
-          'Nama Wali Murid': profil.parentName,
-          'Kontak Wali': profil.parentPhone,
-          'Saldo Terkini Saat Ini': formatRupiah(profil.saldo),
-          'Limit Harian': formatRupiah(profil.limitHarian),
-          'Tanggal Cetak': formatDateTime(new Date()),
-        },
-        columns: [
-          { header: 'No', width: 6 },
-          { header: 'Waktu Transaksi', key: 'waktu', width: 20 },
-          { header: 'No. Transaksi', key: 'referensiId', width: 22 },
-          { header: 'Jenis Mutasi', key: 'jenis', width: 14 },
-          { header: 'Titik Kasir', key: 'titikKasir', width: 20 },
-          { header: 'Petugas', key: 'petugas', width: 18 },
-          { header: 'Rincian Menu / Info', key: 'daftarItem', width: 32 },
-          { header: 'Keterangan', key: 'keterangan', width: 26 },
-          { header: 'Nominal (Rp)', key: 'nominal', width: 16 },
-          { header: 'Saldo Akhir (Rp)', key: 'saldoSetelah', width: 16 },
-        ],
-        data: exportRows,
-        summaryRow: {
-          no: '',
-          waktu: '',
-          referensiId: '',
-          jenis: '',
-          titikKasir: '',
-          petugas: '',
-          daftarItem: '',
-          keterangan: '',
-          nominal: totalNominal,
-          saldoSetelah: '',
-        },
+      await laporanApi.eksporExcel({
+        jenis: 'PER_SISWA',
+        siswaId: profil.siswaId,
       })
 
       toast.success('Ekspor Excel Berhasil', {
         description: `Rekening koran siswa ${profil.nama} (.xlsx) berhasil diunduh.`,
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor', { description: msg })
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     }
   }
 
@@ -898,6 +847,40 @@ export function LaporanRiwayatSiswaPage() {
                     <span>
                       <strong className="text-foreground">Catatan Ortu:</strong> {profil.catatanKontrol}
                     </span>
+                  </div>
+                )}
+
+                {laporanPerSiswa?.ringkasan && (
+                  <div
+                    data-testid="ringkasan-per-siswa"
+                    className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-border/80 bg-muted/20 p-3 text-xs"
+                  >
+                    <div>
+                      <p className="text-muted-foreground">Belanja Sukses ({laporanPerSiswa.ringkasan.jumlahTransaksiSukses}x)</p>
+                      <p className="font-mono font-semibold text-foreground tabular-nums">
+                        {formatRupiah(laporanPerSiswa.ringkasan.nilaiBelanjaSukses)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total Top-Up Periode</p>
+                      <p className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        {formatRupiah(laporanPerSiswa.ringkasan.totalTopup)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Refund / Void ({laporanPerSiswa.ringkasan.jumlahTransaksiVoid}x)</p>
+                      <p className="font-mono font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                        {formatRupiah(laporanPerSiswa.ringkasan.nilaiVoid)}
+                      </p>
+                    </div>
+                    {laporanPerSiswa.ringkasan.totalHpp != null && (
+                      <div>
+                        <p className="text-muted-foreground">Total Modal (HPP)</p>
+                        <p className="font-mono font-semibold text-foreground tabular-nums">
+                          {formatRupiah(laporanPerSiswa.ringkasan.totalHpp)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

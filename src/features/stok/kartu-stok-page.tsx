@@ -24,9 +24,20 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { ExportButton } from '@/components/export-button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { formatRupiah, formatNumber, formatDateTime, formatStokDisplay } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
+import { katalogApi } from '@/features/katalog/api/katalog-api'
+import type { MenuItem } from '@/features/katalog/types'
+import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { stokApi } from './api/stok-api'
 import { logStokAuditEvent } from './api/stok-audit'
 import { parseSafeMenuId, formatJenisMutasi, getStokExportMetadata } from './stok-utils'
@@ -36,8 +47,10 @@ import type { RiwayatStokItem } from './types'
 export function KartuStokPage() {
   // Baca menuId opsional jika ada navigasi spesifik dari halaman lain
   const searchParams = useSearch({ strict: false }) as { menuId?: unknown }
-  const menuIdParam = parseSafeMenuId(searchParams?.menuId)
+  const initialMenuId = parseSafeMenuId(searchParams?.menuId)
 
+  const [selectedMenuId, setSelectedMenuId] = useState<number | undefined>(initialMenuId)
+  const [menuList, setMenuList] = useState<MenuItem[]>([])
   const [riwayat, setRiwayat] = useState<RiwayatStokItem[]>([])
   const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -52,20 +65,57 @@ export function KartuStokPage() {
     return riwayat.slice(start, start + PAGE_SIZE)
   }, [riwayat, safeCurrentPage])
 
-  // Muat data mutasi stok seluruh menu
+  useEffect(() => {
+    let isMounted = true
+    katalogApi
+      .getMenuList()
+      .then((menus) => {
+        if (isMounted) setMenuList(menus)
+      })
+      .catch(() => {
+        // Daftar menu opsional untuk selector filter
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Muat mutasi stok dari GET /api/laporan/kartu-stok/{menuId} bila menu dipilih,
+  // atau seluruh mutasi dari GET /api/stok/riwayat bila melihat semua menu
   useEffect(() => {
     let isMounted = true
 
     const load = async () => {
       try {
         setIsLoadingRiwayat(true)
-        const riwayatRes = await stokApi.getRiwayatStok({
-          menuId: menuIdParam,
-          ukuran: 200,
-        })
-
-        if (!isMounted) return
-        setRiwayat(riwayatRes.items || [])
+        if (selectedMenuId) {
+          const kartu = await laporanApi.getKartuStok(selectedMenuId, 200)
+          if (!isMounted) return
+          setRiwayat(
+            kartu.mutasi.map((m) => ({
+              id: m.id,
+              menuId: kartu.menuId,
+              menuNama: kartu.namaMenu,
+              arah: (m.arah === 'MASUK' ? 'MASUK' : 'KELUAR') as 'MASUK' | 'KELUAR',
+              jenis: m.jenis as RiwayatStokItem['jenis'],
+              qty: m.qty,
+              stokSetelah: m.stokSetelah,
+              hppSnapshot: m.hppSnapshot ?? undefined,
+              hargaBeliSatuan: m.hargaBeliSatuan ?? undefined,
+              referensiId: m.referensiId || '-',
+              alasan: m.alasan ?? undefined,
+              aktorNama: m.aktorNama ?? undefined,
+              dapatDibalik: false,
+              waktu: m.waktu,
+            }))
+          )
+        } else {
+          const riwayatRes = await stokApi.getRiwayatStok({
+            ukuran: 200,
+          })
+          if (!isMounted) return
+          setRiwayat(riwayatRes.items || [])
+        }
       } catch (err: unknown) {
         if (!isMounted) return
         const error = err as { response?: { data?: { message?: string } }; message?: string }
@@ -81,7 +131,7 @@ export function KartuStokPage() {
     return () => {
       isMounted = false
     }
-  }, [menuIdParam])
+  }, [selectedMenuId])
 
   // Metrik KPI dari riwayat mutasi stok
   const kpiData = useMemo(() => {
@@ -129,10 +179,10 @@ export function KartuStokPage() {
         'Alasan/Catatan',
       ]
 
-      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const exportMeta = getStokExportMetadata(selectedMenuId, riwayat[0]?.menuNama)
       const dateStr = new Date().toISOString().slice(0, 10)
-      const filename = menuIdParam
-        ? `mutasi-stok-menu-${menuIdParam}-${dateStr}.csv`
+      const filename = selectedMenuId
+        ? `mutasi-stok-menu-${selectedMenuId}-${dateStr}.csv`
         : `mutasi-stok-${dateStr}.csv`
 
       const rows = riwayat.map((r, idx) => [
@@ -155,14 +205,35 @@ export function KartuStokPage() {
       downloadCsvBlob(filename, csvContent)
       void logStokAuditEvent({
         action: 'STOK_EXPORT_CSV',
-        menuId: menuIdParam,
+        menuId: selectedMenuId,
         detail: {
           totalBaris: rows.length,
           cakupan: exportMeta.cakupan,
-          menuId: menuIdParam ?? null,
+          menuId: selectedMenuId ?? null,
         },
       })
       toast.success('Data mutasi stok berhasil diunduh dalam format CSV')
+    } finally {
+      isExportingRef.current = false
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    if (!selectedMenuId) return
+    if (isExportingRef.current) return
+    isExportingRef.current = true
+    setIsExporting(true)
+    try {
+      await laporanApi.eksporExcel({
+        jenis: 'KARTU_STOK',
+        menuId: selectedMenuId,
+      })
+      toast.success('Ekspor Excel Kartu Stok berhasil diunduh')
+    } catch (err: unknown) {
+      toast.error('Gagal Ekspor Excel', {
+        description: getErrorMessage(err, 'Gagal mengekspor kartu stok'),
+      })
     } finally {
       isExportingRef.current = false
       setIsExporting(false)
@@ -179,7 +250,7 @@ export function KartuStokPage() {
     setIsExporting(true)
 
     try {
-      const exportMeta = getStokExportMetadata(menuIdParam, riwayat[0]?.menuNama)
+      const exportMeta = getStokExportMetadata(selectedMenuId, riwayat[0]?.menuNama)
       const dateStr = new Date().toISOString().split('T')[0]
       const rows = riwayat.map((r) => ({
         waktu: formatDateTime(r.waktu),
@@ -223,11 +294,11 @@ export function KartuStokPage() {
 
       void logStokAuditEvent({
         action: 'STOK_EXPORT_PDF',
-        menuId: menuIdParam,
+        menuId: selectedMenuId,
         detail: {
           totalBaris: rows.length,
           cakupan: exportMeta.cakupan,
-          menuId: menuIdParam ?? null,
+          menuId: selectedMenuId ?? null,
         },
       })
 
@@ -286,8 +357,29 @@ export function KartuStokPage() {
             </p>
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
+            <Select
+              value={selectedMenuId ? String(selectedMenuId) : 'ALL'}
+              onValueChange={(val) => {
+                setCurrentPage(1)
+                setSelectedMenuId(val === 'ALL' ? undefined : Number(val))
+              }}
+            >
+              <SelectTrigger className='w-[220px]' aria-label='Filter menu kartu stok'>
+                <SelectValue placeholder='Pilih Menu (Semua)' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='ALL'>Semua Menu (Riwayat Umum)</SelectItem>
+                {menuList.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <ExportButton
-              onExportCsv={handleExportCsv}
+              onExportExcel={selectedMenuId ? handleExportExcel : undefined}
+              onExportCsv={!selectedMenuId ? handleExportCsv : undefined}
               onExportPdf={handleExportPdf}
               disabled={riwayat.length === 0 || isExporting}
               data-testid='btn-kartu-stok-export'

@@ -6,6 +6,11 @@ import {
   type BarisPenjualanItem,
   type BarisPenjualanKategori,
   type BarisPenjualanKasir,
+  type BarisPenjualanDimensi,
+  type EksporLaporanParams,
+  type KartuStokLaporan,
+  type LaporanPerSiswa,
+  type RekapSetoranLaporanItem,
   type RingkasanSaldoMengendap,
   type SiswaSaldoDetail,
   type ProfilSiswaRiwayat,
@@ -769,4 +774,143 @@ export const laporanApi = {
       }
     })
   },
+
+  /**
+   * Penjualan per Titik Kasir (PRD §9.5, BE #116)
+   */
+  async getPenjualanPerTitik(
+    params?: LaporanFilterParams
+  ): Promise<BarisPenjualanDimensi[]> {
+    const res = await apiClient.get<ApiResponse<BarisPenjualanDimensi[]>>(
+      '/api/laporan/penjualan/titik',
+      { params }
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per titik kasir tidak mengembalikan data')
+    }
+    return rows
+  },
+
+  /**
+   * Penjualan per Petugas Kasir (PRD §9.5, BE #116)
+   */
+  async getPenjualanPerPetugas(
+    params?: LaporanFilterParams
+  ): Promise<BarisPenjualanDimensi[]> {
+    const res = await apiClient.get<ApiResponse<BarisPenjualanDimensi[]>>(
+      '/api/laporan/penjualan/petugas',
+      { params }
+    )
+    const rows = res.data?.data
+    if (!Array.isArray(rows)) {
+      throw new Error('Laporan penjualan per petugas tidak mengembalikan data')
+    }
+    return rows
+  },
+
+  /**
+   * Laporan Per Siswa lengkap — ringkasan, daftar transaksi, mutasi saldo (PRD §9.5, BE #117)
+   */
+  async getPerSiswa(
+    siswaId: number,
+    params?: LaporanFilterParams
+  ): Promise<LaporanPerSiswa> {
+    const res = await apiClient.get<ApiResponse<LaporanPerSiswa>>(
+      '/api/laporan/per-siswa',
+      { params: { ...params, siswaId } }
+    )
+    const data = res.data?.data
+    if (!data) {
+      throw new Error('Laporan per siswa tidak tersedia')
+    }
+    return {
+      ...data,
+      transaksi: Array.isArray(data.transaksi) ? data.transaksi : [],
+      mutasiSaldo: Array.isArray(data.mutasiSaldo) ? data.mutasiSaldo : [],
+    }
+  },
+
+  /**
+   * Laporan Kartu Stok per Item menu beserta saldo berjalan (PRD §9.5, BE #118)
+   */
+  async getKartuStok(menuId: number, batas?: number): Promise<KartuStokLaporan> {
+    const res = await apiClient.get<ApiResponse<KartuStokLaporan>>(
+      `/api/laporan/kartu-stok/${menuId}`,
+      { params: batas ? { batas } : undefined }
+    )
+    const data = res.data?.data
+    if (!data) {
+      throw new Error('Laporan kartu stok tidak ditemukan')
+    }
+    return {
+      ...data,
+      mutasi: Array.isArray(data.mutasi) ? data.mutasi : [],
+    }
+  },
+
+  /**
+   * Laporan Setoran Kas TU harian per petugas + selisih (PRD §9.5, BE #143, khusus Bendahara/TU)
+   */
+  async getSetoranTu(
+    params?: LaporanFilterParams
+  ): Promise<RekapSetoranLaporanItem[]> {
+    const res = await apiClient.get<ApiResponse<RekapSetoranLaporanItem[]>>(
+      '/api/laporan/setoran-tu',
+      { params }
+    )
+    return Array.isArray(res.data?.data) ? res.data.data : []
+  },
+
+  /**
+   * Unduh berkas Excel (.xlsx) resmi dari backend (GET /api/laporan/ekspor).
+   * Menegakkan AksesLaporan per peran, sanitasi formula SEC-01, dan mencatat audit EXPORT_LAPORAN.
+   */
+  async eksporExcel(params: EksporLaporanParams): Promise<string> {
+    try {
+      const res = await apiClient.get<Blob>('/api/laporan/ekspor', {
+        params,
+        responseType: 'blob',
+      })
+      const headers = (res.headers || {}) as Record<string, string | undefined>
+      const disposition = headers['content-disposition'] || headers['Content-Disposition'] || ''
+      const match = disposition.match(/filename="?([^"]+)"?/i)
+      const fallbackName = `Laporan_${params.jenis}_${new Date().toISOString().slice(0, 10)}.xlsx`
+      const filename = match?.[1]?.trim() || fallbackName
+
+      const blob =
+        res.data instanceof Blob
+          ? res.data
+          : new Blob([res.data], {
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            })
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      URL.revokeObjectURL(objectUrl)
+      return filename
+    } catch (err: unknown) {
+      throw await extractExportError(err)
+    }
+  },
+}
+
+async function extractExportError(err: unknown): Promise<unknown> {
+  const resp = (err as { response?: { data?: unknown } })?.response
+  if (resp?.data instanceof Blob) {
+    try {
+      const text = await resp.data.text()
+      const parsed = JSON.parse(text) as { message?: string }
+      if (parsed?.message) {
+        return Object.assign(new Error(parsed.message), { cause: err })
+      }
+    } catch {
+      // Abaikan error parsing JSON; kembalikan error asli
+    }
+  }
+  return err
 }

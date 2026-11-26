@@ -10,6 +10,7 @@ import {
   Store,
   Tag,
   TrendingUp,
+  UserCheck,
   Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -36,7 +37,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportMultiSheetExcel } from '@/lib/excelExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportMultiSectionPdf } from '@/lib/pdfExport'
 import { useRoleStore } from '@/stores/use-role-store'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
@@ -46,7 +47,9 @@ import type {
   RingkasanPenjualan,
   BarisPenjualanItem,
   BarisPenjualanKategori,
+  BarisPenjualanDimensi,
   BarisPenjualanKasir,
+  JenisLaporanEkspor,
   LaporanFilterParams,
 } from './types'
 
@@ -56,12 +59,16 @@ export function LaporanPenjualanPage() {
   const [ringkasan, setRingkasan] = useState<RingkasanPenjualan | null>(null)
   const [items, setItems] = useState<BarisPenjualanItem[]>([])
   const [kategoris, setKategoris] = useState<BarisPenjualanKategori[]>([])
+  const [titikList, setTitikList] = useState<BarisPenjualanDimensi[]>([])
+  const [petugasList, setPetugasList] = useState<BarisPenjualanDimensi[]>([])
   const [kasirs, setKasirs] = useState<BarisPenjualanKasir[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isKasirError, setIsKasirError] = useState(false)
   const [isRetryingKasir, setIsRetryingKasir] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'item' | 'kategori' | 'kasir'>('item')
+  const [activeTab, setActiveTab] = useState<
+    'item' | 'kategori' | 'titik' | 'petugas' | 'kasir'
+  >('item')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'terlaris' | 'laba' | 'margin'>('terlaris')
 
@@ -79,10 +86,12 @@ export function LaporanPenjualanPage() {
       try {
         setIsLoading(true)
         setIsKasirError(false)
-        const [resRingkasan, resItems, resKategoris] = await Promise.all([
+        const [resRingkasan, resItems, resKategoris, resTitik, resPetugas] = await Promise.all([
           laporanApi.getPenjualan(dateFilterParams),
           laporanApi.getPenjualanPerItem(dateFilterParams),
           laporanApi.getPenjualanPerKategori(dateFilterParams),
+          laporanApi.getPenjualanPerTitik(dateFilterParams).catch(() => []),
+          laporanApi.getPenjualanPerPetugas(dateFilterParams).catch(() => []),
         ])
         let kasirFailed = false
         const resKasirs = await laporanApi.getPenjualanPerKasir(dateFilterParams).catch((err) => {
@@ -95,6 +104,8 @@ export function LaporanPenjualanPage() {
         setRingkasan(resRingkasan)
         setItems(resItems)
         setKategoris(resKategoris)
+        setTitikList(resTitik)
+        setPetugasList(resPetugas)
         setKasirs(resKasirs)
         setIsKasirError(kasirFailed)
       } catch (err: unknown) {
@@ -201,175 +212,56 @@ export function LaporanPenjualanPage() {
     )
   }, [kasirs, searchQuery])
 
-  // Handler Ekspor Excel (Multi-Sheet Lengkap)
-  const handleExportExcel = () => {
+  // Filter Titik Kasir
+  const filteredTitik = useMemo(() => {
+    if (!searchQuery.trim()) return titikList
+    const q = searchQuery.toLowerCase()
+    return titikList.filter(
+      (t) =>
+        (t.nama || '').toLowerCase().includes(q) ||
+        String(t.kunciId).includes(q)
+    )
+  }, [titikList, searchQuery])
+
+  // Filter Petugas
+  const filteredPetugas = useMemo(() => {
+    if (!searchQuery.trim()) return petugasList
+    const q = searchQuery.toLowerCase()
+    return petugasList.filter(
+      (p) =>
+        (p.nama || '').toLowerCase().includes(q) ||
+        String(p.kunciId).includes(q)
+    )
+  }, [petugasList, searchQuery])
+
+  // Handler Ekspor Excel resmi via backend (tercatat audit & konsisten RBAC)
+  const handleExportExcel = async () => {
     if (!ringkasan) {
       toast.error('Data belum siap untuk diekspor')
       return
     }
 
-    try {
-      const exportItems = items.map((item) => ({
-        menuId: getItemId(item),
-        nama: item.nama || '-',
-        kategoriNama: item.kategoriNama || 'Umum',
-        qty: item.qty ?? 0,
-        hargaSatuan: getItemHarga(item),
-        total: getItemOmset(item),
-        ...(!isAdmin
-          ? {
-              hpp: getItemUnitModal(item),
-              modal: getItemModal(item),
-              laba: getItemLaba(item),
-              marginPersen: getItemMargin(item),
-            }
-          : {}),
-      }))
-      const exportKategoris = kategoris.map((kat) => ({
-        kategoriId: getKatId(kat),
-        nama: kat.nama || '-',
-        jumlahItem: kat.jumlahItem ?? '-',
-        qty: kat.qty ?? 0,
-        total: getKatOmset(kat),
-        ...(!isAdmin
-          ? {
-              modal: getKatModal(kat),
-              laba: getKatLaba(kat),
-              marginPersen: getKatMargin(kat),
-            }
-          : {}),
-      }))
+    const tabToJenis: Record<typeof activeTab, JenisLaporanEkspor> = {
+      item: 'PENJUALAN_ITEM',
+      kategori: 'PENJUALAN_KATEGORI',
+      titik: 'PENJUALAN_TITIK',
+      petugas: 'PENJUALAN_PETUGAS',
+      kasir: 'PENJUALAN_KASIR',
+    }
 
-      exportMultiSheetExcel({
-        filename: `Laporan_Penjualan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        sheets: [
-          {
-            sheetName: 'Penjualan per Item',
-            title: 'LAPORAN PENJUALAN PER ITEM MENU',
-            metadata: isAdmin
-              ? {
-                  'Tanggal Cetak': formatDateTime(new Date()),
-                  'Periode Laporan': dateFilterLabel,
-                  'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
-                  'Total Transaksi': `${formatNumber(ringkasan.jumlahTransaksi ?? 0)} Trx`,
-                }
-              : {
-                  'Tanggal Cetak': formatDateTime(new Date()),
-                  'Periode Laporan': dateFilterLabel,
-                  'Total Penjualan Akhir': formatRupiah(summaryPenjualanBersih),
-                  'Total Harga Modal': formatRupiah(summaryTotalModal),
-                  'Total Keuntungan': formatRupiah(summaryLaba),
-                  'Rata-rata Persen Untung': `${summaryMargin}%`,
-                },
-            columns: [
-              { header: 'No', width: 6 },
-              { header: 'Nama Menu', key: 'nama', width: 28 },
-              { header: 'Kategori', key: 'kategoriNama', width: 16 },
-              { header: 'Qty Terjual', key: 'qty', width: 12 },
-              { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
-              ...(!isAdmin ? [{ header: 'Modal Satuan (Rp)', key: 'hpp', width: 14 }] : []),
-              { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
-              ...(!isAdmin
-                ? [
-                    { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-                    { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
-                    {
-                      header: 'Persen Untung (%)',
-                      key: 'marginPersen',
-                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
-                      width: 12,
-                    },
-                  ]
-                : []),
-            ],
-            data: exportItems,
-            summaryRow: {
-              no: '',
-              nama: '',
-              kategoriNama: '',
-              qty: items.reduce((acc, i) => acc + (i.qty || 0), 0),
-              hargaSatuan: '',
-              ...(!isAdmin ? { hpp: '' } : {}),
-              total: summaryPenjualanBersih,
-              ...(!isAdmin
-                ? {
-                    modal: summaryTotalModal,
-                    laba: summaryLaba,
-                    marginPersen: `${summaryMargin}%`,
-                  }
-                : {}),
-            },
-          },
-          {
-            sheetName: 'Penjualan per Kategori',
-            title: 'LAPORAN PENJUALAN PER KATEGORI MENU',
-            columns: [
-              { header: 'No', width: 6 },
-              { header: 'Nama Kategori', key: 'nama', width: 25 },
-              { header: 'Jumlah Variasi Menu', key: 'jumlahItem', width: 18 },
-              { header: 'Total Qty Terjual', key: 'qty', width: 16 },
-              { header: 'Total Penjualan (Rp)', key: 'total', width: 20 },
-                  ...(!isAdmin
-                ? [
-                    { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-                    { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
-                    {
-                      header: 'Persen Untung (%)',
-                      key: 'marginPersen',
-                      formatter: (v: unknown) => `${Number(v ?? 0)}%`,
-                      width: 12,
-                    },
-                  ]
-                : []),
-            ],
-            data: exportKategoris,
-            summaryRow: {
-              no: '',
-              nama: '',
-              jumlahItem: '',
-              qty: kategoris.reduce((acc, k) => acc + (k.qty || 0), 0),
-              total: summaryPenjualanBersih,
-              ...(!isAdmin
-                ? {
-                    modal: summaryTotalModal,
-                    laba: summaryLaba,
-                    marginPersen: `${summaryMargin}%`,
-                  }
-                : {}),
-            },
-          },
-          {
-            sheetName: 'Penjualan per Kasir',
-            title: 'LAPORAN PENJUALAN PER TITIK KASIR',
-            columns: [
-              { header: 'No', width: 6 },
-              { header: 'Titik Kasir', key: 'namaTitikKasir', width: 25 },
-              { header: 'Petugas Jaga', key: 'petugas', width: 20 },
-              { header: 'Jumlah Trx', key: 'jumlahTransaksi', width: 16 },
-              { header: 'Total Penjualan Sebelum Refund (Rp)', key: 'penjualanBruto', width: 22 },
-              { header: 'Nilai Refund (Rp)', key: 'nilaiVoid', width: 16 },
-              { header: 'Total Penjualan Akhir (Rp)', key: 'penjualanBersih', width: 22 },
-            ],
-            data: kasirs,
-            summaryRow: {
-              no: '',
-              namaTitikKasir: '',
-              petugas: '',
-              jumlahTransaksi: kasirs.reduce((acc, k) => acc + (k.jumlahTransaksi || 0), 0),
-              penjualanBruto: kasirs.reduce((acc, k) => acc + (k.penjualanBruto || 0), 0),
-              nilaiVoid: kasirs.reduce((acc, k) => acc + (k.nilaiVoid || 0), 0),
-              penjualanBersih: kasirs.reduce((acc, k) => acc + (k.penjualanBersih || 0), 0),
-            },
-          },
-        ],
+    try {
+      await laporanApi.eksporExcel({
+        jenis: tabToJenis[activeTab],
+        ...dateFilterParams,
       })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: 'Buku kerja Excel dengan 3 sheet laporan penjualan berhasil diunduh.',
+        description: `Laporan ${tabToJenis[activeTab]} berhasil diunduh dari server.`,
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor', { description: msg })
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     }
   }
 
@@ -722,15 +614,17 @@ export function LaporanPenjualanPage() {
             </Card>
           </div>
 
-          {/* TABS VIEW: PER ITEM, PER KATEGORI, PER KASIR */}
+          {/* TABS VIEW: PER ITEM, PER KATEGORI, PER TITIK, PER PETUGAS, PER KASIR */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as 'item' | 'kategori' | 'kasir')}
+            onValueChange={(v) =>
+              setActiveTab(v as 'item' | 'kategori' | 'titik' | 'petugas' | 'kasir')
+            }
             className="space-y-4"
           >
             <TableToolbar
               extraLeft={
-                <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                <TabsList className="flex flex-wrap h-auto w-full sm:w-auto">
                   <TabsTrigger value="item" className="gap-2">
                     <Layers className="h-4 w-4" />
                     <span>Per Menu ({items.length})</span>
@@ -739,9 +633,17 @@ export function LaporanPenjualanPage() {
                     <Tag className="h-4 w-4" />
                     <span>Per Kategori ({kategoris.length})</span>
                   </TabsTrigger>
+                  <TabsTrigger value="titik" className="gap-2">
+                    <Store className="h-4 w-4" />
+                    <span>Per Titik Kasir ({titikList.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="petugas" className="gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    <span>Per Petugas ({petugasList.length})</span>
+                  </TabsTrigger>
                   <TabsTrigger value="kasir" className="gap-2">
                     <Store className="h-4 w-4" />
-                    <span>Per Titik Kasir ({kasirs.length})</span>
+                    <span>Per Kasir ({kasirs.length})</span>
                   </TabsTrigger>
                 </TabsList>
               }
@@ -1164,6 +1066,100 @@ export function LaporanPenjualanPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* TAB CONTENT: PER TITIK KASIR & PER PETUGAS (GET /api/laporan/penjualan/titik & /petugas) */}
+            {(
+              [
+                {
+                  tab: 'titik',
+                  title: 'Penjualan per Titik Kasir',
+                  description: 'Rekap transaksi, nilai penjualan, dan laba kotor per titik pos kasir.',
+                  columnLabel: 'Titik Kasir',
+                  prefix: 'Titik #',
+                  rows: filteredTitik,
+                },
+                {
+                  tab: 'petugas',
+                  title: 'Penjualan per Petugas',
+                  description: 'Rekap transaksi, nilai penjualan, dan laba kotor per petugas kasir.',
+                  columnLabel: 'Petugas',
+                  prefix: 'Petugas #',
+                  rows: filteredPetugas,
+                },
+              ] as const
+            ).map(({ tab, title, description, columnLabel, prefix, rows }) => (
+              <TabsContent key={tab} value={tab} className="space-y-4">
+                <Card className="p-0 gap-0 overflow-hidden">
+                  <CardHeader className="border-b border-border bg-muted/30 px-6 py-4">
+                    <CardTitle className="text-base font-bold">{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow className="border-b border-border hover:bg-transparent">
+                          <TableHead className="w-12 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">No.</TableHead>
+                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{columnLabel}</TableHead>
+                          <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jumlah Transaksi</TableHead>
+                          <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Penjualan</TableHead>
+                          {!isAdmin && (
+                            <>
+                              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Modal (HPP)</TableHead>
+                              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-primary">Laba Kotor</TableHead>
+                            </>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {isLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={isAdmin ? 4 : 6} className="h-32 text-center text-muted-foreground">
+                              <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Memuat data {title.toLowerCase()}...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : rows.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={isAdmin ? 4 : 6} className="h-24 text-center text-muted-foreground">
+                              Tidak ada data yang cocok.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          rows.map((row, idx) => (
+                            <TableRow key={row.kunciId ?? idx} className="border-b border-border last:border-b-0">
+                              <TableCell className="text-center text-xs text-muted-foreground font-mono tabular-nums">
+                                {idx + 1}
+                              </TableCell>
+                              <TableCell className="font-semibold text-sm">
+                                {row.nama || `${prefix}${row.kunciId}`}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold tabular-nums">
+                                {formatNumber(row.jumlahTransaksi ?? 0)} trx
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-sm tabular-nums text-emerald-600 dark:text-emerald-400">
+                                {formatRupiah(row.nilai ?? 0)}
+                              </TableCell>
+                              {!isAdmin && (
+                                <>
+                                  <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+                                    {row.hpp != null ? formatRupiah(row.hpp) : '-'}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-semibold text-sm tabular-nums text-primary">
+                                    {row.labaKotor != null ? formatRupiah(row.labaKotor) : '-'}
+                                  </TableCell>
+                                </>
+                              )}
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
           </Tabs>
       </Main>
     </>

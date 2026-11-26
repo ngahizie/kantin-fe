@@ -23,7 +23,8 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportTableToExcel, sanitizeFormulaCell } from '@/lib/excelExport'
+import { sanitizeFormulaCell } from '@/lib/excelExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import {
   LaporanDateFilter,
@@ -176,76 +177,25 @@ export function LaporanLabaKotorPage() {
     return [...items].sort((a, b) => getItemLaba(b) - getItemLaba(a))[0]
   }, [items])
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!ringkasan) {
       toast.error('Data belum siap diekspor')
       return
     }
 
     try {
-      const exportRows = filteredItems.map((item) => ({
-        menuId: getItemId(item),
-        nama: sanitizeFormulaCell(item.nama),
-        kategoriNama: sanitizeFormulaCell(item.kategoriNama || 'Umum'),
-        qty: Math.max(0, Number(item.qty) || 0),
-        hargaSatuan: getItemHarga(item),
-        hpp: getItemUnitModal(item),
-        total: getItemOmset(item),
-        modal: getItemModal(item),
-        laba: getItemLaba(item),
-        marginPersen: getItemMargin(item),
-      }))
-
-      exportTableToExcel({
-        filename: `Laporan_Keuntungan_Kantin_${new Date().toISOString().split('T')[0]}`,
-        sheetName: 'Keuntungan Penjualan',
-        title: 'LAPORAN KEUNTUNGAN PENJUALAN',
-        metadata: {
-          'Periode': dateFilterLabel,
-          'Tanggal Cetak': formatDateTime(new Date()),
-          'Total Penjualan Akhir': formatRupiah(ringkasan.penjualanBersih ?? 0),
-          'Total Harga Modal': formatRupiah(summaryTotalModal),
-          'Total Keuntungan': formatRupiah(summaryLaba),
-          'Rata-rata Persen Untung': `${summaryMargin}%`,
-        },
-        columns: [
-          { header: 'No', width: 6 },
-          { header: 'Nama Menu', key: 'nama', width: 28 },
-          { header: 'Kategori', key: 'kategoriNama', width: 16 },
-          { header: 'Qty Terjual', key: 'qty', width: 12 },
-          { header: 'Harga Satuan (Rp)', key: 'hargaSatuan', width: 16 },
-          { header: 'Modal Satuan (Rp)', key: 'hpp', width: 14 },
-          { header: 'Total Penjualan (Rp)', key: 'total', width: 18 },
-          { header: 'Total Modal (Rp)', key: 'modal', width: 18 },
-          { header: 'Keuntungan (Rp)', key: 'laba', width: 18 },
-          {
-            header: 'Persen Untung (%)',
-            key: 'marginPersen',
-            formatter: (v) => `${Number(v ?? 0)}%`,
-            width: 12,
-          },
-        ],
-        data: exportRows,
-        summaryRow: {
-          no: '',
-          nama: '',
-          kategoriNama: '',
-          qty: filteredItems.reduce((acc, item) => acc + (item.qty || 0), 0),
-          hargaSatuan: '',
-          hpp: '',
-          total: ringkasan.penjualanBersih ?? 0,
-          modal: summaryTotalModal,
-          laba: summaryLaba,
-          marginPersen: `${summaryMargin}%`,
-        },
+      await laporanApi.eksporExcel({
+        jenis: 'PENJUALAN_ITEM',
+        ...dateFilterParams,
       })
 
       toast.success('Ekspor Excel Berhasil', {
         description: 'Laporan Keuntungan Penjualan (.xlsx) berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor', { description: msg })
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     }
   }
 

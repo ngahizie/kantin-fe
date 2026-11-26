@@ -35,8 +35,8 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime } from '@/lib/formatters'
-import { exportMultiSheetExcel } from '@/lib/excelExport'
 import { exportMultiSectionPdf, type PdfTableSection } from '@/lib/pdfExport'
+import { getErrorMessage } from '@/lib/validation-error'
 import { LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
 import type {
@@ -133,101 +133,23 @@ export function LaporanSaldoMengendapPage() {
     )
   }, [canAccessSiswa, siswaList, searchQuery, statusFilter])
 
-  // Ekspor Excel Multi-Sheet disesuaikan dengan role
-  const handleExportExcel = () => {
+  // Ekspor Excel resmi via backend (tercatat audit & konsisten RBAC)
+  const handleExportExcel = async () => {
     if (!ringkasan) {
       toast.error('Data belum siap untuk diekspor')
       return
     }
 
     try {
-      const sheets = []
-
-      // Sheet 1: Saldo Siswa (TU/Bendahara & Admin)
-      if (canAccessSiswa) {
-        const totalSaldo = filteredSiswa.reduce((acc, s) => acc + (Number(s.saldo) || 0), 0)
-        const totalBelanjaHariIni = filteredSiswa.reduce((acc, s) => acc + (Number(s.belanjaHariIni) || 0), 0)
-
-        sheets.push({
-          sheetName: 'Saldo Siswa',
-          title: 'Laporan Total Saldo Siswa',
-          metadata: {
-            'Tanggal Cetak': formatDateTime(new Date()),
-            'Grand Total Saldo Titipan': formatRupiah(ringkasan.saldoSiswa),
-            'Total Siswa Terdaftar': `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
-            'Jumlah Baris Diekspor': `${filteredSiswa.length} Siswa`,
-          },
-          columns: [
-            { header: 'No', width: 6 },
-            { header: 'NIS', key: 'nis', width: 14 },
-            { header: 'Nama Siswa', key: 'nama', width: 25 },
-            { header: 'Kelas', key: 'kelas', width: 10 },
-            { header: 'Nama Orang Tua', key: 'parentName', width: 22 },
-            { header: 'Saldo Terkini (Rp)', key: 'saldo', width: 18 },
-            {
-              header: 'Limit Harian (Rp)',
-              key: 'limitHarian',
-              formatter: (v: unknown) => (Number(v) > 0 ? Number(v) : '-'),
-              width: 16,
-            },
-            { header: 'Belanja Hari Ini (Rp)', key: 'belanjaHariIni', width: 18 },
-            {
-              header: 'Status Kartu',
-              key: 'isBlocked',
-              formatter: (v: unknown) => (v ? 'DIBLOKIR' : 'AKTIF'),
-              width: 14,
-            },
-          ],
-          data: filteredSiswa,
-          summaryRow: {
-            no: '',
-            nis: '',
-            nama: '',
-            kelas: '',
-            parentName: '',
-            saldo: totalSaldo,
-            limitHarian: '',
-            belanjaHariIni: totalBelanjaHariIni,
-            isBlocked: '',
-          },
-        })
-      }
-
-      // Sheet Ringkasan untuk Kepala Sekolah (jika tidak memiliki akses rincian)
-      if (sheets.length === 0) {
-        sheets.push({
-          sheetName: 'Ringkasan Utama',
-          title: 'LAPORAN RINGKASAN TOTAL SALDO SISWA (TITIPAN)',
-          metadata: {
-            'Tanggal Cetak': formatDateTime(new Date()),
-            'Total Dana Titipan': formatRupiah(ringkasan.saldoSiswa),
-          },
-          columns: [
-            { header: 'Jenis Data', key: 'kategori', width: 28 },
-            { header: 'Jumlah', key: 'jumlah', width: 18 },
-            { header: 'Total Saldo Siswa (Rp)', key: 'total', width: 25 },
-          ],
-          data: [
-            {
-              kategori: 'Total Saldo Siswa',
-              jumlah: `${formatNumber(ringkasan.jumlahSiswa)} Siswa`,
-              total: formatRupiah(ringkasan.saldoSiswa),
-            },
-          ],
-        })
-      }
-
-      exportMultiSheetExcel({
-        filename: `Laporan_Total_Saldo_Siswa_${new Date().toISOString().split('T')[0]}`,
-        sheets,
-      })
+      await laporanApi.eksporExcel({ jenis: 'SALDO_MENGENDAP' })
 
       toast.success('Ekspor Excel Berhasil', {
-        description: `Laporan Total Saldo Siswa berhasil diunduh.`,
+        description: 'Laporan Total Saldo Siswa berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor Excel', { description: msg })
+      toast.error('Gagal Ekspor Excel', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     }
   }
 
