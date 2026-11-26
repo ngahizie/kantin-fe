@@ -34,12 +34,13 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
-import type { SiswaNonaktifMock, RefundSlipData } from './types'
+import type { SiswaNonaktif } from '@/types/kantin'
+import type { RefundSlipData } from './types'
 
 interface RefundOrangTuaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  siswa: SiswaNonaktifMock | null
+  siswa: SiswaNonaktif | null
   onRefundSuccess: (siswaId: number, slipData: RefundSlipData) => void
 }
 
@@ -75,7 +76,7 @@ function RefundOrangTuaFormContent({
   onOpenChange,
   onRefundSuccess,
 }: {
-  siswa: SiswaNonaktifMock
+  siswa: SiswaNonaktif
   onOpenChange: (open: boolean) => void
   onRefundSuccess: (siswaId: number, slipData: RefundSlipData) => void
 }) {

@@ -8,7 +8,7 @@ import { katalogApi } from '@/features/katalog/api/katalog-api'
 
 import type { AddCartItemOptions } from '@/stores/use-cart-store'
 
-export interface MenuItemCardProps {
+interface MenuItemCardProps {
   menu: MenuItem
   cartQty?: number
   onAddToCart: (menu: MenuItem, options?: AddCartItemOptions) => void

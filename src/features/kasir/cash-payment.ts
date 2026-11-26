@@ -1,6 +1,6 @@
 import { formatRupiah } from '@/lib/formatters'
 
-export interface CashPaymentSummary {
+interface CashPaymentSummary {
   total: number
   uangDiterima: number
   kembalian: number

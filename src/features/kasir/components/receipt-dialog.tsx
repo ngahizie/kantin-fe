@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import type { ReceiptData } from '../types'
 
-export interface ReceiptDialogProps {
+interface ReceiptDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   receipt: ReceiptData | null

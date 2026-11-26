@@ -86,14 +86,14 @@ describe('Security Hardening Kasir (OWASP & NIST)', () => {
     })
   })
 
-  describe('SEC-KASIR-04: Penghapusan Default Param Kosong pada voidTransaksi', () => {
-    it('menolak voidTransaksi jika kodeStruk kosong atau hanya whitespace', async () => {
+  describe('SEC-KASIR-04: Penghapusan Default Param Kosong pada refundTransaksi', () => {
+    it('menolak refundTransaksi jika kodeStruk kosong atau hanya whitespace', async () => {
       await expect(
-        kasirApi.voidTransaksi(1, 'Salah menu', '')
+        kasirApi.refundTransaksi(1, 'Salah menu', '')
       ).rejects.toThrow('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
 
       await expect(
-        kasirApi.voidTransaksi(1, 'Salah menu', '   ')
+        kasirApi.refundTransaksi(1, 'Salah menu', '   ')
       ).rejects.toThrow('Kode struk wajib diisi untuk melakukan pembatalan transaksi')
     })
   })

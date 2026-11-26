@@ -16,11 +16,12 @@
 
 import ExcelJS from 'exceljs'
 import * as XLSX from 'xlsx'
-import { useAuthStore } from '@/stores/auth-store'
-import { SCHOOL_LOGO_BASE64, getSchoolLogoBase64 } from '@/assets/schoolLogoBase64'
+import { getSchoolProfile, stripKantinSkoolia, SCHOOL_LOGO_BASE64 } from './export-helpers'
 import { formatDateTime } from './formatters'
 
-export interface ExcelColumn<T = any> {
+export { stripKantinSkoolia } from './export-helpers'
+
+interface ExcelColumn<T = any> {
   header: string
   key?: keyof T | string
   formatter?: (val: unknown, row: T, rowIndex: number) => string | number | boolean | null | undefined
@@ -28,7 +29,7 @@ export interface ExcelColumn<T = any> {
   align?: 'left' | 'center' | 'right'
 }
 
-export interface ExportTableOptions<T = any> {
+interface ExportTableOptions<T = any> {
   filename: string
   sheetName?: string
   title?: string
@@ -44,7 +45,7 @@ export interface ExportTableOptions<T = any> {
   footnote?: string
 }
 
-export interface SheetConfig<T = any> {
+interface SheetConfig<T = any> {
   sheetName: string
   title?: string
   schoolName?: string
@@ -59,7 +60,7 @@ export interface SheetConfig<T = any> {
   footnote?: string
 }
 
-export interface MultiSheetExportOptions {
+interface MultiSheetExportOptions {
   filename: string
   schoolName?: string
   schoolAddress?: string
@@ -67,12 +68,12 @@ export interface MultiSheetExportOptions {
   sheets: SheetConfig<any>[]
 }
 
-export type StyledWorkbook = ExcelJS.Workbook & {
+type StyledWorkbook = ExcelJS.Workbook & {
   SheetNames?: string[]
   Sheets?: Record<string, any>
 }
 
-export interface ExportExcelResult {
+interface ExportExcelResult {
   workbook: StyledWorkbook
   filename: string
   bufferPromise: Promise<Uint8Array | undefined>
@@ -253,29 +254,6 @@ function shouldColumnBeSummed(key: string, header: string): boolean {
   return false
 }
 
-/**
- * Mengambil informasi sekolah aktif dari auth store dengan fallback yang aman
- */
-function getSchoolProfile(): { name: string; address: string; logoBase64: string } {
-  try {
-    const user = useAuthStore.getState().auth.user
-    const sekolahId = user?.sekolahId
-    const name = user?.sekolahNama || 'SMP NEGERI 1 SKOOLIA'
-    const address =
-      sekolahId === 10 || /10/.test(name)
-        ? 'Jl. Diponegoro No. 10, Lingkungan Pendidikan SKOOLIA'
-        : 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA'
-    const logoBase64 = getSchoolLogoBase64(sekolahId, name)
-    return { name, address, logoBase64 }
-  } catch {
-    return {
-      name: 'SMP NEGERI 1 SKOOLIA',
-      address: 'Jl. Merdeka No. 1, Lingkungan Pendidikan SKOOLIA',
-      logoBase64: SCHOOL_LOGO_BASE64,
-    }
-  }
-}
-
 const COLOR_NAVY = 'FF123463'
 const COLOR_ZEBRA = 'FFF0F4FB'
 const COLOR_TOTAL = 'FF22559B'
@@ -286,19 +264,6 @@ const COLOR_HEADER_BORDER = 'FFD3D3D3'
 function cleanBase64ForExcel(raw: string): string {
   const commaIdx = raw.indexOf(',')
   return commaIdx >= 0 ? raw.substring(commaIdx + 1).trim() : raw.trim()
-}
-
-/**
- * Menghapus embel-embel "Kantin Skoolia" dari judul, subjudul, atau catatan
- */
-export function stripKantinSkoolia(text?: string | null): string {
-  if (!text) return ''
-  return text
-    .replace(/\s*[-–—:]?\s*kantin\s+skoolia\b/gi, '')
-    .replace(/\bkantin\s+skoolia\s*[-–—:]?\s*/gi, '')
-    .replace(/^[-–—:\s]+|[-–—:\s]+$/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
 }
 
 /**

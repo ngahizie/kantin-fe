@@ -15,7 +15,7 @@ import {
 import type { CartItem } from '@/stores/use-cart-store'
 import { PILIHAN_ALASAN_STOK_MINUS, type AlasanStokMinusType } from '../types'
 
-export interface StokMinusConfirmDialogProps {
+interface StokMinusConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   minusItems: CartItem[]

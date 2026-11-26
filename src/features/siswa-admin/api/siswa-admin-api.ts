@@ -1,18 +1,12 @@
 import apiClient from '@/lib/api-client'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
+import type { ApiEnvelope } from '@/lib/api-types'
 import type {
   DaftarSiswaAdminParams,
   PasangKartuPayload,
   SimpanSiswaAdminPayload,
   SiswaManajemenItem,
 } from '../types'
-
-interface ApiEnvelope<T> {
-  code?: number
-  status?: string
-  message?: string
-  data: T
-}
 
 export const siswaAdminApi = {
   async list(params?: DaftarSiswaAdminParams): Promise<SiswaManajemenItem[]> {

@@ -1,4 +1,4 @@
-export interface MenuItemMock {
+export interface MenuItem {
   id: number
   nama: string
   kode_barcode?: string | null
@@ -13,14 +13,14 @@ export interface MenuItemMock {
   hpp: number
 }
 
-export interface KategoriMock {
+export interface Kategori {
   id: number
   nama: string
   is_active: boolean
   jumlah_item: number
 }
 
-export interface KartuSiswaMock {
+export interface KartuSiswa {
   uid: string
   siswa_id: number
   nis: string
@@ -42,7 +42,7 @@ export interface KartuSiswaMock {
   updated_at?: string
 }
 
-export interface SiblingMock {
+export interface Sibling {
   siswa_id: number
   nis: string
   nama: string
@@ -53,7 +53,7 @@ export interface SiblingMock {
   is_blocked: boolean
 }
 
-export interface SiswaNonaktifMock {
+export interface SiswaNonaktif {
   siswa_id: number
   nis: string
   nama: string
@@ -69,7 +69,7 @@ export interface SiswaNonaktifMock {
   kontak_ortu: string
   no_rekening_ortu?: string
   bank_ortu?: string
-  saudara_kandung?: SiblingMock[]
+  saudara_kandung?: Sibling[]
   is_refunded?: boolean
   refund_info?: {
     tipe: 'REFUND_ORTU' | 'TRANSFER_SAUDARA'
@@ -86,3 +86,9 @@ export interface SiswaNonaktifMock {
     saudara_tujuan_nama?: string
   }
 }
+
+// Kompatibilitas mundur untuk mock data & legacy alias
+export type MenuItemMock = MenuItem
+export type KategoriMock = Kategori
+export type KartuSiswaMock = KartuSiswa
+export type SiswaNonaktifMock = SiswaNonaktif

@@ -7,7 +7,7 @@ import type { MenuItem } from '@/features/katalog/types'
 import type { AddCartItemOptions } from '@/stores/use-cart-store'
 import { MenuItemCard } from './menu-item-card'
 
-export interface MenuGridProps {
+interface MenuGridProps {
   menus: MenuItem[]
   loading?: boolean
   getCartQty: (menuId: number) => number

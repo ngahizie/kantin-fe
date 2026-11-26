@@ -1,11 +1,11 @@
 import { createClientAuditLogger } from '@/lib/client-audit'
 
-export type StokAuditAction =
+type StokAuditAction =
   | 'STOK_EXPORT_CSV'
   | 'STOK_EXPORT_PDF'
   | 'STOK_MUTASI_VIEW'
 
-export interface StokAuditEvent {
+interface StokAuditEvent {
   action: StokAuditAction
   menuId?: number | null
   detail?: Record<string, unknown>

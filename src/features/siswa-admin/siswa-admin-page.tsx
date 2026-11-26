@@ -37,22 +37,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { TableToolbar } from '@/components/data-table'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, getInitials } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/validation-error'
 import { toast } from 'sonner'
 import { siswaAdminApi } from './api/siswa-admin-api'
 import { PasangKartuModal } from './pasang-kartu-modal'
 import { SiswaFormModal } from './siswa-form-modal'
 import type { SiswaManajemenItem } from './types'
-
-function getInitials(nama?: string): string {
-  if (!nama) return 'S'
-  const parts = nama.trim().split(/\s+/)
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  }
-  return parts[0].slice(0, 2).toUpperCase()
-}
 
 export function SiswaAdminPage() {
   const [items, setItems] = useState<SiswaManajemenItem[]>([])

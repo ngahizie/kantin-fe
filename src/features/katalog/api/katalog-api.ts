@@ -1,5 +1,6 @@
 import apiClient from '@/lib/api-client'
 import { notifyKatalogChanged } from '@/lib/katalog-sync'
+import type { ApiResponse } from '@/lib/api-types'
 import type {
   KategoriItem,
   MenuItem,
@@ -8,13 +9,6 @@ import type {
   MenuUpdatePayload,
   UploadResponseData,
 } from '../types'
-
-interface ApiResponse<T> {
-  responseCode?: number
-  code?: number
-  message?: string
-  data: T
-}
 
 export const katalogApi = {
   // --- KATEGORI ---

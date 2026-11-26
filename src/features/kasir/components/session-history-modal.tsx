@@ -43,7 +43,7 @@ const FILTER_STATUS_OPTIONS = [
 const FILTER_SELECT_ITEM_CLASS =
   'rounded-lg py-1.5 ps-2 pe-8 text-xs font-medium cursor-pointer'
 
-export interface SessionHistoryModalProps {
+interface SessionHistoryModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   transactions: TransaksiSesiItem[]

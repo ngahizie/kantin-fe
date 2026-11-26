@@ -20,7 +20,7 @@ export function getCookie(name: string): string | undefined {
   return undefined
 }
 
-export interface SetCookieOptions {
+interface SetCookieOptions {
   sameSite?: 'Lax' | 'Strict' | 'None'
   secure?: boolean
 }

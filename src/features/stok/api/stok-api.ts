@@ -1,5 +1,6 @@
 import apiClient from '@/lib/api-client'
 import { notifyKatalogChanged } from '@/lib/katalog-sync'
+import type { ApiResponse } from '@/lib/api-types'
 import type {
   RiwayatStokItem,
   HalamanResponse,
@@ -14,14 +15,7 @@ import type {
   InventarisItem,
 } from '../types'
 
-interface ApiResponse<T> {
-  responseCode?: number
-  code?: number
-  message?: string
-  data: T
-}
-
-export interface RiwayatFilterParams {
+interface RiwayatFilterParams {
   menuId?: number
   jenis?: JenisMutasiStok
   dari?: string

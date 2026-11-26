@@ -42,7 +42,7 @@ import type { BarisKerugianStok, RingkasanKerugianStok, LaporanFilterParams } fr
 
 const DEFAULT_PAGE_SIZE = 50
 
-export interface LaporanKerugianStokPageProps {
+interface LaporanKerugianStokPageProps {
   /** Ukuran halaman paginasi server (default 50, dibatasi maks 200 sesuai batas BE) */
   pageSize?: number
 }

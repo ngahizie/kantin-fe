@@ -158,17 +158,6 @@ export interface ReceiptData {
   saldoSisa: number | null
 }
 
-export interface RefundTransaksiPayload {
-  alasan: string
-  kodeStruk: string
-}
-
-export interface ApiErrorResponse {
-  message: string
-  kekurangan?: number
-  code?: number
-}
-
 export interface InfoSaldoData {
   id?: number
   nis?: string | null

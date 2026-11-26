@@ -65,12 +65,3 @@ export function cleanupDeletedTitikKasirIds(activeServerIds: number[]): void {
     // ignore
   }
 }
-
-export function clearAllDeletedTitikKasirIds(): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem(DELETED_TITIK_KASIR_STORAGE_KEY)
-  } catch {
-    // ignore
-  }
-}

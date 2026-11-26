@@ -6,15 +6,12 @@ import type {
   MenuItemMock,
   KategoriMock,
   KartuSiswaMock,
-  SiblingMock,
   SiswaNonaktifMock,
 } from '@/types/kantin'
 
 export type {
   MenuItemMock,
-  KategoriMock,
   KartuSiswaMock,
-  SiblingMock,
   SiswaNonaktifMock,
 }
 
@@ -981,7 +978,7 @@ export const MOCK_KERUGIAN_STOK: KerugianStokMock[] = [
   },
 ]
 
-export interface RiwayatSiswaDetailMock {
+interface RiwayatSiswaDetailMock {
   id: string
   waktu: string
   jenis: 'BELANJA' | 'TOPUP_TUNAI' | 'TOPUP_ONLINE' | 'VOID' | 'REFUND' | 'KOREKSI'

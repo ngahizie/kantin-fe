@@ -93,7 +93,7 @@ function CartQtyInput({
   )
 }
 
-export interface CartSidebarProps {
+interface CartSidebarProps {
   onCheckout?: () => void
   onCashCheckout?: (uangDiterima: number) => void
   onManualRfidOpen?: () => void

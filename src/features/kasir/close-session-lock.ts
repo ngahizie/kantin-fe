@@ -3,7 +3,7 @@ import type { SesiKasirData } from './types'
 export const KANTIN_CLOSE_SESSION_LOCKS_KEY =
   'kantin_kasir_close_session_locks'
 
-export interface CloseSessionLockEntry {
+interface CloseSessionLockEntry {
   sesiId: number
   cashValue: number
   kasSeharusnya?: number

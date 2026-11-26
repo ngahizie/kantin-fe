@@ -12,7 +12,7 @@ import { filterNavGroupsByRole } from '@/components/layout/nav-utils'
 import { NavGroup } from '@/components/layout/nav-group'
 import { TeamSwitcher } from '@/components/layout/team-switcher'
 
-export interface SidebarProps {
+interface SidebarProps {
   className?: string
 }
 

@@ -26,7 +26,7 @@ import {
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { TableToolbar } from '@/components/data-table'
-import { formatRupiah } from '@/lib/formatters'
+import { formatRupiah, getInitials } from '@/lib/formatters'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { type KartuSiswaMock } from '@/types/kantin'
 import { LimitBlokirForm } from './limit-blokir-form'
@@ -62,15 +62,6 @@ interface RawKontrolBulkItem {
   menuDiblokir?: number[]
   kategoriDiblokir?: number[]
   alasanBlokir?: string | null
-}
-
-function getInitials(name?: string): string {
-  if (!name) return 'S'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  }
-  return parts[0].slice(0, 2).toUpperCase()
 }
 
 export function KontrolSiswaPage() {

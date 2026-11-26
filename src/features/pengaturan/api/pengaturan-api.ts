@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client'
+import type { ApiResponse } from '@/lib/api-types'
 import type {
   KebijakanSaldoMengendap,
   PengaturanKantin,
@@ -6,13 +7,6 @@ import type {
   TitikKasir,
   TitikKasirFormValues,
 } from '../types'
-
-interface ApiResponse<T> {
-  responseCode?: number
-  code?: number
-  message?: string
-  data: T
-}
 
 interface PengaturanBackendDto {
   sekolahId?: number

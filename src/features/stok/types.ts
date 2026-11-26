@@ -87,28 +87,6 @@ export interface BarangMasukPembalikRequest {
   referensiId: string
 }
 
-export interface RestockItemRow {
-  rowId: string
-  menuId: number | ''
-  qty: number
-  hargaBeliPerUnit: number
-  // Snapshot data menu saat ini
-  stokSekarang: number
-  hppSekarang: number
-}
-
-export interface BarangMasukFormValues {
-  tanggal: string
-  referensiId: string
-  namaPemasok?: string
-  notaFotoUrl?: string
-  items: {
-    menuId: number
-    qty: number
-    hargaBeliPerUnit: number
-  }[]
-}
-
 // Zod schemas
 const restockItemSchema = z.object({
   menuId: z.number().min(1, 'Menu wajib dipilih'),
@@ -157,10 +135,6 @@ export const barangMasukPembalikSchema = z.object({
     .max(60, 'Nomor bukti maksimal 60 karakter'),
 })
 
-export type BarangMasukPembalikFormValues = z.infer<
-  typeof barangMasukPembalikSchema
->
-
 // --- STOK OPNAME & BARANG RUSAK (PRD §7.3) ---
 
 export interface OpnameRequest {
@@ -207,25 +181,6 @@ export const KATEGORI_ALASAN_OPNAME = [
   { value: 'Lainnya', label: 'Lainnya (Perlu Keterangan)', isRusak: false },
 ] as const
 
-export type KategoriAlasanOpnameValue =
-  (typeof KATEGORI_ALASAN_OPNAME)[number]['value']
-
-export interface OpnameRowState {
-  menuId: number
-  nama: string
-  kategoriNama?: string
-  satuan: string
-  stokSistem: number
-  hpp: number
-  hargaJual: number
-  qtyFisik: number | ''
-  selisih: number // qtyFisik - stokSistem
-  nilaiSelisih: number // |selisih| * hpp
-  alasan: string
-  keterangan: string
-  rusak: boolean
-}
-
 export const barangRusakFormSchema = z.object({
   menuId: z.number().min(1, 'Menu wajib dipilih'),
   qtyRusak: z
@@ -244,6 +199,4 @@ export const barangRusakFormSchema = z.object({
     .min(1, 'Nomor referensi wajib diisi')
     .max(60, 'Nomor referensi maksimal 60 karakter'),
 })
-
-export type BarangRusakFormValues = z.infer<typeof barangRusakFormSchema>
 

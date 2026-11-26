@@ -26,13 +26,13 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import apiClient from '@/lib/api-client'
 import { formatRupiah } from '@/lib/formatters'
-import { type KartuSiswaMock } from '@/types/kantin'
-import type { SiswaNonaktifMock, RefundSlipData } from './types'
+import type { KartuSiswa, SiswaNonaktif, Sibling } from '@/types/kantin'
+import type { RefundSlipData } from './types'
 
 interface PindahSaldoModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  siswaAsal: SiswaNonaktifMock | null
+  siswaAsal: SiswaNonaktif | null
   onTransferSuccess: (siswaAsalId: number, slipData: RefundSlipData) => void
 }
 
@@ -61,12 +61,12 @@ function PindahSaldoFormContent({
   onOpenChange,
   onTransferSuccess,
 }: {
-  siswaAsal: SiswaNonaktifMock
+  siswaAsal: SiswaNonaktif
   onOpenChange: (open: boolean) => void
   onTransferSuccess: (siswaAsalId: number, slipData: RefundSlipData) => void
 }) {
-  const [activeStudents, setActiveStudents] = useState<KartuSiswaMock[]>([])
-  const [selectedDestination, setSelectedDestination] = useState<KartuSiswaMock | null>(null)
+  const [activeStudents, setActiveStudents] = useState<KartuSiswa[]>([])
+  const [selectedDestination, setSelectedDestination] = useState<KartuSiswa | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [beritaAcara, setBeritaAcara] = useState(
     `Pemindahan sisa saldo kelulusan ${siswaAsal.nama} (${siswaAsal.nis}) ke saudara kandung aktif.`
@@ -112,11 +112,11 @@ function PindahSaldoFormContent({
 
         const isRich = rawKandidat.some((item) => item.nama && item.nis && item.uid)
         if (isRich) {
-          setActiveStudents(rawKandidat as unknown as KartuSiswaMock[])
+          setActiveStudents(rawKandidat as unknown as KartuSiswa[])
           return
         }
 
-        const mapped: KartuSiswaMock[] = []
+        const mapped: KartuSiswa[] = []
         const seenIds = new Set<number>()
         for (const item of rawKandidat) {
           const sid = Number(item.siswaId ?? item.siswa_id ?? 0)
@@ -335,7 +335,7 @@ function PindahSaldoFormContent({
               </div>
 
               <div className='grid grid-cols-1 gap-2'>
-                {siswaAsal.saudara_kandung.map((sibling) => {
+                {siswaAsal.saudara_kandung.map((sibling: Sibling) => {
                   const isSelected = selectedDestination?.siswa_id === sibling.siswa_id
                   return (
                     <div

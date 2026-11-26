@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useRfidScanner } from '@/hooks/use-rfid-scanner'
 
-export interface ManualRfidModalProps {
+interface ManualRfidModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onScan: (uid: string) => void
