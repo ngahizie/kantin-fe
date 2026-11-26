@@ -508,11 +508,12 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               data: mockResponse.data,
               status: mockResponse.status,
               statusText: 'OK',
-              headers: {},
+              headers: mockResponse.headers || {},
               config,
             } as AxiosResponse
           } else {
-            const errMsg = mockResponse.data?.message || 'Mock Error'
+            const respData = mockResponse.data as MockResponseData
+            const errMsg = respData?.message || 'Mock Error'
             const error = new Error(errMsg) as Error & {
               response?: {
                 data: MockResponseData
@@ -523,7 +524,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
               }
             }
             error.response = {
-              data: mockResponse.data,
+              data: respData,
               status: mockResponse.status,
               statusText: 'Error',
               headers: {},
@@ -544,7 +545,11 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     dataRaw: unknown,
     params?: Record<string, unknown>,
     headers?: Record<string, unknown>
-  ): { status: number; data: MockResponseData } | null {
+  ): {
+    status: number
+    data: MockResponseData | Blob
+    headers?: Record<string, string>
+  } | null {
     let payload: Record<string, unknown> = {}
     if (typeof dataRaw === 'string') {
       try {
@@ -3567,6 +3572,186 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
+    if (url.includes('/api/laporan/ekspor') && method === 'get') {
+      const jenis = String(params?.jenis || 'PENJUALAN')
+      const filename = `Laporan_${jenis}_${new Date().toISOString().slice(0, 10)}.xlsx`
+      const blob = new Blob([`MOCK_XLSX_${jenis}`], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      return {
+        status: 200,
+        data: blob,
+        headers: {
+          'content-disposition': `attachment; filename="${filename}"`,
+        },
+      }
+    }
+
+    if (url.includes('/api/laporan/penjualan/titik') && method === 'get') {
+      const barisTitik = titikKasirList.map((tk, idx) => {
+        const nilai = idx === 0 ? 2100000 : 1275000
+        const hpp = Math.round(nilai * 0.65)
+        return {
+          kunciId: tk.id,
+          nama: tk.nama,
+          jumlahTransaksi: idx === 0 ? 115 : 70,
+          nilai,
+          hpp,
+          labaKotor: nilai - hpp,
+        }
+      })
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          message: 'Penjualan per titik kasir berhasil dimuat',
+          data: barisTitik,
+        },
+      }
+    }
+
+    if (url.includes('/api/laporan/penjualan/petugas') && method === 'get') {
+      const barisPetugas = [
+        {
+          kunciId: 2,
+          nama: 'Petugas Kasir 1',
+          jumlahTransaksi: 115,
+          nilai: 2100000,
+          hpp: 1365000,
+          labaKotor: 735000,
+        },
+        {
+          kunciId: 7,
+          nama: 'Nurul Hidayah',
+          jumlahTransaksi: 70,
+          nilai: 1275000,
+          hpp: 828750,
+          labaKotor: 446250,
+        },
+      ]
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          message: 'Penjualan per petugas berhasil dimuat',
+          data: barisPetugas,
+        },
+      }
+    }
+
+    if (url.includes('/api/laporan/per-siswa') && method === 'get') {
+      const urlObj = new URL(url, 'http://localhost')
+      const siswaId = Number(
+        urlObj.searchParams.get('siswaId') || params?.siswaId || 101
+      )
+      const siswaTarget = siswaList.find((s) => s.siswa_id === siswaId) || siswaList[0]
+      const sid = siswaTarget?.siswa_id ?? siswaId
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          data: {
+            subjekTipe: 'SISWA',
+            siswaId: sid,
+            saldo: siswaTarget?.saldo ?? 0,
+            periode: `${new Date().toISOString().slice(0, 10)} s/d ${new Date().toISOString().slice(0, 10)}`,
+            ringkasan: {
+              jumlahTransaksiSukses: 2,
+              nilaiBelanjaSukses: 27000,
+              jumlahTransaksiVoid: 0,
+              nilaiVoid: 0,
+              totalTopup: 50000,
+              totalHpp: 18500,
+            },
+            transaksi: [
+              {
+                id: 9101,
+                status: 'SUKSES',
+                total: 15000,
+                totalHpp: 10000,
+                petugasId: 2,
+                titikKasirId: 1,
+                alasanVoid: null,
+                waktu: new Date(Date.now() - 3600000).toISOString(),
+              },
+              {
+                id: 9102,
+                status: 'SUKSES',
+                total: 12000,
+                totalHpp: 8500,
+                petugasId: 2,
+                titikKasirId: 1,
+                alasanVoid: null,
+                waktu: new Date(Date.now() - 7200000).toISOString(),
+              },
+            ],
+            mutasiSaldo: [],
+          },
+        },
+      }
+    }
+
+    if (url.includes('/api/laporan/setoran-tu') && method === 'get') {
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          data: setoranKasList.map((s) => ({
+            petugasId: s.petugas_id,
+            tanggal: s.tanggal,
+            totalTopup: s.total_topup_siswa,
+            jumlahDisetor: s.uang_fisik ?? 0,
+            selisih: s.selisih ?? s.total_topup_siswa - (s.uang_fisik ?? 0),
+            referensiId: s.id ?? null,
+          })),
+        },
+      }
+    }
+
+    const kartuStokLaporanMatch = url.match(/\/api\/laporan\/kartu-stok\/(\d+)/)
+    if (kartuStokLaporanMatch && method === 'get') {
+      const menuId = Number(kartuStokLaporanMatch[1])
+      const targetMenu = menuList.find((m) => m.id === menuId) || menuList[0]
+      const mutasi = riwayatStokList
+        .filter((r) => r.menuId === (targetMenu?.id ?? menuId))
+        .map((r) => ({
+          id: r.id,
+          waktu: r.waktu,
+          jenis: r.jenis,
+          arah: r.arah,
+          qty: r.qty,
+          stokSetelah: r.stokSetelah,
+          hppSnapshot: r.hppSnapshot ?? null,
+          hargaBeliSatuan: r.hargaBeliSatuan ?? null,
+          referensiId: r.referensiId ?? null,
+          alasan: r.alasan ?? null,
+          aktorNama: r.aktorNama ?? null,
+        }))
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          data: {
+            menuId: targetMenu?.id ?? menuId,
+            namaMenu: targetMenu?.nama || `Menu #${menuId}`,
+            satuan: targetMenu?.satuan || 'porsi',
+            stokSekarang: targetMenu?.stok ?? 0,
+            mutasi,
+          },
+        },
+      }
+    }
+
     if (url.includes('/api/laporan/penjualan') && method === 'get') {
       const penjualanBruto = 3375000
       const jumlahRefund = 3
@@ -4444,6 +4629,25 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             },
           },
         }
+      }
+    }
+
+    // --- 12a. Status Aktivasi Modul Kantin (diagnostik Q6) ---
+    if (url.includes('/api/pengaturan-kantin/aktivasi-modul') && method === 'get') {
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          responseCode: 200,
+          status: 'SUCCESS',
+          data: {
+            sekolahId: 1,
+            aktif: true,
+            diketahui: true,
+            catatan: 'Modul Kantin aktif (sinkron internal-be)',
+            feeTopup: 0,
+          },
+        },
       }
     }
 

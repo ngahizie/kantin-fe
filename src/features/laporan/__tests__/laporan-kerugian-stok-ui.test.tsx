@@ -9,12 +9,7 @@ import { useRoleStore } from '@/stores/use-role-store'
 import { useAuthStore } from '@/stores/auth-store'
 import { Route } from '@/routes/_authenticated/laporan/kerugian-stok/index'
 import { sidebarData } from '@/components/layout/data/sidebar-data'
-import { exportTableToExcel } from '@/lib/excelExport'
 import { exportTableToPdf } from '@/lib/pdfExport'
-
-vi.mock('@/lib/excelExport', () => ({
-  exportTableToExcel: vi.fn(),
-}))
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: vi.fn(),
@@ -143,6 +138,10 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
       throw new Error(`Unexpected GET ${url}`)
     })
 
+    const eksporSpy = vi
+      .spyOn(laporanApi, 'eksporExcel')
+      .mockResolvedValue('Laporan_KERUGIAN_STOK.xlsx')
+
     const screen = await render(<LaporanKerugianStokPage />)
 
     await expect.element(screen.getByText('Roti Bakar Cokelat')).toBeInTheDocument()
@@ -155,16 +154,14 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     const exportBtn = screen.getByRole('button', { name: /^Ekspor$/i })
     await userEvent.click(exportBtn)
 
-    // Pilih Spreadsheet Excel
+    // Pilih Spreadsheet Excel -> memanggil ekspor resmi backend (/api/laporan/ekspor)
     const excelOption = screen.getByTestId('btn-export-excel-option')
     await userEvent.click(excelOption)
 
-    expect(exportTableToExcel).toHaveBeenCalledTimes(1)
-    const excelCallArg = vi.mocked(exportTableToExcel).mock.calls[0][0]
-    expect(excelCallArg.data).toHaveLength(1)
-    expect(excelCallArg.summaryRow?.qty).toBe(3)
-    // Harus bernilai 15000 (total Roti Bakar saja), bukan 999999 atau 23000
-    expect(excelCallArg.summaryRow?.totalNilai).toBe(15000)
+    expect(eksporSpy).toHaveBeenCalledTimes(1)
+    expect(eksporSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ jenis: 'KERUGIAN_STOK' })
+    )
 
     // Buka kembali dropdown format untuk PDF
     await userEvent.click(exportBtn)
@@ -313,7 +310,6 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
     }
 
     beforeEach(() => {
-      vi.mocked(exportTableToExcel).mockClear()
       vi.mocked(exportTableToPdf).mockClear()
     })
 
@@ -379,18 +375,20 @@ describe('LaporanKerugianStokPage UI & Error Handling', () => {
       await expect.element(screen.getByText('Item Gamma')).toBeInTheDocument()
       await expect.element(screen.getByText('Halaman 2 dari 3')).toBeInTheDocument()
 
-      // Ekspor Excel & PDF dari halaman 2 harus tetap membawa seluruh 5 baris dan ringkasan periode penuh
+      // Ekspor Excel menggunakan jalur resmi backend (eksporExcel), sedangkan PDF merender seluruh periode
+      const eksporSpy = vi
+        .spyOn(laporanApi, 'eksporExcel')
+        .mockResolvedValue('Laporan_KERUGIAN_STOK.xlsx')
       const exportBtn = screen.getByRole('button', { name: /^Ekspor$/i })
       await userEvent.click(exportBtn)
       await userEvent.click(screen.getByTestId('btn-export-excel-option'))
 
       await vi.waitFor(() => {
-        expect(exportTableToExcel).toHaveBeenCalledTimes(1)
+        expect(eksporSpy).toHaveBeenCalledTimes(1)
       })
-      const excelCallArg = vi.mocked(exportTableToExcel).mock.calls[0][0]
-      expect(excelCallArg.data).toHaveLength(5)
-      expect(excelCallArg.summaryRow?.qty).toBe(15)
-      expect(excelCallArg.summaryRow?.totalNilai).toBe(75000)
+      expect(eksporSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ jenis: 'KERUGIAN_STOK' })
+      )
 
       await userEvent.click(exportBtn)
       await userEvent.click(screen.getByTestId('btn-export-pdf-option'))

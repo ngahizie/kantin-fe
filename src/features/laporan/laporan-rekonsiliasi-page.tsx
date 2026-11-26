@@ -32,8 +32,8 @@ import {
 import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
-import { formatRupiah, formatDateTime } from '@/lib/formatters'
-import { exportTableToExcel } from '@/lib/excelExport'
+import { formatDateTime, formatRupiah } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { LaporanDateFilter, getDefaultDateFilter, LaporanExportButton } from './components'
 import { laporanApi } from './api/laporan-api'
@@ -168,81 +168,26 @@ export function LaporanRekonsiliasiPage() {
     )
   }, [rincianPos, searchQuery])
 
-  // Ekspor Excel
-  const handleExportExcel = () => {
+  // Ekspor Excel resmi via backend (tercatat audit & konsisten RBAC)
+  const handleExportExcel = async () => {
     if (!data) {
       toast.error('Data belum siap untuk diekspor')
       return
     }
 
     try {
-      const exportRows = [
-        ...rincianPos.map((item) => ({
-          pos: item.pos,
-          arah: item.arah,
-          nominal: item.nominal,
-          keterangan: item.keterangan,
-        })),
-        {
-          pos: 'TOTAL ISI SALDO AKHIR (Top-up - Refund)',
-          arah: 'EVALUASI',
-          nominal: data.topupBersih,
-          keterangan: 'Hitungan: (Isi Saldo Online + Isi Saldo Tunai) - Pengembalian Saldo',
-        },
-        {
-          pos: 'TOTAL UANG TERPAKAI & SISA SALDO (Siswa + Penjualan)',
-          arah: 'EVALUASI',
-          nominal: data.totalPenggunaan,
-          keterangan: 'Hitungan: Total Saldo Siswa + Total Penjualan Akhir',
-        },
-        {
-          pos: 'SELISIH HITUNGAN UANG',
-          arah: 'EVALUASI',
-          nominal: data.selisih,
-          keterangan: data.seimbang ? 'COCOK (Selisih Rp 0)' : 'ADA SELISIH - PERIKSA UANG KAS!',
-        },
-      ]
-
-      exportTableToExcel({
-        filename: `Laporan_Cek_Selisih_Uang_${new Date().toISOString().split('T')[0]}`,
-        sheetName: 'Cek Selisih Uang',
-        title: 'LAPORAN CEK SELISIH UANG HARIAN',
-        metadata: {
-          'Tanggal Cetak': formatDateTime(new Date()),
-          'Periode Pengecekan': dateFilterLabel,
-          'Status Kecocokan': data.seimbang ? 'COCOK (SEIMBANG)' : 'TIDAK COCOK (ADA SELISIH)',
-          'Total Selisih': formatRupiah(data.selisih),
-          'Total Saldo Siswa (Titipan)': formatRupiah(data.saldoMengendap),
-          'Total Penjualan Akhir': formatRupiah(data.penjualanBersih),
-        },
-        columns: [
-          { header: 'No', width: 6 },
-          { header: 'Rincian Catatan Uang', key: 'pos', width: 35 },
-          { header: 'Arah', key: 'arah', width: 14 },
-          {
-            header: 'Nominal (Rp)',
-            key: 'nominal',
-            formatter: (v) => Number(v),
-            width: 18,
-          },
-          { header: 'Keterangan', key: 'keterangan', width: 45 },
-        ],
-        data: exportRows,
-        summaryRow: {
-          no: '',
-          pos: `Total (${exportRows.length} Pos)`,
-          arah: data.seimbang ? 'COCOK' : 'SELISIH',
-          nominal: rincianPos.reduce((acc, r) => acc + (r.nominal || 0), 0),
-          keterangan: data.seimbang ? 'Selisih Rp 0' : `Selisih ${formatRupiah(data.selisih)}`,
-        },
+      await laporanApi.eksporExcel({
+        jenis: 'REKONSILIASI',
+        ...dateFilterParams,
       })
 
       toast.success('Ekspor Excel Berhasil', {
         description: 'Berkas Laporan Cek Selisih Uang (.xlsx) berhasil diunduh.',
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal mengekspor berkas Excel'
-      toast.error('Gagal Ekspor', { description: msg })
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor berkas Excel'),
+      })
     }
   }
 

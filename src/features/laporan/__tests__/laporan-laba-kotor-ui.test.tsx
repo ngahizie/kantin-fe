@@ -6,23 +6,12 @@ import apiClient from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
 import { Route } from '@/routes/_authenticated/laporan/keuntungan/index'
 import { LaporanLabaKotorPage } from '../laporan-laba-kotor-page'
+import { laporanApi } from '../api/laporan-api'
 import { sanitizeFormulaCell } from '@/lib/excelExport'
 
-const { mockExportExcel, mockExportPdf } = vi.hoisted(() => ({
-  mockExportExcel: vi.fn(),
+const { mockExportPdf } = vi.hoisted(() => ({
   mockExportPdf: vi.fn(),
 }))
-
-vi.mock('@/lib/excelExport', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/excelExport')>()
-  return {
-    ...actual,
-    exportTableToExcel: (options: unknown) => {
-      mockExportExcel(options)
-      return { filename: 'test.xlsx' }
-    },
-  }
-})
 
 vi.mock('@/lib/pdfExport', () => ({
   exportTableToPdf: (options: unknown) => {
@@ -85,7 +74,6 @@ const MOCK_ITEMS = [
 describe('Audit Keamanan & Fungsional Laporan Keuntungan (/laporan/keuntungan)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
-    mockExportExcel.mockClear()
     mockExportPdf.mockClear()
   })
 
@@ -189,7 +177,10 @@ describe('Audit Keamanan & Fungsional Laporan Keuntungan (/laporan/keuntungan)',
       expect(sanitizeFormulaCell('   ')).toBe('-')
     })
 
-    it('mengirimkan data tersanitasi ke exportTableToExcel dan exportTableToPdf', async () => {
+    it('mengirimkan data tersanitasi ke exportTableToPdf dan memanggil eksporExcel backend untuk Excel', async () => {
+      const eksporSpy = vi
+        .spyOn(laporanApi, 'eksporExcel')
+        .mockResolvedValue('Laporan_PENJUALAN_ITEM.xlsx')
       vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
         if (url === '/api/laporan/penjualan') {
           return { data: { code: 200, status: 'SUCCESS', data: MOCK_SUMMARY } }
@@ -210,20 +201,15 @@ describe('Audit Keamanan & Fungsional Laporan Keuntungan (/laporan/keuntungan)',
       await expect.element(exportBtn).toBeInTheDocument()
       await userEvent.click(exportBtn)
 
-      // Klik opsi Excel
+      // Klik opsi Excel -> GET /api/laporan/ekspor?jenis=PENJUALAN_ITEM
       const excelOption = screen.getByTestId('btn-export-excel-option')
       await expect.element(excelOption).toBeInTheDocument()
       await userEvent.click(excelOption)
 
-      expect(mockExportExcel).toHaveBeenCalledTimes(1)
-      const excelCall = mockExportExcel.mock.calls[0][0] as {
-        metadata: Record<string, unknown>
-        data: Array<{ nama: string; kategoriNama: string }>
-      }
-      expect(excelCall.metadata).toHaveProperty('Periode')
-      expect(excelCall.data[0].nama).toBe("'=1+1 Dangerous Formula")
-      expect(excelCall.data[0].kategoriNama).toBe("'@SpecialKategori")
-      expect(excelCall.data[1].nama).toBe('Ayam Geprek Sambal Matah')
+      expect(eksporSpy).toHaveBeenCalledTimes(1)
+      expect(eksporSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ jenis: 'PENJUALAN_ITEM' })
+      )
 
       // Buka kembali dialog ekspor untuk PDF
       await userEvent.click(exportBtn)

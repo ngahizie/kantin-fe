@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { KartuStokPage } from '../kartu-stok-page'
 import { stokApi } from '../api/stok-api'
+import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { MenuItem } from '@/features/katalog/types'
 
@@ -60,37 +61,31 @@ describe('KartuStokPage — Tampilan Total Masuk & Total Keluar tanpa +/-', () =
       menipis: false,
     })
 
-    vi.spyOn(stokApi, 'getRiwayatStok').mockResolvedValueOnce({
-      items: [
+    vi.spyOn(laporanApi, 'getKartuStok').mockResolvedValueOnce({
+      menuId: 1,
+      namaMenu: 'Nasi Goreng Spesial',
+      satuan: 'Porsi',
+      stokSekarang: 15,
+      mutasi: [
         {
           id: 101,
-          menuId: 1,
-          menuNama: 'Nasi Goreng Spesial',
           arah: 'MASUK',
           jenis: 'BARANG_MASUK',
           qty: 50,
           stokSetelah: 50,
           referensiId: 'BM-20261112-001',
-          dapatDibalik: true,
           waktu: '2026-11-12T07:00:00+07:00',
         },
         {
           id: 102,
-          menuId: 1,
-          menuNama: 'Nasi Goreng Spesial',
           arah: 'KELUAR',
           jenis: 'PENJUALAN',
           qty: 35,
           stokSetelah: 15,
           referensiId: 'TRX-20261112-001',
-          dapatDibalik: false,
           waktu: '2026-11-12T08:00:00+07:00',
         },
       ],
-      total: 2,
-      halaman: 0,
-      ukuran: 200,
-      totalHalaman: 1,
     })
 
     const screen = await render(<KartuStokPage />)

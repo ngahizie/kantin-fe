@@ -31,7 +31,8 @@ import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-acti
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatNumber, formatDateTime, formatStokDisplay } from '@/lib/formatters'
 import { exportTableToPdf } from '@/lib/pdfExport'
-import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
+import { getErrorMessage } from '@/lib/validation-error'
+import { laporanApi } from '@/features/laporan/api/laporan-api'
 import { katalogApi } from '@/features/katalog/api/katalog-api'
 import type { KategoriItem, MenuItem } from '@/features/katalog/types'
 import { stokApi } from './api/stok-api'
@@ -207,56 +208,21 @@ export function InventarisPage() {
     return filteredAndSortedList.slice(start, start + PAGE_SIZE)
   }, [filteredAndSortedList, safeCurrentPage])
 
-  // Export to CSV
-  const handleExportCsv = () => {
+  // Ekspor Excel resmi via backend (GET /api/laporan/ekspor?jenis=STOK)
+  const handleExportExcel = async () => {
     if (filteredAndSortedList.length === 0) {
       toast.warning('Tidak ada data inventaris untuk diekspor')
       return
     }
 
-    const headers = [
-      'Menu ID',
-      'Kode Barcode',
-      'Nama Menu',
-      'Kategori',
-      'Stok Saat Ini',
-      'Stok Minimum',
-      'Status Stok',
-      'Modal Rata-rata (Rp)',
-      'Total Nilai Stok (Rp)',
-    ]
-
-    const rows = filteredAndSortedList.map((item) => {
-      const stok = item.stokBerjalan ?? item.stok ?? 0
-      const min = item.stokMinimum ?? 0
-      let status = 'AMAN'
-      if (stok <= 0) status = 'HABIS'
-      else if (stok <= min) status = 'MENIPIS'
-
-      const kategoriNama = item.kategoriId ? kategoriMap.get(item.kategoriId) || '-' : '-'
-      const hpp = item.hpp ?? 0
-      const nilai = item.nilaiPersediaan ?? (stok * hpp)
-      const barcode = item.kodeBarcode || menuMap.get(item.menuId)?.kodeBarcode || '-'
-
-      return [
-        item.menuId,
-        sanitizeCsvCell(barcode),
-        sanitizeCsvCell(item.namaMenu || item.nama),
-        sanitizeCsvCell(kategoriNama),
-        stok,
-        min,
-        status,
-        hpp,
-        nilai,
-      ]
-    })
-
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n')
-    downloadCsvBlob(
-      `laporan-inventaris-kantin-${new Date().toISOString().slice(0, 10)}.csv`,
-      csvContent
-    )
-    toast.success('Laporan inventaris berhasil diunduh dalam format CSV')
+    try {
+      await laporanApi.eksporExcel({ jenis: 'STOK' })
+      toast.success('Laporan inventaris (.xlsx) berhasil diunduh')
+    } catch (err: unknown) {
+      toast.error('Gagal Ekspor', {
+        description: getErrorMessage(err, 'Gagal mengekspor laporan inventaris'),
+      })
+    }
   }
 
   const handleExportPdf = () => {
@@ -343,7 +309,7 @@ export function InventarisPage() {
           </div>
           <div className='flex flex-wrap items-center gap-2.5'>
             <ExportButton
-              onExportCsv={handleExportCsv}
+              onExportExcel={handleExportExcel}
               onExportPdf={handleExportPdf}
               disabled={filteredAndSortedList.length === 0}
               data-testid='btn-inventaris-export'

@@ -43,6 +43,7 @@ import { Header } from '@/components/layout/header'
 import { HeaderActions, HeaderBreadcrumb } from '@/components/layout/header-actions'
 import { Main } from '@/components/layout/main'
 import { formatRupiah, formatDateTime, formatTime, formatTimeWithZone } from '@/lib/formatters'
+import { getErrorMessage } from '@/lib/validation-error'
 import { exportTableToPdf } from '@/lib/pdfExport'
 import { sanitizeCsvCell, downloadCsvBlob } from '@/lib/csv-sanitizer'
 import {
@@ -50,6 +51,7 @@ import {
   getDefaultDateFilter,
   formatYmd,
 } from '@/features/laporan/components'
+import { laporanApi } from '@/features/laporan/api/laporan-api'
 import type { LaporanFilterParams } from '@/features/laporan/types'
 import { KonfirmasiSetoranModal } from './konfirmasi-setoran-modal'
 import {
@@ -95,6 +97,7 @@ function resolveFilterDates(params: LaporanFilterParams): string[] {
 export function SetoranKasPage() {
   const { auth } = useAuthStore()
   const isBendaharaOrAdmin = auth.hasRole(['admin', 'bendahara'])
+  const canAccessLaporanSetoran = auth.hasRole(['tu', 'bendahara'])
 
   const [dateFilterParams, setDateFilterParams] = useState<LaporanFilterParams>(
     () => getDefaultDateFilter().params
@@ -135,10 +138,20 @@ export function SetoranKasPage() {
 
         let isBackendAvailable = false
         try {
-          const res = await apiClient.get('/api/saldo/setoran-tu/rekap', {
-            params: dateFilterParams,
-          })
-          const rawItems = res.data?.data
+          const rawItems = canAccessLaporanSetoran
+            ? await laporanApi
+                .getSetoranTu(dateFilterParams)
+                .catch(async () => {
+                  const fallback = await apiClient.get('/api/saldo/setoran-tu/rekap', {
+                    params: dateFilterParams,
+                  })
+                  return fallback.data?.data
+                })
+            : (
+                await apiClient.get('/api/saldo/setoran-tu/rekap', {
+                  params: dateFilterParams,
+                })
+              ).data?.data
           if (Array.isArray(rawItems) && rawItems.length > 0) {
             items = rawItems.map((item: RawRekapTu) =>
               mapRekapSetoranTuItem(
@@ -263,7 +276,7 @@ export function SetoranKasPage() {
     return () => {
       isMounted = false
     }
-  }, [dateFilterParams, auth.user])
+  }, [dateFilterParams, auth.user, canAccessLaporanSetoran])
 
   // Handle successful confirmation from modal
   const handleConfirmSuccess = (updatedItem: SetoranKasItem) => {
@@ -360,6 +373,24 @@ export function SetoranKasPage() {
       `${dateFilterParams.dari?.slice(0, 10) || 'awal'}_sd_${dateFilterParams.sampai?.slice(0, 10) || 'akhir'}`
     downloadCsvBlob(`Rekap_Setoran_Kas_TU_${fileSlug}.csv`, csvContent)
     toast.success('Laporan rekapitulasi setoran kas berhasil diekspor ke CSV')
+  }
+
+  const handleExportExcel = async () => {
+    if (filteredList.length === 0) {
+      toast.warning('Tidak ada data untuk diekspor')
+      return
+    }
+    try {
+      await laporanApi.eksporExcel({
+        jenis: 'SETORAN_TU',
+        ...dateFilterParams,
+      })
+      toast.success('Ekspor Excel Setoran TU berhasil diunduh')
+    } catch (err: unknown) {
+      toast.error('Gagal Ekspor Excel', {
+        description: getErrorMessage(err, 'Gagal mengekspor laporan setoran TU'),
+      })
+    }
   }
 
   const handleExportPdf = () => {
@@ -572,7 +603,8 @@ export function SetoranKasPage() {
           }}
         >
           <ExportButton
-            onExportCsv={handleExportCSV}
+            onExportExcel={auth.hasRole(['tu', 'bendahara']) ? handleExportExcel : undefined}
+            onExportCsv={!auth.hasRole(['tu', 'bendahara']) ? handleExportCSV : undefined}
             onExportPdf={handleExportPdf}
             disabled={filteredList.length === 0}
             className='h-8 text-xs'

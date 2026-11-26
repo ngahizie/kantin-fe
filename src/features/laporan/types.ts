@@ -319,3 +319,123 @@ export interface BarisPembatalanKasir {
   titikKasirNama?: string
   waktu: string
 }
+
+// ─────────────────────────────────────────────────────────────
+// PENJUALAN DIMENSI (PER TITIK KASIR & PER PETUGAS - PRD §9.5)
+// ─────────────────────────────────────────────────────────────
+
+export interface BarisPenjualanDimensi {
+  kunciId: number
+  nama: string | null
+  jumlahTransaksi: number
+  nilai: number
+  hpp: number | null
+  labaKotor: number | null
+}
+
+// ─────────────────────────────────────────────────────────────
+// LAPORAN PER SISWA (RINGKASAN & TRANSAKSI - PRD §9.5)
+// ─────────────────────────────────────────────────────────────
+
+export interface LaporanPerSiswaRingkasan {
+  jumlahTransaksiSukses: number
+  nilaiBelanjaSukses: number
+  jumlahTransaksiVoid: number
+  nilaiVoid: number
+  totalTopup: number
+  totalHpp: number | null
+}
+
+export interface LaporanPerSiswaTransaksi {
+  id: number
+  status: string
+  total: number
+  totalHpp: number | null
+  petugasId?: number | null
+  titikKasirId?: number | null
+  alasanVoid?: string | null
+  waktu: string
+}
+
+export interface LaporanPerSiswaMutasi {
+  id: number
+  jenis: string
+  arah: 'KREDIT' | 'DEBIT' | string
+  nominal: number
+  saldoSetelah: number
+  transaksiId?: number | null
+  keterangan?: string | null
+  waktu: string
+}
+
+export interface LaporanPerSiswa {
+  subjekTipe: string
+  siswaId: number
+  saldo: number
+  periode: string
+  ringkasan: LaporanPerSiswaRingkasan
+  transaksi: LaporanPerSiswaTransaksi[]
+  mutasiSaldo: LaporanPerSiswaMutasi[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// KARTU STOK PER ITEM & SETORAN TU (PRD §9.5)
+// ─────────────────────────────────────────────────────────────
+
+export interface KartuStokBarisMutasi {
+  id: number
+  waktu: string
+  jenis: string
+  arah: 'MASUK' | 'KELUAR' | string
+  qty: number
+  stokSetelah: number
+  hppSnapshot?: number | null
+  hargaBeliSatuan?: number | null
+  referensiId?: string | null
+  alasan?: string | null
+  aktorNama?: string | null
+}
+
+export interface KartuStokLaporan {
+  menuId: number
+  namaMenu: string
+  satuan: string
+  stokSekarang: number
+  mutasi: KartuStokBarisMutasi[]
+}
+
+export interface RekapSetoranLaporanItem {
+  petugasId: number
+  tanggal: string
+  totalTopup: number
+  jumlahDisetor: number
+  selisih: number
+  referensiId?: string | null
+}
+
+// ─────────────────────────────────────────────────────────────
+// EKSPOR EXCEL RESMI BACKEND (/api/laporan/ekspor - PRD §9.5)
+// ─────────────────────────────────────────────────────────────
+
+export type JenisLaporanEkspor =
+  | 'PENJUALAN'
+  | 'PENJUALAN_ITEM'
+  | 'PENJUALAN_KATEGORI'
+  | 'PENJUALAN_TITIK'
+  | 'PENJUALAN_PETUGAS'
+  | 'PENJUALAN_KASIR'
+  | 'SALDO_MENGENDAP'
+  | 'REKONSILIASI'
+  | 'STOK'
+  | 'KERUGIAN_STOK'
+  | 'BARANG_MASUK'
+  | 'PEMBATALAN'
+  | 'KARTU_STOK'
+  | 'SETORAN_TU'
+  | 'PER_SISWA'
+
+export interface EksporLaporanParams extends LaporanFilterParams {
+  jenis: JenisLaporanEkspor
+  menuId?: number
+  siswaId?: number
+}

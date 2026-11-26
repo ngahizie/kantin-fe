@@ -1,6 +1,7 @@
 import apiClient from '@/lib/api-client'
 import type { ApiResponse } from '@/lib/api-types'
 import type {
+  AktivasiModulStatus,
   KebijakanSaldoMengendap,
   PengaturanKantin,
   PengaturanKantinFormValues,
@@ -167,5 +168,20 @@ export const pengaturanApi = {
 
   async deleteTitikKasir(id: number): Promise<void> {
     await apiClient.delete(`/api/pengaturan-kantin/titik-kasir/${id}`)
+  },
+
+  async getAktivasiModul(): Promise<AktivasiModulStatus> {
+    const res = await apiClient.get<ApiResponse<AktivasiModulStatus>>(
+      '/api/pengaturan-kantin/aktivasi-modul'
+    )
+    return (
+      res.data?.data ?? {
+        sekolahId: 1,
+        aktif: true,
+        diketahui: false,
+        catatan: 'Status modul belum tersedia',
+        feeTopup: null,
+      }
+    )
   },
 }

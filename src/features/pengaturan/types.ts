@@ -117,3 +117,11 @@ export const titikKasirFormSchema = z.object({
 })
 
 export type TitikKasirFormValues = z.infer<typeof titikKasirFormSchema>
+
+export interface AktivasiModulStatus {
+  sekolahId: number
+  aktif: boolean
+  diketahui: boolean
+  catatan?: string | null
+  feeTopup?: number | null
+}

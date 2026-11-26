@@ -21,9 +21,10 @@ describe('Pembersihan Wrapper API Mati (Issue #207)', () => {
   })
 
   describe('laporanApi', () => {
-    it('tidak lagi mengekspos downloadEksporBackend (ekspor 100% sisi klien)', () => {
-      // @ts-expect-error method downloadEksporBackend sudah dihapus sesuai Issue #207
+    it('mengekspos eksporExcel resmi backend (GET /api/laporan/ekspor) sesuai Issue #222', () => {
+      // @ts-expect-error method downloadEksporBackend sudah digantikan eksporExcel resmi
       expect(laporanApi.downloadEksporBackend).toBeUndefined()
+      expect(typeof laporanApi.eksporExcel).toBe('function')
     })
   })
 

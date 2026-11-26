@@ -50,8 +50,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { usePengaturanStore } from '@/stores/use-pengaturan-store'
+import { pengaturanApi } from './api/pengaturan-api'
 import {
   pengaturanKantinSchema,
+  type AktivasiModulStatus,
   type PengaturanKantinFormValues,
 } from './types'
 
@@ -77,6 +79,7 @@ export const PengaturanKantinPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [aktivasiModul, setAktivasiModul] = useState<AktivasiModulStatus | null>(null)
 
   const {
     register,
@@ -118,6 +121,12 @@ export const PengaturanKantinPage: React.FC = () => {
         }
       } catch {
         toast.error('Gagal memuat pengaturan operasional')
+      }
+      try {
+        const modulStatus = await pengaturanApi.getAktivasiModul()
+        if (isMounted) setAktivasiModul(modulStatus)
+      } catch {
+        // Diagnostik aktivasi modul bersifat informatif (fail-open)
       }
     }
     load()
@@ -664,6 +673,28 @@ export const PengaturanKantinPage: React.FC = () => {
               </CardFooter>
             </Card>
           </form>
+
+          {aktivasiModul && (
+            <Alert data-testid='banner-aktivasi-modul' className='border-border bg-muted/30'>
+              <ShieldCheck className='h-4 w-4 text-primary' />
+              <AlertTitle className='text-sm font-semibold flex flex-wrap items-center gap-2'>
+                <span>Status Aktivasi Modul Kantin</span>
+                <Badge variant={aktivasiModul.aktif ? 'default' : 'destructive'}>
+                  {aktivasiModul.aktif ? 'Aktif' : 'Nonaktif'}
+                </Badge>
+                {!aktivasiModul.diketahui && (
+                  <Badge variant='outline' className='text-[11px]'>
+                    Mode Fail-Open
+                  </Badge>
+                )}
+              </AlertTitle>
+              <AlertDescription className='text-xs text-muted-foreground mt-1'>
+                {aktivasiModul.catatan || 'Terhubung ke layanan konfigurasi modul platform.'}
+                {aktivasiModul.feeTopup != null &&
+                  ` • Biaya admin top-up: ${formatRupiah(aktivasiModul.feeTopup)}`}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Dialog Konfirmasi Reset Pengaturan */}
           <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
