@@ -3,9 +3,18 @@ import { KasirLayout } from '@/layouts/kasir-layout'
 import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/kasir')({
-  beforeLoad: ({ location }) => {
-    const { isAuthenticated, hasRole } = useAuthStore.getState().auth
+  beforeLoad: async ({ location }) => {
+    const { isAuthenticated, hasRole, verifySession } = useAuthStore.getState().auth
     if (!isAuthenticated()) {
+      throw redirect({
+        to: '/sign-in',
+        search: {
+          redirect: location.href,
+        },
+      })
+    }
+    const isValid = await verifySession()
+    if (!isValid) {
       throw redirect({
         to: '/sign-in',
         search: {

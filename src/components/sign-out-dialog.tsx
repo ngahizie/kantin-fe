@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { useCartStore } from '@/stores/use-cart-store'
@@ -21,17 +22,28 @@ export function SignOutDialog({
 }: SignOutDialogProps) {
   const navigate = useNavigate()
   const { auth } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSignOut = () => {
-    // Kosongkan keranjang belanja agar tidak terbawa ke akun kasir lain (issue #143)
-    useCartStore.getState().clearCart()
-    auth.reset()
-    // Arahkan langsung ke halaman sign-in tanpa menyimpan redirect path
-    // untuk mencegah error 403 saat staf lain login dengan role berbeda
-    navigate({
-      to: '/sign-in',
-      replace: true,
-    })
+  const handleSignOut = async () => {
+    setIsLoading(true)
+    try {
+      // Kosongkan keranjang belanja agar tidak terbawa ke akun kasir lain (issue #143)
+      useCartStore.getState().clearCart()
+      if (typeof auth.signOut === 'function') {
+        await auth.signOut()
+      } else {
+        auth.reset()
+      }
+    } finally {
+      setIsLoading(false)
+      onOpenChange(false)
+      // Arahkan langsung ke halaman sign-in tanpa menyimpan redirect path
+      // untuk mencegah error 403 saat staf lain login dengan role berbeda
+      navigate({
+        to: '/sign-in',
+        replace: true,
+      })
+    }
   }
 
   return (
@@ -40,9 +52,10 @@ export function SignOutDialog({
       onOpenChange={onOpenChange}
       title='Keluar'
       desc='Apakah Anda yakin ingin keluar? Anda harus masuk kembali untuk mengakses akun Anda.'
-      confirmText='Keluar'
+      confirmText={isLoading ? 'Mengeluarkan...' : 'Keluar'}
       cancelBtnText='Batal'
       destructive
+      isLoading={isLoading}
       handleConfirm={handleSignOut}
       className={cn('sm:max-w-sm', className)}
       cancelBtnClassName={cancelBtnClassName}

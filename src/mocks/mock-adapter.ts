@@ -49,6 +49,8 @@ export interface MockResponseData {
   kekurangan?: number
 }
 
+const revokedTokens = new Set<string>()
+
 interface TransaksiCartItem {
   menu_id: number
   qty: number
@@ -113,6 +115,20 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
   const idempotencyStore = new Map<
     string,
     { status: number; data: MockResponseData }
+  >()
+  const pendingTapStore = new Map<
+    number,
+    {
+      pendingId: number
+      idempotencyKey: string
+      kartuUid: string
+      titikKasirId: number
+      siswaUid: string
+      total: number
+      items: { menu_id: number; qty: number }[]
+      status: 'MENUNGGU' | 'DIKONFIRMASI' | 'DIBATALKAN'
+      confirmedResponse?: { status: number; data: MockResponseData }
+    }
   >()
   const recordedTransactions = new Map<
     number,
@@ -481,7 +497,7 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       const method = (config.method || 'get').toLowerCase()
 
       // Cek apakah request harus di-handle oleh mock
-      const mockResponse = handleMockRequest(url, method, config.data, config.params)
+      const mockResponse = handleMockRequest(url, method, config.data, config.params, config.headers)
       if (mockResponse) {
         // Buat custom adapter yang langsung resolve response mock
         config.adapter = async () => {
@@ -527,7 +543,8 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
     url: string,
     method: string,
     dataRaw: unknown,
-    params?: Record<string, unknown>
+    params?: Record<string, unknown>,
+    headers?: Record<string, unknown>
   ): {
     status: number
     data: MockResponseData | Blob
@@ -609,6 +626,56 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
                 nama: 'PAUD SKOOLIA',
               },
             },
+          },
+        },
+      }
+    }
+
+    // --- 1.1 Auth Cabut Token (Revoke Session) ---
+    if ((url.includes('/api/auth/cabut') || url.includes('/auth/cabut')) && method === 'post') {
+      const authHeader = String(headers?.Authorization || headers?.authorization || '')
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+      if (token) {
+        revokedTokens.add(token)
+      }
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Token dicabut',
+        },
+      }
+    }
+
+    // --- 1.2 Auth Me (Verify Session) ---
+    if ((url.includes('/api/auth/me') || url.includes('/auth/me')) && method === 'get') {
+      const authHeader = String(headers?.Authorization || headers?.authorization || '')
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+      if (!token || revokedTokens.has(token)) {
+        return {
+          status: 401,
+          data: {
+            code: 401,
+            status: 'UNAUTHORIZED',
+            message: 'Token telah dicabut atau sesi tidak valid',
+          },
+        }
+      }
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Operasi berhasil',
+          data: {
+            userId: '1',
+            nama: 'Admin Kantin',
+            sekolahId: 10,
+            peran: 'ADMIN_SEKOLAH',
+            sumber: 'SKOOLIA',
+            siswaId: null,
+            punyaSekolah: true,
           },
         },
       }
@@ -1002,13 +1069,205 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
       }
     }
 
+    // --- 4a. Kasir: Konfirmasi Manual Pending Tap (PRD §6.1, Issue #220) ---
+    if (url.includes('/api/kasir/tap/menunggu') && method === 'get') {
+      const list = Array.from(pendingTapStore.values())
+        .filter((p) => p.status === 'MENUNGGU')
+        .map((p) => {
+          const s = siswaList.find(
+            (item) => item.uid.toUpperCase() === p.siswaUid.toUpperCase()
+          )
+          return {
+            transaksiId: null,
+            pendingId: p.pendingId,
+            menungguKonfirmasi: true,
+            nama: s?.nama || 'Pembeli',
+            kelas: s?.kelas ?? null,
+            fotoUrl: s?.foto_url ?? null,
+            total: p.total,
+            saldoSisa: null,
+            namaItem: null,
+            metode: 'UID',
+          }
+        })
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Daftar tap menunggu konfirmasi',
+          data: list,
+        },
+      }
+    }
+
+    const konfirmasiTapMatch = url.match(/\/api\/kasir\/tap\/(\d+)\/konfirmasi/)
+    if (konfirmasiTapMatch && method === 'post') {
+      const pId = Number(konfirmasiTapMatch[1])
+      const pending = pendingTapStore.get(pId)
+      if (!pending) {
+        return {
+          status: 404,
+          data: { message: 'Permintaan konfirmasi tidak ditemukan' },
+        }
+      }
+      if (pending.status === 'DIKONFIRMASI' && pending.confirmedResponse) {
+        return pending.confirmedResponse
+      }
+      if (pending.status === 'DIBATALKAN') {
+        return {
+          status: 400,
+          data: { message: 'Permintaan konfirmasi sudah dibatalkan' },
+        }
+      }
+
+      const siswa = siswaList.find(
+        (s) => s.uid.toUpperCase() === pending.siswaUid.toUpperCase()
+      )
+      if (!siswa) {
+        return { status: 404, data: { message: 'Kartu tidak dikenal' } }
+      }
+      if (siswa.saldo < pending.total) {
+        const kurang = pending.total - siswa.saldo
+        return {
+          status: 400,
+          data: {
+            message: `Saldo kurang ${formatRupiah(kurang)}`,
+            kekurangan: kurang,
+          },
+        }
+      }
+
+      siswa.saldo -= pending.total
+      siswa.belanja_hari_ini += pending.total
+      for (const cartItem of pending.items) {
+        const menuItem = menuList.find((m) => m.id === cartItem.menu_id)
+        if (menuItem) {
+          menuItem.stok -= cartItem.qty
+        }
+      }
+
+      const trxId = nextUniqueTrxId()
+      const nowIso = new Date().toISOString()
+      const waktuStruk = nowIso.slice(0, 19) + 'Z'
+      const nomorStruk = `TRX-${nowIso.slice(0, 10).replace(/-/g, '')}-${trxId}`
+      const targetTitikKasir = titikKasirList.find(
+        (tk) => tk.id === pending.titikKasirId
+      )
+      const titikKasirNama =
+        targetTitikKasir?.nama || currentSesiMock.titikKasirNama
+
+      const itemDetails = pending.items.map((it) => {
+        const m = menuList.find((menu) => menu.id === it.menu_id)
+        const nama = m ? m.nama : `Menu #${it.menu_id}`
+        const harga = m ? m.harga_jual : 10000
+        return {
+          menuId: it.menu_id,
+          namaMenu: nama,
+          qty: it.qty,
+          hargaSatuan: harga,
+          subtotal: it.qty * harga,
+        }
+      })
+
+      recordedTransactions.set(trxId, {
+        total: pending.total,
+        nomorStruk,
+        siswaUid: siswa.uid,
+        metodeBayar: 'SALDO',
+        uangDiterima: null,
+        kembalian: null,
+        items: pending.items.map((it) => ({ menuId: it.menu_id, qty: it.qty })),
+      })
+
+      mockSesiTransactions.unshift({
+        id: trxId,
+        transaksiId: trxId,
+        nomorReferensi: nomorStruk,
+        waktu: waktuStruk,
+        pembeliNama: siswa.nama,
+        pembeliKelas: siswa.kelas ?? null,
+        pembeliNis: siswa.nis ?? null,
+        pembeliFotoUrl: siswa.foto_url ?? null,
+        kartuUid: pending.kartuUid,
+        metodeBayar: 'SALDO',
+        uangDiterima: null,
+        kembalian: null,
+        items: itemDetails,
+        total: pending.total,
+        status: 'SUKSES',
+      })
+
+      const confirmedResp = {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Transaksi dikonfirmasi',
+          data: {
+            transaksi_id: trxId,
+            transaksiId: trxId,
+            nomorStruk,
+            titikKasir: titikKasirNama,
+            total: pending.total,
+            metodeBayar: 'SALDO',
+            menungguKonfirmasi: false,
+            waktu: waktuStruk,
+            pembeli: {
+              nama: siswa.nama,
+              kelas: siswa.kelas ?? null,
+              nis: siswa.nis ?? null,
+              foto_url: siswa.foto_url ?? null,
+              fotoUrl: siswa.foto_url ?? null,
+              sisa_saldo: siswa.saldo,
+              saldoSisa: siswa.saldo,
+            },
+          },
+        },
+      }
+
+      pending.status = 'DIKONFIRMASI'
+      pending.confirmedResponse = confirmedResp
+      return confirmedResp
+    }
+
+    const batalTapMatch = url.match(/\/api\/kasir\/tap\/(\d+)\/batal/)
+    if (batalTapMatch && method === 'post') {
+      const pId = Number(batalTapMatch[1])
+      const pending = pendingTapStore.get(pId)
+      if (!pending) {
+        return {
+          status: 404,
+          data: { message: 'Permintaan konfirmasi tidak ditemukan' },
+        }
+      }
+      if (pending.status === 'DIKONFIRMASI') {
+        return {
+          status: 400,
+          data: { message: 'Permintaan sudah dikonfirmasi — tidak dapat dibatalkan' },
+        }
+      }
+      pending.status = 'DIBATALKAN'
+      return {
+        status: 200,
+        data: {
+          code: 200,
+          status: 'SUCCESS',
+          message: 'Permintaan konfirmasi dibatalkan',
+          data: null,
+        },
+      }
+    }
+
     // --- 4. Kasir: Transaksi Tap Kartu (Validasi 6 Tahap & Idempotency) ---
     if (
       (url.includes('/api/v1/kasir/transaksi') ||
         url.includes('/api/kasir/tap')) &&
       method === 'post' &&
       !url.includes('/void') &&
-      !url.includes('/refund')
+      !url.includes('/refund') &&
+      !url.includes('/konfirmasi') &&
+      !url.includes('/batal')
     ) {
       const trxPayload = payload as TransaksiPayload & {
         rfidUid?: string
@@ -1163,6 +1422,41 @@ export function setupMockAdapter(axiosInstance: AxiosInstance) {
             data: {
               message: `Saldo kurang ${formatRupiah(kurang)}`,
               kekurangan: kurang,
+            },
+          }
+        }
+
+        // Konfirmasi Manual (Issue #220): jika aktif, JANGAN potong saldo/stok — kembalikan pendingId
+        if (pengaturanKantin.konfirmasi_manual) {
+          const pendingId = nextUniqueTrxId()
+          pendingTapStore.set(pendingId, {
+            pendingId,
+            idempotencyKey: idempKey,
+            kartuUid,
+            titikKasirId: trxPayload.titikKasirId || 1,
+            siswaUid: siswa.uid,
+            total: totalBelanja,
+            items,
+            status: 'MENUNGGU',
+          })
+          return {
+            status: 200,
+            data: {
+              code: 200,
+              status: 'SUCCESS',
+              message: 'Tap menunggu konfirmasi petugas',
+              data: {
+                transaksiId: null,
+                pendingId,
+                menungguKonfirmasi: true,
+                nama: siswa.nama,
+                kelas: siswa.kelas ?? null,
+                fotoUrl: siswa.foto_url ?? null,
+                total: totalBelanja,
+                saldoSisa: null,
+                namaItem: null,
+                metode: 'UID',
+              },
             },
           }
         }
