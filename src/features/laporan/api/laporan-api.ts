@@ -1,5 +1,10 @@
 import apiClient from '@/lib/api-client'
 import {
+  isServiceUnavailableError,
+  isTimeoutError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+} from '@/lib/validation-error'
+import {
   type LaporanFilterParams,
   type RingkasanRekonsiliasi,
   type RingkasanPenjualan,
@@ -25,6 +30,10 @@ import {
 import type { ApiResponse } from '@/lib/api-types'
 
 export const MAX_KERUGIAN_STOK_PAGE_SIZE = 200
+// Di atas plafon BE #449 ekspor (5 dtk connection-timeout + 30 dtk statement_timeout)
+export const EXPORT_REQUEST_TIMEOUT_MS = 45000
+export const EXPORT_TIMEOUT_MESSAGE =
+  'Ekspor laporan melebihi batas waktu. Silakan persempit rentang tanggal atau ulangi.'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapBarisKerugianStok(item: any, idx: number): BarisKerugianStok {
@@ -860,6 +869,8 @@ export const laporanApi = {
       const res = await apiClient.get<Blob>('/api/laporan/ekspor', {
         params,
         responseType: 'blob',
+        timeout: EXPORT_REQUEST_TIMEOUT_MS,
+        skipToast: true,
       })
       const headers = (res.headers || {}) as Record<string, string | undefined>
       const disposition = headers['content-disposition'] || headers['Content-Disposition'] || ''
@@ -889,17 +900,32 @@ export const laporanApi = {
 }
 
 async function extractExportError(err: unknown): Promise<unknown> {
-  const resp = (err as { response?: { data?: unknown } })?.response
+  if (isTimeoutError(err)) {
+    return Object.assign(new Error(EXPORT_TIMEOUT_MESSAGE), { cause: err })
+  }
+
+  const resp = (err as { response?: { status?: number; data?: unknown } })?.response
   if (resp?.data instanceof Blob) {
     try {
       const text = await resp.data.text()
       const parsed = JSON.parse(text) as { message?: string }
       if (parsed?.message) {
-        return Object.assign(new Error(parsed.message), { cause: err })
+        return Object.assign(new Error(parsed.message), {
+          cause: err,
+          status: resp.status,
+        })
       }
     } catch {
-      // Abaikan error parsing JSON; kembalikan error asli
+      // Abaikan error parsing JSON; lanjut ke fallback status/error asli
     }
   }
+
+  if (isServiceUnavailableError(err)) {
+    return Object.assign(new Error(SERVICE_UNAVAILABLE_MESSAGE), {
+      cause: err,
+      status: 503,
+    })
+  }
+
   return err
 }

@@ -1,10 +1,12 @@
 import React from 'react'
 import {
   AlertOctagon,
+  AlertTriangle,
   Wallet,
   ShieldAlert,
   HelpCircle,
   Clock,
+  RotateCcw,
   X,
   PackageX,
 } from 'lucide-react'
@@ -23,32 +25,41 @@ export interface TransactionErrorInfo {
   message: string
   kekurangan?: number
   uid?: string
+  status?: number
+  isTransient?: boolean
 }
 
 interface TransactionErrorModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   errorInfo: TransactionErrorInfo | null
+  onRetry?: () => void
 }
 
 export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
   open,
   onOpenChange,
   errorInfo,
+  onRetry,
 }) => {
   if (!errorInfo) return null
 
+  const isTransient = Boolean(errorInfo.isTransient || errorInfo.status === 503)
   const isSaldoKurang =
-    Boolean(errorInfo.kekurangan) ||
-    errorInfo.message.toLowerCase().includes('saldo kurang')
-  const isKartuDiblokir = errorInfo.message.toLowerCase().includes('diblokir')
-  const isKartuTidakDikenal = errorInfo.message
-    .toLowerCase()
-    .includes('tidak dikenal')
-  const isLimitHarian = errorInfo.message.toLowerCase().includes('limit harian')
-  const isStokKurang = errorInfo.message.toLowerCase().includes('stok')
+    !isTransient &&
+    (Boolean(errorInfo.kekurangan) ||
+      errorInfo.message.toLowerCase().includes('saldo kurang'))
+  const isKartuDiblokir =
+    !isTransient && errorInfo.message.toLowerCase().includes('diblokir')
+  const isKartuTidakDikenal =
+    !isTransient && errorInfo.message.toLowerCase().includes('tidak dikenal')
+  const isLimitHarian =
+    !isTransient && errorInfo.message.toLowerCase().includes('limit harian')
+  const isStokKurang =
+    !isTransient && errorInfo.message.toLowerCase().includes('stok')
 
   const getErrorIcon = () => {
+    if (isTransient) return <AlertTriangle className='h-7 w-7' />
     if (isSaldoKurang) return <Wallet className='h-7 w-7' />
     if (isKartuDiblokir) return <ShieldAlert className='h-7 w-7' />
     if (isKartuTidakDikenal) return <HelpCircle className='h-7 w-7' />
@@ -61,14 +72,28 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-md p-6 select-none'>
         <DialogHeader className='pb-2 text-center'>
-          <div className='mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10 text-destructive duration-200 zoom-in-75'>
+          <div
+            className={
+              isTransient
+                ? 'mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 duration-200 zoom-in-75 dark:text-amber-400'
+                : 'mx-auto mb-2 flex h-14 w-14 animate-in items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10 text-destructive duration-200 zoom-in-75'
+            }
+          >
             {getErrorIcon()}
           </div>
-          <DialogTitle className='text-xl font-bold tracking-tight text-destructive'>
-            Transaksi Kasir Ditolak
+          <DialogTitle
+            className={
+              isTransient
+                ? 'text-xl font-bold tracking-tight text-amber-700 dark:text-amber-400'
+                : 'text-xl font-bold tracking-tight text-destructive'
+            }
+          >
+            {isTransient ? 'Server Sedang Sibuk' : 'Transaksi Kasir Ditolak'}
           </DialogTitle>
           <DialogDescription className='text-xs text-muted-foreground'>
-            Server mendeteksi kegagalan pada tahap validasi transaksi tap RFID.
+            {isTransient
+              ? 'Antrean transaksi sedang padat. Pesanan tetap tersimpan dan aman untuk dicoba ulang.'
+              : 'Server mendeteksi kegagalan pada tahap validasi transaksi tap RFID.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -91,8 +116,20 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
             </div>
           ) : (
             /* Pesan Error Standar yang Jelas */
-            <div className='rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center'>
-              <p className='text-sm font-bold text-destructive sm:text-base'>
+            <div
+              className={
+                isTransient
+                  ? 'rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center'
+                  : 'rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center'
+              }
+            >
+              <p
+                className={
+                  isTransient
+                    ? 'text-sm font-bold text-amber-800 sm:text-base dark:text-amber-300'
+                    : 'text-sm font-bold text-destructive sm:text-base'
+                }
+              >
                 {errorInfo.message}
               </p>
             </div>
@@ -108,15 +145,27 @@ export const TransactionErrorModal: React.FC<TransactionErrorModalProps> = ({
           )}
         </div>
 
-        <DialogFooter className='pt-2 sm:justify-center'>
+        <DialogFooter className='gap-2 pt-2 sm:justify-center'>
+          {isTransient && onRetry && (
+            <Button
+              type='button'
+              onClick={onRetry}
+              className='w-full gap-1.5 px-6 font-semibold sm:w-auto'
+            >
+              <RotateCcw className='h-4 w-4' />
+              <span>Coba Lagi</span>
+            </Button>
+          )}
           <Button
             type='button'
-            variant='destructive'
+            variant={isTransient ? 'outline' : 'destructive'}
             onClick={() => onOpenChange(false)}
             className='w-full gap-1.5 px-6 font-semibold sm:w-auto'
           >
             <X className='h-4 w-4' />
-            <span>Tutup &amp; Sesuaikan Pesanan</span>
+            <span>
+              {isTransient ? 'Tutup' : 'Tutup & Sesuaikan Pesanan'}
+            </span>
           </Button>
         </DialogFooter>
       </DialogContent>

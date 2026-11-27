@@ -67,9 +67,34 @@ describe('Issue #222 — Sinkronisasi Ekspor & Daftar Laporan BE <-> FE', () => 
     expect(getSpy).toHaveBeenCalledWith('/api/laporan/ekspor', {
       params: { jenis: 'PENJUALAN_TITIK', tanggal: '2026-11-26' },
       responseType: 'blob',
+      timeout: 45000,
+      skipToast: true,
     })
     expect(createUrlSpy).toHaveBeenCalledTimes(1)
     expect(revokeSpy).toHaveBeenCalledWith('blob:mock-url')
+  })
+
+  it('laporanApi.eksporExcel mengekstrak pesan JSON 503 dari Blob dan menerjemahkan error timeout', async () => {
+    const busyBlob = new Blob(
+      [JSON.stringify({ code: 503, message: 'Server sedang sibuk: antrean ekspor penuh. Silakan ulangi.' })],
+      { type: 'application/json' }
+    )
+    vi.spyOn(apiClient, 'get').mockRejectedValueOnce({
+      response: { status: 503, data: busyBlob },
+    })
+
+    await expect(
+      laporanApi.eksporExcel({ jenis: 'PENJUALAN', tanggal: '2026-11-26' })
+    ).rejects.toThrow('Server sedang sibuk: antrean ekspor penuh. Silakan ulangi.')
+
+    vi.spyOn(apiClient, 'get').mockRejectedValueOnce({
+      code: 'ECONNABORTED',
+      message: 'timeout of 45000ms exceeded',
+    })
+
+    await expect(
+      laporanApi.eksporExcel({ jenis: 'PENJUALAN', tanggal: '2026-11-26' })
+    ).rejects.toThrow('Ekspor laporan melebihi batas waktu')
   })
 
   it('LaporanPenjualanPage menampilkan tab Per Titik Kasir & Per Petugas serta mengekspor jenis sesuai tab', async () => {

@@ -18,7 +18,12 @@ declare module 'axios' {
 import { toast } from 'sonner'
 
 import { getCookie, removeCookie } from '@/lib/cookies'
-import { extractValidationMessage } from '@/lib/validation-error'
+import {
+  extractValidationMessage,
+  isTimeoutError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+  TIMEOUT_ERROR_MESSAGE,
+} from '@/lib/validation-error'
 import { useCartStore } from '@/stores/use-cart-store'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
@@ -26,7 +31,9 @@ const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
 const apiClient: AxiosInstance = axios.create({
   baseURL,
-  timeout: 10000,
+  // Di atas plafon BE normal (#449: 5 dtk connection-timeout + 10 dtk statement_timeout)
+  // agar respons 503 terstruktur dari server sempat diterima sebelum klien memutus koneksi.
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -96,16 +103,21 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string; status?: string; validation?: unknown; title?: string }>) => {
     const status = error.response?.status
+    const isBlobResponse =
+      typeof Blob !== 'undefined' && error.response?.data instanceof Blob
 
     // Normalisasi error validasi backend (HTTP 400 dengan { code, message: "ERROR MAPPING", validation })
-    if (error.response?.data) {
+    if (error.response?.data && !isBlobResponse) {
       const valMsg = extractValidationMessage(error.response.data)
       if (valMsg && (error.response.data.message === 'ERROR MAPPING' || !error.response.data.message)) {
         error.response.data.message = valMsg
       }
     }
 
-    const message = error.response?.data?.message || error.message || 'Terjadi kesalahan sistem'
+    const message =
+      (!isBlobResponse ? error.response?.data?.message : undefined) ||
+      error.message ||
+      'Terjadi kesalahan sistem'
     const isSilent = Boolean(
       (error.config as { silent?: boolean; skipToast?: boolean } | undefined)?.silent ||
       (error.config as { silent?: boolean; skipToast?: boolean } | undefined)?.skipToast
@@ -132,12 +144,30 @@ apiClient.interceptors.response.use(
       if (!isSilent) {
         toast.error('Anda tidak memiliki hak akses untuk aksi ini')
       }
+    } else if (status === 503) {
+      // Kontrak BE #449: 503 berarti server/DB sibuk sementara dan transaksi idempoten aman diulang.
+      // Pesan aman dari BE tetap diteruskan di mode produksi.
+      if (!isSilent) {
+        const rawBusyMsg =
+          !isBlobResponse && typeof error.response?.data?.message === 'string'
+            ? error.response.data.message.trim()
+            : ''
+        const busyMessage =
+          rawBusyMsg && rawBusyMsg !== 'ERROR MAPPING'
+            ? rawBusyMsg
+            : SERVICE_UNAVAILABLE_MESSAGE
+        toast.warning(busyMessage)
+      }
     } else if (status && status >= 500) {
       if (!isSilent) {
         const safeMessage = import.meta.env.DEV
           ? `Kesalahan Server (${status}): ${message}`
           : 'Terjadi kendala pada server, silakan hubungi administrator'
         toast.error(safeMessage)
+      }
+    } else if (isTimeoutError(error)) {
+      if (!isSilent) {
+        toast.warning(TIMEOUT_ERROR_MESSAGE)
       }
     }
 
