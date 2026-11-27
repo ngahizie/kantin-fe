@@ -4,6 +4,10 @@ import {
   extractValidationMessage,
   getErrorMessage,
   parseBackendValidation,
+  isTimeoutError,
+  isServiceUnavailableError,
+  TIMEOUT_ERROR_MESSAGE,
+  SERVICE_UNAVAILABLE_MESSAGE,
 } from './validation-error'
 
 describe('validation-error utilities', () => {
@@ -130,6 +134,32 @@ describe('validation-error utilities', () => {
     it('falls back to Error.message or custom fallback', () => {
       expect(getErrorMessage(new Error('Koneksi terputus'))).toBe('Koneksi terputus')
       expect(getErrorMessage(null, 'Terjadi kesalahan')).toBe('Terjadi kesalahan')
+    })
+
+    it('normalizes Axios timeout and HTTP 503 responses per BE #449 contract', () => {
+      const timeoutErr = new AxiosError('timeout of 20000ms exceeded', 'ECONNABORTED')
+      expect(isTimeoutError(timeoutErr)).toBe(true)
+      expect(getErrorMessage(timeoutErr)).toBe(TIMEOUT_ERROR_MESSAGE)
+
+      const busyJsonErr = new AxiosError('Service Unavailable')
+      busyJsonErr.response = {
+        status: 503,
+        data: {
+          code: 503,
+          message: 'Server sedang sibuk: data sedang dipakai transaksi lain. Silakan ulangi.',
+        },
+      } as AxiosResponse
+      expect(isServiceUnavailableError(busyJsonErr)).toBe(true)
+      expect(getErrorMessage(busyJsonErr)).toBe(
+        'Server sedang sibuk: data sedang dipakai transaksi lain. Silakan ulangi.'
+      )
+
+      const busyBlobErr = new AxiosError('Request failed with status code 503')
+      busyBlobErr.response = {
+        status: 503,
+        data: new Blob(['{}'], { type: 'application/json' }),
+      } as AxiosResponse
+      expect(getErrorMessage(busyBlobErr)).toBe(SERVICE_UNAVAILABLE_MESSAGE)
     })
   })
 })

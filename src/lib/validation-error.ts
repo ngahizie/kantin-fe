@@ -1,5 +1,49 @@
 import { AxiosError } from 'axios'
 
+export const TIMEOUT_ERROR_MESSAGE =
+  'Permintaan ke server melebihi batas waktu. Silakan ulangi.'
+
+export const SERVICE_UNAVAILABLE_MESSAGE =
+  'Server sedang sibuk sementara. Silakan ulangi beberapa saat lagi.'
+
+/**
+ * Deteksi apakah error berasal dari batas waktu permintaan HTTP klien (Axios timeout).
+ */
+export function isTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const errObj = error as { code?: unknown; message?: unknown }
+  if (errObj.code === 'ECONNABORTED' || errObj.code === 'ETIMEDOUT') {
+    return true
+  }
+  if (typeof errObj.message === 'string') {
+    const lower = errObj.message.toLowerCase()
+    return /timeout of \d+ms exceeded/.test(lower) || lower === 'network timeout'
+  }
+  return false
+}
+
+/**
+ * Ekstrak kode status HTTP dari error Axios atau objek respons serupa.
+ */
+export function getHttpStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') return undefined
+  const errObj = error as { status?: unknown; response?: { status?: unknown } }
+  if (typeof errObj.response?.status === 'number') {
+    return errObj.response.status
+  }
+  if (typeof errObj.status === 'number') {
+    return errObj.status
+  }
+  return undefined
+}
+
+/**
+ * Deteksi respons HTTP 503 Service Unavailable (kontrak BE #449 saat database sibuk).
+ */
+export function isServiceUnavailableError(error: unknown): boolean {
+  return getHttpStatus(error) === 503
+}
+
 interface BackendValidationResponse {
   code?: number
   message?: string
@@ -137,22 +181,41 @@ export function parseBackendValidation(error: unknown): ParsedValidationError {
  * Mendapatkan pesan error paling representatif dari backend untuk toast / alert.
  */
 export function getErrorMessage(error: unknown, fallback = 'Terjadi kesalahan sistem'): string {
+  const isBlobData = (d: unknown): boolean =>
+    typeof Blob !== 'undefined' && d instanceof Blob
+
   if (error instanceof AxiosError) {
-    const data = error.response?.data
+    const data = isBlobData(error.response?.data) ? undefined : error.response?.data
     const valMsg = extractValidationMessage(data)
     if (valMsg) return valMsg
     if (data?.message && data.message !== 'ERROR MAPPING') return data.message
     if (data?.title) return String(data.title)
+    if (isTimeoutError(error)) return TIMEOUT_ERROR_MESSAGE
+    if (error.response?.status === 503) return SERVICE_UNAVAILABLE_MESSAGE
     if (error.message) return error.message
   }
 
   if (error && typeof error === 'object' && 'response' in error) {
-    const withResp = error as { response?: { data?: BackendValidationResponse } }
-    const valMsg = extractValidationMessage(withResp.response?.data)
-    if (valMsg) return valMsg
-    if (withResp.response?.data?.message && withResp.response.data.message !== 'ERROR MAPPING') {
-      return withResp.response.data.message
+    const withResp = error as {
+      response?: { status?: number; data?: BackendValidationResponse }
     }
+    const data = isBlobData(withResp.response?.data) ? undefined : withResp.response?.data
+    const valMsg = extractValidationMessage(data)
+    if (valMsg) return valMsg
+    if (data?.message && data.message !== 'ERROR MAPPING') {
+      return data.message
+    }
+    if (withResp.response?.status === 503) {
+      return SERVICE_UNAVAILABLE_MESSAGE
+    }
+  }
+
+  if (isTimeoutError(error)) {
+    return TIMEOUT_ERROR_MESSAGE
+  }
+
+  if (isServiceUnavailableError(error)) {
+    return SERVICE_UNAVAILABLE_MESSAGE
   }
 
   if (error instanceof Error) {

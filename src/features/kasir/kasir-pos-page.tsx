@@ -15,7 +15,13 @@ import { useCartStore, type AddCartItemOptions } from '@/stores/use-cart-store'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePengaturanStore } from '@/stores/use-pengaturan-store'
 import { formatRupiah } from '@/lib/formatters'
-import { getErrorMessage } from '@/lib/validation-error'
+import {
+  getErrorMessage,
+  getHttpStatus,
+  isTimeoutError,
+  SERVICE_UNAVAILABLE_MESSAGE,
+  TIMEOUT_ERROR_MESSAGE,
+} from '@/lib/validation-error'
 import { subscribeKatalogChanges } from '@/lib/katalog-sync'
 import { useBeepAudio } from '@/hooks/use-beep-audio'
 import { useRfidScanner } from '@/hooks/use-rfid-scanner'
@@ -74,6 +80,54 @@ import { CloseSessionModal } from './components/close-session-modal'
 import { StokMinusConfirmDialog } from './components/stok-minus-confirm-dialog'
 import { PendingTapDialog } from './components/pending-tap-dialog'
 
+type PendingRetryTransaction =
+  | {
+      type: 'SALDO'
+      uid: string
+      alasanStokMinus?: string
+      idempotencyKey: string
+    }
+  | {
+      type: 'TUNAI'
+      uangDiterima: number
+      alasanStokMinus?: string
+      idempotencyKey: string
+    }
+
+function extractKasirTransactionError(
+  err: unknown,
+  defaultFallback: string,
+  uid?: string
+): TransactionErrorInfo {
+  const axiosErr = err as {
+    response?: {
+      status?: number
+      data?: { message?: string; kekurangan?: number }
+    }
+  }
+  const status = getHttpStatus(err)
+  const isTimeout = isTimeoutError(err)
+  const isTransient = status === 503 || isTimeout
+  const rawMsg = isTimeout
+    ? TIMEOUT_ERROR_MESSAGE
+    : status === 503
+      ? axiosErr.response?.data?.message || SERVICE_UNAVAILABLE_MESSAGE
+      : axiosErr.response?.data?.message ||
+        (err instanceof Error ? err.message : '') ||
+        defaultFallback
+  const message = sanitizeKasirErrorMessage(
+    rawMsg,
+    isTransient ? SERVICE_UNAVAILABLE_MESSAGE : defaultFallback
+  )
+  return {
+    message,
+    kekurangan: axiosErr.response?.data?.kekurangan,
+    status,
+    isTransient,
+    ...(uid ? { uid } : {}),
+  }
+}
+
 export const KasirPosPage: React.FC = () => {
   const [menus, setMenus] = useState<MenuItem[]>([])
   const [kategoris, setKategoris] = useState<KategoriItem[]>([])
@@ -121,6 +175,7 @@ export const KasirPosPage: React.FC = () => {
   const [successData, setSuccessData] = useState<TapTransaksiData | null>(null)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [errorInfo, setErrorInfo] = useState<TransactionErrorInfo | null>(null)
+  const [pendingRetry, setPendingRetry] = useState<PendingRetryTransaction | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const tapCompletedRef = useRef(false)
 
@@ -485,7 +540,11 @@ export const KasirPosPage: React.FC = () => {
 
   // Eksekusi transaksi tap RFID ke backend
   const executeTapTransaction = useCallback(
-    async (scannedUid: string, alasanStokMinusOverride?: string) => {
+    async (
+      scannedUid: string,
+      alasanStokMinusOverride?: string,
+      reuseIdempotencyKey?: string
+    ) => {
       const cleanUid = scannedUid.trim().toUpperCase()
       if (!cleanUid || isProcessing) return
 
@@ -495,11 +554,12 @@ export const KasirPosPage: React.FC = () => {
         return
       }
 
-      const idempotencyKey = generateIdempotencyKey()
+      const idempotencyKey = reuseIdempotencyKey ?? generateIdempotencyKey()
       const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
       const alasanStokMinus = hasMarkedMinus
         ? (alasanStokMinusOverride ?? confirmedAlasanStokMinus ?? undefined)
         : undefined
+      setPendingRetry(null)
       setIsProcessing(true)
 
       try {
@@ -556,29 +616,23 @@ export const KasirPosPage: React.FC = () => {
         setMobileCartOpen(false)
         setManualRfidOpen(false)
       } catch (err: unknown) {
-        // Transaksi Gagal (Validasi 6 Tahap)
+        // Transaksi Gagal (Validasi 6 Tahap atau HTTP 503/timeout BE #449)
         playError()
-        const axiosErr = err as {
-          response?: {
-            status?: number
-            data?: { message?: string; kekurangan?: number }
-          }
-        }
-        const rawMsg =
-          axiosErr.response?.data?.message ||
-          (err instanceof Error ? err.message : '') ||
-          'Terjadi kesalahan saat memproses transaksi tap'
-        const message = sanitizeKasirErrorMessage(
-          rawMsg,
-          'Terjadi kesalahan saat memproses transaksi tap'
+        const info = extractKasirTransactionError(
+          err,
+          'Terjadi kesalahan saat memproses transaksi tap',
+          cleanUid
         )
-        const kekurangan = axiosErr.response?.data?.kekurangan
 
-        setErrorInfo({
-          message,
-          kekurangan,
-          uid: cleanUid,
-        })
+        if (info.isTransient) {
+          setPendingRetry({
+            type: 'SALDO',
+            uid: cleanUid,
+            alasanStokMinus,
+            idempotencyKey,
+          })
+        }
+        setErrorInfo(info)
         setErrorModalOpen(true)
 
         void logKasirAuditEvent({
@@ -586,8 +640,8 @@ export const KasirPosPage: React.FC = () => {
           titikKasirId: targetTitikKasirId,
           sesiId: sesi?.id,
           detail: {
-            alasan: message,
-            kekurangan,
+            alasan: info.message,
+            kekurangan: info.kekurangan,
             metodeBayar: 'SALDO',
           },
         })
@@ -820,7 +874,11 @@ export const KasirPosPage: React.FC = () => {
 
   // Eksekusi transaksi TUNAI (Kartu Tamu / tanpa kartu, tanpa potong saldo)
   const executeCashTransaction = useCallback(
-    async (uangDiterima: number, alasanStokMinusOverride?: string) => {
+    async (
+      uangDiterima: number,
+      alasanStokMinusOverride?: string,
+      reuseIdempotencyKey?: string
+    ) => {
       if (isProcessing) return
 
       const targetTitikKasirId = activeTitikKasirId ?? sesi?.titikKasirId
@@ -830,11 +888,12 @@ export const KasirPosPage: React.FC = () => {
       }
 
       const currentTotal = totalHarga()
-      const idempotencyKey = generateIdempotencyKey()
+      const idempotencyKey = reuseIdempotencyKey ?? generateIdempotencyKey()
       const hasMarkedMinus = items.some((it) => Boolean(it.jualMelebihiCatatan))
       const alasanStokMinus = hasMarkedMinus
         ? (alasanStokMinusOverride ?? confirmedAlasanStokMinus ?? undefined)
         : undefined
+      setPendingRetry(null)
       setIsProcessing(true)
 
       try {
@@ -913,26 +972,20 @@ export const KasirPosPage: React.FC = () => {
         void loadSesiData()
       } catch (err: unknown) {
         playError()
-        const axiosErr = err as {
-          response?: {
-            status?: number
-            data?: { message?: string; kekurangan?: number }
-          }
-        }
-        const rawMsg =
-          axiosErr.response?.data?.message ||
-          (err instanceof Error ? err.message : '') ||
-          'Terjadi kesalahan saat memproses transaksi tunai'
-        const message = sanitizeKasirErrorMessage(
-          rawMsg,
+        const info = extractKasirTransactionError(
+          err,
           'Terjadi kesalahan saat memproses transaksi tunai'
         )
-        const kekurangan = axiosErr.response?.data?.kekurangan
 
-        setErrorInfo({
-          message,
-          kekurangan,
-        })
+        if (info.isTransient) {
+          setPendingRetry({
+            type: 'TUNAI',
+            uangDiterima,
+            alasanStokMinus,
+            idempotencyKey,
+          })
+        }
+        setErrorInfo(info)
         setErrorModalOpen(true)
 
         void logKasirAuditEvent({
@@ -940,8 +993,8 @@ export const KasirPosPage: React.FC = () => {
           titikKasirId: targetTitikKasirId,
           sesiId: sesi?.id,
           detail: {
-            alasan: message,
-            kekurangan,
+            alasan: info.message,
+            kekurangan: info.kekurangan,
             metodeBayar: 'TUNAI',
           },
         })
@@ -966,6 +1019,25 @@ export const KasirPosPage: React.FC = () => {
       loadSesiData,
     ]
   )
+
+  const handleRetryTransientTransaction = useCallback(() => {
+    if (!pendingRetry) return
+    const targetRetry = pendingRetry
+    setErrorModalOpen(false)
+    if (targetRetry.type === 'SALDO') {
+      void executeTapTransaction(
+        targetRetry.uid,
+        targetRetry.alasanStokMinus,
+        targetRetry.idempotencyKey
+      )
+    } else {
+      void executeCashTransaction(
+        targetRetry.uangDiterima,
+        targetRetry.alasanStokMinus,
+        targetRetry.idempotencyKey
+      )
+    }
+  }, [pendingRetry, executeTapTransaction, executeCashTransaction])
 
   const handleProcessCash = useCallback(
     async (uangDiterima: number) => {
@@ -1522,11 +1594,17 @@ export const KasirPosPage: React.FC = () => {
         errorMessage={pendingTapError}
       />
 
-      {/* Modal Error Transaksi Ditolak (Kekurangan Saldo & Validasi 6 Tahap) */}
+      {/* Modal Error Transaksi Ditolak / Server Sibuk (BE #449) */}
       <TransactionErrorModal
         open={errorModalOpen}
-        onOpenChange={setErrorModalOpen}
+        onOpenChange={(open) => {
+          setErrorModalOpen(open)
+          if (!open) {
+            setPendingRetry(null)
+          }
+        }}
         errorInfo={errorInfo}
+        onRetry={pendingRetry ? handleRetryTransientTransaction : undefined}
       />
 
       {/* Modal Riwayat Transaksi Sesi Hari Ini (termasuk aksi Cetak Ulang & Refund BE #292) */}
